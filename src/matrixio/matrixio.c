@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../config.h"
+
 #include <check.h>
 #include <scalar.h>
 #include <mpiglue.h>
@@ -34,6 +36,7 @@
 static void add_string_attr(matrixio_id id,
 			    const char *name, const char *val)
 {
+#if defined(HAVE_HDF5)
      hid_t type_id;
      hid_t space_id;
      hid_t attr_id;
@@ -57,6 +60,7 @@ static void add_string_attr(matrixio_id id,
      H5Aclose(attr_id);
      H5Sclose(space_id);
      H5Tclose(type_id);
+#endif
 }
 
 #define FNAME_SUFFIX ".h5"  /* standard HDF5 filename suffix */
@@ -83,15 +87,16 @@ static char *add_fname_suffix(const char *fname)
 
 matrixio_id matrixio_create(const char *fname)
 {
+#if defined(HAVE_HDF5)
      char *new_fname;
      matrixio_id id;
      hid_t access_props;
 
      access_props = H5Pcreate (H5P_FILE_ACCESS);
      
-#ifdef HAVE_MPI
+#  ifdef HAVE_MPI
      H5Pset_mpi(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
-#endif
+#  endif
 
      new_fname = add_fname_suffix(fname);
 
@@ -103,10 +108,16 @@ matrixio_id matrixio_create(const char *fname)
      H5Pclose(access_props);
 
      return id;
+#else
+     fprintf(stderr, "matrixio: cannot output \"%s\" (compiled without HDF)\n",
+	     fname);
+     return 0;
+#endif
 }
 
 matrixio_id matrixio_open(const char *fname)
 {
+#if defined(HAVE_HDF5)
      char *new_fname;
      matrixio_id id;
      hid_t access_props;
@@ -127,16 +138,22 @@ matrixio_id matrixio_open(const char *fname)
      H5Pclose(access_props);
 
      return id;
+#else
+     return 0;
+#endif
 }
 
 void matrixio_close(matrixio_id id)
 {
+#if defined(HAVE_HDF5)
      H5Fclose(id);
+#endif
 }
 
 matrixio_id matrixio_create_sub(matrixio_id id, 
 				const char *name, const char *description)
 {
+#if defined(HAVE_HDF5)
      matrixio_id sub_id;
 
      /* when running a parallel job, only the master process creates the
@@ -159,17 +176,23 @@ matrixio_id matrixio_create_sub(matrixio_id id,
      }
 
      return sub_id;
+#else
+     return 0;
+#endif
 }
 
 void matrixio_close_sub(matrixio_id id)
 {
+#if defined(HAVE_HDF5)
      H5Gclose(id);
+#endif
 }
 
 matrixio_id matrixio_create_dataset(matrixio_id id,
 				    const char *name, const char *description,
 				    int rank, const int *dims)
 {
+#if defined(HAVE_HDF5)
      int i;
      hid_t space_id, type_id, data_id;
      hsize_t *dims_copy;
@@ -198,11 +221,16 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
      add_string_attr(data_id, "description", description);
 
      return data_id;
+#else
+     return 0;
+#endif
 }
 
 void matrixio_close_dataset(matrixio_id data_id)
 {
+#if defined(HAVE_HDF5)
      H5Dclose(data_id);
+#endif
 }
 
 void matrixio_write_real_data(matrixio_id data_id,
@@ -210,6 +238,7 @@ void matrixio_write_real_data(matrixio_id data_id,
 			      int stride,
 			      real *data)
 {
+#if defined(HAVE_HDF5)
      int rank;
      hsize_t *dims, *maxdims;
      hid_t space_id, type_id, mem_space_id;
@@ -277,6 +306,7 @@ void matrixio_write_real_data(matrixio_id data_id,
      free(start);
      free(dims);
      H5Sclose(space_id);
+#endif
 }
 
 void matrixio_read_real_data(matrixio_id id,
@@ -286,6 +316,7 @@ void matrixio_read_real_data(matrixio_id id,
 			     int stride,
 			     real *data)
 {
+#if defined(HAVE_HDF5)
      hid_t space_id, type_id, data_id, mem_space_id;
      hssize_t *start;
      hsize_t *dims_copy, *maxdims, *strides, *count;
@@ -364,4 +395,5 @@ void matrixio_read_real_data(matrixio_id id,
      free(dims_copy);
      H5Sclose(space_id);
      H5Dclose(data_id);
+#endif
 }

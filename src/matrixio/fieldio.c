@@ -20,6 +20,8 @@
 #include <string.h>
 #include <math.h>
 
+#include "../config.h"
+
 #include <check.h>
 #include <matrices.h>
 

@@ -18,34 +18,32 @@
 #ifndef MATRIXIO_H
 #define MATRIXIO_H
 
-#include <hdf5.h>
-
 #include <matrices.h>
 
+#if defined(HAVE_HDF5)
+#  include <hdf5.h>
 typedef hid_t matrixio_id;
+#else /* no HDF */
+typedef int matrixio_id; /* dummy */
+#endif
 
 extern matrixio_id matrixio_create(const char *fname);
-
 extern matrixio_id matrixio_open(const char *fname);
-
 extern void matrixio_close(matrixio_id id);
 
 extern matrixio_id matrixio_create_sub(matrixio_id id,
                                 const char *name, const char *description);
-
 extern void matrixio_close_sub(matrixio_id id);
 
 extern matrixio_id matrixio_create_dataset(matrixio_id id,
                                     const char *name, const char *description,
                                     int rank, const int *dims);
-
 extern void matrixio_close_dataset(matrixio_id data_id);
 
 extern void matrixio_write_real_data(matrixio_id data_id,
                               const int *local_dims, const int *local_start,
                               int stride,
                               real *data);
-
 extern void matrixio_read_real_data(matrixio_id id,
                              const char *name,
                              int rank, const int *dims,

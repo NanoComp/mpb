@@ -6,7 +6,7 @@ Optimize multiplications by diagonal matrices?
 
 Allow real-complex transforms for structures with inversion symmetry.
 
-Allow linking without HDF5.  Add HDF4 support (uniprocessor only)?
+Add HDF4 support (uniprocessor only)?
 
 Export/import DXF, VRML, POV, ...?
 

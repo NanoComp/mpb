@@ -36,6 +36,9 @@
 #  define HAVE_FFTW
 #endif
 
+/* Define if you have the HDF5 library and headers: */
+#undef HAVE_HDF5
+
 /* define to disable CHECK macros */
 #undef CHECK_DISABLE
 

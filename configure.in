@@ -167,9 +167,13 @@ AC_CHECK_LIB(lapack, main)
 
 # ----------------------------------------------------------------------
 # Check for HDF5 library
-AC_CHECK_LIB(z, deflate)
-AC_CHECK_LIB(hdf5, H5Pcreate)
-AC_CHECK_HEADERS(hdf5.h)
+AC_ARG_WITH(hdf5, [  --without-hdf5          don't use HDF5 output], ok=$withval, ok=yes)
+if test "$ok" = "yes"; then
+	AC_CHECK_LIB(z, deflate)
+	AC_CHECK_LIB(hdf5, H5Pcreate, [
+		AC_CHECK_HEADERS(hdf5.h, [LIBS="-lhdf5 $LIBS"
+			                  AC_DEFINE(HAVE_HDF5)])])
+fi
 
 # ----------------------------------------------------------------------
 # Check for Guile library and flags:
