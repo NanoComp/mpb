@@ -18,7 +18,7 @@ distdir = $(package)-@MPB_VERSION@
 
 LIBSUBDIRS = src/util src/matrices src/maxwell src/matrixio
 INSTALLSUBDIRS = mpb-ctl utils
-CHECKSUBDIRS = mpb-ctl tests
+CHECKSUBDIRS = tests mpb-ctl
 SUBDIRS = $(LIBSUBDIRS) tests $(INSTALLSUBDIRS)
 
 all: all-recursive
