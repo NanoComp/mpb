@@ -44,6 +44,10 @@
 #  endif
 #endif
 
+#if defined(HAVE_LIBFFTW) || defined(HAVE_LIBDFFTW) || defined(HAVE_LIBSFFTW)
+#  define HAVE_FFTW 1
+#endif
+
 /* This data structure is designed to hold k+G related data at a given
    point.  kmag is the length of the k+G vector.  The m and n vectors are
    orthonormal vectors orthogonal to (kx,ky,kz).  These are used

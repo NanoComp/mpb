@@ -6,11 +6,6 @@ AC_CONFIG_HEADER(src/config.h)
 MPB_VERSION=1.1.1
 AC_SUBST(MPB_VERSION)
 
-# set CFLAGS to -O3, unless the user has set the CFLAGS env. variable:
-if test x = x"$CFLAGS"; then
-	CFLAGS="-O3"
-fi
-
 AC_MSG_CHECKING([for vendor f77 to be used instead of g77])
 AC_MSG_RESULT()
 AC_CHECK_PROGS(F77, f77 xlf77 cf77 fort77 f90 xlf90)
