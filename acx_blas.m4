@@ -27,7 +27,7 @@ dnl the default action will define HAVE_BLAS.
 dnl
 dnl This macro requires autoconf 2.50 or later.
 dnl
-dnl @version $Id: acx_blas.m4,v 1.2 2001/12/08 20:28:02 stevenj Exp $
+dnl @version $Id: acx_blas.m4,v 1.3 2001/12/12 19:54:10 stevenj Exp $
 dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
 
 AC_DEFUN([ACX_BLAS], [
@@ -48,10 +48,13 @@ esac
 AC_F77_FUNC(sgemm)
 AC_F77_FUNC(dgemm)
 
+acx_blas_save_LIBS="$LIBS"
+LIBS="$LIBS $FLIBS"
+
 # First, check BLAS_LIBS environment variable
 if test $acx_blas_ok = no; then
 if test "x$BLAS_LIBS" != x; then
-	save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS $FLIBS"
+	save_LIBS="$LIBS"; LIBS="$BLAS_LIBS $LIBS"
 	AC_MSG_CHECKING([for $sgemm in $BLAS_LIBS])
 	AC_TRY_LINK_FUNC($sgemm, [acx_blas_ok=yes], [BLAS_LIBS=""])
 	AC_MSG_RESULT($acx_blas_ok)
@@ -61,7 +64,7 @@ fi
 
 # BLAS linked to by default?  (happens on some supercomputers)
 if test $acx_blas_ok = no; then
-	save_LIBS="$LIBS"; LIBS="$LIBS $FLIBS"
+	save_LIBS="$LIBS"; LIBS="$LIBS"
 	AC_CHECK_FUNC($sgemm, [acx_blas_ok=yes])
 	LIBS="$save_LIBS"
 fi
@@ -73,8 +76,8 @@ if test $acx_blas_ok = no; then
 		[AC_CHECK_LIB(cblas, cblas_dgemm,
 			[acx_blas_ok=yes
 			 BLAS_LIBS="-lcblas -lf77blas -latlas"],
-			[], [-lf77blas -latlas $FLIBS])],
-			[], [-latlas $FLIBS])])
+			[], [-lf77blas -latlas])],
+			[], [-latlas])])
 fi
 
 # BLAS in PhiPACK libraries? (requires generic BLAS lib, too)
@@ -83,20 +86,18 @@ if test $acx_blas_ok = no; then
 		[AC_CHECK_LIB(dgemm, $dgemm,
 		[AC_CHECK_LIB(sgemm, $sgemm,
 			[acx_blas_ok=yes; BLAS_LIBS="-lsgemm -ldgemm -lblas"],
-			[], [-lblas $FLIBS])],
-			[], [-lblas $FLIBS])], [], [$FLIBS])
+			[], [-lblas])],
+			[], [-lblas])])
 fi
 
 # BLAS in Alpha CXML library?
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(cxml, $sgemm, [acx_blas_ok=yes;BLAS_LIBS="-lcxml"], [],
-		     [$FLIBS])
+	AC_CHECK_LIB(cxml, $sgemm, [acx_blas_ok=yes;BLAS_LIBS="-lcxml"])
 fi
 
 # BLAS in Alpha DXML library? (now called CXML, see above)
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(dxml, $sgemm, [acx_blas_ok=yes;BLAS_LIBS="-ldxml"], [],
-		     [$FLIBS])
+	AC_CHECK_LIB(dxml, $sgemm, [acx_blas_ok=yes;BLAS_LIBS="-ldxml"])
 fi
 
 # BLAS in Sun Performance library?
@@ -111,15 +112,13 @@ fi
 
 # BLAS in SCSL library?  (SGI/Cray Scientific Library)
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(scs, $sgemm, [acx_blas_ok=yes; BLAS_LIBS="-lscs"], [],
-		     [$FLIBS])
+	AC_CHECK_LIB(scs, $sgemm, [acx_blas_ok=yes; BLAS_LIBS="-lscs"])
 fi
 
 # BLAS in SGIMATH library?
 if test $acx_blas_ok = no; then
 	AC_CHECK_LIB(complib.sgimath, $sgemm,
-		     [acx_blas_ok=yes; BLAS_LIBS="-lcomplib.sgimath"], [],
-		     [$FLIBS])
+		     [acx_blas_ok=yes; BLAS_LIBS="-lcomplib.sgimath"])
 fi
 
 # BLAS in IBM ESSL library? (requires generic BLAS lib, too)
@@ -127,16 +126,17 @@ if test $acx_blas_ok = no; then
 	AC_CHECK_LIB(blas, $sgemm,
 		[AC_CHECK_LIB(essl, $sgemm,
 			[acx_blas_ok=yes; BLAS_LIBS="-lessl -lblas"],
-			[], [-lblas $FLIBS])], [], [$FLIBS])
+			[], [-lblas $FLIBS])])
 fi
 
 # Generic BLAS library?
 if test $acx_blas_ok = no; then
-	AC_CHECK_LIB(blas, $sgemm, [acx_blas_ok=yes; BLAS_LIBS="-lblas"], [],
-		     [$FLIBS])
+	AC_CHECK_LIB(blas, $sgemm, [acx_blas_ok=yes; BLAS_LIBS="-lblas"])
 fi
 
 AC_SUBST(BLAS_LIBS)
+
+LIBS="$acx_blas_save_LIBS"
 
 # Finally, execute ACTION-IF-FOUND/ACTION-IF-NOT-FOUND:
 if test x"$acx_blas_ok" = xyes; then
