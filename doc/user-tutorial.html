@@ -302,6 +302,42 @@ also possible to call lower-level functions of the code directly, to
 have a finer control of the computation; such functions are described
 in the reference section.
 
+<h2>A Few Words on Units</h2>
+
+<p>In principle, you can use any units you want with the
+Photonic-Bands package.  You can input all of your distances and
+coordinates in furlongs, for example, as long as you set the size of
+the lattice cell accordingly (the <code>size</code> property of
+<code>geometry-lattice</code>; see below).  We do not recommend this
+practice, however.
+
+<p>Maxwell's equations possess an important property--they are
+<em>scale-invariant</em>.  If you multiply all of your sizes by 10,
+the solution scales are simply multiplied by 10 likewise (while the
+frequencies are divided by 10).  So, you can solve a problem once and
+apply that solution to all length-scales.  For this reason, we usually
+pick some fundamental lengthscale of a structure, such as its lattice
+constant (unit of periodicity) <i>a</i>, and write all distances in
+terms of that.  That is, we choose units so that <i>a</i> is unity.
+Then, to apply to any physical system, one simply scales all distances
+by <i>a</i>.  This is what we have done in the preceding and following
+examples, and this is the default behavior of Photonic-Bands: the
+lattice constant is one, and all coordinates are scaled accordingly.
+
+<p>As has been mentioned already, all 3-vectors in the program are
+specified in the <em>basis</em> of the unit vectors in the lattice
+directions.  That is, each component is multiplied by the
+corresponding basis vector and summed to compute the corresponding
+cartesian vector.  It is worth noting that a basis is not meaningful
+for scalar distances (such as the cylinder radius), however: these are
+just the ordinary cartesian distances in your chosen units of
+<i>a</i>.
+
+<p>The frequency eigenvalues returned by the program are in units of
+<i>c/a</i>, where <i>c</i> is the speed of light and <i>a</i> is the
+unit of distance.  (Thus, the corresponding vacuum wavelength is
+<i>a</i> over the frequency eigenvalue.)
+
 <h2>Bands of a Triangular Lattice</h2>
 
 <p>As a second example, we'll compute the TM band structure of a
