@@ -314,11 +314,11 @@ Once you've unpacked it, just run:
 make
 </pre>
 
-<p>to configure and compile the package.  Hopefully, the
-<code>configure</code> script will correctly detect the BLAS, FFTW,
-etcetera libraries that you've dutifully installed, as well as the C
-compiler and so on, and the <code>make</code> compilation will proceed
-without a hitch.  If not, it's a <a
+<p>to configure and compile the package (see below to install).
+Hopefully, the <code>configure</code> script will correctly detect the
+BLAS, FFTW, etcetera libraries that you've dutifully installed, as
+well as the C compiler and so on, and the <code>make</code>
+compilation will proceed without a hitch.  If not, it's a <a
 href="http://www.tuxedo.org/~esr/jargon/html/entry/SMOP.html">Simple
 Matter of Programming</a> to correct the problem.
 <code>configure</code> accepts several flags to help control its
@@ -331,10 +331,6 @@ are:
 
 <dl>
 
-<p><dt><code>--enable-single</code>
-<dd>Use single precision (C <code>float</code>) instead of the default
-double precision (C <code>double</code>) for computations.
-
 <p><dt><code>--with-inv-symmetry</code>
 <dd>Assume <a href="user-ref.html#inv-symmetry">inversion symmetry</a>
 in the dielectric function, allowing us to use real fields (in Fourier
@@ -342,15 +338,29 @@ space) instead of complex fields.  This gives a factor of 2 benefit in
 speed and memory.  In this case, the MPB program will be installed as
 <code>mpbi</code> instead of <code>mpb</code>, so that you can have
 versions both with and without inversion symmetry installed at the
-same time.  (If you compile and install the code twice, with and
-without inversion symmetry, you should run <code>make distclean</code>
-in between.)
+same time.  To install <em>both</em> <code>mpb</code> and
+<code>mpbi</code>, you should do:
+
+<pre>
+./configure
+make
+su -c "make install"
+make distclean
+./configure --with-inv-symmetry
+make
+su -c "make install"
+</pre>
 
 <p><dt><code>--with-hermitian-epsilon</code>
 <dd>Support the use of <a
 href="user-ref.html#dielectric-anisotropic">complex-hermitian
 dielectric tensors</a> (corresponding to magnetic materials, which
 break inversion symmetry).
+
+<p><dt><code>--enable-single</code>
+<dd>Use single precision (C <code>float</code>) instead of the default
+double precision (C <code>double</code>) for computations.  (Not
+recommended.)
 
 <p><dt><code>--without-fastblas</code>
 <dt><code>--with-fastblas=<i>lib</i></code>
@@ -420,8 +430,12 @@ called <code>mpb</code>.  You can install this program under
 <code>--prefix</code> flag for <code>configure</code>), by running:
 
 <pre>
-make install
+su -c "make install"
 </pre>
+
+<p>The "su" command is to switch to <code>root</code> for installation
+into system directories.  You can just do <code>make install</code> if
+you are installing into your home directory instead.
 
 <p>If you make a mistake (e.g. you forget to specify a needed
 <code>-L<i>dir</i></code> flag) or in general want to start over from
