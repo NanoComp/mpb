@@ -1,3 +1,132 @@
+2001-01-06  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	* /home/stevenj/Repository/mpb/NEWS,
+	/home/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: read
+	filename-prefix on each output call
+
+2001-01-03  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	* /home/stevenj/Repository/mpb/NEWS,
+	/home/stevenj/Repository/mpb/doc/user-ref.html: documented using
+	thunks for band functions
+
+	* /home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: accept thunks
+	as band functions
+
+	* /home/stevenj/Repository/mpb/doc/user-ref.html,
+	/home/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/stevenj/Repository/mpb/NEWS: compute-field-energy now
+	returns the fraction of the energy in each field component.  Also,
+	fixed a bug in the group velocity calculation when
+	eigensolver-block-size < num-bands.  Thanks to Karl Koch for the
+	suggestion and bug report.
+
+	* /home/stevenj/Repository/mpb/src/matrices/blasglue.c: fixed
+	calling real syev for complex scalars
+
+2000-11-12  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	* /home/stevenj/Repository/mpb/src/matrices/blasglue.c,
+	/home/stevenj/Repository/mpb/src/matrices/blasglue.h: separate
+	function for eigenvalues of real matrices, if we need them
+
+2000-11-10  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	* /home/stevenj/Repository/mpb/src/maxwell/maxwell_eps.c: comment
+
+2000-11-07  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	* /home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/stevenj/Repository/mpb/src/matrices/evectmatrix.c,
+	/home/stevenj/Repository/mpb/src/matrices/matrices.h: changed flop
+	count to double to avoid overflow
+
+	*
+	/home/stevenj/Repository/mpb/src/matrices/eigensolver_davidson.c:
+	make trace output more closely match other eigensolver's
+
+	* /home/stevenj/Repository/mpb/src/matrices/eigensolver.c: print
+	more digits in eigensolver trace output
+
+	* /home/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/stevenj/Repository/mpb/src/matrices/evectmatrix.c,
+	/home/stevenj/Repository/mpb/src/matrices/matrices.h: added flop
+	count, nwork & davidson user control
+
+	* /home/stevenj/Repository/mpb/doc/analysis-tutorial.html: noted
+	reference for diamond
+
+2000-11-06  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	*
+	/home/stevenj/Repository/mpb/src/matrices/eigensolver_davidson.c:
+	added dead code for alternate computation method of computing
+	AY...
+
+	* /home/stevenj/Repository/mpb/src/maxwell/maxwell.h,
+	/home/stevenj/Repository/mpb/src/maxwell/maxwell_op.c: added
+	maxwell_target_operator1
+
+	* /home/stevenj/Repository/mpb/src/matrices/eigensolver.c: put
+	constraint in a more logical place, after the preconditioner.
+
+2000-11-04  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	* /home/stevenj/Repository/mpb/src/matrices/eigensolver.c: reorder
+	iteration output so it's a little less misleading (iteration 1 is
+	now after the first eigenvector update, and the last iteration can
+	be printed)
+
+2000-10-30  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	* /home/stevenj/Repository/mpb/tests/normal_vectors.c: use uniform
+	directions on a sphere
+
+2000-10-26  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	* /home/stevenj/Repository/mpb/mpb-ctl/examples/check.ctl: use a
+	slightly lower tolerance for the targeted eigensolver
+
+	* /home/stevenj/Repository/mpb/mpb-ctl/examples/check.ctl: updated
+	for new MPB...in particular, 3d numbers have changed because of
+	the new spherical quadrature, and 2d numbers may have changed
+	slightly because of the new handling of the Gamma points.  Also
+	fixed some bugs where some of the tests that I had blithely
+	inserted conflicted with one another.
+
+	* /home/stevenj/Repository/mpb/doc/user-ref.html,
+	/home/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: changed default
+	block size, made more flexible
+
+	* /home/stevenj/Repository/mpb/mpb-ctl/mpb.c: print a message to
+	remind the user when we're assuming inversion symmetry
+
+	* /home/stevenj/Repository/mpb/mpb-ctl/mpb.c: fixed bug in
+	integration (eps_mean, energy in object, etcetera) when using
+	inversion symmetry.  Because of the funny format output by real
+	FFTs, the fields stored are slightly *over* half of the full
+	"logical" arrays.  One has to be careful not to overcount the
+	boundary points.
+
+2000-10-25  Steven G. Johnson  <stevenj@alum.mit.edy>
+
+	* /home/stevenj/Repository/mpb/NEWS: updated
+
+	* /home/stevenj/Repository/mpb/configure.in,
+	/home/stevenj/Repository/mpb/doc/installation.html,
+	/home/stevenj/Repository/mpb/doc/user-ref.html,
+	/home/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/stevenj/Repository/mpb/src/maxwell/maxwell.c,
+	/home/stevenj/Repository/mpb/src/maxwell/maxwell.h,
+	/home/stevenj/Repository/mpb/src/maxwell/maxwell_eps.c,
+	/home/stevenj/Repository/mpb/src/maxwell/maxwell_op.c,
+	/home/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c: support
+	inversion symmetry
+
 2000-10-23  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/user-ref.html, mpb-ctl/examples/bragg.ctl, mpb-ctl/mpb.c,
