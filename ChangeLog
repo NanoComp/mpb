@@ -1,3 +1,118 @@
+1999-11-29  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/Makefile.in: fixed
+	trailing spaces in sed command; thanks to Ron Chase for the bug
+	report.
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/Makefile.in,
+	/home/a/stevenj/Repository/mpb/tests/Makefile.in,
+	/home/a/stevenj/Repository/mpb/configure.in: incorporate FLIBS
+	into LIBS
+
+	* /home/a/stevenj/Repository/mpb/doc/installation.html: more
+	explicit instructions for LAPACK and BLAS.
+
+1999-11-25  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/epsilon_file.c: minor
+	improvements, mostly to comments
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: get
+	rid of warning
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: don't
+	redeclare lambda (also gets rid of possiblity of prev_lambda being
+	assigned to undefined variable)
+
+	* /home/a/stevenj/Repository/mpb/Makefile.in: added 'make
+	snapshot'
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: slight
+	rewording
+
+	* /home/a/stevenj/Repository/mpb/src/maxwell/maxwell_eps.c,
+	/home/a/stevenj/Repository/mpb/src/matrixio/matrixio.c,
+	/home/a/stevenj/Repository/mpb/src/matrixio/matrixio.h,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell.h,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.h,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/src/matrixio/evectmatrixio.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/Makefile.in,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/epsilon_file.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/a/stevenj/Repository/mpb/doc/user-ref.html: added
+	epsilon-input-file input var
+
+1999-11-24  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/configure.in,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: added
+	eigensolver-flags input variable
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/evectmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h: Added
+	EIGS_ANALYTIC_MULTIMIN, but don't enable by default until I can
+	fix the convergence.  (Maybe by implementing a generalized
+	conjugacy condition for conjugate gradient?)
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c:
+	commented on non-storage of U and YtAYU; also changed iteration
+	counter to be 1-based in verbose mode
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/matrices.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/scalar.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/evectmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c:
+	optimized when matrices are diagonal
+
+1999-11-22  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/configure.in: bumped version
+
+	* /home/a/stevenj/Repository/mpb/NEWS: noted (scheduled) 0.8.1
+	release.
+
+	* /home/a/stevenj/Repository/mpb/doc/introduction.html: added
+	comparison with time-domain
+
+1999-11-21  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/hole-slab.ctl,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/examples/tutorial.ctl,
+	/home/a/stevenj/Repository/mpb/doc/user-tutorial.html,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/doc/user-ref.html,
+	/home/a/stevenj/Repository/mpb/NEWS: output-hfieldz, etc ->
+	output-hfield-z; also use these functions in tutorial
+
+	* /home/a/stevenj/Repository/mpb/NEWS: noted changes
+
+	* /home/a/stevenj/Repository/mpb/src/matrixio/matrixio.c: speed up
+	saving non-contiguous data
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/doc/user-ref.html: added
+	output-field[xyz] and friends
+
+	* /home/a/stevenj/Repository/mpb/src/matrixio/matrixio.h,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/src/matrixio/fieldio.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: Sped up phase
+	calculations in field output (but to no avail, it seems), and set
+	things up for outputting only a single component of a vector
+	field.
+
+	* /home/a/stevenj/Repository/mpb/NEWS: fixed typo
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/NEWS: added output-copies variable
+
 Fri Nov 19 00:45:13 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* TODO: updated and cleaned up a bit
