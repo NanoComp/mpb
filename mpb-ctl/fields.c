@@ -717,6 +717,7 @@ cvector3 get_field_point(vector3 p)
      scalar_complex field[3], phase;
      double phase_phi;
      cvector3 F;
+     vector3 kvector = {0,0,0};
 
      CHECK(curfield && strchr("dhec", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
@@ -724,9 +725,11 @@ cvector3 get_field_point(vector3 p)
      field[1] = f_interp_cval(p, mdata, &curfield[1].re, 6);
      field[2] = f_interp_cval(p, mdata, &curfield[2].re, 6);
 
-     phase_phi = TWOPI * (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
-			  cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
-			  cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+     if (curfield_type != 'c')
+	  kvector = cur_kvector;
+     phase_phi = TWOPI * (kvector.x * (p.x/geometry_lattice.size.x+0.5) +
+			  kvector.y * (p.y/geometry_lattice.size.y+0.5) +
+			  kvector.z * (p.z/geometry_lattice.size.z+0.5));
      CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
      CASSIGN_MULT(field[0], field[0], phase);
      CASSIGN_MULT(field[1], field[1], phase);
@@ -1303,11 +1306,14 @@ cnumber compute_field_integral(function f)
      int integrate_energy;
      real *energy = (real *) curfield;
      cnumber integral = {0,0};
+     vector3 kvector = {0,0,0};
 
      if (!curfield || !strchr("dheDHRc", curfield_type)) {
           mpi_one_fprintf(stderr, "The D or H energy/field must be loaded first.\n");
           return integral;
      }
+     if (curfield_type != 'c')
+	  kvector = cur_kvector;
 
      integrate_energy = strchr("DHR", curfield_type) != NULL;
 
@@ -1424,9 +1430,9 @@ cnumber compute_field_integral(function f)
 		    cnumber integrand;
 
 		    phase_phi = TWOPI * 
-			 (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
-			  cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
-			  cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+			 (kvector.x * (p.x/geometry_lattice.size.x+0.5) +
+			  kvector.y * (p.y/geometry_lattice.size.y+0.5) +
+			  kvector.z * (p.z/geometry_lattice.size.z+0.5));
 		    CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
 		    CASSIGN_MULT_RE(F.x.re, curfield[3*index+0], phase);
 		    CASSIGN_MULT_IM(F.x.im, curfield[3*index+0], phase);
@@ -1483,11 +1489,11 @@ cnumber compute_field_integral(function f)
 			      Fx.im= -Fx.im; Fy.im= -Fy.im; Fz.im= -Fz.im;
 
 			      phase_phi = TWOPI * 
-				   (cur_kvector.x 
+				   (kvector.x 
 				    * (p.x/geometry_lattice.size.x+0.5) +
-				    cur_kvector.y 
+				    kvector.y 
 				    * (p.y/geometry_lattice.size.y+0.5) +
-				    cur_kvector.z 
+				    kvector.z 
 				    * (p.z/geometry_lattice.size.z+0.5));
 			      CASSIGN_SCALAR(phase, 
 					     cos(phase_phi), sin(phase_phi));
