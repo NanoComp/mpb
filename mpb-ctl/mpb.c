@@ -359,6 +359,7 @@ void solve_kpoint(vector3 kvector)
 	  /* now, diagonalize the real Maxwell operator in the
 	     solution subspace to get the true eigenvalues and
 	     eigenvectors: */
+	  CHECK(NWORK >= 2, "not enough workspace");
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
                                     W[0], W[1]);
      }
