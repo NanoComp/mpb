@@ -418,4 +418,9 @@ AC_SUBST(EIGS_FLAGS_SCM)
 
 # ----------------------------------------------------------------------
 
-AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm utils/Makefile)
+# Find a shell that supports job control, for mpb-split:
+AC_PATH_PROG(SH_JOB, bash ksh ash bsh, sh)
+
+# ----------------------------------------------------------------------
+
+AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm mpb-ctl/mpb-split utils/Makefile)
