@@ -529,7 +529,9 @@ void matrixio_write_real_data(matrixio_id data_id,
 	  CHK_MALLOC(data_copy, real, N);
 	  if (data_copy) {
 	       free_data_copy = 1;
-	       for (i = 0; i < N; i += 4) {
+	       for (i = 0; i < (N & 3); ++i)
+		    data_copy[i] = data[i * stride];
+	       for (; i < N; i += 4) {
 		    real d0 = data[i * stride];
 		    real d1 = data[(i + 1) * stride];
 		    real d2 = data[(i + 2) * stride];
@@ -539,8 +541,7 @@ void matrixio_write_real_data(matrixio_id data_id,
 		    data_copy[i+2] = d2;
 		    data_copy[i+3] = d3;
 	       }
-	       for (i = i - 4 + 1; i < N; ++i)
-		    data_copy[i] = data[i * stride];
+	       CHECK(i == N, "bug in matrixio copy routine");
 	  }
 	  else {
 	       data_copy = data;
