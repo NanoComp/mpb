@@ -1,3 +1,161 @@
+2001-02-17  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* src/maxwell/maxwell.c: whoops, fixed typo
+
+	* mpb-ctl/mpb.c: slight cleanup and mpi compilation fix
+
+	* src/maxwell/maxwell.c, src/maxwell/maxwell_eps.c,
+	src/maxwell/maxwell.h, src/maxwell/maxwell_op.c, mpb-ctl/mpb.c:
+	Laid much of the groundwork for mpbi-mpi (still untested, though).
+	Rewritten otherhalf routine and field output to support funky
+	rfftwnd_mpi output formats (especially the 2d case).  Fixed bug in
+	mpb-mpi when x and y grid sizes are not equal.
+
+	* mpb-ctl/mpb.scm.in: fixed typo
+
+2001-02-16  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* NEWS: minor rewordings
+
+	* NEWS: updated
+
+	* utils/mpb-data.c: Fixed a problem with MODF_POSITIVE that caused
+	mpb-data to crash on an Alpha; thanks to Dominique Caron for the
+	bug report.
+
+2001-02-14  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html: note that MPB exits with an error if
+	run-te/tm are used nonsensically, or if epsilon is not
+	positive-definite.
+
+	* NEWS: fixed hyphenation
+
+	* configure.in: bumped version
+
+	* mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, src/matrices/scalar.h,
+	src/matrixio/fieldio.c, src/matrixio/matrixio.c,
+	src/matrixio/matrixio.h, src/maxwell/maxwell.c,
+	src/maxwell/maxwell.h, src/maxwell/maxwell_op.c, NEWS: Rewrote
+	field output for inversion-symmetry case.  We now write the field
+	to the file in a few chunks, rather than trying to expand the
+	half-complex rfftw output to the full array.  This paves the way
+	for a parallel mpbi.  As a side effect, we also circumvent a bug
+	in the old makefull routines that caused artifacts to appear in
+	the output for 3d cells (reported by Michelle Povinelli).
+
+2001-02-11  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in: Bug fix in combine-band-functions, etcetera,
+	for when a thunk is encountered.  Thanks to Michelle Povinelli for
+	the bug report.
+
+2001-02-09  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.c, src/matrixio/fieldio.c, src/matrixio/matrixio.c,
+	src/matrixio/matrixio.h: generalized fieldio function in
+	preparation for rewritten mpbi output...
+
+	* mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, NEWS, src/matrixio/fieldio.c,
+	src/matrixio/matrixio.h: eliminated output-copies in favor of
+	mpb-data
+
+2001-02-08  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.c: added geometry tree debugging code
+
+	* doc/installation.html, doc/user-ref.html, NEWS: give (more)
+	thanks to Clarendon
+
+	* src/matrices/blasglue.c, src/matrixio/matrixio.c,
+	src/maxwell/maxwell_op.c: fixed problems when an MPI process has
+	no portion of the eigenmodes (which can happen for inconvenient #
+	processes)...matrixio is still not quite right, though
+
+	* src/matrices/blasglue.c: don't die if passed NULL arrays for
+	zero sizes
+
+	* mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in: added get/set kpoint-index
+	functions
+
+	* NEWS: updated
+
+	* doc/index.html, doc/installation.html, doc/user-ref.html:
+	documented mpb-mpi
+
+	* mpb-ctl/examples/check.ctl: check-tolerance should be a param
+
+	* src/maxwell/maxwell_pre.c: Fixed bug in zero-k constraint for
+	parallel systems.
+
+2001-02-07  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/acknowledgments.html: thanks to Clarendon
+
+	* utils/mpb-data.1, utils/mpb-data.c: added mpb-data -T option
+
+	* configure.in, utils/Makefile.in: don't build/install mpb-data
+	when linking to MPI
+
+	* mpb-ctl/examples/check.ctl, mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in:
+	expose more MPI info to Guile, and don't do 1d tests in check.ctl
+	under MPI (where they are not supported)
+
+	* mpb-ctl/mpb.c, src/matrices/eigensolver.c,
+	src/matrices/eigensolver_davidson.c,
+	src/matrices/eigensolver_utils.c, src/matrices/evectmatrix.c,
+	src/matrices/matrices.h, src/maxwell/maxwell_eps.c,
+	src/maxwell/maxwell_pre.c, src/util/mpiglue.h,
+	src/util/mpi_utils.c, src/util/mpi_utils.h, tests/eigs_test.c:
+	yikes, Allreduce requires sendbuf != recvbuf (although this is not
+	clear from the documentation)
+
+	* src/maxwell/maxwell_eps.c: cleanups, fixed calculation of
+	eps_inv_mean for MPI
+
+	* src/maxwell/maxwell.c: fixed indenting
+
+	* TODO: updates
+
+	* mpb-ctl/Makefile.in: put check target at the end so that 'make'
+	does 'make all'
+
+	* src/matrixio/matrixio.c: fprintf -> mpi_one_fprintf
+
+	* src/maxwell/maxwell_op.c: whoops, fixed stride/dist check to
+	coincide with what fftwnd_mpi really supports
+
+	* src/config.h.in: define HAVE_FFTW to something
+
+	* configure.in, mpb-ctl/mpb.c, src/maxwell/maxwell.c,
+	src/maxwell/maxwell.h, src/util/mpi_utils.c: fixed compilation
+	whoopses under MPI
+
+	* doc/user-ref.html: fix
+
+	* ChangeLog, NEWS: updated
+
+2001-02-06  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in: workaround for older versions of Guile where
+	we can't get the number of arguments to a function (apparently)
+
+	* configure.in: fixed gen-ctl-io check, removed AC_PROG_CC_STDC
+	ifdef...there's something not working about ifdef that I don't
+	understand
+
+	* configure.in: call AC_PROG_CC_STDC if defined, in part so that
+	autoconf 2.5 doesn't complain
+
+	* configure.in: added MPI checks
+
+	* src/util/mpi_utils.c: clarification
+
+	* src/matrixio/matrixio.c: fixed misnamed function call
+
+	* configure.in, src/config.h.in, src/matrixio/matrixio.c: support
+	HDF5 file i/o without H5Pset_mpi
+
 2001-02-06  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* mpb-ctl/mpb.scm.in: workaround for older versions of Guile where
