@@ -95,7 +95,7 @@ ctl-io.c ctl-io.h: $(SPECIFICATION_FILE)
 # install' copies the real executable and spec files into their final
 # locations.
 
-$(PROGRAM_NAME): ctl-io.h $(ALL_OBJECTS)
+$(PROGRAM_NAME): ctl-io.h $(ALL_OBJECTS) $(MY_LIBS)
 	$(CC) $(LDFLAGS) $(CFLAGS) $(ALL_OBJECTS) $(LIBS) -o .$@
 	rm -f $@
 	echo '#!/bin/sh' > $@
