@@ -133,15 +133,19 @@ field_smob *update_curfield_smob(void)
      else {
 	  curfield_smob.type = RSCALAR_FIELD_SMOB; /* arbitrary */
 	  curfield_smob.f.rs = (real *) curfield;
+	  if (!curfield_smob.f.rs)
+	       curfield_smob.f.rs = (real *) mdata->fft_data;
 	  return 0;
      }	  
      return &curfield_smob;
 }
 
-static void update_curfield_type(field_smob *pf)
+static void update_curfield(field_smob *pf)
 {
-     if (pf == &curfield_smob)
+     if (pf == &curfield_smob) {
 	  curfield_type = curfield_smob.type_char;
+	  curfield = curfield_smob.f.cv;
+     }
 }
 
 boolean cur_fieldp(SCM obj)
@@ -233,16 +237,18 @@ static void field_set(field_smob *fd, field_smob *fs)
 	   "fields for field-set! must conform");
      switch (fs->type) {
          case RSCALAR_FIELD_SMOB:
+	      CHECK(fs->type_char != '-', "must load field for field-set!");
 	      for (i = 0; i < fs->N; ++i)
 		   fd->f.rs[i] = fs->f.rs[i];
 	      break;
          case CVECTOR_FIELD_SMOB:
+	      CHECK(fs->type_char != '-', "must load field for field-set!");
 	      for (i = 0; i < fs->N * 3; ++i)
 		   fd->f.cv[i] = fs->f.cv[i];
 	      break;
      }
      fd->type_char = fs->type_char;
-     update_curfield_type(fd);
+     update_curfield(fd);
 }
 
 void field_setB(SCM dest, SCM src)
@@ -312,7 +318,7 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 		   pd->type_char = 'c'; 
 		   break;
 	  }
-     update_curfield_type(pd);
+     update_curfield(pd);
 }
 
 /*************************************************************************/
