@@ -155,7 +155,7 @@
 (if (not (defined? 'output-source)) ; (a function defined by gen-ctl-io)
     (set! print-ok? (mpi-is-master?)))
 
-(if (using-mpi?)
+(if (and (not (defined? 'output-source)) (using-mpi?))
     (set! interactive? false)) ; MPI doesn't support interactive mode
 
 ; ****************************************************************

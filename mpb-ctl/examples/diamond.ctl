@@ -32,7 +32,8 @@
 
 ; (A simple fcc lattice would have only one sphere/object at the origin.)
 
-(set! grid-size (vector3 16 16 16))
+(define-param res 16) ; the grid resolution
+(set! grid-size (vector3 res res res))
 (set! mesh-size 5)
 (set! num-bands 5)
 

@@ -45,9 +45,9 @@ void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
 	  Vinv->m00 = 1.0 / m00;
 	  Vinv->m11 = 1.0 / m11;
 	  Vinv->m22 = 1.0 / m22;
-	  ASSIGN_ZERO(Vinv->m01);
-	  ASSIGN_ZERO(Vinv->m02);
-	  ASSIGN_ZERO(Vinv->m12);
+	  CASSIGN_ZERO(Vinv->m01);
+	  CASSIGN_ZERO(Vinv->m02);
+	  CASSIGN_ZERO(Vinv->m12);
      }
      else {
 	  double detinv;

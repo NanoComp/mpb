@@ -358,7 +358,8 @@ gap in periodic dielectric structures," <i>Phys. Rev. Lett.</i>
 
 ; (A simple fcc lattice would have only one sphere/object at the origin.)
 
-(set! grid-size (vector3 16 16 16))
+(define-param res 16) ; the grid resolution
+(set! grid-size (vector3 res res res))
 (set! mesh-size 5)
 (set! num-bands 5)
 
@@ -374,6 +375,15 @@ even if we log out:
 <pre>
 unix% nohup mpb diamond.ctl &gt;&amp; diamond.out &amp;
 </pre>
+
+<p>Note that, because we used <code>define-param</code> to define some
+variables (see the <a
+href="http://ab-initio.mit.edu/libctl/doc/user-ref.html">libctl
+manual</a>), we can change them from the command line.  For example,
+to use a radius of 0.3 instead of 0.25, we can just type <code>mpb
+r=0.3 diamond.ctl</code>.  This is an extremely useful feature,
+because it allows you to use one generic control file for many
+variations on the same structure.
 
 <h3><a name="fccunits">Important note on units for the diamond/fcc
 lattice</a></h3>
