@@ -114,11 +114,11 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 	  moment_mesh[1][2] = 0.0;
      }
      else if (rank == 2) {
-	  /* two-dimensional: 6 points at 60-degree intervals: */
-	  *size_moment_mesh = 6;
+	  /* two-dimensional: 12 points at 30-degree intervals: */
+	  *size_moment_mesh = 12;
 	  for (i = 0; i < *size_moment_mesh; ++i) {
-	       moment_mesh[i][0] = cos(i * K_PI / 3.0) * MOMENT_MESH_R;
-	       moment_mesh[i][1] = sin(i * K_PI / 3.0) * MOMENT_MESH_R;
+	       moment_mesh[i][0] = cos(i * K_PI / 6.0) * MOMENT_MESH_R;
+	       moment_mesh[i][1] = sin(i * K_PI / 6.0) * MOMENT_MESH_R;
 	       moment_mesh[i][2] = 0.0;
 	  }
      }
