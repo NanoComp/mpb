@@ -139,6 +139,9 @@
   'number (make-list-type 'geometric-object))
 
 (define-external-function mpi-is-master? false false 'boolean)
+(define-external-function using-mpi? false false 'boolean)
+(define-external-function mpi-num-procs false false 'integer)
+(define-external-function mpi-proc-index false false 'integer)
 
 ; ****************************************************************
 

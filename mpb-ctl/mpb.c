@@ -77,9 +77,35 @@ void ctl_stop_hook(void)
 
 /**************************************************************************/
 
+/* Some Guile-callable functions so that ctl files can know something
+   about MPI. */
+
 boolean mpi_is_masterp(void)
 {
      return mpi_is_master();
+}
+
+boolean using_mpip(void)
+{
+#ifdef HAVE_MPI
+     return 1;
+#else
+     return 0;
+#endif
+}
+
+integer mpi_num_procs(void)
+{
+     int num_procs;
+     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+     return num_procs;
+}
+
+integer mpi_proc_index(void)
+{
+     int proc_num;
+     MPI_Comm_rank(MPI_COMM_WORLD, &proc_num);
+     return proc_num;
 }
 
 /**************************************************************************/
