@@ -129,6 +129,9 @@ static evectmatrix H, W[NWORK];
 static real R[3][3], G[3][3];
 static matrix3x3 Rm, Gm; /* same thing, but matrix3x3 */
 
+/* index of current kpoint, for labeling output */
+static int kpoint_index = 0;
+
 /**************************************************************************/
 
 /* Given a position r in the basis of the lattice vectors, return the
@@ -152,6 +155,47 @@ static real epsilon_func(real r[3], void *edata)
      
      material = material_of_point(p);  /* from libctl/utils/libgeom/geom.c */
      return material.epsilon;
+}
+
+/**************************************************************************/
+
+/* Set the current polarization to solve for. (init-params should have
+   already been called.  (Guile-callable; see photon.scm.) */
+
+void set_polarization(int p)
+{
+     int i;
+
+     if (!mdata) {
+	  fprintf(stderr,
+		  "init-params must be called before set-polarization!\n");
+	  return;
+     }
+
+     switch (p) {
+	 case 0:
+	      printf("Solving for non-polarized bands.\n");
+	      set_maxwell_data_polarization(mdata, NO_POLARIZATION);
+	      break;
+	 case 1:
+	      printf("Solving for TE-polarized bands.\n");
+	      set_maxwell_data_polarization(mdata, TE_POLARIZATION);
+	      break;
+	 case 2:
+	      printf("Solving for TM-polarized bands.\n");
+	      set_maxwell_data_polarization(mdata, TM_POLARIZATION);
+	      break;
+	 default:
+	      fprintf(stderr, "Unknown polarization type!\n");
+	      return;
+     }
+
+     /* need to re-randomize fields (might have the wrong polarization). */
+     printf("Initializing fields to random numbers...\n");
+     for (i = 0; i < H.n * H.p; ++i)
+          ASSIGN_REAL(H.data[i], rand() * 1.0 / RAND_MAX);
+
+     kpoint_index = 0;  /* reset index */
 }
 
 /**************************************************************************/
@@ -183,6 +227,8 @@ void init_params(void)
 	  int true_rank = nz > 1 ? 3 : (ny > 1 ? 2 : 1);
 	  if (true_rank < dimensions)
 	       dimensions = true_rank;
+	  else if (true_rank > dimensions)
+	       fprintf(stderr, "WARNING: true rank of grid is > dimensions\n");
      }
 
      printf("Working in %d dimensions.\n", dimensions);
@@ -235,10 +281,6 @@ void init_params(void)
                                  num_bands, NUM_FFT_BANDS);
      CHECK(mdata, "NULL mdata");
 
-     /* can also be TE_POLARIZATION or TM_POLARIZATION; what is the
-	best way to set this? */
-     set_maxwell_data_polarization(mdata, NO_POLARIZATION);
-
      printf("Initializing dielectric function...\n");
      set_maxwell_dielectric(mdata, mesh, R, epsilon_func, NULL);
 
@@ -254,30 +296,44 @@ void init_params(void)
           W[i] = create_evectmatrix(nx * ny * nz, 2, num_bands,
                                     local_N, N_start, alloc_N);
 
-     printf("Initializing fields to random numbers...\n");
-     for (i = 0; i < H.n * H.p; ++i)
-          ASSIGN_REAL(H.data[i], rand() * 1.0 / RAND_MAX);
+     set_polarization(0);
 
      printf("Stuff for grepping:\n");
      printf("sumfrq:, k index, kx, ky, kz, kmag/2pi");
      for (i = 0; i < num_bands; ++i)
 	  printf(", band %d", i + 1);
      printf("\n");
+     if (dimensions <= 2) {
+	  printf("sumte:, k index, kx, ky, kz, kmag/2pi");
+	  for (i = 0; i < num_bands; ++i)
+	       printf(", band %d", i + 1);
+	  printf("\n");
+	  printf("sumtm:, k index, kx, ky, kz, kmag/2pi");
+	  for (i = 0; i < num_bands; ++i)
+	       printf(", band %d", i + 1);
+	  printf("\n");
+     }
 
      printf("@@@@@\n");
 }
+
+/**************************************************************************/
 
 /* Solve for the bands at a given k point.
    Must only be called after init_params! */
 void solve_kpoint(vector3 kvector)
 {
-     static int call_count = 0;
      int i, num_iters;
      real *eigvals;
      real k[3];
 
      printf("@@@@@ solve_kpoint (%g,%g,%g):\n",
 	    kvector.x, kvector.y, kvector.z);
+
+     if (!mdata) {
+	  fprintf(stderr, "init-params must be called before solve-kpoint!\n");
+	  return;
+     }
 
      vector3_to_arr(k, kvector);
      update_maxwell_data_k(mdata, k, G[0], G[1], G[2]);
@@ -318,8 +374,10 @@ void solve_kpoint(vector3 kvector)
      freqs.items = (number *) malloc(freqs.num_items * sizeof(number));
      CHECK(freqs.items, "out of memory");
      
-     printf("sumfrq:, %d, %g, %g, %g, %g",
-	    ++call_count, k[0], k[1], k[2],
+     printf("%s:, %d, %g, %g, %g, %g",
+	    mdata->polarization == NO_POLARIZATION ? "sumfrq" :
+	    (mdata->polarization == TE_POLARIZATION ? "sumte" : "sumtm"),
+	    ++kpoint_index, k[0], k[1], k[2],
 	    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
      for (i = 0; i < num_bands; ++i) {
 	  freqs.items[i] = sqrt(eigvals[i]);
@@ -331,4 +389,6 @@ void solve_kpoint(vector3 kvector)
 
      printf("@@@@@\n");
 }
+
+/**************************************************************************/
 
