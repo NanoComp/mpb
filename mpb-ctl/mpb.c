@@ -752,8 +752,8 @@ static char *fix_fname(const char *fname, const char *prefix,
      CHK_MALLOC(s, char,
 		(fname ? strlen(fname) : 0) + 
 		(prefix ? strlen(prefix) : 0) + 20);
-     strcpy(s, fname ? fname : "");
-     strcat(s, prefix ? prefix : "");
+     strcpy(s, prefix ? prefix : "");
+     strcat(s, fname ? fname : "");
      if (p != NO_POLARIZATION) {
 	  /* assumes polarization suffix is less than 20 characters;
 	     currently it is less than 12 */
