@@ -12,8 +12,9 @@ dnl needed for linking MPI (e.g. -lmpi, if a special MPICC/MPICXX/MPIF77
 dnl was not found).
 dnl
 dnl If you want to compile everything with MPI, you should set:
-dnl	CC="$MPICC" #OR# CXX="$MPICXX" #OR# F77="$MPIF77"
-dnl	LIBS="$MPILIBS $LIBS"
+dnl
+dnl     CC="$MPICC" #OR# CXX="$MPICXX" #OR# F77="$MPIF77"
+dnl     LIBS="$MPILIBS $LIBS"
 dnl
 dnl The user can force a particular library/compiler by setting the
 dnl MPICC/MPICXX/MPIF77 and/or MPILIBS environment variables.
@@ -23,7 +24,7 @@ dnl library is found, and ACTION-IF-NOT-FOUND is a list of commands
 dnl to run it if it is not found.  If ACTION-IF-FOUND is not specified,
 dnl the default action will define HAVE_MPI.
 dnl
-dnl @version $Id: acx_mpi.m4,v 1.3 2002/09/24 19:49:08 stevenj Exp $
+dnl @version $Id: acx_mpi.m4,v 1.4 2002/09/26 16:46:50 stevenj Exp $
 dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
 
 AC_DEFUN([ACX_MPI], [
