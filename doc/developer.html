@@ -26,7 +26,7 @@ href="http://www.mozilla.org/projects/mathml/">decent browser</a>.
 
 <p>This section provides a whirlwind tour of the mathematics of
 photonic band structure calculations and the algorithms that we
-employ.  For more information, see also:
+employ.  For more detailed information, see:
 
 <ul>
 
@@ -35,11 +35,9 @@ href="http://shop.barnesandnoble.com/booksearch/isbnInquiry.asp?isbn=0691037442"
 Crystals: Molding the Flow of Light</i></a>, by J. D. Joannopoulos,
 R. D. Meade, and J. N. Winn (Princeton, 1995).
 
-<li>R. D. Meade, A. M. Rappe, K. D. Brommer, J. D. Joannopoulos, and O. L. Alerhand,
-<a href="http://ojps.aip.org/AIPcgipath/doc/getabs-PRBMDO/disk3/journals/journal_cgi/getabs?KEY=PRBMDO&head=PRBMDO&cvips=PRBMDO000048000011008434000001&gifs=no">"Accurate theoretical analysis of photonic band-gap materials,"</a>
-<i>Phys.  Rev. B</i> <b>48</b>, no. 11, pp. 8434-8437 (Sep 1993).
-Erratum by S. G. Johnson, <i>PRB</i> <b>55</b>, no. 23, pp. 15942
-(June 1997).
+<li>Steven G. Johnson and J. D. Joannopoulos, "<a href="http://www.opticsexpress.org/oearchive/source/27937.htm">Block-iterative
+frequency-domain methods for Maxwell's equations in a planewave
+basis</a>," <i>Optics Express</i> <b>8</b>, no. 3, 173-190 (2001).
 
 </ul>
 
@@ -92,16 +90,8 @@ basis, applying <code>M</code> to a function is relatively easy: the
 curls become cross products with <code>i (k + G)</code>; the
 multiplication by <code>1/epsilon</code> is performed by using an FFT
 to transform to the spatial domain, multiplying, and then transforming
-back with an inverse FFT.  For more information on iterative
-eigensolvers, see e.g.:
-
-<ul>
-<li><a href="http://www-math.mit.edu/~edelman/">A. Edelman</a> and
-S. T. Smith, <a
-href="ftp://theory.lcs.mit.edu/pub/people/edelman/scicom/conf2.ps">"On
-conjugate gradient-like methods for eigen-like problems,"</a>
-<i>BIT</i> <b>36</b>, p. 494-508 (1996).
-</ul>
+back with an inverse FFT.  For more information and references on
+iterative eigensolvers, see the paper cited above.
 
 <p>We also support a "targeted" eigensolver.  A typical iterative
 eigensolver finds the <code>p</code> lowest eigenvalues and
@@ -132,8 +122,7 @@ thinking about it is that this brings the average dielectric constant
 (over the grid) closer to its true value.  Since different
 polarizations of the field prefer different averaging methods, one has
 to construct an effective dielectric tensor at the boundaries between
-dielectrics, as described by Meade <i>et al.</i> in the paper
-referenced above (note also the erratum).
+dielectrics, as described by the paper referenced above.
 
 <p>This averaging has two components.  First, at each grid point the
 dielectric constant (epsilon) and its inverse are averaged over a
