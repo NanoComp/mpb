@@ -489,7 +489,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    double new_E, new_dE;
 		    TIME_OP(time_linmin,
 			    theta = linmin(&new_E, &new_dE, theta, E, dE,
-					   0.1, 1e-6, 1e-14,
+					   0.1, MIN2(tolerance, 1e-6), 1e-14,
 					   0, dE > 0 ? -K_PI : K_PI,
 					   trace_func, &tfd,
 					   flags & EIGS_VERBOSE));
