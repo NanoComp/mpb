@@ -108,7 +108,7 @@
   (set! geometry (append old-geometry
                          (list (make cylinder (center 0 0 0)
                                      (radius 0.2) (height infinity)
-                                     (material (make material-type
+                                     (material (make dielectric
                                                  (epsilon eps)))))))
   (run-tm)  ; solve for the mode (using the targeted solver)
   (display-many "epsilon = " eps " gives freq. = " (list-ref freqs 0) "\n")

@@ -109,14 +109,15 @@ typedef struct {
 } epsilon_func_data;
 
 /* Given a position r in the basis of the lattice vectors, return the
-   corresponding dielectric constant.  edata is ignored.  Should be
+   corresponding dielectric tensor and its inverse.  Should be
    called from within init_params (or after init_params), so that the
    geometry input variables will have been read in (for use in libgeom).
 
    This function is passed to set_maxwell_dielectric to initialize
    the dielectric tensor array for eigenvector calculations. */
 
-static real epsilon_func(real r[3], void *edata)
+static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
+			 real r[3], void *edata)
 {
      epsilon_func_data *d = (epsilon_func_data *) edata;
      material_type material;
@@ -140,10 +141,40 @@ static real epsilon_func(real r[3], void *edata)
 
      /* if we aren't in any geometric object and we have an epsilon
 	file, use that. */
-     if (!inobject && d->eps_file_func)
-	  return d->eps_file_func(r, d->eps_file_func_data);
-     else
-	  return material.epsilon;
+     if (!inobject && d->eps_file_func) {
+	  d->eps_file_func(eps, eps_inv, r, d->eps_file_func_data);
+     }
+     else {
+	  if (material.which_subclass == MATERIAL_TYPE_SELF)
+	       material = default_material;
+	  switch (material.which_subclass) {
+	      case DIELECTRIC:
+	      {
+		   real eps_val = material.subclass.dielectric_data->epsilon;
+		   eps->m00 = eps->m11 = eps->m22 = eps_val;
+		   eps->m01 = eps->m02 = eps->m12 = 0.0;
+		   eps_inv->m00 = eps_inv->m11 = eps_inv->m22 = 1.0 / eps_val;
+		   eps_inv->m01 = eps_inv->m02 = eps_inv->m12 = 0.0;
+		   break;
+	      }
+	      case DIELECTRIC_ANISOTROPIC:
+	      {
+		   dielectric_anisotropic *d =
+			material.subclass.dielectric_anisotropic_data;
+		   eps->m00 = d->epsilon_diag.x;
+		   eps->m11 = d->epsilon_diag.y;
+		   eps->m22 = d->epsilon_diag.z;
+		   eps->m01 = d->epsilon_offdiag.x;
+		   eps->m02 = d->epsilon_offdiag.y;
+		   eps->m12 = d->epsilon_offdiag.z;
+		   maxwell_sym_matrix_invert(eps_inv, eps);
+		   break;
+	      }
+	      case MATERIAL_TYPE_SELF:
+		   CHECK(0, "invalid use of material-type");
+		   break;
+	  }
+     }
 }
 
 /**************************************************************************/
@@ -313,8 +344,11 @@ void init_params(int p, boolean reset_fields)
      printf("Geometric objects:\n");
      for (i = 0; i < geometry.num_items; ++i) {
 	  display_geometric_object_info(5, geometry.items[i]);
-	  printf("%*sdielectric constant epsilon = %g\n", 5 + 5, "",
-		 geometry.items[i].material.epsilon);
+
+	  if (geometry.items[i].material.which_subclass == DIELECTRIC)
+	       printf("%*sdielectric constant epsilon = %g\n", 5 + 5, "",
+		      geometry.items[i].material.
+		      subclass.dielectric_data->epsilon);
      }
 
      destroy_geom_box_tree(geometry_tree);  /* destroy any tree from
@@ -643,9 +677,9 @@ void get_epsilon(void)
 
      N = mdata->fft_output_size;
      for (i = 0; i < N; ++i) {
-	  epsilon[i] = 3.0 / (mdata->eps_inv[i].m00 +
-			      mdata->eps_inv[i].m11 +
-			      mdata->eps_inv[i].m22);
+          epsilon[i] = 3.0 / (mdata->eps_inv[i].m00 +
+                              mdata->eps_inv[i].m11 +
+                              mdata->eps_inv[i].m22);
 	  if (epsilon[i] < eps_low)
 	       eps_low = epsilon[i];
 	  if (epsilon[i] > eps_high)

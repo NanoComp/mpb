@@ -25,33 +25,47 @@
 #include "maxwell.h"
 
 /* Set Vinv = inverse of V, where both V and Vinv are symmetric matrices. */
-static void sym_matrix_invert(symmetric_matrix *Vinv, symmetric_matrix V)
+extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv, 
+				      const symmetric_matrix *V)
 {
-     double detinv;
-     
-     /* compute the determinant: */
-     detinv = V.m00*V.m11*V.m22 - V.m02*V.m11*V.m02 +
-	      2.0 * V.m01*V.m12*V.m02 -
-	      V.m01*V.m01*V.m22 - V.m12*V.m12*V.m00;
+     real m00 = V->m00, m11 = V->m11, m22 = V->m22,
+	  m01 = V->m01, m02 = V->m02, m12 = V->m12;
 
-     /* don't bother to check for singular matrices, as that shouldn't
-	be possible in the context in which this is used */
-     detinv = 1.0/detinv;
-     
-     Vinv->m00 = detinv * (V.m11*V.m22 - V.m12*V.m12);
-     Vinv->m11 = detinv * (V.m00*V.m22 - V.m02*V.m02);
-     Vinv->m22 = detinv * (V.m11*V.m00 - V.m01*V.m01);
-     
-     Vinv->m02 = detinv * (V.m01*V.m12 - V.m11*V.m02);
-     Vinv->m01 = -detinv * (V.m01*V.m22 - V.m12*V.m02);
-     Vinv->m12 = -detinv * (V.m00*V.m12 - V.m01*V.m02);
+     if (m01 == 0.0 && m02 == 0.0 && m12 == 0.0) {
+	  /* optimize common case of a diagonal matrix: */
+	  Vinv->m00 = 1.0 / m00;
+	  Vinv->m11 = 1.0 / m11;
+	  Vinv->m22 = 1.0 / m22;
+	  Vinv->m01 = Vinv->m02 = Vinv->m12 = 0.0;
+     }
+     else {
+	  double detinv;
+	  
+	  /* compute the determinant: */
+	  detinv = m00*m11*m22 - m02*m11*m02 + 2.0 * m01*m12*m02 -
+	       m01*m01*m22 - m12*m12*m00;
+	  
+	  CHECK(detinv != 0.0, "singular 3x3 matrix");
+	  
+	  detinv = 1.0/detinv;
+	  
+	  Vinv->m00 = detinv * (m11*m22 - m12*m12);
+	  Vinv->m11 = detinv * (m00*m22 - m02*m02);
+	  Vinv->m22 = detinv * (m11*m00 - m01*m01);
+	  
+	  Vinv->m02 = detinv * (m01*m12 - m11*m02);
+	  Vinv->m01 = detinv * (m12*m02 - m01*m22);
+	  Vinv->m12 = detinv * (m01*m02 - m00*m12);
+     }
 }
 
 #define K_PI 3.141592653589793238462643383279502884197
-#define MAX_MOMENT_MESH 12 /* max # of moment-mesh vectors */
 #define SMALL 1.0e-6
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
+
+#define MAX_MOMENT_MESH 12 /* max # of moment-mesh vectors */
+#define MOMENT_MESH_R 0.5
 
 /* A function to set up the mesh given the grid dimensions, mesh size,
    and lattice/reciprocal vectors.  (Any mesh sizes < 1 are taken to
@@ -87,15 +101,15 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
      /* Set the mesh to compute the "dipole moment" of epsilon over,
 	in Cartesian coordinates (used to compute the normal vector
 	at surfaces).  Ideally, a spherically-symmetrical distribution
-	of points on the radius-0.5 sphere. */
+	of points on the radius MOMENT_MESH_R sphere. */
      if (rank == 1) {
 	  /* one-dimensional: just two points (really, normal
 	     vector is always along x): */
 	  *size_moment_mesh = 2;
-	  moment_mesh[0][0] = -0.5;
+	  moment_mesh[0][0] = -MOMENT_MESH_R;
 	  moment_mesh[0][1] = 0.0;
 	  moment_mesh[0][2] = 0.0;
-	  moment_mesh[1][0] = 0.5;
+	  moment_mesh[1][0] = MOMENT_MESH_R;
 	  moment_mesh[1][1] = 0.0;
 	  moment_mesh[1][2] = 0.0;
      }
@@ -103,8 +117,8 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 	  /* two-dimensional: 6 points at 60-degree intervals: */
 	  *size_moment_mesh = 6;
 	  for (i = 0; i < *size_moment_mesh; ++i) {
-	       moment_mesh[i][0] = cos(i * K_PI / 3.0) * 0.5;
-	       moment_mesh[i][1] = sin(i * K_PI / 3.0) * 0.5;
+	       moment_mesh[i][0] = cos(i * K_PI / 3.0) * MOMENT_MESH_R;
+	       moment_mesh[i][1] = sin(i * K_PI / 3.0) * MOMENT_MESH_R;
 	       moment_mesh[i][2] = 0.0;
 	  }
      }
@@ -121,17 +135,18 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 	  for (i = 0; i < *size_moment_mesh; ++i) {
 	       int shift = i / 4;
 	       moment_mesh[i][(shift + 0) % 3] = 0.0;
-	       moment_mesh[i][(shift + 1) % 3] = 
-		    golden * (1 - 2 * (i & 1)) * 0.5 / sqrt(2 - golden);
-	       moment_mesh[i][(shift + 2) % 3] = 
-		    1.0 * (1 - (i & 2)) * 0.5 / sqrt(2 - golden);
+	       moment_mesh[i][(shift + 1) % 3] = MOMENT_MESH_R *
+		    golden * (1 - 2 * (i & 1)) / sqrt(2 - golden);
+	       moment_mesh[i][(shift + 2) % 3] = MOMENT_MESH_R *
+		    1.0 * (1 - (i & 2)) / sqrt(2 - golden);
 	  }
      }
 
      CHECK(*size_moment_mesh <= MAX_MOMENT_MESH, "yikes, moment mesh too big");
 
-     /* scale the moment-mesh vectors to the diameter of the smallest
-	grid direction: */
+     /* scale the moment-mesh vectors so that the sphere has a
+	diameter of 2*MOMENT_MESH_R times the diameter of the
+	smallest grid direction: */
 
      /* first, find the minimum distance between grid points along the
 	lattice directions: */
@@ -141,7 +156,7 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 	  min_diam = MIN2(min_diam, ri);
      }
      
-     /* scale moment_mesh to this diameter: */
+     /* scale moment_mesh by this diameter: */
      for (i = 0; i < *size_moment_mesh; ++i) {
 	  real len = 0;
 	  for (j = 0; j < 3; ++j) {
@@ -149,7 +164,8 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 	       len += moment_mesh[i][j] * moment_mesh[i][j];
 	       mesh_total[j] += moment_mesh[i][j];
 	  }
-	  CHECK(fabs(len - min_diam*min_diam/4) < SMALL,
+	  CHECK(fabs(len - min_diam*min_diam*(MOMENT_MESH_R*MOMENT_MESH_R)) 
+		< SMALL,
 		"bug in get_mesh: moment_mesh vector is wrong length");
      }
      CHECK(fabs(mesh_total[0]) + fabs(mesh_total[1]) + fabs(mesh_total[2])
@@ -167,7 +183,7 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 }
 
 /* The following function initializes the dielectric tensor md->eps_inv,
-   using the dielectric function epsilon(r, epsilon_data).
+   using the dielectric function epsilon(&eps, &eps_inv, r, epsilon_data).
 
    epsilon is averaged over a rectangular mesh spanning the space between
    grid points; the size of the mesh is given by mesh_size.
@@ -176,12 +192,13 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
    the discretization grid into spatial coordinates (with the origin at
    the (0,0,0) grid element.
 
-   In most places, the dielectric tensor is equal to 1/eps * identity,
-   but at dielectric interfaces it varies depending upon the polarization
-   of the field (for faster convergence).  In particular, it depends upon
-   the direction of the field relative to the surface normal vector, so
-   we must compute the latter.  The surface normal is approximated by
-   the "dipole moment" of the dielectric function over a spherical mesh.
+   In most places, the dielectric tensor is equal to eps_inv, but at
+   dielectric interfaces it varies depending upon the polarization of
+   the field (for faster convergence).  In particular, it depends upon
+   the direction of the field relative to the surface normal vector,
+   so we must compute the latter.  The surface normal is approximated
+   by the "dipole moment" of the dielectric function over a spherical
+   mesh.
 
    Implementation note: md->eps_inv is chosen to have dimensions matching
    the output of the FFT.  Thus, its dimensions depend upon whether we are
@@ -199,6 +216,7 @@ void set_maxwell_dielectric(maxwell_data *md,
      real eps_inv_total = 0.0;
      int i, j, k;
      int mesh_prod;
+     real mesh_prod_inv;
      int size_moment_mesh = 0;
      int nx, ny, nz;
 #ifdef HAVE_MPI
@@ -209,6 +227,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 
      get_mesh(nx, ny, nz, mesh_size, R, G,
 	      mesh_center, &mesh_prod, moment_mesh, &size_moment_mesh);
+     mesh_prod_inv = 1.0 / mesh_prod;
 
 #ifdef DEBUG
      printf("Using moment mesh:\n");
@@ -274,40 +293,92 @@ void set_maxwell_dielectric(maxwell_data *md,
 #endif /* not SCALAR_COMPLEX */
 
 	  int mi, mj, mk;
-	  real eps_mean = 0.0, eps_inv_mean = 0.0, norm_len;
+	  symmetric_matrix eps_mean = {0,0,0,0,0,0}, 
+			   eps_inv_mean = {0,0,0,0,0,0}, eps_mean_inv;
+	  real norm_len;
 	  real norm0, norm1, norm2;
-	  short means_different_p;
+	  short means_different_p, diag_eps_p;
 	  
 	  for (mi = 0; mi < mesh_size[0]; ++mi)
 	       for (mj = 0; mj < mesh_size[1]; ++mj)
 		    for (mk = 0; mk < mesh_size[2]; ++mk) {
-			 real r[3], eps;			 
+			 real r[3];
+			 symmetric_matrix eps, eps_inv;
 			 r[0] = i2 * s1 + (mi - mesh_center[0]) * m1;
 			 r[1] = j2 * s2 + (mj - mesh_center[1]) * m2;
 			 r[2] = k2 * s3 + (mk - mesh_center[2]) * m3;
-			 eps = epsilon(r, epsilon_data);
-			 eps_mean += eps;
-			 eps_inv_mean += 1.0 / eps;
+			 epsilon(&eps, &eps_inv, r, epsilon_data);
+			 eps_mean.m00 += eps.m00;
+			 eps_mean.m11 += eps.m11;
+			 eps_mean.m22 += eps.m22;
+			 eps_mean.m01 += eps.m01;
+			 eps_mean.m02 += eps.m02;
+			 eps_mean.m12 += eps.m12;
+			 eps_inv_mean.m00 += eps_inv.m00;
+			 eps_inv_mean.m11 += eps_inv.m11;
+			 eps_inv_mean.m22 += eps_inv.m22;
+			 eps_inv_mean.m01 += eps_inv.m01;
+			 eps_inv_mean.m02 += eps_inv.m02;
+			 eps_inv_mean.m12 += eps_inv.m12;
 		    }
      
-	  /* compute inverses of epsilon means: */
-	  eps_mean = mesh_prod / eps_mean;
-	  eps_inv_mean = eps_inv_mean / mesh_prod;
+	  diag_eps_p =
+	       eps_mean.m01==0.0 && eps_mean.m02==0.0 && eps_mean.m12==0.0;
+	  if (diag_eps_p) { /* handle the common case of diagonal matrices: */
+	       eps_mean_inv.m00 = mesh_prod / eps_mean.m00;
+	       eps_mean_inv.m11 = mesh_prod / eps_mean.m11;
+	       eps_mean_inv.m22 = mesh_prod / eps_mean.m22;
+	       eps_mean_inv.m01 = eps_mean_inv.m02 = eps_mean_inv.m12 = 0.0;
+	       eps_inv_mean.m00 *= mesh_prod_inv;
+	       eps_inv_mean.m11 *= mesh_prod_inv;
+	       eps_inv_mean.m22 *= mesh_prod_inv;
 
-	  means_different_p = fabs(eps_mean - eps_inv_mean) > SMALL;
+	       means_different_p = 
+		    fabs(eps_mean_inv.m00 - eps_inv_mean.m00) > SMALL ||
+		    fabs(eps_mean_inv.m11 - eps_inv_mean.m11) > SMALL ||
+		    fabs(eps_mean_inv.m22 - eps_inv_mean.m22) > SMALL;
+	  }
+	  else {
+	       eps_mean.m00 *= mesh_prod_inv;
+	       eps_mean.m11 *= mesh_prod_inv;
+	       eps_mean.m22 *= mesh_prod_inv;
+	       eps_mean.m01 *= mesh_prod_inv;
+	       eps_mean.m02 *= mesh_prod_inv;
+	       eps_mean.m12 *= mesh_prod_inv;
+	       maxwell_sym_matrix_invert(&eps_mean_inv, &eps_mean);
+	       eps_inv_mean.m00 *= mesh_prod_inv;
+	       eps_inv_mean.m11 *= mesh_prod_inv;
+	       eps_inv_mean.m22 *= mesh_prod_inv;
+	       eps_inv_mean.m01 *= mesh_prod_inv;
+	       eps_inv_mean.m02 *= mesh_prod_inv;
+	       eps_inv_mean.m12 *= mesh_prod_inv;
+	       
+	       means_different_p = 
+		    fabs(eps_mean_inv.m00 - eps_inv_mean.m00) > SMALL ||
+		    fabs(eps_mean_inv.m11 - eps_inv_mean.m11) > SMALL ||
+		    fabs(eps_mean_inv.m22 - eps_inv_mean.m22) > SMALL ||
+		    fabs(eps_mean_inv.m01 - eps_inv_mean.m01) > SMALL ||
+		    fabs(eps_mean_inv.m02 - eps_inv_mean.m02) > SMALL ||
+		    fabs(eps_mean_inv.m12 - eps_inv_mean.m12) > SMALL;
+	  }
 
+	  /* if the two averaging methods yielded different results,
+	     which usually happens if epsilon is not constant, then
+	     we need to find the normal vector to the dielectric interface: */
 	  if (means_different_p) {
 	       real moment0 = 0, moment1 = 0, moment2 = 0;
 
 	       for (mi = 0; mi < size_moment_mesh; ++mi) {
-		    real r[3], eps;
+		    real r[3], eps_trace;
+		    symmetric_matrix eps, eps_inv;
 		    r[0] = i2 * s1 + moment_mesh[mi][0];
 		    r[1] = j2 * s2 + moment_mesh[mi][1];
 		    r[2] = k2 * s3 + moment_mesh[mi][2];
-		    eps = epsilon(r, epsilon_data);
-		    moment0 += eps * moment_mesh[mi][0];
-		    moment1 += eps * moment_mesh[mi][1];
-		    moment2 += eps * moment_mesh[mi][2];
+		    epsilon(&eps, &eps_inv, r, epsilon_data);
+		    eps_trace = eps.m00 + eps.m11 + eps.m22;
+		    moment0 += eps_trace * moment_mesh[mi][0];
+		    moment1 += eps_trace * moment_mesh[mi][1];
+		    moment2 += eps_trace * moment_mesh[mi][2];
 	       }
 	       /* need to convert moment from lattice to cartesian coords: */
 	       norm0 = R[0][0]*moment0 + R[1][0]*moment1 + R[2][0]*moment2;
@@ -318,32 +389,61 @@ void set_maxwell_dielectric(maxwell_data *md,
 	  }
 	  
 	  if (means_different_p && norm_len > SMALL) {
-	       norm0 /= norm_len;
-	       norm1 /= norm_len;
-	       norm2 /= norm_len;
+	       real x0, x1, x2;
+
+	       norm_len = 1.0/norm_len;
+	       norm0 *= norm_len;
+	       norm1 *= norm_len;
+	       norm2 *= norm_len;
+
+	       /* Compute the effective inverse dielectric tensor.
+		  We define this as:
+                    1/2 ( {eps_inv_mean, P} + {eps_mean_inv, 1-P} )
+	          where P is the projection matrix onto the normal direction
+                  (P = norm ^ norm), and {a,b} is the anti-commutator ab+ba.
+		   = 1/2 {eps_inv_mean - eps_mean_inv, P} + eps_mean_inv
+		   = 1/2 (n_i x_j + x_i n_j) + (eps_mean_inv)_ij
+		  where n_k is the kth component of the normal vector and 
+		     x_i = (eps_inv_mean - eps_mean_inv)_ik n_k  
+		  Note the implied summations (Einstein notation).
+
+		  Note that the resulting matrix is symmetric, and we get just
+		  eps_inv_mean if eps_inv_mean == eps_mean_inv, as desired.
+
+	          Note that P is idempotent, so for scalar epsilon this
+	          is just eps_inv_mean * P + eps_mean_inv * (1-P)
+                        = (1/eps_inv_mean * P + eps_mean * (1-P)) ^ (-1),
+	          which corresponds to the expression in the Meade paper. */
 	       
-	       /* compute effective inverse dielectric tensor: */
-	       
-	       md->eps_inv[eps_index].m00 = 
-		    (eps_inv_mean-eps_mean) * norm0*norm0 + eps_mean;
-	       md->eps_inv[eps_index].m11 = 
-		    (eps_inv_mean-eps_mean) * norm1*norm1 + eps_mean;
-	       md->eps_inv[eps_index].m22 = 
-		    (eps_inv_mean-eps_mean) * norm2*norm2 + eps_mean;
-	       md->eps_inv[eps_index].m01 = 
-		    (eps_inv_mean-eps_mean) * norm0*norm1;
-	       md->eps_inv[eps_index].m02 = 
-		    (eps_inv_mean-eps_mean) * norm0*norm2;
-	       md->eps_inv[eps_index].m12 = 
-		    (eps_inv_mean-eps_mean) * norm1*norm2;
+	       x0 = (eps_inv_mean.m00 - eps_mean_inv.m00) * norm0;
+	       x1 = (eps_inv_mean.m11 - eps_mean_inv.m11) * norm1;
+	       x2 = (eps_inv_mean.m22 - eps_mean_inv.m22) * norm2;
+	       if (diag_eps_p) {
+		    md->eps_inv[eps_index].m01 = 0.5*(x0*norm1 + x1*norm0);
+		    md->eps_inv[eps_index].m02 = 0.5*(x0*norm2 + x2*norm0);
+		    md->eps_inv[eps_index].m12 = 0.5*(x1*norm2 + x2*norm1);
+	       }
+	       else {
+		    x0 += ((eps_inv_mean.m01 - eps_mean_inv.m01) * norm1 + 
+			   (eps_inv_mean.m02 - eps_mean_inv.m02) * norm2);
+		    x1 += ((eps_inv_mean.m01 - eps_mean_inv.m01) * norm0 + 
+			   (eps_inv_mean.m12 - eps_mean_inv.m12) * norm2);
+		    x2 += ((eps_inv_mean.m02 - eps_mean_inv.m02) * norm0 +
+			   (eps_inv_mean.m12 - eps_mean_inv.m12) * norm1);
+
+		    md->eps_inv[eps_index].m01 = (0.5*(x0*norm1 + x1*norm0) 
+						  + eps_mean_inv.m01);
+		    md->eps_inv[eps_index].m02 = (0.5*(x0*norm2 + x2*norm0) 
+						  + eps_mean_inv.m02);
+		    md->eps_inv[eps_index].m12 = (0.5*(x1*norm2 + x2*norm1) 
+						  + eps_mean_inv.m12);
+	       }
+	       md->eps_inv[eps_index].m00 = x0*norm0 + eps_mean_inv.m00;
+	       md->eps_inv[eps_index].m11 = x1*norm1 + eps_mean_inv.m11;
+	       md->eps_inv[eps_index].m22 = x2*norm2 + eps_mean_inv.m22;
 	  }
 	  else { /* undetermined normal vector and/or constant eps */
-	       md->eps_inv[eps_index].m00 = eps_mean;
-	       md->eps_inv[eps_index].m11 = eps_mean;
-	       md->eps_inv[eps_index].m22 = eps_mean;
-	       md->eps_inv[eps_index].m01 = 0.0;
-	       md->eps_inv[eps_index].m02 = 0.0;
-	       md->eps_inv[eps_index].m12 = 0.0;
+	       md->eps_inv[eps_index] = eps_mean_inv;
 	  }
 	  
 	  eps_inv_total += (md->eps_inv[eps_index].m00 + 

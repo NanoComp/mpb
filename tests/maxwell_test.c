@@ -65,20 +65,27 @@ typedef struct {
 
 #define INVERSION_SYM 0
 
-static real epsilon(real r[3], void *edata_v)
+static void epsilon(symmetric_matrix *eps, symmetric_matrix *eps_inv,
+		    real r[3], void *edata_v)
 {
      epsilon_data *edata = (epsilon_data *) edata_v;
+     real eps_val;
 
 #if INVERSION_SYM
      if (fabs(r[0]) < 0.5*edata->eps_high_x 
 	 || fabs(r[0]-1.0) < 0.5*edata->eps_high_x)
-	  return edata->eps_high;
+	  eps_val = edata->eps_high;
 #else
      if ((r[0] < edata->eps_high_x && r[0] >= 0.0) ||
 	 (r[0] >= 1.0 && r[0] - 1.0 < edata->eps_high_x))
-	  return edata->eps_high;
+	  eps_val = edata->eps_high;
 #endif
-     return edata->eps_low;
+     else
+	  eps_val = edata->eps_low;
+     eps->m00 = eps->m11 = eps->m22 = eps_val;
+     eps->m01 = eps->m02 = eps->m12 = 0.0;
+     eps_inv->m00 = eps_inv->m11 = eps_inv->m22 = 1.0 / eps_val;
+     eps_inv->m01 = eps_inv->m02 = eps_inv->m12 = 0.0;
 }
 
 /*************************************************************************/

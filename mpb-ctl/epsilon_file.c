@@ -42,11 +42,13 @@ typedef struct {
      real *data;
 } epsilon_file_data;
 
-static real epsilon_file_func(real r[3], void *edata)
+static void epsilon_file_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
+			      real r[3], void *edata)
 {
      epsilon_file_data *d = (epsilon_file_data *) edata;
      real rx, ry, rz, dx, dy, dz;
      int x, y, z, x2, y2, z2;
+     real eps_val;
 
      /* make sure r is positive: */
      rx = r[0] >= 0.0 ? r[0] : (r[0] + (1 + (int) (-r[0])));
@@ -83,12 +85,17 @@ static real epsilon_file_func(real r[3], void *edata)
 #define EPS(x,y,z) (d->data[((x)*d->ny + (y))*d->nz + (z)])
 
      /* compute the effective epsilon by linear interpolation: */
-     return (((EPS(x,y,z)*(1.0-dx) + EPS(x2,y,z)*dx) * (1.0-dy) +
-	      (EPS(x,y2,z)*(1.0-dx) + EPS(x2,y2,z)*dx) * dy) * (1.0-dz) +
-	     ((EPS(x,y,z2)*(1.0-dx) + EPS(x2,y,z2)*dx) * (1.0-dy) +
-              (EPS(x,y2,z2)*(1.0-dx) + EPS(x2,y2,z2)*dx) * dy) * dz);
+     eps_val = (((EPS(x,y,z)*(1.0-dx) + EPS(x2,y,z)*dx) * (1.0-dy) +
+		 (EPS(x,y2,z)*(1.0-dx) + EPS(x2,y2,z)*dx) * dy) * (1.0-dz) +
+		((EPS(x,y,z2)*(1.0-dx) + EPS(x2,y,z2)*dx) * (1.0-dy) +
+		 (EPS(x,y2,z2)*(1.0-dx) + EPS(x2,y2,z2)*dx) * dy) * dz);
 
 #undef EPS
+
+     eps->m00 = eps->m11 = eps->m22 = eps_val;
+     eps->m01 = eps->m02 = eps->m12 = 0.0;
+     eps_inv->m00 = eps_inv->m11 = eps_inv->m22 = 1.0 / eps_val;
+     eps_inv->m01 = eps_inv->m02 = eps_inv->m12 = 0.0;
 }
 
 void get_epsilon_file_func(const char *fname,

@@ -256,8 +256,9 @@ Defaults to unit lengths.
 <h3>material-type</h3>
 
 <p>This class is used to specify the materials that geometric objects
-are made of.  Currently, there is only one class,
-<code>dielectric</code>, but in the future there may be others.
+are made of.  Currently, there are two subclasses,
+<code>dielectric</code> and <code>dielectric-anisotropic</code>, and
+in the future there may be others.
 
 <dl>
 
@@ -267,6 +268,30 @@ are made of.  Currently, there is only one class,
 <dt><code>epsilon</code> [<code>number</code>]
 <dd>The dielectric constant (must be positive).  No default value.
 </dl>
+
+<p><dt><code>dielectric-anisotropic</code>
+<dd>A uniform, possibly anisotropic, linear dielectric material.  For
+this material type, you specify the (real, symmetric) dielectric
+tensor (relative to the cartesian xyz axes):
+<pre>
+             a  u  v
+epsilon =  ( u  b  w )
+             v  w  c
+</pre>
+<p>This allows your dielectric to have different dielectric constants
+for fields polarized in different directions.  The components of the
+tensor are specified via two properties:
+<dl>
+<dt><code>epsilon-diag</code> [<code>vector3</code>]
+<dd>The diagonal elements (a b c) of the dielectric tensor.  No default value.
+<dt><code>epsilon-offdiag</code> [<code>vector3</code>]
+<dd>The off-diagonal elements (u v w) of the dielectric tensor.  Defaults to
+zero.
+</dl>
+<p>For example, a material with a dielectric constant of 3.0 for TE
+fields (polarized in the xy plane) and 5.0 for TM fields (polarized in
+the z direction) would be specified via <code>(make
+(dielectric-anisotropic (epsilon-diag 3 3 5)))</code>.
 
 </dl>
 

@@ -16,11 +16,14 @@
 
 ; ****************************************************************
 
-(define-class material-type no-parent
+(define-class material-type no-parent)
+
+(define-class dielectric material-type
   (define-property epsilon 'number no-default positive?))
 
-; Define an alias, "dielectric" for "material-type".
-(define dielectric material-type)
+(define-class dielectric-anisotropic material-type
+  (define-property epsilon-diag 'vector3 no-default)
+  (define-property epsilon-offdiag 'vector3 (vector3 0 0 0)))
 
 ; use the solid geometry classes, variables, etcetera in libgeom:
 ; (one specifications file can include another specifications file)
@@ -113,7 +116,7 @@
 
 ; Add some predefined variables, for convenience:
 
-(define vacuum (make material-type (epsilon 1.0)))
+(define vacuum (make dielectric (epsilon 1.0)))
 (define air vacuum)
 
 (define infinity 1.0e20) ; big number for infinite dimensions of objects
