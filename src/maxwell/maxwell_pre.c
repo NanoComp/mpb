@@ -314,9 +314,8 @@ void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d)
 
      num_const_bands = maxwell_zero_k_num_const_bands(X, d);
 
-     /* for num_const_bands, all components except for the DC component
-	are zero. */
-     for (i = X.Nstart == 0 ? X.c : 0; i < X.localN * X.c; ++i) 
+     /* Initialize num_const_bands to zero: */
+     for (i = 0; i < X.n; ++i) 
 	  for (j = 0; j < num_const_bands; ++j) {
 	       ASSIGN_ZERO(X.data[i * X.p + j]);
 	  }
@@ -324,6 +323,8 @@ void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d)
      if (X.Nstart > 0)
 	  return;  /* DC frequency is not on this process */
 		      
+     /* Set DC components to 1 (in two polarizations) for num_const_bands: */
+
      if (d->polarization == TE_POLARIZATION ||
 	 d->polarization == EVEN_Z_POLARIZATION) {
 	  ASSIGN_SCALAR(X.data[0], 1.0, 0.0);
@@ -349,6 +350,10 @@ void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d)
 void maxwell_zero_k_constraint(evectmatrix X, void *data)
 {
      int j;
+
+     if (X.Nstart > 0)
+	  return;  /* DC frequency is not on this process */
+		      
      for (j = 0; j < X.p; ++j) {
 	  ASSIGN_ZERO(X.data[j]);
 	  ASSIGN_ZERO(X.data[X.p + j]);
