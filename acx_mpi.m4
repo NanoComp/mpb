@@ -24,7 +24,7 @@ dnl library is found, and ACTION-IF-NOT-FOUND is a list of commands
 dnl to run it if it is not found.  If ACTION-IF-FOUND is not specified,
 dnl the default action will define HAVE_MPI.
 dnl
-dnl @version $Id: acx_mpi.m4,v 1.5 2002/10/24 05:08:52 stevenj Exp $
+dnl @version $Id: acx_mpi.m4,v 1.6 2003/05/15 01:54:07 stevenj Exp $
 dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
 
 AC_DEFUN([ACX_MPI], [
@@ -32,6 +32,7 @@ AC_PREREQ(2.50) dnl for AC_LANG_CASE
 
 AC_LANG_CASE([C], [
 	AC_REQUIRE([AC_PROG_CC])
+	AC_ARG_VAR(MPICC,[MPI C compiler command])
 	AC_CHECK_PROGS(MPICC, mpicc hcc mpcc mpcc_r mpxlc, $CC)
 	acx_mpi_save_CC="$CC"
 	CC="$MPICC"
@@ -39,6 +40,7 @@ AC_LANG_CASE([C], [
 ],
 [C++], [
 	AC_REQUIRE([AC_PROG_CXX])
+	AC_ARG_VAR(MPICXX,[MPI C++ compiler command])
 	AC_CHECK_PROGS(MPICXX, mpiCC mpCC, $CXX)
 	acx_mpi_save_CXX="$CXX"
 	CXX="$MPICXX"
@@ -46,6 +48,7 @@ AC_LANG_CASE([C], [
 ],
 [Fortran 77], [
 	AC_REQUIRE([AC_PROG_F77])
+	AC_ARG_VAR(MPIF77,[MPI Fortran compiler command])
 	AC_CHECK_PROGS(MPIF77, mpif77 hf77 mpxlf mpf77 mpif90 mpf90 mpxlf90 mpxlf95 mpxlf_r, $F77)
 	acx_mpi_save_F77="$F77"
 	F77="$MPIF77"
