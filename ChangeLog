@@ -1,7 +1,12 @@
 2003-02-27  Steven G. Johnson  <stevenj@ab-initio>
 
-	* mpb-ctl/mpb.scm.in: bug fix: kdir is in reciprocal coordinates.
-	Thanks to Suxia (Susan) Yang for tracking down this bug.
+	* NEWS: tense
+
+	* NEWS, ChangeLog: updated
+
+	* mpb-ctl/mpb.scm.in:
+	bug fix: kdir is in reciprocal coordinates.  Thanks to Suxia (Susan)
+	Yang for tracking down this bug.
 
 2003-02-25  Steven G. Johnson  <stevenj@ab-initio>
 
