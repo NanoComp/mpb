@@ -481,7 +481,7 @@ void usage(FILE *f)
 	     "    -z <mx> : output mx/my/mz periods in the x/y/z directions\n"
 	     "     -m <s> : same as -x <s> -y <s> -z <s>\n"
 	     "         -p : pixellized output (no grid interpolation)\n"
-	     "  -d <name> : use dataset <name> in the input files (default: first dataset)\n"
+	     "  -d <name> : use dataset <name> in the input files (default: all mpb datasets)\n"
 	     "           -- you can also specify a dataset via <filename>:<name>\n"
 	  );
 }
