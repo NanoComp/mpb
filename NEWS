@@ -15,7 +15,7 @@ MPB 1.4.2
   * Fixed find-k to work for band-min > 1; thanks to M. Povinelli for
     the bug report.
 
-  * Fix find-k to work for thunk band functions (which take no arguments
+  * Fixed find-k to work for thunk band functions (which take no arguments
     and are called only once instead of per-band).
 
 MPB 1.4.1 (9/16/2002)
