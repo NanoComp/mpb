@@ -1,11 +1,13 @@
 ; Photonic crystal slab consisting of a triangular lattice of air
-; holes in a finite-thickness dielectric slab.  See the paper:
-; S. G. Johnson, S. Fan, P. R. Villeneuve, J. D. Joannopoulos,
-; L. A. Kolodziejski, "Guided modes in photonic crystal slabs,"
-; PRB 60, 5751 (August 1999).
+; holes in a finite-thickness dielectric slab, optionally with a
+; substrate on one side of the slab.  See the paper: S. G. Johnson,
+; S. Fan, P. R. Villeneuve, J. D. Joannopoulos, L. A. Kolodziejski,
+; "Guided modes in photonic crystal slabs," PRB 60, 5751 (August
+; 1999).
 
 (define-param h 0.5) ; the thickness of the slab
 (define-param eps 12.0) ; the dielectric constant of the slab
+(define-param loweps 1.0) ; the dielectric constant of the substrate
 (define-param r 0.3) ; the radius of the holes
 (define-param supercell-h 4) ; height of the supercell
 
@@ -15,7 +17,10 @@
                          (basis2 (/ (sqrt 3) 2) -0.5)))
 
 (set! geometry
-      (list (make block (material (make dielectric (epsilon eps)))
+      (list (make block (material (make dielectric (epsilon loweps)))
+		  (center 0 0 (* 0.5 supercell-h))
+		  (size 1 1 supercell-h))
+	    (make block (material (make dielectric (epsilon eps)))
 		  (center 0) (size 1 1 h))
 	    (make cylinder (material air)
 		  (center 0) (radius r) (height supercell-h))))
