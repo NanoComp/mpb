@@ -1,4 +1,4 @@
-dnl Process this file with autoconf to produce a configure script.
+# Process this file with autoconf to produce a configure script.
 AC_INIT(src/matrices/matrices.c)
 AC_CONFIG_HEADER(src/config.h)
 
@@ -28,7 +28,7 @@ AC_MSG_CHECKING([for vendor's f77 to be used instead of g77])
 AC_MSG_RESULT()
 AC_CHECK_PROGS(F77, f77 xlf77 cf77 fort77 f90 xlf90 g77)
 
-dnl Checks for programs.
+# Checks for programs.
 AC_PROG_CC
 AC_PROG_RANLIB
 AC_PROG_INSTALL
@@ -63,18 +63,18 @@ if test "$GCC" = "yes"; then
 	CFLAGS="$CFLAGS -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align -pedantic"
 fi
 
-dnl Checks for libraries.
+# Checks for libraries.
 AC_CHECK_LIB(m, sqrt)
 
 AC_F77_LIBRARY_LDFLAGS
 
-dnl ----------------------------------------------------------------------
-dnl In principle, we should abort if some of the following libraries are
-dnl missing, or perhaps only compile some of the subdirectories.  For now,
-dnl though, we do nothing (and wait for the compilation errors).
+# ----------------------------------------------------------------------
+# In principle, we should abort if some of the following libraries are
+# missing, or perhaps only compile some of the subdirectories.  For now,
+# though, we do nothing (and wait for the compilation errors).
 
-dnl ----------------------------------------------------------------------
-dnl Check for FFTW libraries
+# ----------------------------------------------------------------------
+# Check for FFTW libraries
 if test "$enable_single" = "yes"; then
 	AC_CHECK_LIB(sfftw, fftw)
 	AC_CHECK_LIB(srfftw, rfftw)
@@ -88,25 +88,25 @@ if test -z "`echo $LIBS | grep fftw`"; then
 	AC_CHECK_LIB(rfftw, rfftw)
 fi
 
-dnl ----------------------------------------------------------------------
-dnl Checks for BLAS libraries:
+# ----------------------------------------------------------------------
+# Checks for BLAS libraries:
 
-dnl Generic BLAS:
+# Generic BLAS:
 AC_CHECK_LIB(blas, main)
 
-dnl Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
+# Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
 AC_CHECK_LIB(dgemm, main)
 AC_CHECK_LIB(sgemm, main)
 
-dnl Optimized BLAS for Pentium Pro?
+# Optimized BLAS for Pentium Pro?
 AC_CHECK_LIB(blasppro1,main)
 
-dnl BLAS in Alpha DXML library?
+# BLAS in Alpha DXML library?
 AC_CHECK_LIB(dxml, dgemm_)
 AC_CHECK_LIB(for, for_stop)
 
-dnl Check for BLAS in Sun Performance library:
-dnl AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
+# Check for BLAS in Sun Performance library:
+# AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
 AC_CHECK_LIB(sunmath, acosp)
 AC_CHECK_LIB(F77, ishft_)
 AC_CHECK_LIB(f90, _F90_STOP)
@@ -114,24 +114,24 @@ AC_CHECK_LIB(sunperf, dgemm_,
         [LIBS="-xlic_lib=sunperf $LIBS"; AC_DEFINE(HAVE_LIBSUNPERF)])
 AC_CHECK_LIB(M77, __pow_ri)
 
-dnl Check for BLAS in SGIMATH library:
+# Check for BLAS in SGIMATH library:
 AC_CHECK_LIB(complib.sgimath, dgemm)
 
-dnl Checks for BLAS in IBM ESSL library
+# Checks for BLAS in IBM ESSL library
 AC_CHECK_LIB(essl, dgemm)
 
-dnl ----------------------------------------------------------------------
-dnl Checks for LAPACK library
+# ----------------------------------------------------------------------
+# Checks for LAPACK library
 AC_CHECK_LIB(lapack, main)
 
-dnl ----------------------------------------------------------------------
-dnl Check for HDF5 library
+# ----------------------------------------------------------------------
+# Check for HDF5 library
 AC_CHECK_LIB(z, deflate)
 AC_CHECK_LIB(hdf5, H5Pcreate)
 AC_CHECK_HEADERS(hdf5.h)
 
-dnl ----------------------------------------------------------------------
-dnl Check for Guile library and flags:
+# ----------------------------------------------------------------------
+# Check for Guile library and flags:
 
 AC_CHECK_PROG(HAVE_GUILE_CONFIG, guile-config, yes, no)
 if test "$HAVE_GUILE_CONFIG" = "yes"; then
@@ -149,8 +149,8 @@ else
         AC_CHECK_LIB(guile, gh_eval_str)
 fi
 
-dnl ----------------------------------------------------------------------
-dnl Check for libctl library and files
+# ----------------------------------------------------------------------
+# Check for libctl library and files
 
 AC_ARG_WITH(libctl, [  --with-libctl=<dir>     specify libctl directory], ok=$withval, ok=yes)
 if test "$ok" = "no"; then
@@ -182,21 +182,21 @@ AC_SUBST(GEN_CTL_IO)
 # check for -lctl:
 AC_CHECK_LIB(ctl, ctl_get_list)
 
-dnl ----------------------------------------------------------------------
-dnl Checks for header files.
+# ----------------------------------------------------------------------
+# Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h getopt.h)
 
-dnl Checks for typedefs, structures, and compiler characteristics.
+# Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
 
-dnl Checks for library functions.
+# Checks for library functions.
 AC_CHECK_FUNCS(getopt)
 
-dnl ----------------------------------------------------------------------
-dnl Check to see if calling Fortran functions (in particular, the BLAS
-dnl complex dot product functions) works from C:
+# ----------------------------------------------------------------------
+# Check to see if calling Fortran functions (in particular, the BLAS
+# complex dot product functions) works from C:
 
 AC_MSG_CHECKING([whether calling BLAS zdotc works])
 AC_TRY_RUN([
@@ -232,6 +232,6 @@ if test "$ok" = "no"; then
 	AC_DEFINE(NO_FORTRAN_FUNCTIONS)
 fi
 
-dnl ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile photon-ctl/Makefile photon-ctl/photon.scm)
