@@ -43,10 +43,12 @@
 
 ; Definitions of external (C) functions:
 
-; (init-params) initializes the geometry, etcetera, and does everything
+; (init-params true) initializes the geometry, etcetera, and does everything
 ; else that's needed to get ready for an eigenvalue calculation.
 ; This should be called after the input variables are changed.
-(define-external-function init-params true false no-return-value)
+; If false is passed instead of true, fields from a previous run are
+; retained, if possible, as a starting point for the eigensolver.
+(define-external-function init-params true false no-return-value 'boolean)
 
 ; (set-polarization p) sets the polarization that is solved for by
 ; solve-kpoint, below.  p should be one of the constants NO-POLARIZATION,
@@ -70,12 +72,10 @@
 (define-external-function compute-field-energy false false no-return-value)
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
-(define-external-function output_field_extended false false
+(define-external-function output-field-extended false false
   no-return-value 'vector3)  
-
-; it would be nice to have this routine later:
-; (define-external-function energy-in-object false false
-;   'number 'geometric-object)
+(define-external-function compute-energy-in-object-list false false
+  'number (make-list-type 'geometric-object))
 
 ; ****************************************************************
 
@@ -96,7 +96,7 @@
 ; bands at all the k points).
 (define (run)
   (set! interactive false)  ; don't be interactive if we call (run)
-  (init-params)
+  (init-params true)
   (if (<= dimensions 2)
       (begin                         ; solve for both TE and TM bands
        (set-polarization TE)
@@ -111,8 +111,11 @@
   (get-efield-from-dfield))
 
 (define (output-field . copies)
-  (output_field_extended (apply vector3 copies)))
+  (output-field-extended (apply vector3 copies)))
 
 (define (output-epsilon . copies)
   (get-epsilon)
   (apply output-field copies))
+
+(define (compute-energy-in-objects . objects)
+  (compute-energy-in-object-list objects))

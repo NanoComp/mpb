@@ -166,19 +166,30 @@ static real epsilon_func(real r[3], void *edata)
 /**************************************************************************/
 
 /* Set the current polarization to solve for. (init-params should have
-   already been called.  (Guile-callable; see photon.scm.) */
+   already been called.  (Guile-callable; see photon.scm.) 
+
+   Also initializes the field to random numbers.  Hackery:  If
+   a polarization constant -(p+1) is substituted for p, then
+   the field is not reinitialized unless the polarization has
+   changed since the last call.  */
 
 void set_polarization(int p)
 {
-     int i;
+     static int last_p = 0xDEADBEEF;  /* initialize to some non-value */
+     int real_p, i;
 
      if (!mdata) {
 	  fprintf(stderr,
 		  "init-params must be called before set-polarization!\n");
 	  return;
      }
+     
+     if (p < 0)
+	  real_p = -(p + 1);
+     else
+	  real_p = p;
 
-     switch (p) {
+     switch (real_p) {
 	 case 0:
 	      printf("Solving for non-polarized bands.\n");
 	      set_maxwell_data_polarization(mdata, NO_POLARIZATION);
@@ -196,11 +207,14 @@ void set_polarization(int p)
 	      return;
      }
 
-     /* need to re-randomize fields (might have the wrong polarization). */
-     printf("Initializing fields to random numbers...\n");
-     for (i = 0; i < H.n * H.p; ++i)
-          ASSIGN_REAL(H.data[i], rand() * 1.0 / RAND_MAX);
-
+     if (p > 0 || real_p != last_p) {
+	  /* need to re-randomize fields 
+	     (might have the wrong polarization). */
+	  printf("Initializing fields to random numbers...\n");
+	  for (i = 0; i < H.n * H.p; ++i)
+	       ASSIGN_REAL(H.data[i], rand() * 1.0 / RAND_MAX);
+     }
+     last_p = real_p;
      kpoint_index = 0;  /* reset index */
 }
 
@@ -209,17 +223,22 @@ void set_polarization(int p)
 /* Guile-callable function: init-params, which initializes any data
    that we need for the eigenvalue calculation.  When this function
    is called, the input variables (the geometry, etcetera) have already
-   been read into the global variables defined in ctl-io.h.  */
-void init_params(void)
+   been read into the global variables defined in ctl-io.h.  
+
+   If reset_fields is false, then any fields from a previous run are
+   retained if they are of the same dimensions.  Otherwise, new
+   fields are allocated and initialized to random numbers. */
+void init_params(boolean reset_fields)
 {
      int i, local_N, N_start, alloc_N;
      int nx, ny, nz;
      int mesh[3];
+     int have_old_fields = 0;
      
      /* Output a bunch of stuff so that the user can see what we're
 	doing and what we've read in. */
      
-     printf("@@@@@ init-params: initializing eigensolver data\n");
+     printf("init-params: initializing eigensolver data\n");
      
      printf("Computing %d bands with %e tolerance.\n", num_bands, tolerance);
      if (target_freq != 0.0)
@@ -273,9 +292,14 @@ void init_params(void)
 		 k_points.items[i].y, k_points.items[i].z);
      
      if (mdata) {  /* need to clean up from previous init_params call */
-	  destroy_evectmatrix(H);
-	  for (i = 0; i < NWORK; ++i)
-	       destroy_evectmatrix(W[i]);
+	  if (nx == mdata->nx && ny == mdata->ny && nz == mdata->nz &&
+	      num_bands == mdata->num_bands)
+	       have_old_fields = 1; /* don't need to reallocate */
+	  else {
+	       destroy_evectmatrix(H);
+	       for (i = 0; i < NWORK; ++i)
+		    destroy_evectmatrix(W[i]);
+	  }
 	  destroy_maxwell_target_data(mtdata); mtdata = NULL;
 	  destroy_maxwell_data(mdata); mdata = NULL;
 	  curfield = NULL;
@@ -296,14 +320,16 @@ void init_params(void)
      else
 	  mtdata = NULL;
 
-     printf("Allocating fields...\n");
-     H = create_evectmatrix(nx * ny * nz, 2, num_bands,
-                            local_N, N_start, alloc_N);
-     for (i = 0; i < NWORK; ++i)
-          W[i] = create_evectmatrix(nx * ny * nz, 2, num_bands,
-                                    local_N, N_start, alloc_N);
+     if (!have_old_fields) {
+	  printf("Allocating fields...\n");
+	  H = create_evectmatrix(nx * ny * nz, 2, num_bands,
+				 local_N, N_start, alloc_N);
+	  for (i = 0; i < NWORK; ++i)
+	       W[i] = create_evectmatrix(nx * ny * nz, 2, num_bands,
+					 local_N, N_start, alloc_N);
+     }
 
-     set_polarization(0);
+     set_polarization((have_old_fields && !reset_fields) ? -1 : 0);
 
      printf("Stuff for grepping:\n");
      printf("sumfrq:, k index, kx, ky, kz, kmag/2pi");
@@ -320,8 +346,6 @@ void init_params(void)
 	       printf(", band %d", i + 1);
 	  printf("\n");
      }
-
-     printf("@@@@@\n");
 }
 
 /**************************************************************************/
@@ -334,7 +358,7 @@ void solve_kpoint(vector3 kvector)
      real *eigvals;
      real k[3];
 
-     printf("@@@@@ solve_kpoint (%g,%g,%g):\n",
+     printf("solve_kpoint (%g,%g,%g):\n",
 	    kvector.x, kvector.y, kvector.z);
 
      if (!mdata) {
@@ -394,8 +418,6 @@ void solve_kpoint(vector3 kvector)
 
      free(eigvals);
      curfield = NULL;
-
-     printf("@@@@@\n");
 }
 
 /**************************************************************************/
@@ -622,8 +644,9 @@ void output_field_extended(vector3 copiesv)
 	  return;
      }
      
-     /* this will need to be fixed for MPI, where we transpose the data: */
-#ifdef HAVE_MPI
+     /* this will need to be fixed for MPI, where we transpose the data,
+	and also for real-to-complex calculations: */
+#if defined(HAVE_MPI) || ! defined(SCALAR_COMPLEX)
 #    broken, please fix
 #endif
      dims[0] = mdata->nx;
@@ -665,3 +688,49 @@ void output_field_extended(vector3 copiesv)
      else
 	  fprintf(stderr, "unknown field type!\n");
 }
+
+/**************************************************************************/
+
+/* For curfield an energy density, compute the fraction of the energy
+   that resides inside the given list of geometric objects.   Later
+   objects in the list have precedence, just like the ordinary
+   geometry list. */
+number compute_energy_in_object_list(geometric_object_list objects)
+{
+     int i, j, k, n1, n2, n3;
+     real s1, s2, s3;
+     real *energy = (real *) curfield;
+     real energy_sum = 0;
+
+     if (!curfield || !strchr("DH", curfield_type)) {
+          fprintf(stderr, "The D or H energy density must be loaded first.\n");
+          return;
+     }
+
+     /* this will need to be fixed for MPI, where we transpose the data,
+	and also for real-to-complex calculations: */
+#if defined(HAVE_MPI) || ! defined(SCALAR_COMPLEX)
+#    broken, please fix
+#endif
+     n1 = mdata->nx;
+     n2 = mdata->ny;
+     n3 = mdata->nz;
+     s1 = geometry_lattice.size.x / n1;
+     s2 = geometry_lattice.size.y / n2;
+     s3 = geometry_lattice.size.z / n3;
+
+     for (i = 0; i < n1; ++i)
+	  for (j = 0; j < n2; ++j)
+	       for (k = 0; k < n3; ++k) {
+		    vector3 p = { i * s1, j * s2, k * s3 };
+		    int n;
+		    for (n = objects.num_items - 1; n >= 0; --n)
+			 if (point_in_periodic_objectp(p, objects.items[n])) {
+			      energy_sum += energy[(i*n2 + j)*n3 + k];
+			      break;
+			 }
+	       }
+     return energy_sum;
+}
+
+/**************************************************************************/
