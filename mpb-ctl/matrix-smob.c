@@ -120,8 +120,7 @@ SCM evectmatrix2scm(evectmatrix m)
 {
      SCM obj;
      evectmatrix *mp;
-     mp = (evectmatrix *) malloc(sizeof(evectmatrix));
-     CHECK(mp, "out of memory");
+     CHK_MALLOC(mp, evectmatrix, 1);
      *mp = create_evectmatrix(m.N, m.c, m.p, m.localN, m.Nstart, m.allocN);
      evectmatrix_copy(*mp, m);
      NEWCELL_SMOB(obj, evectmatrix, mp);
@@ -135,8 +134,7 @@ SCM evectmatrix_slice2scm(evectmatrix m, int p_start, int p)
      evectmatrix *mp;
      CHECK(p_start >= 0 && p_start + p <= m.p && p >= 0,
 	   "invalid arguments in evectmatrix_slice2scm");
-     mp = (evectmatrix *) malloc(sizeof(evectmatrix));
-     CHECK(mp, "out of memory");
+     CHK_MALLOC(mp, evectmatrix, 1);
      *mp = create_evectmatrix(m.N, m.c, p, m.localN, m.Nstart, m.allocN);
      evectmatrix_copy_slice(*mp, m, 0, p_start, p);
      NEWCELL_SMOB(obj, evectmatrix, mp);
@@ -147,8 +145,7 @@ SCM sqmatrix2scm(sqmatrix m)
 {
      SCM obj;
      sqmatrix *mp;
-     mp = (sqmatrix *) malloc(sizeof(sqmatrix));
-     CHECK(mp, "out of memory");
+     CHK_MALLOC(mp, sqmatrix, 1);
      *mp = create_sqmatrix(m.p);
      sqmatrix_copy(*mp, m);
      NEWCELL_SMOB(obj, sqmatrix, mp);
