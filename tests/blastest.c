@@ -5,6 +5,8 @@
 #include <blasglue.h>
 #include <check.h>
 
+extern void debug_check_memory_leaks(void);  
+
 void printmat(scalar *A, int m, int n)
 {
   int i, j;
@@ -107,6 +109,8 @@ int main(int argc, char **argv)
   blasglue_gemm('C', 'N', N, N, N, 1.0, E, N, E, N, 0.0, C, N);
   printf("\nsqrtm(D) * sqrtm(D)\n");
   printmat(C,N,N);
+
+  debug_check_memory_leaks();
 
   return EXIT_SUCCESS;
 }
