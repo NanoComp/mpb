@@ -59,7 +59,7 @@ void printmat_matlab(scalar *A, int m, int n)
   printf("]\n");
 }
 
-int main(int argc, char **argv)
+int main(void)
 {
   const int N = 4;
   int i,j;
