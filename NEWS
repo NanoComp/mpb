@@ -4,8 +4,8 @@ MPB 0.81
     even/odd states (with respect to a z=0 mirror plane) in systems with
     sufficient symmetry.  See also the new z-parity output variable.
 
-  * Added epsilon-input-file variable, so that you can now read the
-    dielectric function from a file.
+  * Added epsilon-input-file variable, so that you can now read an
+    arbitrary dielectric function from a file.
 
   * configure should work even when there is no Fortran compiler on your
     system (assuming your BLAS, etc., libraries work without Fortran libs).
