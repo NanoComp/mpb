@@ -153,7 +153,7 @@ int main(void)
     CHECK(eigvals[i] > 0, "non-positive eigenvalue");
     
     blasglue_copy(N, D + i*N, 1, E + i*N, 1);
-    blasglue_scal(N, sqrt(eigvals[i]), E + i*N, 1);
+    blasglue_rscal(N, sqrt(eigvals[i]), E + i*N, 1);
   }
 
   /* compute C = adjoint(D) * E == sqrt (At * A) */
