@@ -84,11 +84,11 @@ extern void F(gemm,GEMM) (char *, char *, int *, int *, int *,
 			  scalar *, scalar *, int *, scalar *, int *,
 			  scalar *, scalar *, int *);
 extern void F(herk,HERK) (char *, char *, int *, int *,
-			  scalar *, scalar *, int *,
-			  scalar *, scalar *, int *);
+			  real *, scalar *, int *,
+			  real *, scalar *, int *);
 extern void F(syrk,SYRK) (char *, char *, int *, int *,
-			  scalar *, scalar *, int *,
-			  scalar *, scalar *, int *);
+			  real *, scalar *, int *,
+			  real *, scalar *, int *);
 extern void F(potrf,POTRF) (char *, int *, scalar *, int *, int *);
 extern void F(potri,POTRI) (char *, int *, scalar *, int *, int *);
 extern void F(heev,HEEV) (char *, char *, int *, scalar *, int *, real *,
@@ -170,22 +170,17 @@ void blasglue_herk(char uplo, char trans, int n, int k,
 		   real a, scalar *A, int fdA,
 		   real b, scalar *C, int fdC)
 {
-     scalar alpha, beta;
-     
      CHECK(A != C, "herk output array must be distinct");
      
-     ASSIGN_REAL(alpha,a);
-     ASSIGN_REAL(beta,b);
-
      uplo = uplo == 'U' ? 'L' : 'U';
      trans = (trans == 'C' || trans == 'T') ? 'N' : 'C';
 
 #ifdef SCALAR_COMPLEX
      F(herk,HERK) (&uplo, &trans, &n, &k,
-		   &alpha, A, &fdA, &beta, C, &fdC);
+		   &a, A, &fdA, &b, C, &fdC);
 #else
      F(syrk,SYRK) (&uplo, &trans, &n, &k,
-		   &alpha, A, &fdA, &beta, C, &fdC);
+		   &a, A, &fdA, &b, C, &fdC);
 #endif
 }
 
