@@ -99,7 +99,9 @@ and data-analysis tools still use HDF4, but HDF5 includes an
 HDF4 files.
 
 <p>You can get HDF and learn about it on the <a
-href="http://hdf.ncsa.uiuc.edu">HDF Home Page</a>.
+href="http://hdf.ncsa.uiuc.edu">HDF Home Page</a>.  (Note: if you
+don't have HDF5, you can still compile Photonic-Bands, but you won't
+be able to output the fields or the dielectric function.)
 
 <h2>FFTW</h2>
 
@@ -184,18 +186,86 @@ compiler and so on, and the <code>make</code> compilation will proceed
 without a hitch.  If not, it's a <a
 href="http://www.tuxedo.org/~esr/jargon/html/entry/SMOP.html">Simple
 Matter of Programming</a> to correct the problem.
-<code>configure</code> accepts several flags that we hope will work
-someday, such as <code>--enable-mpi</code> to turn on MPI support, as
-well as a number of standard flags that work already
-(<code>./configure --help</code> for more info).
+<code>configure</code> accepts several flags to help control its
+behavior.  Some of these are standard, like
+<code>--prefix=<i>dir</i></code> to specify and installation directory
+prefix, and some of them are specific to the Photonic-Bands package
+(<code>./configure --help</code> for more info).  The
+<code>configure</code> flags specific to the Photonic-Bands package
+are:
 
-<p>The <code>configure</code> script automatically attempts to detect
+<dl>
+
+<p><dt><code>--enable-single</code>
+<dd>Use single precision (C <code>float</code>) instead of the default
+double precision (C <code>double</code>) for computations.
+
+<p><dt><code>--disable-complex</code>
+<dd>Assume <i>inversion symmetry</i> in the dielectric function,
+allowing us to use real fields (in Fourier space) instead of complex
+fields.  This gives a factor of 2 benefit in speed and memory.
+<i>Not supported yet.</i>
+
+<p><dt><code>--without-fastblas</code>
+<dt><code>--with-fastblas=<i>lib</i></code>
+<dd>The <code>configure</code> script automatically attempts to detect
 accelerated BLAS libraries, like DXML (DEC/Alpha), SCSL and SGIMATH
 (SGI/MIPS), ESSL (IBM/PowerPC), ATLAS, and PHiPACK.  You can disable
-these by using <code>./configure --without-fastblas</code>, or supply
-another library name to try via
-<code>--with-fastblas=<i>lib</i></code> (it will attempt to link with
-<code>-l<i>lib</i></code>).
+these by using <code>--without-fastblas</code>, or supply another
+library name to try via <code>--with-fastblas=<i>lib</i></code> (it
+will attempt to link with <code>-l<i>lib</i></code>).
+
+<p><dt><code>--without-hdf5</code>
+<dd>Don't use the HDF5 library for field and dielectric function
+output.  (In which case, no field output is possible.)
+
+<p><dt><code>--with-libctl=<i>dir</i></code>
+<dd>If libctl was installed in a nonstandard location (i.e. neither
+<code>/usr</code> nor <code>/usr/local</code>), you need to specify
+the location of the libctl directory, <code><i>dir</i></code>.  This
+is either <code><i>prefix</i>/share/libctl</code>, where
+<code><i>prefix</i><code> is the installation prefix of libctl, or the
+original libctl source code directory.
+
+<p><dt><code>--disable-checks</code>
+<dd>Disable runtime checks.  (Not recommended; the disabled checks
+shouldn't take up a significant amount of time anyway.)
+
+<p><dt><code>--enable-prof</code>
+<dd>Compile for performance profiling.
+
+<p><dt><code>--enable-debug</code>
+<dd>Compile for debugging, adding extra runtime checks and so on.
+
+<p><dt><code>--enable-debug-malloc</code>
+<dd>Use special memory-allocation routines for extra debugging (to
+check for array overwrites, memory leaks, etcetera).
+
+<p><dt><code>--with-efence</code>
+<dd>Use the <a href="http://perens.com/FreeSoftware/">Electric
+Fence</a> library, if available, for extra runtime array
+bounds-checking.
+
+</dl>
+
+<p>You can further control <code>configure</code> by setting various
+environment variables, such as:
+
+<ul>
+
+<li><code>CC</code>: the C compiler command
+
+<li><code>CFLAGS</code>: the C compiler flags (defaults to <code>-O3</code>).
+
+<li><code>INCLUDES</code>: <code>-I<i>dir</i></code> flags to tell the
+C compiler additional places to look for header files.
+
+<li><code>LDFLAGS</code>: <code>-L<i>dir</i></code> flags to tell the
+linker additional places to look for libraries.
+
+<li><code>LIBS</code>: additional libraries to link against.
+
+</ul>
 
 <p>Once compiled, the main program (as opposed to various test
 programs) resides in the <code>photon-ctl/</code> subdirectory, and is
