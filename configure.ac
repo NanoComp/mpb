@@ -262,12 +262,31 @@ fi
 
 AC_CHECK_FUNCS(scm_make_smob_type)
 AC_MSG_CHECKING([for SCM_SMOB_PREDICATE])
-AC_TRY_LINK([#include <libguile/smob.h>],
+AC_TRY_LINK([#include <guile/gh.h>
+#include <libguile/smob.h>],
                     [int x; SCM_SMOB_PREDICATE(1,x);],
                     ok=yes, ok=no)
 AC_MSG_RESULT($ok)
 if test $ok = yes; then
 	AC_DEFINE(HAVE_SCM_SMOB_PREDICATE, 1, [define if we have SCM_SMOB_PREDICATE])
+fi
+AC_MSG_CHECKING([for SCM_SMOB_DATA])
+AC_TRY_LINK([#include <guile/gh.h>
+#include <libguile/smob.h>],
+                    [int x; SCM_SMOB_DATA(x);],
+                    ok=yes, ok=no)
+AC_MSG_RESULT($ok)
+if test $ok = yes; then
+	AC_DEFINE(HAVE_SCM_SMOB_DATA, 1, [define if we have SCM_SMOB_DATA])
+fi
+AC_MSG_CHECKING([for SCM_NEWSMOB])
+AC_TRY_LINK([#include <guile/gh.h>
+#include <libguile/smob.h>],
+                    [int x; SCM_NEWSMOB(x,1,0);],
+                    ok=yes, ok=no)
+AC_MSG_RESULT($ok)
+if test $ok = yes; then
+	AC_DEFINE(HAVE_SCM_NEWSMOB, 1, [define if we have SCM_NEWSMOB])
 fi
 
 # Check how to activate Guile readline support:
