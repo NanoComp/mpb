@@ -218,6 +218,22 @@ void assign_symmatrix_vector(scalar_complex *newv,
 {
      scalar_complex v0 = oldv[0], v1 = oldv[1], v2 = oldv[2];
 
+#if defined(WITH_HERMITIAN_EPSILON)
+     newv[0].re = matrix.m00 * v0.re;
+     newv[0].im = matrix.m00 * v0.im;
+     CACCUMULATE_SUM_MULT(newv[0], matrix.m01, v1);
+     CACCUMULATE_SUM_MULT(newv[0], matrix.m02, v2);
+
+     newv[1].re = matrix.m11 * v1.re;
+     newv[1].im = matrix.m11 * v1.im;
+     CACCUMULATE_SUM_CONJ_MULT(newv[1], matrix.m01, v0);
+     CACCUMULATE_SUM_MULT(newv[1], matrix.m12, v2);
+
+     newv[2].re = matrix.m22 * v2.re;
+     newv[2].im = matrix.m22 * v2.im;
+     CACCUMULATE_SUM_CONJ_MULT(newv[2], matrix.m02, v0);
+     CACCUMULATE_SUM_CONJ_MULT(newv[2], matrix.m12, v1);
+#else
      newv[0].re = matrix.m00 * v0.re + matrix.m01 * v1.re + matrix.m02 * v2.re;
      newv[0].im = matrix.m00 * v0.im + matrix.m01 * v1.im + matrix.m02 * v2.im;
 
@@ -226,12 +242,13 @@ void assign_symmatrix_vector(scalar_complex *newv,
 
      newv[2].re = matrix.m02 * v0.re + matrix.m12 * v1.re + matrix.m22 * v2.re;
      newv[2].im = matrix.m02 * v0.im + matrix.m12 * v1.im + matrix.m22 * v2.im;
+#endif
 
-#if defined(DEBUG) && defined(SCALAR_COMPLEX)
+#if defined(DEBUG)
      {
 	  real dummy;
-	  dummy = SCALAR_NORMSQR(newv[0]) + SCALAR_NORMSQR(newv[1])
-	       + SCALAR_NORMSQR(newv[2]);
+	  dummy = CSCALAR_NORMSQR(newv[0]) + CSCALAR_NORMSQR(newv[1])
+	       + CSCALAR_NORMSQR(newv[2]);
 	  CHECK(!BADNUM(dummy), "yikes, crazy number!");
      }
 #endif

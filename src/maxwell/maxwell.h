@@ -51,13 +51,29 @@ typedef struct {
      real nx, ny, nz;
 } k_data;
 
+
 /* Data structure to hold the upper triangle of a symmetric real matrix
-   (e.g. the dielectric tensor). */
+   or possibly a Hermitian complex matrix (e.g. the dielectric tensor). */
 typedef struct {
+#ifdef WITH_HERMITIAN_EPSILON
+     real m00, m11, m22;
+     scalar_complex m01, m02, m12;
+#else
      real m00, m01, m02,
                m11, m12,
                     m22;
+#endif
 } symmetric_matrix;
+
+#ifdef WITH_HERMITIAN_EPSILON
+#  define DIAG_SYMMETRIC_MATRIX(m) ((m).m01.re == 0.0 && (m).m01.im == 0.0 && \
+				    (m).m02.re == 0.0 && (m).m02.im == 0.0 && \
+				    (m).m12.re == 0.0 && (m).m12.im == 0.0)
+#else
+#  define DIAG_SYMMETRIC_MATRIX(m) ((m).m01 == 0.0 && \
+				    (m).m02 == 0.0 && \
+				    (m).m12 == 0.0)
+#endif
 
 typedef enum { 
      NO_POLARIZATION = 0,

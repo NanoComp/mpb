@@ -157,9 +157,18 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 	      {
 		   real eps_val = material.subclass.dielectric_data->epsilon;
 		   eps->m00 = eps->m11 = eps->m22 = eps_val;
-		   eps->m01 = eps->m02 = eps->m12 = 0.0;
 		   eps_inv->m00 = eps_inv->m11 = eps_inv->m22 = 1.0 / eps_val;
+#ifdef WITH_HERMITIAN_EPSILON
+		   CASSIGN_ZERO(eps->m01);
+		   CASSIGN_ZERO(eps->m02);
+		   CASSIGN_ZERO(eps->m12);
+		   CASSIGN_ZERO(eps_inv->m01);
+		   CASSIGN_ZERO(eps_inv->m02);
+		   CASSIGN_ZERO(eps_inv->m12);
+#else
+		   eps->m01 = eps->m02 = eps->m12 = 0.0;
 		   eps_inv->m01 = eps_inv->m02 = eps_inv->m12 = 0.0;
+#endif
 		   break;
 	      }
 	      case DIELECTRIC_ANISOTROPIC:
@@ -169,9 +178,22 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 		   eps->m00 = d->epsilon_diag.x;
 		   eps->m11 = d->epsilon_diag.y;
 		   eps->m22 = d->epsilon_diag.z;
+#ifdef WITH_HERMITIAN_EPSILON
+		   eps->m01.re = d->epsilon_offdiag.x;
+		   eps->m02.re = d->epsilon_offdiag.y;
+		   eps->m12.re = d->epsilon_offdiag.z;
+		   eps->m01.im = d->epsilon_offdiag_imag.x;
+		   eps->m02.im = d->epsilon_offdiag_imag.y;
+		   eps->m12.im = d->epsilon_offdiag_imag.z;
+#else
 		   eps->m01 = d->epsilon_offdiag.x;
 		   eps->m02 = d->epsilon_offdiag.y;
 		   eps->m12 = d->epsilon_offdiag.z;
+		   CHECK(d->epsilon_offdiag_imag.x == 0.0 &&
+			 d->epsilon_offdiag_imag.y == 0.0 &&
+			 d->epsilon_offdiag_imag.z == 0.0,
+			 "epsilon-offdiag-imag is only supported when MPB is configured --with-hermitian-epsilon");
+#endif
 		   maxwell_sym_matrix_invert(eps_inv, eps);
 		   break;
 	      }

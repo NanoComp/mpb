@@ -26,6 +26,9 @@
 /* Define to use single precision: */
 #undef SCALAR_SINGLE_PREC
 
+/* Define to use complex-Hermitian dielectric tensors: */
+#undef WITH_HERMITIAN_EPSILON
+
 /* Define if you have the FFTW library: */
 #undef HAVE_LIBFFTW
 #undef HAVE_LIBDFFTW

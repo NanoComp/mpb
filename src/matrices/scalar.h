@@ -26,35 +26,26 @@ typedef double real;
 #define SCALAR_MPI_TYPE MPI_DOUBLE
 #endif
 
+/********************* complex types and operations **********************/
 typedef struct {
      real re, im;
 } scalar_complex;
 
-/************************** scalars are complex **************************/
-#ifdef SCALAR_COMPLEX
+#define CSCALAR_NUMVALS (2)
 
-typedef scalar_complex scalar;
+#define CSCALAR_INIT_ZERO { 0.0, 0.0 }
 
-#define SCALAR_NUMVALS 2
+#define CSCALAR_RE(a) ((a).re)
+#define CSCALAR_IM(a) ((a).im)
 
-#define ASSIGN_CONJ(a, b) { (a).re = (b).re; (a).im = -(b).im; }
+#define CASSIGN_SCALAR(a, real, imag) { (a).re = (real); (a).im = (imag); }
+#define CACCUMULATE_SCALAR(a, real, imag) { (a).re +=(real); (a).im +=(imag); }
+#define CACCUMULATE_DIFF_SCALAR(a, real, imag) { (a).re -=(real); (a).im -=(imag); }
 
-#define SCALAR_INIT_ZERO { 0.0, 0.0 }
-#define ASSIGN_ZERO(a) { (a).re = 0.0; (a).im = 0.0; }
-
-#define ACCUMULATE_SUM(sum, a) { (sum).re += (a).re; (sum).im += (a).im; }
-#define ACCUMULATE_DIFF(sum, a) { (sum).re -= (a).re; (sum).im -= (a).im; }
-
-#define SCALAR_RE(a) ((a).re)
-#define SCALAR_IM(a) ((a).im)
-
-#define ASSIGN_REAL(a, c) { (a).re = (c); (a).im = 0.0; }
-#define ASSIGN_SCALAR(a, real, imag) { (a).re = (real); (a).im = (imag); }
-
-#define SCALAR_NORMSQR(a) ((a).re * (a).re + (a).im * (a).im)
+#define CSCALAR_NORMSQR(a) ((a).re * (a).re + (a).im * (a).im)
 
 /* a = b * c */
-#define ASSIGN_MULT(a, b, c) { \
+#define CASSIGN_MULT(a, b, c) { \
      real bbbb_re = (b).re, bbbb_im = (b).im; \
      real cccc_re = (c).re, cccc_im = (c).im; \
      ASSIGN_SCALAR(a, bbbb_re * cccc_re - bbbb_im * cccc_im, \
@@ -62,7 +53,7 @@ typedef scalar_complex scalar;
 }
 
 /* a = b / c = b * conj(c) / |c|^2 */
-#define ASSIGN_DIV(a, b, c) { \
+#define CASSIGN_DIV(a, b, c) { \
      scalar aaaa_tmp; real aaaa_tmp_norm; \
      ASSIGN_CONJ(aaaa_tmp, c); \
      aaaa_tmp_norm = 1.0 / SCALAR_NORMSQR(aaaa_tmp); \
@@ -71,32 +62,85 @@ typedef scalar_complex scalar;
 }
 
 /* a = Re (b * c) */
-#define ASSIGN_MULT_RE(a, b, c) { \
+#define CASSIGN_MULT_RE(a, b, c) { \
      real bbbb_re = (b).re, bbbb_im = (b).im; \
      real cccc_re = (c).re, cccc_im = (c).im; \
      (a) = bbbb_re * cccc_re - bbbb_im * cccc_im; \
 }
 
 /* a = Im (b * c) */
-#define ASSIGN_MULT_IM(a, b, c) { \
+#define CASSIGN_MULT_IM(a, b, c) { \
      real bbbb_re = (b).re, bbbb_im = (b).im; \
      real cccc_re = (c).re, cccc_im = (c).im; \
      (a) = bbbb_re * cccc_im + bbbb_im * cccc_re; \
 }
 
-/* a += conj(b) * c */
-#define ACCUMULATE_SUM_CONJ_MULT(a, b, c) { \
+/* a += b * c */
+#define CACCUMULATE_SUM_MULT(a, b, c) { \
      real bbbb_re = (b).re, bbbb_im = (b).im; \
      real cccc_re = (c).re, cccc_im = (c).im; \
-     (a).re += bbbb_re * cccc_re + bbbb_im * cccc_im, \
-     (a).im += bbbb_re * cccc_im - bbbb_im * cccc_re; \
+     ACCUMULATE_SCALAR(a, bbbb_re * cccc_re - bbbb_im * cccc_im, \
+		       bbbb_re * cccc_im + bbbb_im * cccc_re); \
+}
+
+/* a += conj(b) * c */
+#define CACCUMULATE_SUM_CONJ_MULT(a, b, c) { \
+     real bbbb_re = (b).re, bbbb_im = (b).im; \
+     real cccc_re = (c).re, cccc_im = (c).im; \
+     ACCUMULATE_SCALAR(a, bbbb_re * cccc_re + bbbb_im * cccc_im, \
+		       bbbb_re * cccc_im - bbbb_im * cccc_re); \
 }
 
 /* a += |b|^2 */
-#define ACCUMULATE_SUM_SQ(a, b) { \
+#define CACCUMULATE_SUM_SQ(a, b) { \
      real bbbb_re = (b).re, bbbb_im = (b).im; \
      (a) += bbbb_re * bbbb_re + bbbb_im * bbbb_im; \
 }
+
+#define CASSIGN_ZERO(a) CASSIGN_SCALAR(a, 0.0, 0.0);
+#define CASSIGN_REAL(a, c) CASSIGN_SCALAR(a, c, 0.0)
+#define CASSIGN_CONJ(a, b) CASSIGN_SCALAR(a, SCALAR_RE(b), -SCALAR_IM(b))
+#define CACCUMULATE_SUM(sum, a) CACCUMULATE_SCALAR(sum,SCALAR_RE(a),SCALAR_IM(a))
+#define CACCUMULATE_DIFF(sum, a) CACCUMULATE_DIFF_SCALAR(sum,SCALAR_RE(a),SCALAR_IM(a))
+
+/************************** scalars are complex **************************/
+#ifdef SCALAR_COMPLEX
+
+typedef scalar_complex scalar;
+
+#define SCALAR_NUMVALS CSCALAR_NUMVALS
+
+#define SCALAR_INIT_ZERO CSCALAR_INIT_ZERO
+
+#define SCALAR_RE(a) CSCALAR_RE(a)
+#define SCALAR_IM(a) CSCALAR_IM(a)
+
+#define ASSIGN_SCALAR(a, real, imag) CASSIGN_SCALAR(a, real, imag)
+#define ACCUMULATE_SCALAR(a, real, imag) CACCUMULATE_SCALAR(a, real, imag)
+#define ACCUMULATE_DIFF_SCALAR(a, real, imag) CACCUMULATE_DIFF_SCALAR(a, real, imag)
+
+#define SCALAR_NORMSQR(a) CSCALAR_NORMSQR(a)
+
+/* a = b * c */
+#define ASSIGN_MULT(a, b, c) CASSIGN_MULT(a, b, c)
+
+/* a = b / c = b * conj(c) / |c|^2 */
+#define ASSIGN_DIV(a, b, c) CASSIGN_DIV(a, b, c)
+
+/* a = Re (b * c) */
+#define ASSIGN_MULT_RE(a, b, c) CASSIGN_MULT_RE(a, b, c)
+
+/* a = Im (b * c) */
+#define ASSIGN_MULT_IM(a, b, c) CASSIGN_MULT_IM(a, b, c)
+
+/* a += b * c */
+#define ACCUMULATE_SUM_MULT(a, b, c) CACCUMULATE_SUM_MULT(a, b, c)
+
+/* a += conj(b) * c */
+#define ACCUMULATE_SUM_CONJ_MULT(a, b, c) CACCUMULATE_SUM_CONJ_MULT(a, b, c)
+
+/* a += |b|^2 */
+#define ACCUMULATE_SUM_SQ(a, b) CACCUMULATE_SUM_SQ(a, b)
 
 /*************************** scalars are real ****************************/
 #else /* scalars are real */
@@ -105,19 +149,14 @@ typedef real scalar;
 
 #define SCALAR_NUMVALS 1
 
-#define ASSIGN_CONJ(a, b) (a) = (b);
-
 #define SCALAR_INIT_ZERO 0.0
-#define ASSIGN_ZERO(a) (a) = 0.0;
-
-#define ACCUMULATE_SUM(sum, a) (sum) += (a);
-#define ACCUMULATE_DIFF(sum, a) (sum) -= (a);
 
 #define SCALAR_RE(a) (a)
-#define SCALAR_IM(a) 0.0
+#define SCALAR_IM(a) (0.0)
 
-#define ASSIGN_REAL(a, c) (a) = (c);
 #define ASSIGN_SCALAR(a, real, imag) (a) = (real);
+#define ACCUMULATE_SCALAR(a, real, imag) (a) += (real);
+#define ACCUMULATE_DIFF_SCALAR(a, real, imag) (a) -= (real);
 
 #define SCALAR_NORMSQR(a) ((a) * (a))
 
@@ -127,9 +166,16 @@ typedef real scalar;
 #define ASSIGN_MULT_RE(a, b, c) (a) = (b) * (c);
 #define ASSIGN_MULT_IM(a, b, c) (a) = 0.0;
 
+#define ACCUMULATE_SUM_MULT(a, b, c) (a) += (b) * (c);
 #define ACCUMULATE_SUM_CONJ_MULT(a, b, c) (a) += (b) * (c);
 #define ACCUMULATE_SUM_SQ(a, b) { real bbbb = (b); (a) += bbbb * bbbb; }
 
-#endif
+#endif /* scalars are real */
+
+#define ASSIGN_ZERO(a) ASSIGN_SCALAR(a, 0.0, 0.0);
+#define ASSIGN_REAL(a, c) ASSIGN_SCALAR(a, c, 0.0)
+#define ASSIGN_CONJ(a, b) ASSIGN_SCALAR(a, SCALAR_RE(b), -SCALAR_IM(b))
+#define ACCUMULATE_SUM(sum, a) ACCUMULATE_SCALAR(sum,SCALAR_RE(a),SCALAR_IM(a))
+#define ACCUMULATE_DIFF(sum, a) ACCUMULATE_DIFF_SCALAR(sum,SCALAR_RE(a),SCALAR_IM(a))
 
 #endif /* SCALAR_H */

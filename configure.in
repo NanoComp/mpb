@@ -62,6 +62,11 @@ else
 	program_transform_name='s,^mpb$$,mpbi,'";$program_transform_name"
 fi
 
+AC_ARG_WITH(hermitian-epsilon,[  --with-hermitian-epsilon     allow complex-Hermitian dielectric tensors], hermitian_epsilon=$withval, hermitian_epsilon=no)
+if test "$hermitian_epsilon" = "yes"; then
+        AC_DEFINE(WITH_HERMITIAN_EPSILON)
+fi
+
 # Add lots of compiler warnings to check for if we are using gcc:
 # (The variable $GCC is set to "yes" by AC_PROG_CC if we are using gcc.)
 if test "$GCC" = "yes"; then

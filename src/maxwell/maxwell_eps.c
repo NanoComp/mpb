@@ -24,12 +24,59 @@
 
 #include "maxwell.h"
 
-/* Set Vinv = inverse of V, where both V and Vinv are symmetric matrices. */
-extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv, 
-				      const symmetric_matrix *V)
+/* Set Vinv = inverse of V, where both V and Vinv are real-symmetric
+   (or possibly complex-Hermitian) matrices. */
+void maxwell_sym_matrix_invert(symmetric_matrix *Vinv, 
+			       const symmetric_matrix *V)
 {
-     real m00 = V->m00, m11 = V->m11, m22 = V->m22,
-	  m01 = V->m01, m02 = V->m02, m12 = V->m12;
+     real m00 = V->m00, m11 = V->m11, m22 = V->m22;
+
+#if defined(WITH_HERMITIAN_EPSILON)
+     scalar_complex m01 = V->m01, m02 = V->m02, m12 = V->m12;
+
+     if (m01.re == 0.0 && m01.im == 0.0 &&
+	 m02.re == 0.0 && m02.im == 0.0 &&
+	 m12.re == 0.0 && m12.im == 0.0) {
+	  /* optimize common case of a diagonal matrix: */
+	  Vinv->m00 = 1.0 / m00;
+	  Vinv->m11 = 1.0 / m11;
+	  Vinv->m22 = 1.0 / m22;
+	  ASSIGN_ZERO(Vinv->m01);
+	  ASSIGN_ZERO(Vinv->m02);
+	  ASSIGN_ZERO(Vinv->m12);
+     }
+     else {
+	  double detinv;
+	  
+	  /* compute the determinant: */
+	  detinv = m00*m11*m22 - m11*CSCALAR_NORMSQR(m02) -
+	       CSCALAR_NORMSQR(m01)*m22 - CSCALAR_NORMSQR(m12)*m00 +
+	       2.0 * ((m01.re * m12.re - m01.im * m12.im) * m02.re +
+		      (m01.re * m12.im + m01.im * m12.re) * m02.im);
+	  
+	  CHECK(detinv != 0.0, "singular 3x3 matrix");
+	  
+	  detinv = 1.0/detinv;
+	  
+	  Vinv->m00 = detinv * (m11*m22 - CSCALAR_NORMSQR(m12));
+	  Vinv->m11 = detinv * (m00*m22 - CSCALAR_NORMSQR(m02));
+	  Vinv->m22 = detinv * (m11*m00 - CSCALAR_NORMSQR(m01));
+	  
+	  CASSIGN_SCALAR(Vinv->m02,
+			 detinv * (m01.re*m12.re-m01.im*m12.im - m11*m02.re),
+			 -detinv*(-m01.re*m12.im-m01.im*m12.re + m11*m02.im));
+
+	  CASSIGN_SCALAR(Vinv->m01,
+			 detinv * (m12.re*m02.re+m12.im*m02.im - m22*m01.re),
+			 -detinv * (m12.im*m02.re-m12.re*m02.im + m22*m01.im));
+
+	  CASSIGN_SCALAR(Vinv->m12,
+			 detinv * (m01.re*m02.re+m01.im*m02.im - m00*m12.re),
+			 -detinv * (m01.im*m02.re-m01.re*m02.im + m00*m12.im));
+     }
+     
+#else /* real matrix */
+     real m01 = V->m01, m02 = V->m02, m12 = V->m12;
 
      if (m01 == 0.0 && m02 == 0.0 && m12 == 0.0) {
 	  /* optimize common case of a diagonal matrix: */
@@ -57,6 +104,7 @@ extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
 	  Vinv->m01 = detinv * (m12*m02 - m01*m22);
 	  Vinv->m12 = detinv * (m01*m02 - m00*m12);
      }
+#endif /* real matrix */
 }
 
 #define SHIFT3(x,y,z) {real SHIFT3_dummy = z; z = y; y = x; x = SHIFT3_dummy;}
@@ -458,8 +506,14 @@ void set_maxwell_dielectric(maxwell_data *md,
 
      {
 	  int mi, mj, mk;
+#ifdef WITH_HERMITIAN_EPSILON
+	  symmetric_matrix eps_mean = {0,0,0,{0,0},{0,0},{0,0}}, 
+			   eps_inv_mean = {0,0,0,{0,0},{0,0},{0,0}},
+			   eps_mean_inv;
+#else
 	  symmetric_matrix eps_mean = {0,0,0,0,0,0}, 
 			   eps_inv_mean = {0,0,0,0,0,0}, eps_mean_inv;
+#endif
 	  real norm_len;
 	  real norm0, norm1, norm2;
 	  short means_different_p, diag_eps_p;
@@ -476,24 +530,38 @@ void set_maxwell_dielectric(maxwell_data *md,
 			 eps_mean.m00 += eps.m00;
 			 eps_mean.m11 += eps.m11;
 			 eps_mean.m22 += eps.m22;
-			 eps_mean.m01 += eps.m01;
-			 eps_mean.m02 += eps.m02;
-			 eps_mean.m12 += eps.m12;
 			 eps_inv_mean.m00 += eps_inv.m00;
 			 eps_inv_mean.m11 += eps_inv.m11;
 			 eps_inv_mean.m22 += eps_inv.m22;
+#ifdef WITH_HERMITIAN_EPSILON
+			 CACCUMULATE_SUM(eps_mean.m01, eps.m01);
+			 CACCUMULATE_SUM(eps_mean.m02, eps.m02);
+			 CACCUMULATE_SUM(eps_mean.m12, eps.m12);
+			 CACCUMULATE_SUM(eps_inv_mean.m01, eps_inv.m01);
+			 CACCUMULATE_SUM(eps_inv_mean.m02, eps_inv.m02);
+			 CACCUMULATE_SUM(eps_inv_mean.m12, eps_inv.m12);
+#else
+			 eps_mean.m01 += eps.m01;
+			 eps_mean.m02 += eps.m02;
+			 eps_mean.m12 += eps.m12;
 			 eps_inv_mean.m01 += eps_inv.m01;
 			 eps_inv_mean.m02 += eps_inv.m02;
 			 eps_inv_mean.m12 += eps_inv.m12;
+#endif
 		    }
      
-	  diag_eps_p =
-	       eps_mean.m01==0.0 && eps_mean.m02==0.0 && eps_mean.m12==0.0;
+	  diag_eps_p = DIAG_SYMMETRIC_MATRIX(eps_mean);
 	  if (diag_eps_p) { /* handle the common case of diagonal matrices: */
 	       eps_mean_inv.m00 = mesh_prod / eps_mean.m00;
 	       eps_mean_inv.m11 = mesh_prod / eps_mean.m11;
 	       eps_mean_inv.m22 = mesh_prod / eps_mean.m22;
+#ifdef WITH_HERMITIAN_EPSILON
+	       CASSIGN_ZERO(eps_mean_inv.m01);
+	       CASSIGN_ZERO(eps_mean_inv.m02);
+	       CASSIGN_ZERO(eps_mean_inv.m12);
+#else
 	       eps_mean_inv.m01 = eps_mean_inv.m02 = eps_mean_inv.m12 = 0.0;
+#endif
 	       eps_inv_mean.m00 *= mesh_prod_inv;
 	       eps_inv_mean.m11 *= mesh_prod_inv;
 	       eps_inv_mean.m22 *= mesh_prod_inv;
@@ -504,27 +572,53 @@ void set_maxwell_dielectric(maxwell_data *md,
 		    fabs(eps_mean_inv.m22 - eps_inv_mean.m22) > SMALL;
 	  }
 	  else {
-	       eps_mean.m00 *= mesh_prod_inv;
-	       eps_mean.m11 *= mesh_prod_inv;
-	       eps_mean.m22 *= mesh_prod_inv;
-	       eps_mean.m01 *= mesh_prod_inv;
-	       eps_mean.m02 *= mesh_prod_inv;
-	       eps_mean.m12 *= mesh_prod_inv;
-	       maxwell_sym_matrix_invert(&eps_mean_inv, &eps_mean);
 	       eps_inv_mean.m00 *= mesh_prod_inv;
 	       eps_inv_mean.m11 *= mesh_prod_inv;
 	       eps_inv_mean.m22 *= mesh_prod_inv;
+	       eps_mean.m00 *= mesh_prod_inv;
+	       eps_mean.m11 *= mesh_prod_inv;
+	       eps_mean.m22 *= mesh_prod_inv;
+#ifdef WITH_HERMITIAN_EPSILON
+	       eps_mean.m01.re *= mesh_prod_inv;
+	       eps_mean.m01.im *= mesh_prod_inv;
+	       eps_mean.m02.re *= mesh_prod_inv;
+	       eps_mean.m02.im *= mesh_prod_inv;
+	       eps_mean.m12.re *= mesh_prod_inv;
+	       eps_mean.m12.im *= mesh_prod_inv;
+	       eps_inv_mean.m01.re *= mesh_prod_inv;
+	       eps_inv_mean.m01.im *= mesh_prod_inv;
+	       eps_inv_mean.m02.re *= mesh_prod_inv;
+	       eps_inv_mean.m02.im *= mesh_prod_inv;
+	       eps_inv_mean.m12.re *= mesh_prod_inv;
+	       eps_inv_mean.m12.im *= mesh_prod_inv;
+#else
+	       eps_mean.m01 *= mesh_prod_inv;
+	       eps_mean.m02 *= mesh_prod_inv;
+	       eps_mean.m12 *= mesh_prod_inv;
 	       eps_inv_mean.m01 *= mesh_prod_inv;
 	       eps_inv_mean.m02 *= mesh_prod_inv;
 	       eps_inv_mean.m12 *= mesh_prod_inv;
+#endif
+	       maxwell_sym_matrix_invert(&eps_mean_inv, &eps_mean);
 	       
 	       means_different_p = 
 		    fabs(eps_mean_inv.m00 - eps_inv_mean.m00) > SMALL ||
 		    fabs(eps_mean_inv.m11 - eps_inv_mean.m11) > SMALL ||
-		    fabs(eps_mean_inv.m22 - eps_inv_mean.m22) > SMALL ||
+		    fabs(eps_mean_inv.m22 - eps_inv_mean.m22) > SMALL;
+#ifdef WITH_HERMITIAN_EPSILON
+	       means_different_p = means_different_p ||
+		    fabs(eps_mean_inv.m01.re - eps_inv_mean.m01.re) > SMALL ||
+		    fabs(eps_mean_inv.m02.re - eps_inv_mean.m02.re) > SMALL ||
+		    fabs(eps_mean_inv.m12.re - eps_inv_mean.m12.re) > SMALL ||
+		    fabs(eps_mean_inv.m01.im - eps_inv_mean.m01.im) > SMALL ||
+		    fabs(eps_mean_inv.m02.im - eps_inv_mean.m02.im) > SMALL ||
+		    fabs(eps_mean_inv.m12.im - eps_inv_mean.m12.im) > SMALL;
+#else
+	       means_different_p = means_different_p ||
 		    fabs(eps_mean_inv.m01 - eps_inv_mean.m01) > SMALL ||
 		    fabs(eps_mean_inv.m02 - eps_inv_mean.m02) > SMALL ||
 		    fabs(eps_mean_inv.m12 - eps_inv_mean.m12) > SMALL;
+#endif
 	  }
 
 	  /* if the two averaging methods yielded different results,
@@ -564,11 +658,11 @@ void set_maxwell_dielectric(maxwell_data *md,
 
 	       /* Compute the effective inverse dielectric tensor.
 		  We define this as:
-                    1/2 ( {eps_inv_mean, P} + {eps_mean_inv, 1-P} )
+                     1/2 ( {eps_inv_mean, P} + {eps_mean_inv, 1-P} )
 	          where P is the projection matrix onto the normal direction
                   (P = norm ^ norm), and {a,b} is the anti-commutator ab+ba.
 		   = 1/2 {eps_inv_mean - eps_mean_inv, P} + eps_mean_inv
-		   = 1/2 (n_i x_j + x_i n_j) + (eps_mean_inv)_ij
+		   = 1/2 (n_i conj(x_j) + x_i n_j) + (eps_mean_inv)_ij
 		  where n_k is the kth component of the normal vector and 
 		     x_i = (eps_inv_mean - eps_mean_inv)_ik n_k  
 		  Note the implied summations (Einstein notation).
@@ -585,11 +679,48 @@ void set_maxwell_dielectric(maxwell_data *md,
 	       x1 = (eps_inv_mean.m11 - eps_mean_inv.m11) * norm1;
 	       x2 = (eps_inv_mean.m22 - eps_mean_inv.m22) * norm2;
 	       if (diag_eps_p) {
+#ifdef WITH_HERMITIAN_EPSILON
+		    md->eps_inv[eps_index].m01.re = 0.5*(x0*norm1 + x1*norm0);
+		    md->eps_inv[eps_index].m01.im = 0.0;
+		    md->eps_inv[eps_index].m02.re = 0.5*(x0*norm2 + x2*norm0);
+		    md->eps_inv[eps_index].m02.im = 0.0;
+		    md->eps_inv[eps_index].m12.re = 0.5*(x1*norm2 + x2*norm1);
+		    md->eps_inv[eps_index].m12.im = 0.0;
+#else
 		    md->eps_inv[eps_index].m01 = 0.5*(x0*norm1 + x1*norm0);
 		    md->eps_inv[eps_index].m02 = 0.5*(x0*norm2 + x2*norm0);
 		    md->eps_inv[eps_index].m12 = 0.5*(x1*norm2 + x2*norm1);
+#endif
 	       }
 	       else {
+#ifdef WITH_HERMITIAN_EPSILON
+		    real x0i, x1i, x2i;
+		    x0 += ((eps_inv_mean.m01.re - eps_mean_inv.m01.re)*norm1 + 
+			   (eps_inv_mean.m02.re - eps_mean_inv.m02.re)*norm2);
+		    x1 += ((eps_inv_mean.m01.re - eps_mean_inv.m01.re)*norm0 + 
+			   (eps_inv_mean.m12.re - eps_mean_inv.m12.re)*norm2);
+		    x2 += ((eps_inv_mean.m02.re - eps_mean_inv.m02.re)*norm0 +
+			   (eps_inv_mean.m12.re - eps_mean_inv.m12.re)*norm1);
+		    x0i = ((eps_inv_mean.m01.im - eps_mean_inv.m01.im)*norm1 + 
+			   (eps_inv_mean.m02.im - eps_mean_inv.m02.im)*norm2);
+		    x1i = (-(eps_inv_mean.m01.im - eps_mean_inv.m01.im)*norm0+ 
+			   (eps_inv_mean.m12.im - eps_mean_inv.m12.im)*norm2);
+		    x2i = -((eps_inv_mean.m02.im - eps_mean_inv.m02.im)*norm0 +
+			    (eps_inv_mean.m12.im - eps_mean_inv.m12.im)*norm1);
+
+		    md->eps_inv[eps_index].m01.re = (0.5*(x0*norm1 + x1*norm0) 
+						     + eps_mean_inv.m01.re);
+		    md->eps_inv[eps_index].m02.re = (0.5*(x0*norm2 + x2*norm0) 
+						     + eps_mean_inv.m02.re);
+		    md->eps_inv[eps_index].m12.re = (0.5*(x1*norm2 + x2*norm1) 
+						     + eps_mean_inv.m12.re);
+		    md->eps_inv[eps_index].m01.im = (0.5*(x0i*norm1-x1i*norm0) 
+						     + eps_mean_inv.m01.im);
+		    md->eps_inv[eps_index].m02.im = (0.5*(x0i*norm2-x2i*norm0) 
+						     + eps_mean_inv.m02.im);
+		    md->eps_inv[eps_index].m12.im = (0.5*(x1i*norm2-x2i*norm1) 
+						     + eps_mean_inv.m12.im);
+#else
 		    x0 += ((eps_inv_mean.m01 - eps_mean_inv.m01) * norm1 + 
 			   (eps_inv_mean.m02 - eps_mean_inv.m02) * norm2);
 		    x1 += ((eps_inv_mean.m01 - eps_mean_inv.m01) * norm0 + 
@@ -603,6 +734,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 						  + eps_mean_inv.m02);
 		    md->eps_inv[eps_index].m12 = (0.5*(x1*norm2 + x2*norm1) 
 						  + eps_mean_inv.m12);
+#endif
 	       }
 	       md->eps_inv[eps_index].m00 = x0*norm0 + eps_mean_inv.m00;
 	       md->eps_inv[eps_index].m11 = x1*norm1 + eps_mean_inv.m11;

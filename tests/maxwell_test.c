@@ -83,9 +83,18 @@ static void epsilon(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      else
 	  eps_val = edata->eps_low;
      eps->m00 = eps->m11 = eps->m22 = eps_val;
-     eps->m01 = eps->m02 = eps->m12 = 0.0;
      eps_inv->m00 = eps_inv->m11 = eps_inv->m22 = 1.0 / eps_val;
+#ifdef WITH_HERMITIAN_EPSILON
+     CASSIGN_ZERO(eps->m01);
+     CASSIGN_ZERO(eps->m02);
+     CASSIGN_ZERO(eps->m12);
+     CASSIGN_ZERO(eps_inv->m01);
+     CASSIGN_ZERO(eps_inv->m02);
+     CASSIGN_ZERO(eps_inv->m12);
+#else
+     eps->m01 = eps->m02 = eps->m12 = 0.0;
      eps_inv->m01 = eps_inv->m02 = eps_inv->m12 = 0.0;
+#endif
 }
 
 /*************************************************************************/
