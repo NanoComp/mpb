@@ -81,6 +81,7 @@ fi
 AC_CHECK_LIB(m, sqrt)
 
 AC_F77_LIBRARY_LDFLAGS
+LIBS="$LIBS $FLIBS"
 
 # ----------------------------------------------------------------------
 # In principle, we should abort if some of the following libraries are
@@ -116,7 +117,7 @@ if test "$ok" = "no"; then
 	save_LIBS="xxxxxxxx"
 elif test "$ok" != "yes"; then
 	# user specified a BLAS library to try on the command line
-	AC_CHECK_LIB($ok, main, LIBS="-l$ok $LIBS",, $FLIBS)
+	AC_CHECK_LIB($ok, main)
 fi
 
 if test "$save_LIBS" = "$LIBS"; then
@@ -146,7 +147,7 @@ fi
 
 if test "$save_LIBS" = "$LIBS"; then
 	# Checks for BLAS in IBM ESSL library
-	AC_CHECK_LIB(essl, dgemm, LIBS="-lessl $LIBS",, $FLIBS)
+	AC_CHECK_LIB(essl, dgemm)
 fi
 
 if test "$save_LIBS" = "$LIBS"; then

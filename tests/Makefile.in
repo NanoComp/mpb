@@ -5,7 +5,7 @@ CFLAGS = @CFLAGS@
 INCLUDES = @INCLUDES@ -I../src/util -I../src/matrices -I../src/maxwell
 DEFS = @DEFS@
 LDFLAGS = @LDFLAGS@
-LIBS = @LIBS@ @FLIBS@
+LIBS = @LIBS@
 RANLIB = @RANLIB@
 @SET_MAKE@
 
