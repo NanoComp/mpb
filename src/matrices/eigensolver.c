@@ -139,10 +139,11 @@ static real trace_func(real *trace_deriv,
 
 /**************************************************************************/
 
-/* Minimize the function func(x) to within a fractional tolerance (in x)
-   of "tolerance".  The df parameter of func should return the derivative
-   d(func)/dx at x.  The data parameter to linmin is passed unchanged
-   to func.
+/* Minimize the function func(x) to within a fractional tolerance (in
+   x) of "tolerance".  The df parameter of func should return the
+   derivative d(func)/dx at x; if df is NULL the derivative should not
+   be computed/returned.  The data parameter to linmin is passed
+   unchanged to func.
 
    Looks for the minimum between xmin and xmax, with x0 an initial guess
    for the minimum.  f_xmin and df_xmin should be the values of func
