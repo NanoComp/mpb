@@ -348,7 +348,9 @@ expect for complex-hermitian epsilon, so be cautious about using
 <p>For example, a material with a dielectric constant of 3.0 for TE
 fields (polarized in the xy plane) and 5.0 for TM fields (polarized in
 the z direction) would be specified via <code>(make
-(dielectric-anisotropic (epsilon-diag 3 3 5)))</code>.
+(dielectric-anisotropic (epsilon-diag 3 3 5)))</code>.  Please <a
+href="#tetm-aniso">be aware</a> that not all 2d anisotropic dielectric
+structures will have TE and TM modes, however.
 
 <p><dt><code>material-function</code>
 <dd>This material type allows you to specify the material as an
@@ -652,6 +654,15 @@ completely polarized, and these functions behave identically to
 <code>run</code>.  (2d systems oriented in the yz or xz directions
 don't work; you have to orient your coordinates to be in the xy
 plane.)
+
+<p><a name="tetm-aniso">Note</a> that for the modes to be segregated
+into TE and TM polarizations, the dielectric function <em>must</em>
+have mirror symmetry for reflections through the xy plane.  If you use
+<a href="#dielectric-anisotropic">anisotropic dielectrics</a>, you
+should be aware that they break this symmetry if the z direction is
+not one of the principle axes.  If you use <code>run-te</code> or
+<code>run-tm</code> in such a case of broken symmetry, MPB will not
+detect it and <em>unpredictable results will ensue</em>.
 
 <p><dt><code>(run-even <i>band-func ...</i>), (run-odd <i>band-func ...</i>)</code>
 <dd>These are the same as the <code>run</code> function except that
