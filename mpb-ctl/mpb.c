@@ -778,6 +778,114 @@ void compute_field_energy(void)
 
 /**************************************************************************/
 
+/* Fix the phase of the current field (e/h/d) to a canonical value.
+
+   The following procedure is used, derived from a suggestion by Doug
+   Allan of Corning: Given the field component with the largest
+   square-amplitude, choose the phase to maximize the sum of the
+   squares of the real parts.  This doesn't fix the overall sign, though;
+   that is done using a method described below. */
+void fix_field_phase(void)
+{
+     int i, N, j, jmax;
+     real sq_amp[3] = {0,0,0};
+     real sq_sum[2] = {0,0}, maxabs = 0.0;
+     int maxabs_index = 0, maxabs_sign = 1;
+     double theta;
+     scalar phase;
+
+     if (!curfield || !strchr("dhe", curfield_type)) {
+          fprintf(stderr, "The D, H, or E field must be loaded first.\n");
+          return;
+     }
+
+     N = mdata->fft_output_size;
+
+     /* first, find component jmax with largest square amplitude: */
+     for (i = 0; i < N; ++i) {
+	  for (j = 0; j < 3; ++j) {
+	       sq_amp[j] += SCALAR_NORMSQR(curfield[3*i+j]);
+	  }
+     }
+     MPI_Allreduce(sq_amp, sq_amp, 3, SCALAR_MPI_TYPE,
+		   MPI_SUM, MPI_COMM_WORLD);
+     jmax = sq_amp[0] > sq_amp[1] ? (sq_amp[0] > sq_amp[2] ? 0 : 2) :
+	  (sq_amp[1] > sq_amp[2] ? 1 : 2);
+     printf("biggest component = %d (%g)\n", jmax, sq_amp[jmax]);
+ 
+     /* Compute the phase that maximizes the sum of the squares of
+	the real parts of the jmax component.  Equivalently, maximize
+	the real part of the sum of the squares. */
+     for (i = 0; i < N; ++i) {
+	  scalar sq;
+	  ASSIGN_MULT(sq, curfield[3*i+jmax], curfield[3*i+jmax]);
+	  sq_sum[0] += SCALAR_RE(sq);
+	  sq_sum[1] += SCALAR_IM(sq);
+     }
+     MPI_Allreduce(sq_sum, sq_sum, 2, SCALAR_MPI_TYPE,
+                   MPI_SUM, MPI_COMM_WORLD);
+     /* compute the phase = exp(i*theta) maximizing the real part of
+	the sum of the squares.  i.e., maximize:
+	    cos(2*theta)*sq_sum[0] - sin(2*theta)*sq_sum[1] */
+     theta = 0.5 * atan2(-sq_sum[1], sq_sum[0]);
+     ASSIGN_SCALAR(phase, cos(theta), sin(theta));
+
+     /* Next, fix the overall sign.  We do this by first computing the
+	maximum |real part| of the jmax component (after multiplying
+	by phase), and then finding the last spatial index at which
+	|real part| is at least half of this value.  The sign is then
+	chosen to make the real part positive at that point. 
+
+        (Note that we can't just make the point of maximum |real part|
+         positive, as that would be ambiguous in the common case of an
+         oscillating field within the unit cell.) */
+     for (i = 0; i < N; ++i) {
+	  real r;
+	  ASSIGN_MULT_RE(r, curfield[3*i+jmax], phase);  r = fabs(r);
+	  if (r > maxabs)
+	       maxabs = r;
+     }
+     MPI_Allreduce(&maxabs, &maxabs, 1, SCALAR_MPI_TYPE,
+		   MPI_MAX, MPI_COMM_WORLD);
+     for (i = N - 1; i >= 0; --i) {
+	  real r;
+	  ASSIGN_MULT_RE(r, curfield[3*i+jmax], phase);
+	  if (fabs(r) >= 0.5 * maxabs) {
+	       maxabs_index = i;
+	       maxabs_sign = r < 0 ? -1 : 1;
+	       break;
+	  }
+     }
+     if (i >= 0)  /* convert index to global index in distributed array: */
+	  maxabs_index += mdata->local_x_start * mdata->ny * mdata->nz;
+     {
+	  /* compute maximum index and corresponding sign over all the 
+	     processors, using the MPI_MAXLOC reduction operation: */
+	  struct {int i; int s;} x;
+	  x.i = maxabs_index; x.s = maxabs_sign;
+	  MPI_Allreduce(&x, &x, 1, MPI_2INT, MPI_MAXLOC, MPI_COMM_WORLD);
+	  maxabs_index = x.i; maxabs_sign = x.s;
+     }
+     ASSIGN_SCALAR(phase, maxabs_sign*cos(theta), maxabs_sign*sin(theta));
+
+     printf("Fixing %c-field (band %d) phase by %g + %gi; max ampl. = %g\n",
+	    curfield_type, curfield_band,
+	    SCALAR_RE(phase), SCALAR_IM(phase), maxabs);
+
+     /* Now, multiply everything by this phase, *including* the
+	stored "raw" eigenvector in H, so that any future fields
+	that we compute will have a consistent phase: */
+     for (i = 0; i < N*3; ++i) {
+	  ASSIGN_MULT(curfield[i], curfield[i], phase);
+     }
+     for (i = 0; i < H.n; ++i) {
+          ASSIGN_MULT(H.data[i*H.p + curfield_band - 1], 
+		      H.data[i*H.p + curfield_band - 1], phase);
+     }
+}
+
+/**************************************************************************/
+
 /* compute the fraction of the field energy that is located in the
    given range of dielectric constants: */
 number compute_energy_in_dielectric(number eps_low, number eps_high)
