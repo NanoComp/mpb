@@ -128,8 +128,8 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 	in the lattice vector basis.  Also, shift origin to the center
         of the grid. */
      p.x = (r[0] - 0.5) * geometry_lattice.size.x;
-     p.y = (r[1] - 0.5) * geometry_lattice.size.y;
-     p.z = (r[2] - 0.5) * geometry_lattice.size.z;
+     p.y = dimensions <= 1 ? 0 : (r[1] - 0.5) * geometry_lattice.size.y;
+     p.z = dimensions <= 2 ? 0 : (r[2] - 0.5) * geometry_lattice.size.z;
 
      /* call search routine from libctl/utils/libgeom/geom.c: */
 #if USE_GEOMETRY_TREE
