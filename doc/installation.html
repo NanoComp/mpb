@@ -54,6 +54,8 @@ when configuring the program; the directories
 <code>$HOME/install/lib</code> etc. are created automatically as
 needed.
 
+<h3>Paths for Configuring<h3>
+
 <p>There are two further complications.  First, if you install in a
 non-standard location (and <code>/usr/local</code> is considered
 non-standard by some proprietary compilers), you will need to tell the
@@ -80,6 +82,8 @@ described above, we would do:
 <pre>
 setenv PATH "$HOME/install/bin:$PATH"
 </pre>
+
+<h3>Paths for Running (Shared Libraries)<h3>
 
 <p>Second, many of the packages installed below (e.g. Guile) are
 installed as shared libraries.  You need to make sure that your
