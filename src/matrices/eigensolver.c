@@ -296,6 +296,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                printf("    iteration %4d: "
                       "trace = %0.16g (%g%% change)\n", iteration, E,
 		      convergence_history[iteration % EIG_HISTORY_SIZE]);
+	       if (flags & EIGS_VERBOSE)
+		    debug_output_malloc_count();
 	       fflush(stdout); /* make sure output appears */
                prev_feedback_time = MPIGLUE_CLOCK; /* reset feedback clock */
           }
