@@ -1,3 +1,26 @@
+2000-02-12  stevenj  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c: Yikes!
+	Bug fix in zparity stuff for even nz!!
+
+2000-02-09  stevenj  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: documented
+	band-range-data output var
+
+	* /home/a/stevenj/Repository/mpb/ChangeLog: updated
+
+	* /home/a/stevenj/Repository/mpb/NEWS: noted changes
+
+	* /home/a/stevenj/Repository/mpb/NEWS: noted --without-hdf5 fix
+
+	* /home/a/stevenj/Repository/mpb/configure.in: Warn user if -lhdf5
+	is found but hdf5.h is not (probably an error).
+
+	* /home/a/stevenj/Repository/mpb/src/matrixio/matrixio.c,
+	/home/a/stevenj/Repository/mpb/utils/mpb-data.c: fixed compilation
+	--without-hdf5
+
 Wed Feb  9 23:14:45 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* NEWS: noted changes

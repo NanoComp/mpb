@@ -1,6 +1,12 @@
+MPB 0.11 (2/12/2000)
+
   * configure script can now detect and link ATLAS 3.0 accelerated BLAS.
 
   * Added band-range-data output variable.
+
+  * Fixed bug in run-even/run-odd that could seriously slow or even
+    prevent eigensolver convergence.  Thanks to Payam Rabiei for the
+    bug report.
 
   * Fixed compilation --without-hdf5, or when HDF5 is not found.  Thanks
     to Rajesh Rengarajan for the bug report.
