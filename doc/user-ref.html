@@ -915,9 +915,14 @@ in the following form (suitable for grepping):
 
 <p>where <code><i>f</i></code> is either <code>h</code> or
 <code>d</code>.  The return value of <code>compute-field-energy</code>
-is the total, unnormalized energy, which is in arbitrary units
-deriving from the normalization of the eigenstate (e.g. the total
-energy for H is always 1.0).
+is a list of 7 numbers: <code>(<i>U xr xi yr yi zr zi</i>)</code>.
+<code><i>U</i></code> is the total, unnormalized energy, which is in
+arbitrary units deriving from the normalization of the eigenstate
+(e.g. the total energy for H is always 1.0).  <code><i>xr</i></code>
+is the fraction of the energy in the real part of the field's x
+component, <code><i>xi</i></code> is the fraction in the imaginary
+part of the x component, etcetera (<code><i>yr + yi =
+y-fraction</i></code>, and so on).
 
 </dl>
 

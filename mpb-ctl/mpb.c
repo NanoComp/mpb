@@ -750,7 +750,7 @@ number_list compute_group_velocity_component(vector3 d)
 {
      number_list group_v;
      real u[3];
-     int i;
+     int i, ib;
 
      group_v.num_items = 0;  group_v.items = (number *) NULL;
 
@@ -771,8 +771,32 @@ number_list compute_group_velocity_component(vector3 d)
      CHK_MALLOC(group_v.items, number, group_v.num_items);
      
      /* now, compute group_v.items = diag Re <H| curl 1/eps i u x |H>: */
-     maxwell_ucross_op(H, W[0], mdata, u);
-     evectmatrix_XtY_diag_real(H, W[0], group_v.items);
+
+     /* ...we have to do this in blocks of eigensolver_block_size since
+	the work matrix W[0] may not have enough space to do it all at once. */
+     
+     for (ib = 0; ib < num_bands; ib += Hblock.alloc_p) {
+	  if (ib + mdata->num_bands > num_bands) {
+	       maxwell_set_num_bands(mdata, num_bands - ib);
+	       evectmatrix_resize(&W[0], num_bands - ib, 0);
+	       evectmatrix_resize(&Hblock, num_bands - ib, 0);
+	  }
+	  if (Hblock.data != H.data) {  /* initialize fields of block from H */
+	       int in, ip;
+	       for (in = 0; in < Hblock.n; ++in)
+		    for (ip = 0; ip < Hblock.p; ++ip)
+			 Hblock.data[in * Hblock.p + ip] =
+			      H.data[in * H.p + ip + ib];
+	  }
+
+	  maxwell_ucross_op(Hblock, W[0], mdata, u);
+	  evectmatrix_XtY_diag_real(Hblock, W[0], group_v.items + ib);
+     }
+
+     /* Reset scratch matrix sizes: */
+     evectmatrix_resize(&Hblock, Hblock.alloc_p, 0);
+     evectmatrix_resize(&W[0], W[0].alloc_p, 0);
+     maxwell_set_num_bands(mdata, Hblock.alloc_p);
 
      /* The group velocity is given by:
 
@@ -941,16 +965,17 @@ void get_epsilon(void)
    the relative strength of different field components.  Also return
    the integral of the energy density, which we used to normalize it,
    in case the user needs the unnormalized version. */
-number compute_field_energy(void)
+number_list compute_field_energy(void)
 {
      int i, N, last_dim, last_dim_stored;
      real comp_sum[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
      real energy_sum = 0.0, normalization;
      real *energy_density = (real *) curfield;
+     number_list retval = { 0, 0 };
 
      if (!curfield || !strchr("dh", curfield_type)) {
 	  fprintf(stderr, "The D or H field must be loaded first.\n");
-	  return 0;
+	  return retval;
      }
 
      N = mdata->fft_output_size;
@@ -1024,10 +1049,22 @@ number compute_field_energy(void)
      /* remember that we now have energy density; denoted by capital D/H */
      curfield_type = toupper(curfield_type);
 
-     /* Return the total energy.  Divide by N to account for the
+     /* The return value is a list of 7 items: the total energy,
+	followed by the 6 elements of the comp_sum array (the fraction
+	of the energy in the real/imag. parts of each field component). */
+
+     retval.num_items = 7;
+     CHK_MALLOC(retval.items, number, retval.num_items);
+
+     /* Return the total energy divided by nx*ny*nz to account for the
 	scaling of the Fourier transform, so that the integral is
 	consistent with the integral in frequency-domain. */
-     return (energy_sum/N);
+     retval.items[0] = energy_sum/H.N;
+
+     for (i = 0; i < 6; ++i)
+	  retval.items[i+1] = comp_sum[i];
+
+     return retval;
 }
 
 /**************************************************************************/

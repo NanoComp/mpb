@@ -12,6 +12,9 @@
     the Gamma (k=0) point.  This k point should no longer converge
     slowly (or cause additional problems in the targeted eigensolver).
 
+  * compute-field-energy function now also returns the fraction of the
+    energy in the various field components.
+
   * Added first-brillouin-zone function to transform an arbitrary
     k-point into an equivalent point in the first Brillouin zone.
     Thanks to Payam Rabiei for the suggestion.
