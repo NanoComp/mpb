@@ -259,7 +259,7 @@ int main(int argc, char **argv)
           extern int optind;
           int c;
 
-          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:emt:c:g:1pv"))
+          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:emt:c:g:1pvE:"))
 		 != -1)
 	       switch (c) {
 		   case 'h':
@@ -307,7 +307,7 @@ int main(int argc, char **argv)
 			target_freq = fabs(atof(optarg));
 			do_target = 1;
 			break;
-		   case 'D':
+		   case 'E':
 			max_err = fabs(atof(optarg));
 			CHECK(max_err > 0, "maximum error must be positive");
 			break;
