@@ -265,7 +265,11 @@ void assign_symmatrix_vector(scalar_complex *newv,
    taking the curl and then Fourier transforming.  The output array,
    dfield, is fft_output_size x cur_num_bands x 3, where
    fft_output_size is the local spatial indices and 3 is the field
-   components. */
+   components. 
+
+   Note: actually, this computes just (k+G) x H, whereas the actual D
+   field is i/omega i(k+G) x H...so, we are really computing -omega*D,
+   here. */
 void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin, 
 			      scalar_complex *dfield,
 			      int cur_band_start, int cur_num_bands)
@@ -279,7 +283,7 @@ void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin,
      CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Hin.p,
 	   "invalid range of bands for computing fields");
 
-     /* first, compute fft_data = curl(Hin): */
+     /* first, compute fft_data = curl(Hin) (really (k+G) x H) : */
      for (i = 0; i < d->other_dims; ++i)
 	  for (j = 0; j < d->last_dim; ++j) {
 	       int ij = i * d->last_dim + j;
@@ -325,7 +329,10 @@ void maxwell_compute_e_from_d(maxwell_data *d,
 /* Compute the magnetic (H) field in Fourier space from the electric
    field (e) in position space; this amouns to Fourier transforming and
    then taking the curl.  Also, multiply by scale.  Other
-   parameters are as in compute_d_from_H. */
+   parameters are as in compute_d_from_H. 
+
+   Note: we actually compute (k+G) x E, whereas the actual H field
+   is -i/omega i(k+G) x E...so, we are actually computing omega*H, here. */
 void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout, 
 			      scalar_complex *efield,
 			      int cur_band_start, int cur_num_bands,

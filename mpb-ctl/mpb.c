@@ -1010,6 +1010,26 @@ void get_dfield(int which_band)
      curfield_band = which_band;
      curfield_type = 'd';
      maxwell_compute_d_from_H(mdata, H, curfield, which_band - 1, 1);
+
+     /* Here, we correct for the fact that compute_d_from_H actually
+	computes just (k+G) x H, whereas the actual D field is
+	i/omega i(k+G) x H...so, there is an added factor of -1/omega. */
+     {
+	  int i, N;
+	  double scale;
+	  N = mdata->fft_output_size;
+
+	  if (freqs.items[which_band - 1] != 0.0) {
+	       scale = -1.0 / freqs.items[which_band - 1];
+	  }
+	  else
+	       scale = -1.0; /* arbitrary */
+
+	  for (i = 0; i < 3*N; ++i) {
+	       curfield[i].re *= scale;
+	       curfield[i].im *= scale;
+	  }
+     }
 }
 
 void get_hfield(integer which_band)
