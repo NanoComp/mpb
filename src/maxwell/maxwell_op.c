@@ -175,69 +175,71 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
      
      CHECK(d, "null maxwell data pointer!");
      CHECK(Xin.c == 2, "fields don't have 2 components!");
-     CHECK(d->num_fft_bands == Xin.p, "not yet implemented...");
 
      fft_data = d->fft_data;
 
      scale = -1.0 / Xout.N;  /* scale factor to normalize FFT; 
 				negative sign comes from 2 i's from curls */
 
+     for (cur_band_start = 0; cur_band_start < Xin.p; 
+	  cur_band_start += d->num_fft_bands) {
+	  int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
+
 #ifdef SCALAR_COMPLEX
 
-     /********************************************/
-
-     /* first, compute fft_data = curl(Xin): */
-     for (i = 0; i < Xin.localN; ++i) {
-	  k_data cur_k = d->k_plus_G[i];
-	  for (b = 0; b < Xin.p; ++b)
-	       assign_cross_t2c(&fft_data[3 * (i * d->num_fft_bands + b)], 
-				cur_k, &Xin.data[i * 2 * Xin.p + b], Xin.p,
-				scale);
-     }
-
-     /********************************************/
-
-     /* Now, multiply fft_data by 1/epsilon using FFT/IFFT pair. */
-
-     compute_fft(+1, d, fft_data, d->num_fft_bands*3, d->num_fft_bands*3, 1);
-
-     cdata = (scalar_complex *) fft_data;
-
-     for (i = 0; i < d->fft_output_size; ++i) {
-	  symmetric_matrix eps_inv = d->eps_inv[i];
-	  for (b = 0; b < d->num_fft_bands; ++b) {
-	       int ib = 3 * (i * d->num_fft_bands + b);
-	       assign_matrix_vector(&cdata[ib], eps_inv, &cdata[ib]);
+	  /********************************************/
+	  
+	  /* first, compute fft_data = curl(Xin): */
+	  for (i = 0; i < Xin.localN; ++i) {
+	       k_data cur_k = d->k_plus_G[i];
+	       for (b = 0; b < cur_num_bands; ++b)
+		    assign_cross_t2c(&fft_data[3*(i * cur_num_bands + b)], 
+				     cur_k, 
+				     &Xin.data[i * 2 * Xin.p + 
+					      b + cur_band_start],
+				     Xin.p, scale);
 	  }
-     }
 
-     compute_fft(-1, d, fft_data, d->num_fft_bands*3, d->num_fft_bands*3, 1);
+	  /********************************************/
 
-     /********************************************/
+	  /* Now, multiply fft_data by 1/epsilon using FFT/IFFT pair. */
 
-     /* finally, compute Xout = curl(fft_data): */
-     for (i = 0; i < Xout.localN; ++i) {
-	  k_data cur_k = d->k_plus_G[i];
-	  for (b = 0; b < Xout.p; ++b)
-	       assign_cross_c2t(&Xout.data[i * 2 * Xout.p + b], Xout.p,
-				cur_k, &fft_data[3 * (i * Xout.p + b)]);
-     }
+	  compute_fft(+1, d, fft_data,
+		      cur_num_bands*3, cur_num_bands*3, 1);
 
-     /********************************************/
+	  cdata = (scalar_complex *) fft_data;
+
+	  for (i = 0; i < d->fft_output_size; ++i) {
+	       symmetric_matrix eps_inv = d->eps_inv[i];
+	       for (b = 0; b < cur_num_bands; ++b) {
+		    int ib = 3 * (i * cur_num_bands + b);
+		    assign_matrix_vector(&cdata[ib], eps_inv, &cdata[ib]);
+	       }
+	  }
+	  
+	  compute_fft(-1, d, fft_data, cur_num_bands*3, cur_num_bands*3, 1);
+	  
+	  /********************************************/
+	  
+	  /* finally, compute Xout = curl(fft_data): */
+	  for (i = 0; i < Xout.localN; ++i) {
+	       k_data cur_k = d->k_plus_G[i];
+	       for (b = 0; b < cur_num_bands; ++b)
+		    assign_cross_c2t(&Xout.data[i * 2 * Xout.p + 
+					       b + cur_band_start], Xout.p,
+				     cur_k, &fft_data[3 * (i * cur_num_bands
+							   + b)]);
+	  }
+	  
+	  /********************************************/
+
+     } /* end of cur_band_start loop */
 
 #else /* not SCALAR_COMPLEX */
 
-     /* compute Maxwell operator on Xin bands, num_fft_bands at a time: */
-
-     for (cur_band_start = 0; cur_band_start < Xin.p;
-	  cur_band_start += d->num_fft_bands) {
-	  int num_fft_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
-
 #error Not supported yet!
 
-     }
-
-#endif
+#endif /* not SCALAR_COMPLEX */
 }
 
 void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,

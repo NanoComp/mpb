@@ -22,6 +22,7 @@
 #define NY 1
 #define NZ 1
 #define NUM_BANDS 8
+#define NUM_FFT_BANDS 5
 
 #define NWORK 3
 
@@ -302,7 +303,7 @@ int main(int argc, char **argv)
 
      printf("Creating Maxwell data...\n");
      mdata = create_maxwell_data(nx, ny, nz, &local_N, &N_start, &alloc_N,
-				 num_bands, num_bands);
+				 num_bands, NUM_FFT_BANDS);
      CHECK(mdata, "NULL mdata");
 
      set_maxwell_data_polarization(mdata, polarization);

@@ -9,6 +9,8 @@
 
 /* This file is has too many #ifdef's...blech. */
 
+#define MIN2(a,b) ((a) < (b) ? (a) : (b))
+
 maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				  int *local_N, int *N_start, int *alloc_N,
 				  int num_bands,
@@ -34,7 +36,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->ny = ny;
      d->nz = nz;
      
-     d->num_fft_bands = num_fft_bands;
+     d->num_fft_bands = MIN2(num_bands, num_fft_bands);
 
      d->current_k[0] = d->current_k[1] = d->current_k[2] = 0.0;
      d->polarization = NO_POLARIZATION;
