@@ -203,11 +203,8 @@ void randomize_fields(void)
 {
      int i;
 
-     if (!mdata) {
-	  mpi_one_fprintf(stderr,
-		  "init-params must be called before randomize-fields!\n");
+     if (!mdata)
 	  return;
-     }
      mpi_one_printf("Initializing fields to random numbers...\n");
      for (i = 0; i < H.n * H.p; ++i) {
 	  ASSIGN_SCALAR(H.data[i], rand() * 1.0 / RAND_MAX,
