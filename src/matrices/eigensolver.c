@@ -120,9 +120,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      real dE = 0.0, d2E, traceGtX, prev_traceGtX = 0.0;
      real lambda, prev_lambda = 0.001, prev_change = -1e20;
      int i, iteration = 0;
-     double pref_feedback_time;
+     mpiglue_clock_t prev_feedback_time;
      
-     pref_feedback_time = MPI_Wtime();
+     prev_feedback_time = MPIGLUE_CLOCK;
 
      CHECK(nWork >= 2, "not enough workspace");
      G = Work[0];
@@ -269,12 +269,13 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  }
 
 	  if (((flags & EIGS_VERBOSE) && iteration % 10 == 0) ||
-	      MPI_Wtime() - pref_feedback_time > FEEDBACK_TIME) {
+	      MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
+	      > FEEDBACK_TIME) {
 	       printf("    iteration %4d: "
-		      "trace = %g (%g%% change)\n", iteration, E,
+		      "trace = %g (%g%% change)\n", iteration + 1, E,
 		      200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
 	       fflush(stdout); /* make sure output appears */
-	       pref_feedback_time = MPI_Wtime(); /* reset feedback clock */
+	       prev_feedback_time = MPIGLUE_CLOCK; /* reset feedback clock */
 	  }
 
 	  /* Compute gradient of functional G = (1 - Y U Yt) A Y U: */
@@ -453,7 +454,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	       if ((flags & EIGS_VERBOSE) && fabs(lambda) > 3.14159*0.2)
 		    printf("    it. %d: large lambda/pi = %g\n", 
-			   iteration, lambda/3.14159);
+			   iteration + 1, lambda/3.14159);
 	       
 	       /* Compute new Y.  Note that we have already shifted Y. */
 	       evectmatrix_aXpbY(1.0, Y, lambda - prev_lambda*0.5, D);

@@ -26,6 +26,10 @@
 
 #include <mpi.h>
 
+typedef double mpiglue_clock_t;
+#define MPIGLUE_CLOCK MPI_Wtime()
+#define MPIGLUE_CLOCK_DIFF(t2, t1) ((t2) - (t1))
+
 #else /* don't have MPI */
 
 #include <time.h>
@@ -36,16 +40,13 @@ CHECK((sb) == (rb), "MPI_Allreduce stub doesn't work for sendbuf != recvbuf")
 
 #define MPI_Abort(comm, errcode) exit(errcode)
 
-#define MPI_Barrier(comm) { }
+#define MPI_Barrier(comm) 0
 
 #define MPI_Comm_rank(comm, rankp) *(rankp) = 0
 
-/* warning: ANSI C does not technically define what happens for
-   macros with empty argument lists.  However, this is changing
-   in the C9X revision of ANSI C, and all compilers that we have
-   tried seem to support this already.  However, if there is a problem
-   we may need to change this into a real function. */
-#define MPI_Wtime() (clock() * 1.0 / CLOCKS_PER_SEC)
+typedef clock_t mpiglue_clock_t;
+#define MPIGLUE_CLOCK clock()
+#define MPIGLUE_CLOCK_DIFF(t2, t1) (((t2) - (t1)) * 1.0 / CLOCKS_PER_SEC)
 
 #endif /* HAVE_MPI */
 
