@@ -15,15 +15,16 @@ MPB 1.2
   * Now outputs D and H in consistent units (previously, D was multiplied
     by a factor of i/frequency).
 
-  * epsilon.h5 file now includes datasets for the full effective
-    dielectric tensor.  (This doesn't work quite right yet, though,
-    if you configure --with-inv-symmetry and --with-hermitian-epsilon.)
+  * epsilon.h5 file now includes extra datasets for all components of the
+    effective dielectric tensor.  (This feature is not yet supported if
+    you configure --with-inv-symmetry and --with-hermitian-epsilon.)
 
-  * Group velocity computation no longer silently invalidates fields
+  * Group-velocity computation no longer silently invalidates fields
     that have been loaded with get-dfield, etcetera.  Thanks to Marin
     Soljacic for the bug report.
 
-  * configure script now makes sure guile is in the $PATH.
+  * The configure script now checks that guile is in the $PATH.  Thanks to
+    Bing Li and Giridhar Malalahalli for their bug reports.
 
 MPB 1.1.1 (7/4/2001)
 
