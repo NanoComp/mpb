@@ -190,10 +190,16 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
      k_data *kpG = d->k_plus_G;
      real *kpGn2 = d->k_plus_G_normsqr;
      int x, y, z;
+     real kx = k[0], ky = k[1], kz = k[2];
 
-     d->current_k[0] = k[0];
-     d->current_k[1] = k[1];
-     d->current_k[2] = k[2];
+     if (kx == 0.0 && ky == 0.0 && kz == 0.0) {
+	  printf("detected zero k\n");
+	  kx = 1e-5;
+     }
+
+     d->current_k[0] = kx;
+     d->current_k[1] = ky;
+     d->current_k[2] = kz;
 
      /* make sure current polarization is still valid: */
      set_maxwell_data_polarization(d, d->polarization);
@@ -204,20 +210,20 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 	       int kyi = (y > cy) ? (y - ny) : y;
 	       for (z = 0; z < nz; ++z, kpG++, kpGn2++) {
 		    int kzi = (z > cz) ? (z - nz) : z;
-		    real kx, ky, kz, a, b, c, leninv;
+		    real kpGx, kpGy, kpGz, a, b, c, leninv;
 
 		    /* Compute k+G: */
-		    kx = k[0] + G1[0]*kxi + G2[0]*kyi + G3[0]*kzi;
-		    ky = k[1] + G1[1]*kxi + G2[1]*kyi + G3[1]*kzi;
-		    kz = k[2] + G1[2]*kxi + G2[2]*kyi + G3[2]*kzi;
+		    kpGx = kx + G1[0]*kxi + G2[0]*kyi + G3[0]*kzi;
+		    kpGy = ky + G1[1]*kxi + G2[1]*kyi + G3[1]*kzi;
+		    kpGz = kz + G1[2]*kxi + G2[2]*kyi + G3[2]*kzi;
 
-		    a = kx*kx + ky*ky + kz*kz;
+		    a = kpGx*kpGx + kpGy*kpGy + kpGz*kpGz;
 		    kpG->kmag = sqrt(a);
 		    *kpGn2 = a;
 		    
 		    /* Now, compute the two normal vectors: */
 
-		    if (kx == 0.0 && ky == 0.0) {
+		    if (kpGx == 0.0 && kpGy == 0.0) {
 			 /* just put n in the x direction if k+G is in z: */
 			 kpG->nx = 1.0;
 			 kpG->ny = 0.0;
@@ -227,7 +233,7 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 			 /* otherwise, let n = z x (k+G), normalized: */
 			 compute_cross(&a, &b, &c,
 				       0.0, 0.0, 1.0,
-				       kx, ky, kz);
+				       kpGx, kpGy, kpGz);
 			 leninv = 1.0 / sqrt(a*a + b*b + c*c);
 			 kpG->nx = a * leninv;
 			 kpG->ny = b * leninv;
@@ -237,7 +243,7 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 		    /* m = n x (k+G), normalized */
 		    compute_cross(&a, &b, &c,
 				  kpG->nx, kpG->ny, kpG->nz,
-				  kx, ky, kz);
+				  kpGx, kpGy, kpGz);
 		    leninv = 1.0 / sqrt(a*a + b*b + c*c);
 		    kpG->mx = a * leninv;
 		    kpG->my = b * leninv;
@@ -247,10 +253,10 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 #define DOT(u0,u1,u2,v0,v1,v2) ((u0)*(v0) + (u1)*(v1) + (u2)*(v2))
 
 		    /* check orthogonality */
-		    CHECK(fabs(DOT(kx, ky, kz,
+		    CHECK(fabs(DOT(kpGx, kpGy, kpGz,
 				   kpG->nx, kpG->ny, kpG->nz)) < 1e-6,
 			  "vectors not orthogonal!");
-		    CHECK(fabs(DOT(kx, ky, kz,
+		    CHECK(fabs(DOT(kpGx, kpGy, kpGz,
 				   kpG->mx, kpG->my, kpG->mz)) < 1e-6,
 			  "vectors not orthogonal!");
 		    CHECK(fabs(DOT(kpG->mx, kpG->my, kpG->mz,

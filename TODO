@@ -22,6 +22,4 @@ Interface with libctl for input and control.
 implement create_evectmatrix_clone, evectmatrices_conformant_p
 (convenience functions)
 
-in update_k_vector, check for k == 0 (or any integer multiple of G)
-
 World domination.
