@@ -7,7 +7,7 @@
 (define-param eps 11.56) ; dielectric constant
 (define-param k-interp 4) ; number of k points to interpolate
 
-(define Si (make dielectric (epsilon eps)))
+(define GaAs (make dielectric (epsilon eps)))
 
 (set! geometry-lattice (make lattice (size 1 1 no-size))) ; 2d cell
 
