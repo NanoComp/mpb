@@ -73,8 +73,7 @@ static char *add_fname_suffix(const char *fname)
 
      CHECK(fname, "null filename!");
 
-     new_fname = (char *) malloc(oldlen + suflen + 1);
-     CHECK(new_fname, "out of memory!");
+     CHK_MALLOC(new_fname, char, oldlen + suflen + 1);
 
      strcpy(new_fname, fname);
 
@@ -200,8 +199,7 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
 
      CHECK(rank > 0, "non-positive rank");
 
-     dims_copy = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     CHECK(dims_copy, "out of memory!");
+     CHK_MALLOC(dims_copy, hsize_t, rank);
      for (i = 0; i < rank; ++i)
           dims_copy[i] = dims[i];
 
@@ -256,9 +254,8 @@ void matrixio_write_real_data(matrixio_id data_id,
 
      rank = H5Sget_simple_extent_ndims(space_id);
      
-     dims = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     maxdims = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     CHECK(dims && maxdims, "out of memory!");
+     CHK_MALLOC(dims, hsize_t, rank);
+     CHK_MALLOC(maxdims, hsize_t, rank);
 
      H5Sget_simple_extent_dims(space_id, dims, maxdims);
 
@@ -278,7 +275,7 @@ void matrixio_write_real_data(matrixio_id data_id,
 	  int N = 1;
 	  for (i = 0; i < rank; ++i)
 	       N *= local_dims[i];
-	  data_copy = (real*) malloc(sizeof(real) * N);
+	  CHK_MALLOC(data_copy, real, N);
 	  if (data_copy) {
 	       free_data_copy = 1;
 	       for (i = 0; i < N; i += 4) {
@@ -306,10 +303,9 @@ void matrixio_write_real_data(matrixio_id data_id,
      /* Before we can write the data to the data set, we must define
 	the dimensions and "selections" of the arrays to be read & written: */
 
-     start = (hssize_t *) malloc(sizeof(hssize_t) * rank);
-     strides = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     count = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     CHECK(start && strides && count, "out of memory!");
+     CHK_MALLOC(start, hssize_t, rank);
+     CHK_MALLOC(strides, hsize_t, rank);
+     CHK_MALLOC(count, hsize_t, rank);
 
      for (i = 0; i < rank; ++i) {
 	  start[i] = local_start[i];
@@ -357,8 +353,7 @@ static herr_t find_dataset(hid_t group_id, const char *name, void *d)
 
      H5Gget_objinfo(group_id, name, 1, &info);
      if (info.type == H5G_DATASET) {
-	  *dname = malloc(sizeof(char) * (strlen(name) + 1));
-	  CHECK(dname, "out of memory");
+	  CHK_MALLOC(*dname, char, strlen(name) + 1);
 	  strcpy(*dname, name);
 	  return 1;
      }
@@ -399,8 +394,7 @@ real *matrixio_read_real_data(matrixio_id id,
      /* Open the data set and check the dimensions: */
 
      if (name) {
-	  dname = (char*) malloc(sizeof(char) * (strlen(name) + 1));
-	  CHECK(dname, "out of memory!");
+	  CHK_MALLOC(dname, char, strlen(name) + 1);
 	  strcpy(dname, name);
      }
      else {
@@ -428,9 +422,8 @@ real *matrixio_read_real_data(matrixio_id id,
 	  }
      }
      
-     dims_copy = (hsize_t *) malloc(sizeof(hsize_t) * *rank);
-     maxdims = (hsize_t *) malloc(sizeof(hsize_t) * *rank);
-     CHECK(dims_copy && maxdims, "out of memory!");
+     CHK_MALLOC(dims_copy, hsize_t, *rank);
+     CHK_MALLOC(maxdims, hsize_t, *rank);
 
      H5Sget_simple_extent_dims(space_id, dims_copy, maxdims);
      free(maxdims);
@@ -458,10 +451,9 @@ real *matrixio_read_real_data(matrixio_id id,
 	  hssize_t *start;
 	  hsize_t *strides, *count;
 
-	  start = (hssize_t *) malloc(sizeof(hssize_t) * *rank);
-	  strides = (hsize_t *) malloc(sizeof(hsize_t) * *rank);
-	  count = (hsize_t *) malloc(sizeof(hsize_t) * *rank);
-	  CHECK(start && strides && count, "out of memory!");
+	  CHK_MALLOC(start, hssize_t, *rank);
+	  CHK_MALLOC(strides, hsize_t, *rank);
+	  CHK_MALLOC(count, hsize_t, *rank);
 	  
 	  for (i = 0; i < *rank; ++i) {
 	       start[i] = 0;
@@ -491,8 +483,7 @@ real *matrixio_read_real_data(matrixio_id id,
 	  int N = 1;
 	  for (i = 0; i < *rank; ++i)
 	       N *= dims[i];
-	  data = (real *) malloc(sizeof(real) * N);
-	  CHECK(data, "out of memory!");
+	  CHK_MALLOC(data, real, N);
 
 	  mem_space_id = H5S_ALL;
 	  H5Sclose(space_id);

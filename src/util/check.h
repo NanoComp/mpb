@@ -46,8 +46,8 @@ extern void check_breakpoint(void);
 #ifdef DEBUG_MALLOC
 extern void *debug_malloc(size_t n);
 extern void debug_free(void *p);
-#define malloc debug_malloc
-#define free debug_free
+#  define malloc debug_malloc
+#  define free debug_free
 #endif
 
 /* Macro to check whether a floating-point number contains a ridiculous
@@ -55,5 +55,11 @@ extern void debug_free(void *p);
 #define BADNUM(x) ((x) != (x) || (x) > 1e50 || (x) < -1e50)
 
 extern void debug_check_memory_leaks(void);
+
+#define CHK_MALLOC(p, t, n) {                                 \
+     size_t CHK_MALLOC_n_tmp = (n);                           \
+     (p) = (t *) malloc(sizeof(t) * CHK_MALLOC_n_tmp);        \
+     CHECK((p) || CHK_MALLOC_n_tmp == 0, "out of memory!");   \
+}
 
 #endif /* CHECK_H */

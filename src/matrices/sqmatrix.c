@@ -119,18 +119,17 @@ void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W)
 {
      real *work;
 
-     work = (real*) malloc(sizeof(real) * (3*U.p - 2));
-     CHECK(work, "out of memory");
+     CHK_MALLOC(work, real, 3*U.p - 2);
 
      if (W.p * W.p >= 3 * U.p - 1)
-       lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
-		       W.data, W.p * W.p, work);
+	  lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
+			  W.data, W.p * W.p, work);
      else {
-       scalar *morework = (scalar*) malloc(sizeof(scalar) * (3 * U.p - 1));
-       CHECK(morework, "out of memory");
-       lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
-                       morework, 3 * U.p - 1, work);
-       free(morework);
+	  scalar *morework;
+	  CHK_MALLOC(morework, scalar, 3 * U.p - 1);
+	  lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
+			  morework, 3 * U.p - 1, work);
+	  free(morework);
      }
 
      free(work);
@@ -145,8 +144,7 @@ void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W)
 
      CHECK(Usqrt.p == U.p && U.p == W.p, "matrices not conformant");
 
-     eigenvals = (real*) malloc(sizeof(real) * U.p);
-     CHECK(eigenvals, "out of memory");
+     CHK_MALLOC(eigenvals, real, U.p);
 
      sqmatrix_eigensolve(U, eigenvals, W);
 

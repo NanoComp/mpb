@@ -43,8 +43,7 @@ evectmatrix create_evectmatrix(int N, int c, int p,
      X.p = p;
      
      if (allocN > 0) {
-	  X.data = (scalar*) malloc(sizeof(scalar) * allocN * c * p);
-	  CHECK(X.data, "out of memory");
+	  CHK_MALLOC(X.data, scalar, allocN * c * p);
      }
      else
 	  X.data = NULL;
@@ -62,10 +61,7 @@ sqmatrix create_sqmatrix(int p)
      sqmatrix X;
 
      X.p = p;
-
-     X.data = (scalar*) malloc(sizeof(scalar) * p * p);
-     CHECK(X.data, "out of memory");
-
+     CHK_MALLOC(X.data, scalar, p * p);
      return X;
 }
 

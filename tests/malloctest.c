@@ -28,7 +28,7 @@
 
 int main(void)
 {
-     void *pointers[NUM_POINTERS];
+     char *pointers[NUM_POINTERS];
      int i, iter;
 
 #ifdef DEBUG_MALLOC
@@ -50,8 +50,7 @@ int main(void)
 	  i = rand() % NUM_POINTERS;
 	  if (pointers[i])
 	       free(pointers[i]);
-	  pointers[i] = malloc(rand() % MAX_SIZE + 1);
-	  CHECK(pointers[i], "out of memory!");
+	  CHK_MALLOC(pointers[i], char, rand() % MAX_SIZE + 1);
 	  if ((iter + 1) % (NUM_MALLOCS / 20) == 0)
 	       printf("...completed %d...\n", iter + 1);
      }

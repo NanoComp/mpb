@@ -105,8 +105,7 @@ int main(int argc, char **argv)
 	  printmat_matlab(A.data, n, n);
      }
 
-     eigvals_dense = (real*) malloc(sizeof(real) * n);
-     CHECK(eigvals_dense, "out of memory");
+     CHK_MALLOC(eigvals_dense, real, n);
 
      sqmatrix_eigensolve(U, eigvals_dense, X);
 
@@ -140,8 +139,7 @@ int main(int argc, char **argv)
      Ystart = create_evectmatrix(n, 1, p, n, 0, n);
      for (i = 0; i < NWORK; ++i)
 	  W[i] = create_evectmatrix(n, 1, p, n, 0, n);
-     eigvals = (real*) malloc(sizeof(real) * p);
-     CHECK(eigvals, "out of memory");
+     CHK_MALLOC(eigvals, real, p);
 
      for (i = 0; i < n*p; ++i)
 	  ASSIGN_REAL(Ystart.data[i], rand() * 1.0 / RAND_MAX);

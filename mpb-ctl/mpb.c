@@ -415,8 +415,7 @@ void solve_kpoint(vector3 kvector)
      vector3_to_arr(k, kvector);
      update_maxwell_data_k(mdata, k, G[0], G[1], G[2]);
 
-     eigvals = (real*) malloc(sizeof(real) * num_bands);
-     CHECK(eigvals, "out of memory");
+     CHK_MALLOC(eigvals, real, num_bands);
 
      printf("Solving for bands...\n");
 
@@ -488,8 +487,7 @@ void solve_kpoint(vector3 kvector)
 
      /* create freqs array for storing frequencies in a Guile list */
      freqs.num_items = num_bands;
-     freqs.items = (number *) malloc(freqs.num_items * sizeof(number));
-     CHECK(freqs.items, "out of memory");
+     CHK_MALLOC(freqs.items, number, freqs.num_items);
      
      printf("%s:, %d, %g, %g, %g, %g",
 	    mdata->polarization == NO_POLARIZATION ? "freqs" :
@@ -721,9 +719,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 static char *strcat_new(const char *s1, const char *s2)
 {
      char *s;
-     s = (char *) malloc((s1 ? strlen(s1) : 0) + 
-			 (s2 ? strlen(s2) : 0) + 1);
-     CHECK(s, "out of memory!");
+     CHK_MALLOC(s, char, (s1 ? strlen(s1) : 0) + (s2 ? strlen(s2) : 0) + 1);
      strcpy(s, s1 ? s1 : "");
      strcat(s, s2 ? s2 : "");
      return s;

@@ -68,8 +68,7 @@ void fieldio_write_complex_field(scalar_complex *field,
      }
 
      /* allocate string for holding fname + ".x.r" or similar */
-     fname2 = (char *) malloc(strlen(fname) + 4 + 1);
-     CHECK(fname2, "out of memory!");
+     CHK_MALLOC(fname2, char, strlen(fname) + 4 + 1);
      strcpy(fname2, fname);
      strcat(fname2, ".x.r");
 
@@ -91,10 +90,9 @@ void fieldio_write_complex_field(scalar_complex *field,
      free(fname2);
 
      /* cache exp(ikx) along each of the directions, for speed */
-     phasex = (scalar_complex *) malloc(sizeof(scalar_complex) * local_nx);
-     phasey = (scalar_complex *) malloc(sizeof(scalar_complex) * dims[1]);
-     phasez = (scalar_complex *) malloc(sizeof(scalar_complex) * dims[2]);
-     CHECK(phasex && phasey && phasez, "out of memory!");
+     CHK_MALLOC(phasex, scalar_complex, local_nx);
+     CHK_MALLOC(phasey, scalar_complex, dims[1]);
+     CHK_MALLOC(phasez, scalar_complex, dims[2]);
      for (i = 0; i < local_nx; ++i) {
 	  real phase = s[0] * (i + local_x_start);
 	  phasex[i].re = cos(phase);

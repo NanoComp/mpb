@@ -50,8 +50,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 	   "floating-point type is inconsistent with FFTW!");
 #endif
 
-     d = (maxwell_data *) malloc(sizeof(maxwell_data));
-     CHECK(d, "out of memory");
+     CHK_MALLOC(d, maxwell_data, 1);
 
      d->nx = nx;
      d->ny = ny;
@@ -144,19 +143,14 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      CHECK(d->plan && d->iplan, "FFTW plan creation failed");
 #endif
 
-     d->eps_inv = (symmetric_matrix*) malloc(sizeof(symmetric_matrix)
-	                                     * d->fft_output_size);
-     CHECK(d->eps_inv, "out of memory");
+     CHK_MALLOC(d->eps_inv, symmetric_matrix, d->fft_output_size);
 
      /* a scratch output array is required because the "ordinary" arrays
 	are not in a cartesian basis (or even a constant basis). */
-     d->fft_data = (scalar*) malloc(sizeof(scalar) * 3
-				    * num_fft_bands * fft_data_size);
-     CHECK(d->fft_data, "out of memory");
+     CHK_MALLOC(d->fft_data, scalar, 3 * num_fft_bands * fft_data_size);
 
-     d->k_plus_G = (k_data*) malloc(sizeof(k_data) * *local_N);
-     d->k_plus_G_normsqr = (real*) malloc(sizeof(real) * *local_N);
-     CHECK(d->k_plus_G && d->k_plus_G_normsqr, "out of memory");
+     CHK_MALLOC(d->k_plus_G, k_data, *local_N);
+     CHK_MALLOC(d->k_plus_G_normsqr, real, *local_N);
 
      d->eps_inv_mean = 1.0;
 
@@ -318,8 +312,7 @@ maxwell_target_data *create_maxwell_target_data(maxwell_data *md,
 {
      maxwell_target_data *d;
 
-     d = (maxwell_target_data *) malloc(sizeof(maxwell_target_data));
-     CHECK(d, "out of memory");
+     CHK_MALLOC(d, maxwell_target_data, 1);
 
      d->d = md;
      d->target_frequency = target_frequency;

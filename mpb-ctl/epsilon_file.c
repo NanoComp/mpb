@@ -102,8 +102,7 @@ void get_epsilon_file_func(const char *fname,
 
 	  printf("Using background dielectric from file \"%s\"...\n", fname);
 
-	  d = (epsilon_file_data *) malloc(sizeof(epsilon_file_data));
-	  CHECK(d, "out of memory");
+	  CHK_MALLOC(d, epsilon_file_data, 1);
 	  
 	  file_id = matrixio_open(fname);
 	  d->data = matrixio_read_real_data(file_id, NULL, &rank, dims,

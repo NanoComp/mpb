@@ -174,8 +174,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
      if (flags & EIGS_DIAGONALIZE_EACH_STEP &&
 	 flags & EIGS_CONVERGE_EACH_EIGENVALUE) {
-	  prev_eigenvals = (real*) malloc(sizeof(real) * Y.p);
-	  CHECK(prev_eigenvals, "out of memory");
+	  CHK_MALLOC(prev_eigenvals, real, Y.p);
 	  for (i = 0; i < Y.p; ++i)
 	       prev_eigenvals[i] = 0.0;
      }
@@ -649,9 +648,7 @@ evectconstraint_chain *evect_add_constraint(evectconstraint_chain *constraints,
 {
      evectconstraint_chain *new_constraints;
 
-     new_constraints =
-	  (evectconstraint_chain *) malloc(sizeof(evectconstraint_chain));
-     CHECK(new_constraints, "out of memory!");
+     CHK_MALLOC(new_constraints, evectconstraint_chain, 1);
 
      new_constraints->C = C;
      new_constraints->constraint_data = constraint_data;

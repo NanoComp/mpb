@@ -362,8 +362,7 @@ int main(int argc, char **argv)
 	  W[i] = create_evectmatrix(nx * ny * nz, 2, num_bands,
 				    local_N, N_start, alloc_N);
 
-     eigvals = (real*) malloc(sizeof(real) * num_bands);
-     CHECK(eigvals, "out of memory");
+     CHK_MALLOC(eigvals, real, num_bands);
 
      for (iters = 0; iters < PROF_ITERS; ++iters) {
 
