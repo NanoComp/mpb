@@ -304,15 +304,7 @@ if test "$ok" = "yes"; then
 	fi
 
         if test x != x"$MPILIBS"; then
-		AC_MSG_CHECKING([for H5Pset_mpi])
-		AC_TRY_LINK([#include <mpi.h>
-#include <hdf5.h>],
-		[H5Pset_mpi(H5P_DEFAULT, MPI_COMM_WORLD, MPI_INFO_NULL);],
-		ok=yes, ok=no)
-		AC_MSG_RESULT($ok)
-		if test "x$ok" = xyes; then
-			AC_DEFINE(HAVE_H5PSET_MPI)
-		fi
+		AC_CHECK_FUNCS(H5Pset_mpi H5Pset_fapl_mpio)
 	fi
 fi
 

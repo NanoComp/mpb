@@ -35,7 +35,7 @@
 
 /*****************************************************************************/
 
-/* If we have the H5Pset_mpi function (which is available if HDF5 was
+/* If we have the H5Pset_fapl_mpio function (which is available if HDF5 was
    compiled for MPI), then we can perform collective file i/o operations
    (e.g. all processes call H5Fcreate at the same time to create one file).
 
@@ -44,7 +44,14 @@
    macro helps us select different bits of code depending upon whether
    this is the case. */
 
-#ifdef HAVE_H5PSET_MPI
+#ifdef HAVE_H5PSET_MPI /* old name for this routine */
+#  define H5Pset_fapl_mpio H5Pset_mpi
+#  ifndef HAVE_H5PSET_FAPL_MPIO
+#    define HAVE_H5PSET_FAPL_MPIO 1
+#  endif
+#endif
+
+#ifdef HAVE_H5PSET_FAPL_MPIO
 #  define IF_EXCLUSIVE(yes,no) no
 #else
 #  define IF_EXCLUSIVE(yes,no) yes
@@ -322,13 +329,13 @@ matrixio_id matrixio_create(const char *fname)
 
      access_props = H5Pcreate (H5P_FILE_ACCESS);
      
-#  if defined(HAVE_MPI) && defined(HAVE_H5PSET_MPI)
-     H5Pset_mpi(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
+#  if defined(HAVE_MPI) && defined(HAVE_H5PSET_FAPL_MPIO)
+     H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
 #  endif
 
      new_fname = add_fname_suffix(fname);
 
-#  ifdef HAVE_H5PSET_MPI
+#  ifdef HAVE_H5PSET_FAPL_MPIO
      id = H5Fcreate(new_fname, H5F_ACC_TRUNC, H5P_DEFAULT, access_props);
 #  else
      mpi_begin_critical_section(matrixio_critical_section_tag);
@@ -362,8 +369,8 @@ matrixio_id matrixio_open(const char *fname, int read_only)
 
      access_props = H5Pcreate (H5P_FILE_ACCESS);
      
-#  if defined(HAVE_MPI) && defined(HAVE_H5PSET_MPI)
-     H5Pset_mpi(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
+#  if defined(HAVE_MPI) && defined(HAVE_H5PSET_FAPL_MPIO)
+     H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
 #  endif
 
      new_fname = add_fname_suffix(fname);
