@@ -117,14 +117,26 @@ static real epsilon_func(real r[3], void *edata)
 
 /**************************************************************************/
 
+/* initialize the field to random numbers; should only be called
+   after init-params.  (Guile-callable.) */
+void randomize_fields(void)
+{
+     int i;
+
+     if (!mdata) {
+	  fprintf(stderr,
+		  "init-params must be called before randomize-fields!\n");
+	  return;
+     }
+     printf("Initializing fields to random numbers...\n");
+     for (i = 0; i < H.n * H.p; ++i)
+	  ASSIGN_REAL(H.data[i], rand() * 1.0 / RAND_MAX);     
+}
+
+/**************************************************************************/
+
 /* Set the current polarization to solve for. (init-params should have
    already been called.  (Guile-callable; see photon.scm.) 
-
-   Also initializes the field to random numbers.
-
-   Hackery: If a polarization constant -(p+1) is substituted for p,
-   then the field is not reinitialized unless the polarization has
-   changed since the last call.  
 
    p = 0 means NO_POLARIZATION
    p = 1 means TE_POLARIZATION
@@ -135,23 +147,17 @@ static real epsilon_func(real r[3], void *edata)
 void set_polarization(int p)
 {
      static int last_p = 0xDEADBEEF;  /* initialize to some non-value */
-     int real_p, i;
 
      if (!mdata) {
 	  fprintf(stderr,
 		  "init-params must be called before set-polarization!\n");
 	  return;
      }
-     
-     if (p < 0)
-	  real_p = -(p + 1);
-     else
-	  real_p = p;
 
-     if (real_p == 3)
-	  real_p = last_p == 0xDEADBEEF ? 0 : last_p;
+     if (p == 3)
+	  p = last_p == 0xDEADBEEF ? 0 : last_p;
 
-     switch (real_p) {
+     switch (p) {
 	 case 0:
 	      printf("Solving for non-polarized bands.\n");
 	      set_maxwell_data_polarization(mdata, NO_POLARIZATION);
@@ -169,13 +175,7 @@ void set_polarization(int p)
 	      return;
      }
 
-     if (p > 0 || real_p != last_p) {
-	  /* need to re-randomize fields */
-	  printf("Initializing fields to random numbers...\n");
-	  for (i = 0; i < H.n * H.p; ++i)
-	       ASSIGN_REAL(H.data[i], rand() * 1.0 / RAND_MAX);
-     }
-     last_p = real_p;
+     last_p = p;
      kpoint_index = 0;  /* reset index */
 }
 
@@ -305,10 +305,9 @@ void init_params(int p, boolean reset_fields)
 					 local_N, N_start, alloc_N);
      }
 
+     set_polarization(p);
      if (!have_old_fields || reset_fields)
-	  set_polarization(p);
-     else
-	  set_polarization(-(p+1)); /* don't reinitialize the fields */
+	  randomize_fields();
 }
 
 /**************************************************************************/

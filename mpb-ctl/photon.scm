@@ -60,13 +60,18 @@
 ; (set-polarization p) changes the polarization that is solved for by
 ; solve-kpoint, below.  p should be one of the constants
 ; NO-POLARIZATION, TE, or TM.  init-params should already have been
-; called.
-(define-external-function set-polarization false false 
-  no-return-value 'integer)
+; called.  Be sure to call (randomize-fields) if you change the
+; polarization from TE to TM or vice versa without calling init-params.
 (define NO-POLARIZATION 0)
 (define TE 1)
 (define TM 2)
 (define PREV-POLARIZATION 3)
+(define-external-function set-polarization false false 
+  no-return-value 'integer)
+
+; (randomize-fields) initializes the fields to random values; should
+; only be called after init-params.
+(define-external-function randomize-fields false false no-return-value)
 
 ; (solve-kpoint kpoint) solves for the specified bands at the given k point.
 ; Requires that (init-params) has been called, and does not re-read the
