@@ -2,6 +2,9 @@ Add more example files: more 3d crystals, ...
 
 Export/import DXF, VRML, POV, ...?
 
+Add strip waveguide example.  Support resolution (and no-size) instead
+of grid-size.  Make mpb-data pick default -n when -r is used.
+
 More eigensolver improvements...adaptive selection of an iteration technique?
 
 Try Jacobi-Davidson method with harmonic eigenvalues for targeted solver.
