@@ -118,7 +118,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      real y_norm;
      real *prev_eigenvals = NULL;
      real dE = 0.0, d2E, traceGtX, prev_traceGtX = 0.0;
-     real lambda, prev_lambda = 0.001, prev_change = -1e20;
+     real lambda = 0.0, prev_lambda = 0.001, prev_change = -1e20;
      int i, iteration = 0;
      mpiglue_clock_t prev_feedback_time;
      
