@@ -141,13 +141,10 @@
     (map (lambda (x y z) (vector3 x y z)) vx vy vz)))
 
 ; Define a band function to be passed to run, so that you can easily
-; display the group velocities for each k-point.  The band index b is
-; only used to ensure that the output is printed just once (by only
-; outputting for b=1):
-(define (display-group-velocities b)
-  (if (= b 1)
-      (display-many "group velocities at " current-k ": "
-		    (compute-group-velocities) "\n")))
+; display the group velocities for each k-point.
+(define (display-group-velocities)
+  (display-many "group velocities at " current-k ": "
+		(compute-group-velocities) "\n"))
 
 ; ****************************************************************
 
@@ -295,6 +292,11 @@
 
 ; ****************************************************************
 
+; get the number of arguments to a function p:
+(define (procedure-num-args p) (car (procedure-property p 'arity)))
+
+; ****************************************************************
+
 (define current-k (vector3 0)) ; current k point in the run function
 (define all-freqs '()) ; list of all freqs computed in a run
 
@@ -323,8 +325,10 @@
 		      (append eigensolver-iters
 			      (list (/ iterations num-bands))))
 		(map (lambda (f)
-		       (do ((band 1 (+ band 1))) ((> band num-bands))
-			 (f band)))
+		       (if (zero? (procedure-num-args f))
+			   (f) ; f is a thunk: evaluate once per k-point
+			   (do ((band 1 (+ band 1))) ((> band num-bands))
+			     (f band))))
 		     band-functions))
 	      k-points)
 	 (if (> (length k-points) 1)
