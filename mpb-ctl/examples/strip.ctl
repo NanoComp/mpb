@@ -11,7 +11,7 @@
 
 ; define parameters which can easily be changed on the command-line
 ; (e.g.: mpb w=0.5 buried-strip.ctl)
-(define-param w 0.2) ; Si width (um)
+(define-param w 0.3) ; Si width (um)
 (define-param h 0.25) ; Si height (um)
 
 (define Si (make dielectric (index 3.45)))
