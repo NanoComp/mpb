@@ -12,7 +12,7 @@ RANLIB = @RANLIB@
 # Subdirectories to make in:
 
 LIBSUBDIRS = src/util src/matrices src/maxwell src/matrixio
-INSTALLSUBDIRS = photon-ctl
+INSTALLSUBDIRS = mpb-ctl
 SUBDIRS = $(LIBSUBDIRS) tests $(INSTALLSUBDIRS)
 
 all: all-recursive
@@ -28,7 +28,7 @@ distclean: clean
 	@list='$(SUBDIRS)'; for subdir in $$list; do \
 	  echo "rm -f $$subdir/Makefile"; rm -f $$subdir/Makefile; done
 	rm -f config.cache Makefile src/config.h config.log config.status \
-              photon-ctl/photon.scm
+              mpb-ctl/mpb.scm
 
 maintainer-clean: distclean
 	rm -f configure

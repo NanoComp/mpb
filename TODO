@@ -1,3 +1,11 @@
+Different convergence test, like in old code: eigenvalue converged
+*and* |grad|/|y| small.  In old code, tolerance in eigenval is
+specified in cntrl file, and tolerance in residual (gradient) defaults
+to 1 (is number after tolerance in cntrl file, which is normally
+omitted).  (What is |grad|/|y|?  Units don't make sense.)
+
+Restart conjugate-gradient every 25 iterations, like old code?
+
 Profile--where is the performance going?  Systematic comparisons with old code.
 
 Add ability to solve for only even/odd bands w.r.t. z=0 plane.

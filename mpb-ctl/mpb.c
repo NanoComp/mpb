@@ -18,7 +18,7 @@
 /**************************************************************************/
 
 /* Here, we define the external functions callable from Guile, as defined
-   by photon.scm. */
+   by mpb.scm. */
 
 /**************************************************************************/
 
@@ -41,7 +41,7 @@
 #include <maxwell.h>
 
 /* Header file for the ctl-file (Guile) interface; automatically
-   generated from photon.scm */
+   generated from mpb.scm */
 #include <ctl-io.h>
 
 /* Routines from libctl/utils/geom.c: */
@@ -146,7 +146,7 @@ void randomize_fields(void)
 /**************************************************************************/
 
 /* Set the current polarization to solve for. (init-params should have
-   already been called.  (Guile-callable; see photon.scm.) 
+   already been called.  (Guile-callable; see mpb.scm.) 
 
    p = 0 means NO_POLARIZATION
    p = 1 means TE_POLARIZATION

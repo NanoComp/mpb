@@ -300,4 +300,4 @@ fi
 
 # ----------------------------------------------------------------------
 
-AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile photon-ctl/Makefile photon-ctl/photon.scm)
+AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm)

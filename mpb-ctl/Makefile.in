@@ -17,14 +17,14 @@
 # being used, of course).  You should only need to change the definitions
 # in this section of the file.
 
-SPECIFICATION_FILE = photon.scm
-PROGRAM_NAME = photon
+SPECIFICATION_FILE = mpb.scm
+PROGRAM_NAME = mpb
 
 # what is printed out when invoking your program with --version:
 VERSION_STRING = "MIT Photonic Bands @MPB_VERSION@, Copyright (C) 1999 by MIT."
 
 # objects for program sources:
-OBJECTS = photon.o \
+OBJECTS = mpb.o \
 	  geom.o     # since we use the geom.scm utilities
 
 HEADERS =            # any extra header files you are dependent on
