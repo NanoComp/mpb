@@ -5,6 +5,7 @@ c       p:  number of bands
 c       ldp:  number of bands leading dimension (number of stored bands)
 c       v(ldp,3,Ni,Nj,Nk): input = velocity field u * sqrt(rho)
 c       w(ldp,3,Ni,Nj,Nk): output
+c       edata: elastic_data structure (pointer), from elastic.c
 c       sqrtrhoinv(Ni,Nj,Nk): 1 / sqrt(density = rho)
 c       rhoct2(Ni,Nj,Nk): transverse velocity: rho*ct^2
 c       rhocl2(Ni,Nj,Nk): long. velocity: rho*cl^2
@@ -13,7 +14,7 @@ c       Ni,Nj,Nk: spatial grid
 c       b1x,...,b3z: G vectors, Cartesian coordinates (including 2*pi)
 c       Datx,Daty,Datz,Dat1..18: complex(Ni,Nj,Nk) work arrays
 
-      Subroutine av (p,ldp, v, w, 
+      Subroutine av (p,ldp, v, w, edata, 
      +     sqrtrhoinv,rhoct2,rhocl2,vkx,vky,vkz,
      +     Ni,Nj,Nk,
      +     b1x,b1y,b1z,b2x,b2y,b2z,b3x,b3y,b3z,
@@ -21,7 +22,7 @@ c       Datx,Daty,Datz,Dat1..18: complex(Ni,Nj,Nk) work arrays
      +     Dat8,Dat9,Dat10,Dat11,Dat12,Dat13,Dat14,Dat15,
      +     Dat16,Dat17,Dat18)
       implicit none
-      Integer n, p, ldp, Ni,Nj,Nk
+      Integer n, p, ldp, Ni,Nj,Nk, edata
       Complex*16 v(Ni*Nj*Nk*3), w(Ni*Nj*Nk*3)
       real*8 vkx,vky,vkz
       real*8 b1x,b1y,b1z,b2x,b2y,b2z,b3x,b3y,b3z
@@ -90,7 +91,7 @@ c
       Enddo
 
 	isign=1                               ! +1
-      Call fourn(datx,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, datx,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -101,13 +102,13 @@ c
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(datx,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, datx,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Datx(i)=Datx(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(daty,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, daty,1,1,1)
       Do i=0,Ni-1                                               ! y
         Do j=0,Nj-1                                             ! y
           Do k=0,Nk-1                                           ! y
@@ -118,13 +119,13 @@ c
         Enddo                                                   ! y
       Enddo                                                     ! y
       isign=-1                              ! -1                ! y
-      Call fourn(daty,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, daty,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! y
         Daty(i)=Daty(i)/(Ni*Nj*Nk)                            ! y
       Enddo                                                     ! y
 
       isign=1                               ! +1
-      Call fourn(datz,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, datz,1,1,1)
       Do i=0,Ni-1                                               ! z
         Do j=0,Nj-1                                             ! z
           Do k=0,Nk-1                                           ! z
@@ -135,7 +136,7 @@ c
         Enddo                                                   ! z
       Enddo                                                     ! z
       isign=-1                              ! -1                ! z
-      Call fourn(datz,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, datz,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! z
         Datz(i)=Datz(i)/(Ni*Nj*Nk)                            ! z
       Enddo                                                     ! z
@@ -225,7 +226,7 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       ndim=3
 
       isign=1                               ! +1
-      Call fourn(dat1,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat1,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -236,13 +237,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat1,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat1,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat1(i)=Dat1(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat2,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat2,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -253,13 +254,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat2,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat2,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat2(i)=Dat2(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat3,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat3,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -270,13 +271,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat3,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat3,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat3(i)=Dat3(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat4,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat4,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -287,13 +288,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat4,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat4,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat4(i)=Dat4(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat5,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat5,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -304,13 +305,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat5,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat5,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat5(i)=Dat5(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat6,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat6,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -321,13 +322,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat6,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat6,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat6(i)=Dat6(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat7,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat7,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -338,13 +339,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat7,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat7,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat7(i)=Dat7(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat8,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat8,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -355,13 +356,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat8,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat8,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat8(i)=Dat8(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat9,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat9,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -372,13 +373,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat9,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat9,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat9(i)=Dat9(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat10,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat10,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -389,13 +390,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat10,nn,ndim,isign)                        ! FFT
+      Call elasticFFT(isign, edata, dat10,1,1,1)                        ! FFT
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat10(i)=Dat10(i)/(Ni*Nj*Nk)                          ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat11,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat11,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -406,13 +407,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat11,nn,ndim,isign)                        ! FFT
+      Call elasticFFT(isign, edata, dat11,1,1,1)                        ! FFT
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat11(i)=Dat11(i)/(Ni*Nj*Nk)                          ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat12,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat12,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -423,13 +424,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat12,nn,ndim,isign)                        ! FFT
+      Call elasticFFT(isign, edata, dat12,1,1,1)                        ! FFT
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat12(i)=Dat12(i)/(Ni*Nj*Nk)                          ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat13,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat13,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -440,13 +441,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat13,nn,ndim,isign)                        ! FFT
+      Call elasticFFT(isign, edata, dat13,1,1,1)                        ! FFT
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat13(i)=Dat13(i)/(Ni*Nj*Nk)                          ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat14,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat14,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -457,13 +458,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat14,nn,ndim,isign)                        ! FFT
+      Call elasticFFT(isign, edata, dat14,1,1,1)                        ! FFT
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat14(i)=Dat14(i)/(Ni*Nj*Nk)                          ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat15,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat15,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -474,13 +475,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat15,nn,ndim,isign)                        ! FFT
+      Call elasticFFT(isign, edata, dat15,1,1,1)                        ! FFT
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat15(i)=Dat15(i)/(Ni*Nj*Nk)                          ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat16,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat16,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -491,13 +492,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat16,nn,ndim,isign)                        ! FFT
+      Call elasticFFT(isign, edata, dat16,1,1,1)                        ! FFT
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat16(i)=Dat16(i)/(Ni*Nj*Nk)                          ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat17,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat17,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -508,13 +509,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat17,nn,ndim,isign)                        ! FFT
+      Call elasticFFT(isign, edata, dat17,1,1,1)                        ! FFT
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat17(i)=Dat17(i)/(Ni*Nj*Nk)                          ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(dat18,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, dat18,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -525,7 +526,7 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(dat18,nn,ndim,isign)                        ! FFT
+      Call elasticFFT(isign, edata, dat18,1,1,1)                        ! FFT
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Dat18(i)=Dat18(i)/(Ni*Nj*Nk)                          ! x
       Enddo                                                     ! x
@@ -610,7 +611,7 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
       Enddo
 
 	isign=1                               ! +1
-      Call fourn(datx,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, datx,1,1,1)
       Do i=0,Ni-1                                               ! x
         Do j=0,Nj-1                                             ! x
           Do k=0,Nk-1                                           ! x
@@ -621,13 +622,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! x
       Enddo                                                     ! x
       isign=-1                              ! -1                ! x
-      Call fourn(datx,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, datx,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! x
         Datx(i)=Datx(i)/(Ni*Nj*Nk)                            ! x
       Enddo                                                     ! x
 
       isign=1                               ! +1
-      Call fourn(daty,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, daty,1,1,1)
       Do i=0,Ni-1                                               ! y
         Do j=0,Nj-1                                             ! y
           Do k=0,Nk-1                                           ! y
@@ -638,13 +639,13 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! y
       Enddo                                                     ! y
       isign=-1                              ! -1                ! y
-      Call fourn(daty,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, daty,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! y
         Daty(i)=Daty(i)/(Ni*Nj*Nk)                            ! y
       Enddo                                                     ! y
 
       isign=1                               ! +1
-      Call fourn(datz,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, datz,1,1,1)
       Do i=0,Ni-1                                               ! z
         Do j=0,Nj-1                                             ! z
           Do k=0,Nk-1                                           ! z
@@ -655,7 +656,7 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         Enddo                                                   ! z
       Enddo                                                     ! z
       isign=-1                              ! -1                ! z
-      Call fourn(datz,nn,ndim,isign)                         ! FFT
+      Call elasticFFT(isign, edata, datz,1,1,1)
       Do i=1,2*Ni*Nj*Nk                                         ! z
         Datz(i)=Datz(i)/(Ni*Nj*Nk)                            ! z
       Enddo                                                     ! z
@@ -676,4 +677,3 @@ C@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
       Return
       End
-

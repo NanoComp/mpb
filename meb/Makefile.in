@@ -28,7 +28,7 @@ VERSION_STRING = "MIT Elastic Bands @MPB_VERSION@, Copyright (C) 1999-2001 by MI
 # objects for program sources:
 OBJECTS = meb.o materials.o fields.o \
           elastic.o elastic_materials.o elastic_op.o elastic_constraints.o \
-          operator.o fourn.o \
+          operator.o \
 	  geom.o     # since we use the geom.scm utilities
 
 HEADERS =            # any extra header files you are dependent on

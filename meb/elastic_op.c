@@ -85,6 +85,14 @@ void elastic_compute_fft(int dir, elastic_data *d, scalar *array,
 #endif /* not HAVE_FFTW */
 }
 
+#define ELASTICFFT F77_FUNC(elasticfft,ELASTICFFT)
+
+void ELASTICFFT(int *dir, elastic_data *d, scalar *array,
+	   int *howmany, int *stride, int *dist)
+{
+     elastic_compute_fft(*dir, d, array, *howmany, *stride, *dist);
+}
+
 /**************************************************************************/
 
 /* Compute u (displacement field) from v; this amounts to dividing v by
@@ -546,6 +554,7 @@ void elastic_scalarfield_otherhalf(elastic_data *d, real *field)
 #define AV F77_FUNC(av,AV)
 extern void AV(int *p, int *ldp,
 	       scalar *v, scalar *Av,
+	       elastic_data *edata,
 	       real *sqrtrhoinv, real *rhoct2, real *rhocl2,
 	       real *vkx, real *vky, real *vkz,
 	       int *Ni, int *Nj, int *Nk,
@@ -597,6 +606,7 @@ void elastic_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 
 	  AV(&cur_num_bands, &Xin.p,
 	     Xin.data + cur_band_start, Xout.data + cur_band_start,
+	     d,
 	     d->sqrt_rhoinv, d->rhoct2, d->rhocl2,
 	     &d->current_k[0], &d->current_k[1], &d->current_k[1],
 	     &d->nz, &d->ny, &d->nx,
