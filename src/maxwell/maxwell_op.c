@@ -126,7 +126,7 @@ static void compute_fft(int dir, maxwell_data *d, scalar *array,
 
 #    ifndef HAVE_MPI
 
-     fftwnd(dir > 0 ? d->plan : d->iplan,
+     fftwnd(dir < 0 ? d->plan : d->iplan,
 	    howmany,
 	    (fftw_complex *) array, stride, dist,
 	    0, 0, 0);
@@ -136,7 +136,7 @@ static void compute_fft(int dir, maxwell_data *d, scalar *array,
      CHECK(dist == howmany && stride == 1,
 	   "weird strides and dists don't work with fftwnd_mpi");
 
-     fftwnd_mpi(dir > 0 ? d->plan : d->iplan,
+     fftwnd_mpi(dir < 0 ? d->plan : d->iplan,
 		howmany,
 		(fftw_complex *) array);
 
@@ -146,7 +146,7 @@ static void compute_fft(int dir, maxwell_data *d, scalar *array,
 
 #    ifndef HAVE_MPI
 
-     if (dir > 0)
+     if (dir < 0)
 	  rfftwnd_real_to_complex(d->plan,
 				  howmany,
 				  (fftw_real *) array, stride, dist,
@@ -197,24 +197,24 @@ static void assign_matrix_vector(scalar_complex *newv,
 #endif
 }
 
-/* compute the D field in position space from Xin, which holds the H
+/* compute the D field in position space from Hin, which holds the H
    field in Fourier space, for the specified bands.  The output array,
    dfield, is localN x cur_num_bands x 3, where localN is the local
    spatial indices and 3 is the field components. */
-void maxwell_compute_dfield(maxwell_data *d, evectmatrix Xin, 
+void maxwell_compute_dfield(maxwell_data *d, evectmatrix Hin, 
 			    scalar_complex *dfield,
 			    int cur_band_start, int cur_num_bands)
 {
      scalar *fft_data = (scalar *) dfield;
      int i, j, b;
 
-     CHECK(Xin.c == 2, "fields don't have 2 components!");
+     CHECK(Hin.c == 2, "fields don't have 2 components!");
      CHECK(d, "null maxwell data pointer!");
      CHECK(dfield, "null field output data!");
-     CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Xin.p,
+     CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Hin.p,
 	   "invalid range of bands for computing fields");
 
-     /* first, compute fft_data = curl(Xin): */
+     /* first, compute fft_data = curl(Hin): */
      for (i = 0; i < d->other_dims; ++i)
 	  for (j = 0; j < d->last_dim; ++j) {
 	       int ij = i * d->last_dim + j;
@@ -225,9 +225,9 @@ void maxwell_compute_dfield(maxwell_data *d, evectmatrix Xin,
 		    assign_cross_t2c(&fft_data[3 * (ij2*cur_num_bands 
 						    + b)], 
 				     cur_k, 
-				     &Xin.data[ij * 2 * Xin.p + 
+				     &Hin.data[ij * 2 * Hin.p + 
 					      b + cur_band_start],
-				     Xin.p);
+				     Hin.p);
 	  }
 
      /* now, convert to position space via FFT: */
@@ -256,22 +256,22 @@ void maxwell_compute_e_from_d(maxwell_data *d,
      }	  
 }
 
-/* Compute H field in position space from Xin.  Parameters and output
+/* Compute H field in position space from Hin.  Parameters and output
    formats are the same as for compute_dfield, above. */
-void maxwell_compute_hfield(maxwell_data *d, evectmatrix Xin, 
+void maxwell_compute_hfield(maxwell_data *d, evectmatrix Hin, 
 			    scalar_complex *hfield,
 			    int cur_band_start, int cur_num_bands)
 {
      scalar *fft_data = (scalar *) hfield;
      int i, j, b;
 
-     CHECK(Xin.c == 2, "fields don't have 2 components!");
+     CHECK(Hin.c == 2, "fields don't have 2 components!");
      CHECK(d, "null maxwell data pointer!");
      CHECK(hfield, "null field output data!");
-     CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Xin.p,
+     CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Hin.p,
 	   "invalid range of bands for computing fields");
 
-     /* first, compute fft_data = Xin, with the vector field converted 
+     /* first, compute fft_data = Hin, with the vector field converted 
 	from transverse to cartesian basis: */
      for (i = 0; i < d->other_dims; ++i)
 	  for (j = 0; j < d->last_dim; ++j) {
@@ -283,9 +283,9 @@ void maxwell_compute_hfield(maxwell_data *d, evectmatrix Xin,
 		    assign_t2c(&fft_data[3 * (ij2*cur_num_bands 
 					      + b)], 
 			       cur_k,
-			       &Xin.data[ij * 2 * Xin.p + 
+			       &Hin.data[ij * 2 * Hin.p + 
 					b + cur_band_start],
-			       Xin.p);
+			       Hin.p);
 	  }
 
      /* now, convert to position space via FFT: */
