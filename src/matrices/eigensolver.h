@@ -55,6 +55,7 @@ extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 #define EIGS_VERBOSE (1<<4)
 #define EIGS_RESET_CG (1<<5)
 #define EIGS_ANALYTIC_LINMIN (1<<6)
+#define EIGS_ANALYTIC_MULTIMIN (1<<7)
 
 /* default flags: what we think works best most of the time: */
 #define EIGS_DEFAULT_FLAGS (EIGS_DIAGONALIZE_EACH_STEP | EIGS_CONVERGE_EACH_EIGENVALUE | EIGS_RESET_CG | EIGS_ANALYTIC_LINMIN)

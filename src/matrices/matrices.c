@@ -94,6 +94,22 @@ void matrix_XtY_diag(scalar *X, scalar *Y, int n, int p, scalar *diag)
 	  }
 }
 
+/* compute diag = diagonal elements of Re[Xt * Y], where X and Y are n x p. */
+void matrix_XtY_diag_real(scalar *X, scalar *Y, int n, int p, real *diag)
+{
+     int i, j;
+
+     for (j = 0; j < p; ++j) {
+	  diag[j] = 0;
+     }
+     
+     for (i = 0; i < n; ++i)
+	  for (j = 0; j < p; ++j) {
+	       diag[j] += (SCALAR_RE(X[i*p+j]) * SCALAR_RE(Y[i*p+j]) + 
+			   SCALAR_IM(X[i*p+j]) * SCALAR_IM(Y[i*p+j]));
+	  }
+}
+
 /* compute diag = diagonal elements of Xt * X, where X is n x p. */
 void matrix_XtX_diag_real(scalar *X, int n, int p, real *diag)
 {
@@ -140,6 +156,25 @@ void matrix_XpaY_diag_real(scalar *X, real a, scalar *Y,
 			     SCALAR_IM(X[i*p+j]) + d * SCALAR_IM(Y[i*p+j]));
 	  }
      }
+}
+
+/* compute X = X * diag1 + Y * diag2, where X and Y are n x p and 
+   diag1 and diag2 are real diagonal matrices */
+void matrix_X_diag_real_pY_diag_real(scalar *X, real *diag1,
+				     scalar *Y, real *diag2, int n, int p)
+{
+          int i, j;
+
+	  for (i = 0; i < n; ++i) {
+	       for (j = 0; j < p; ++j) {
+		    real d1 = diag1[j], d2 = diag2[j];
+		    ASSIGN_SCALAR(X[i*p+j],
+				  d1 * SCALAR_RE(X[i*p+j]) + 
+				  d2 * SCALAR_RE(Y[i*p+j]),
+				  d1 * SCALAR_IM(X[i*p+j]) +
+				  d2 * SCALAR_IM(Y[i*p+j]));
+	       }
+	  }
 }
 
 /* compute Re [ trace A * diag(diag) ], where A is p by p. */

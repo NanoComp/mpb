@@ -116,6 +116,12 @@ void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag)
 		   MPI_SUM, MPI_COMM_WORLD);
 }
 
+void evectmatrix_XtY_diag_real(evectmatrix X, evectmatrix Y, real *diag)
+{
+     matrix_XtY_diag_real(X.data, Y.data, X.n, X.p, diag);
+     MPI_Allreduce(diag, diag, X.p, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+}
+
 /* compute only the diagonal elements of XtX */
 void evectmatrix_XtX_diag_real(evectmatrix X, real *diag)
 {

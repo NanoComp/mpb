@@ -228,6 +228,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       
 	       /* skip this since YtG should be diag(eigenvals): */
 	       /* evectmatrix_XtY(YtAYU, Y, G); */
+	       /* (also don't bother to compute U = 1/(YtY) = identity) */
 	  }
 	  else {
 	       A(Y, X, Adata, 1); /* X = AY */
@@ -236,7 +237,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  }
 
 	  if (flags & EIGS_DIAGONALIZE_EACH_STEP)
-	       E = matrix_diag_real_trace(eigenvals, U.p);
+	       E = matrix_diag_real_trace(eigenvals, Y.p);
 	  else
 	       E = SCALAR_RE(sqmatrix_trace(YtAYU));
 
@@ -266,6 +267,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 					       tolerance))
 	       break; /* convergence!  hooray! */
 
+#if 0  /* yikes, don't do this: we need the eigenvals array below! */
 	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
 	       /* initial eigenvalues are completely bogus and shouldn't be
 		  used in preconditioner; kill them: */
@@ -274,6 +276,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    for (i = 0; i < Y.p; ++i)
 			 eigenvals[i] = 0.0;
 	  }
+#endif
 
 	  if (((flags & EIGS_VERBOSE) && (iteration + 1) % 10 == 0) ||
 	      MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
@@ -355,7 +358,78 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  /*** Minimization of trace along D direction ***/
 
-	  if (flags & EIGS_ANALYTIC_LINMIN) {
+	  if ((flags & EIGS_ANALYTIC_MULTIMIN) && 
+	      (flags & EIGS_DIAGONALIZE_EACH_STEP)) {
+	       real *YtAX_diag, *XtAX_diag, *XtX_diag;
+	       real x_norm;
+
+	       /* For this minimization method, we write
+		      Y' = cos(lambda) Y + sin(lambda) X,
+		  where X is the projection of D perpendicular to Y
+		  (Yt X = 0).  (We also normalize the traces of Y and
+		  X to equal p.)  Here, lambda is a pxp matrix,
+		  diag(lambda_diag).  Thus, we are minimizing over a
+		  p-dimensional space.  We then approximate our
+		  function E(lambda) by dropping terms of O(lambda^3)
+		  and higher, and thus can minimize analytically.
+		  This is actually exact for the case of p=1 (1
+		  eigenvector).
+
+		  This stuff only works if we are diagonalizing on
+	          each step!! */
+	       
+	       /* make a copy of D, if we are using conj. gradient.
+		  (otherwise, X already equals D).  This is necessary
+		  to avoid screwing up the conjugacy condition when
+		  we project to space orthogonal to Y, below */
+	       if (usingConjugateGradient)
+		    evectmatrix_copy(X, D);
+
+	       /* make sure Yt X = 0 */
+	       if (usingConjugateGradient ||
+		   (!(flags & EIGS_PROJECT_PRECONDITIONING) && C != NULL)) {
+		    /* Operate projection P = (1 - Y U Yt) on D: */
+		    evectmatrix_XtY(S1, Y, X);  /* S1 = Yt X */
+		    
+		    /* U is the identity matrix */
+		    evectmatrix_XpaYS(X, -1.0, Y, S1);
+	       }
+
+	       /* Now, we need some 1d arrays of length p to store the
+		  diagonals of our matrices.  We'll just use the
+		  storage of S1, S2, and YtAYU for this (they hold pxp
+		  scalar values), since we aren't using them for
+		  anything else. */
+	       YtAX_diag = (real *) S1.data;
+	       XtAX_diag = (real *) S2.data;
+	       XtX_diag = (real *) YtAYU.data;
+
+	       A(X, G, Adata, 0); /* G = A X */
+
+	       evectmatrix_XtY_diag_real(Y, G, YtAX_diag);
+	       evectmatrix_XtY_diag_real(X, G, XtAX_diag);
+	       evectmatrix_XtX_diag_real(X, XtX_diag);
+	       x_norm = sqrt(X.p / matrix_diag_real_trace(XtX_diag, Y.p));
+
+	       /* now compute the values of diag(lambda).  Actually,
+		  compute cos(lambda) * y_norm and sin(lambda) * x_norm,
+		  and store these values in XtAX_diag and XtX_diag,
+	          for combining Y and X in the next step. */
+	       for (i = 0; i < Y.p; ++i) {
+		    real lambda;
+		    lambda = 0.5 * atan2(-2.0 * YtAX_diag[i] * x_norm * y_norm,
+				    (XtAX_diag[i] -
+				     XtX_diag[i] * eigenvals[i]*y_norm*y_norm)
+				    * x_norm*x_norm);
+		    XtAX_diag[i] = cos(lambda) * y_norm;
+		    XtX_diag[i] = sin(lambda) * x_norm;
+	       }
+	       
+	       /* Y = Y * cos(lambda)*y_norm + X * sin(lambda)*x_norm */
+               matrix_X_diag_real_pY_diag_real(Y.data, XtAX_diag,
+					       X.data, XtX_diag, Y.n, Y.p);
+	  }
+	  else if (flags & EIGS_ANALYTIC_LINMIN) {
 	       real traceYtAXU, traceUYtAYUXtX, traceXtAXU;
 	       real x_norm;
 

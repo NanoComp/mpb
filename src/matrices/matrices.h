@@ -43,11 +43,16 @@ extern void destroy_sqmatrix(sqmatrix X);
 /* diagonal matrix utils: */
 
 extern void matrix_XtY_diag(scalar *X, scalar *Y, int n, int p, scalar *diag);
+extern void matrix_XtY_diag_real(scalar *X, scalar *Y, int n, int p, 
+				 real *diag);
 extern void matrix_XtX_diag_real(scalar *X, int n, int p, real *diag);
 extern void matrix_XpaY_diag(scalar *X, real a, scalar *Y,
 			     scalar *diag, int n, int p);
 extern void matrix_XpaY_diag_real(scalar *X, real a, scalar *Y,
 				  real *diag, int n, int p);
+extern void matrix_X_diag_real_pY_diag_real(scalar *X, real *diag1,
+					    scalar *Y, real *diag2,
+					    int n, int p);
 extern real matrix_re_trace_A_diag_real(scalar *A, real *diag, int p);
 extern scalar matrix_diag_trace(scalar *diag, int p);
 extern real matrix_diag_real_trace(real *diag, int p);
@@ -62,6 +67,8 @@ extern void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y,sqmatrix S);
 extern void evectmatrix_XtX(sqmatrix U, evectmatrix X);
 extern void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y);
 extern void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag);
+extern void evectmatrix_XtY_diag_real(evectmatrix X, evectmatrix Y,
+				      real *diag);
 extern void evectmatrix_XtX_diag_real(evectmatrix X, real *diag);
 extern scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y);
 
