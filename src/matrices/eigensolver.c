@@ -416,7 +416,6 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		  and store these values in XtAX_diag and XtX_diag,
 	          for combining Y and X in the next step. */
 	       for (i = 0; i < Y.p; ++i) {
-		    real lambda;
 		    lambda = 0.5 * atan2(-2.0 * YtAX_diag[i] * x_norm * y_norm,
 				    (XtAX_diag[i] -
 				     XtX_diag[i] * eigenvals[i]*y_norm*y_norm)
