@@ -162,6 +162,9 @@
 (define vacuum (make dielectric (epsilon 1.0)))
 (define air vacuum)
 
+(define nothing (make material-type)) ; punches a "hole" through objects
+				      ; to the default/background material
+
 (define infinity 1.0e20) ; big number for infinite dimensions of objects
 
 (set! default-material air)

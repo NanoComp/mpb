@@ -144,6 +144,11 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      material = material_of_point_inobject(p, &inobject);
 #endif
 
+     if (material.which_subclass == MATERIAL_TYPE_SELF) {
+	  material = default_material;
+	  inobject = 0;  /* treat as a "nothing" object */
+     }
+
      /* if we aren't in any geometric object and we have an epsilon
 	file, use that. */
      if (!inobject && d->eps_file_func) {
@@ -152,8 +157,6 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      else {
 	  boolean destroy_material = 0;
 
-	  if (material.which_subclass == MATERIAL_TYPE_SELF)
-	       material = default_material;
 	  while (material.which_subclass == MATERIAL_FUNCTION) {
 	       material_type m;
 	       SCM mo;

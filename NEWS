@@ -7,6 +7,9 @@
     materials, which break time-reversal symmetry) are supported.
     Thanks to Shanhui Fan for pestering me about this.
 
+  * Added new "nothing" material type that punches a hole through other
+    objects to the background.
+
 MPB 0.13 (1/7/2001)
 
   * Can now take advantage of inversion symmetry in the geometry, gaining
