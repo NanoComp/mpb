@@ -46,4 +46,4 @@
 (define (print-dos freq-min freq-max num-freq)
   (let ((dos (all-freqs-broaden)))
     (map (lambda (f) (print "dos:, " f ", " (dos f) "\n"))
-	 (interpolate (- num-freq 2) (list freq-min freq-max)))))
+	 (interpolate (max 0 (- num-freq 2)) (list freq-min freq-max)))))
