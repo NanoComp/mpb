@@ -194,6 +194,16 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      material = material_of_point_inobject(p, &inobject);
 #endif
 
+#if defined(DEBUG_GEOMETRY_TREE) && USE_GEOMETRY_TREE
+     {
+	  material_type m2 = material_of_point_inobject(p, &inobject);
+	  CHECK(m2.which_subclass == material.which_subclass &&
+		m2.subclass.dielectric_data ==
+		material.subclass.dielectric_data,
+		"material_of_point & material_of_point_in_tree don't agree!");
+     }
+#endif
+
      if (material.which_subclass == MATERIAL_TYPE_SELF) {
 	  material = default_material;
 	  inobject = 0;  /* treat as a "nothing" object */
