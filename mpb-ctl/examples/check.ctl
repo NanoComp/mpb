@@ -8,11 +8,23 @@
 
 (set! tolerance 1e-9) ; use a low tolerance to get consistent results
 
+; keep track of some error statistics:
+(define min-err infinity)
+(define max-err 0)
+(define sum-err 0)
+(define num-err 0)
+
 ; function to check if two results are sufficently close:
 (define check-tolerance 1e-4)
 (define (almost-equal? x y)
+  (if (> (abs x) 1e-3)
+      (let ((err (/ (abs (- x y)) (* 0.5 (+ (abs x) (abs y))))))
+	(set! min-err (min min-err err))
+	(set! max-err (max max-err err))
+	(set! num-err (+ num-err 1))
+	(set! sum-err (+ sum-err err))))
   (or 
-   (< (abs (- x y)) (* check-tolerance (+ (abs x) (abs y))))
+   (< (abs (- x y)) (* 0.5 check-tolerance (+ (abs x) (abs y))))
    (and (< (abs x) 1e-3) (< (abs (- x y)) 1e-3))))
 
 ; Convert a list l into a list of indices '(1 2 ...) of the same length.
@@ -205,4 +217,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (display-eigensolver-stats)
+(display-many "Relative error ranged from " min-err " to " max-err
+	      ", with a mean of " (/ sum-err num-err) "\n")
 (display "PASSED all tests.\n")
