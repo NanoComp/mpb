@@ -29,6 +29,74 @@ In the following list, some of the packages are dependent upon
 packages listed earlier, so you should install them in more-or-less
 the order given.
 
+<h2><a name="paths">Installation Paths</a></h2>
+
+<p>First, let's review some important information about installing
+software on Unix systems, especially as regards to installing software
+in non-standard locations.  (None of these issues are specific to MPB,
+but they've caused a lot of confusion among our beloved users.)
+
+<p>Most of the software below, including MPB, installs under
+<code>/usr/local</code>; that is, libraries go in
+<code>/usr/local/lib</code>, programs in <code>/usr/local/bin</code>,
+etc.  If you don't have <code>root</code> privileges on your machine,
+you may need to install somewhere else, e.g. under
+<code>$HOME/install</code> (the <code>install/</code> subdirectory of
+your home directory).  Most of the programs below use a GNU-style
+<code>configure</code> script, which means that all you would need to
+do to install there is to use:
+
+<pre>
+./configure --prefix=$HOME/install
+</pre>
+
+when configuring the program; the directories
+<code>$HOME/install/lib</code> etc. are created automatically as
+needed.
+
+<p>There are two further complications.  First, if you install in a
+non-standard location (and <code>/usr/local</code> is considered
+non-standard by some proprietary compilers), you will need to tell the
+compilers where to find the libraries and header files that you
+dutifully installed.  You do this by setting two environment variables:
+
+<pre>
+setenv LDFLAGS "-L/usr/local/lib"
+setenv CPPFLAGS "-I/usr/local/include"
+</pre>
+
+Of course, substitute whatever installation directory you used.  Do
+this <em>before</em> you run the <code>configure</code> scripts,
+etcetera.  You may need to include multiple <code>-L</code> and
+<code>-I</code> flags (separated by spaces) if your machine has stuff
+installed in several non-standard locations.
+
+<p>Second, many of the packages installed below (e.g. Guile) are
+installed as shared libraries.  You need to make sure that your
+runtime linker knows where to find these shared libraries.  The bad
+news is that every operating system does this in a slightly different
+way.  The good news is that, when you run <code>make install</code>
+for the packages involving shared libraries, the output includes the
+necessary instructions specific to your system, so pay close
+attention!  It will say something like "<code>add LIBDIR to the
+<i>foobar</i> environment variable</code>," where <code>LIBDIR</code>
+will be your library installation directory
+(e.g. <code>/usr/local/lib</code>) and <i>foobar</i> is some
+environment variable specific to your system
+(e.g. <code>LD_LIBRARY_PATH</code> on some systems, including
+Linux).  For example, you might do:
+
+<pre>
+setenv <i>foobar</i> "/usr/local/lib:$<i>foobar</i>"
+</pre>
+
+Note that we just add to the library path variable, and don't replace
+it in case it contains stuff already.  If you use Linux and have
+<code>root</code> privileges, you can instead simply run
+<code>/sbin/ldconfig</code>, first making sure that
+a line "<code>/usr/local/lib</code>" (or whatever) is in
+<code>/etc/ld.so.conf</code>.
+
 <h2><a name="blas">BLAS</a></h2>
 
 <p>The first thing you must have on your system is a BLAS
