@@ -280,8 +280,6 @@ AC_SUBST(ACTIVATE_READLINE)
 ##############################################################################
 # Check for libctl library and files
 
-save_LIBS_0="$LIBS" # save, to check later if we found any library
-
 AC_ARG_WITH(libctl, [AC_HELP_STRING([--with-libctl=<dir>],[specify libctl directory])], ok=$withval, ok=yes)
 if test "$ok" = "no"; then
         AC_MSG_ERROR([libctl is required and you may not disable it])
@@ -314,11 +312,19 @@ GEN_CTL_IO=gen-ctl-io
 AC_SUBST(GEN_CTL_IO)
 
 # check for -lctl:
-AC_CHECK_LIB(ctl, ctl_get_vector3)
+AC_CHECK_LIB(ctl, ctl_get_vector3, [], [AC_MSG_ERROR([Couldn't find the required libctl library.])])
 
-if test x"$save_LIBS_0" = x"$LIBS"; then
-	AC_MSG_ERROR([Couldn't find the required libctl library.])
-fi
+AC_CHECK_HEADER(ctl.h, [], [AC_MSG_ERROR([Couldn't find the libctl header.])])
+
+# Check libctl version >= LIBCTL_MAJOR.LIBCTL_MINOR.LIBCTL_BUGFIX
+LIBCTL_MAJOR=2; LIBCTL_MINOR=1; LIBCTL_BUGFIX=1
+AC_MSG_CHECKING([whether libctl version is at least ${LIBCTL_MAJOR}.${LIBCTL_MINOR}.${LIBCTL_BUGFIX}])
+AC_EGREP_CPP(yes, [[
+#include <ctl.h>
+#if LIBCTL_MAJOR_VERSION > $LIBCTL_MAJOR || (LIBCTL_MAJOR_VERSION == $LIBCTL_MAJOR && (LIBCTL_MINOR_VERSION > $LIBCTL_MINOR || (LIBCTL_MINOR_VERSION == $LIBCTL_MINOR && LIBCTL_BUGFIX_VERSION >= $LIBCTL_BUGFIX)))
+  yes
+#endif
+]], [AC_MSG_RESULT(ok)], [AC_MSG_ERROR([libctl version ${LIBCTL_MAJOR}.${LIBCTL_MINOR}.${LIBCTL_BUGFIX} or later is required])])
 
 ##############################################################################
 # Checks for header files.
