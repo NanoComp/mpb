@@ -10,13 +10,17 @@ if test -z "$CFLAGS"; then
 	CFLAGS="-O3"
 fi
 
-# Use native f77 if present
+# Use native f77 if present, since BLAS libraries are often compiled with
+# this and there may be linking problems if we use a different compiler.
 AC_MSG_CHECKING([for vendor's f77 to be used instead of g77])
 AC_MSG_RESULT()
-AC_CHECK_PROGS(F77, f77 xlf77 cf77 fort77 f90 xlf90 g77)
+AC_CHECK_PROGS(F77, f77 xlf77 cf77 fort77 f90 xlf90)
+AC_PROG_F77
 
-# Get C compiler (default to gcc).
-AC_CHECK_PROGS(CC, xlc) # prefer xlc on AIX in order to link ESSL libs :(
+# Get C compiler.
+AC_MSG_CHECKING([for vendor's cc to be used instead of gcc])
+AC_MSG_RESULT()
+AC_CHECK_PROGS(CC, cc xlc) # prefer vendor cc, to stay in sync with Fortran
 AC_PROG_CC
 
 # Checks for programs.
