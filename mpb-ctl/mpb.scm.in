@@ -180,7 +180,7 @@
 (define (run-polarization p reset-fields . band-functions)
   (begin-time "total elapsed time for run: "
    (define band-range-data '())
-   (set! interactive false)  ; don't be interactive if we call (run)
+   (set! interactive? false)  ; don't be interactive if we call (run)
    (init-params p reset-fields)
    (output-epsilon)          ; output epsilon immediately
    (map (lambda (k)
