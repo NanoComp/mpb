@@ -28,6 +28,31 @@
 /* Simple operations on sqmatrices.  Also, some not-so-simple operations,
    like inversion and eigenvalue decomposition. */
 
+static double max2(double a, double b) { return a > b ? a : b; }
+
+void sqmatrix_assert_hermitian(sqmatrix A)
+{
+#ifdef DEBUG
+     double err = 0, maxsq = 0;
+     int i, j, p = A.p;
+
+     for (i = 0; i < p; ++i)
+	  for (j = 0; j < p; ++j)
+	       maxsq = max2(maxsq, SCALAR_NORMSQR(A.data[i*p + j]));
+     for (i = 0; i < p; ++i) {
+	  err = max2(err, (SCALAR_IM(A.data[i*p + i]) *
+			   SCALAR_IM(A.data[i*p + i])) / maxsq);
+	  for (j = i + 1; j < p; ++j) {
+	       scalar x;
+	       ASSIGN_CONJ(x, A.data[i*p + j]);
+	       ACCUMULATE_DIFF(x, A.data[j*p + i]);
+	       err = max2(err, SCALAR_NORMSQR(x) / maxsq);
+	  }
+     }
+     CHECK(err < 1e-10, "sqmatrix_assert_hermitian failed");
+#endif
+}
+
 /* A = B */
 void sqmatrix_copy(sqmatrix A, sqmatrix B)
 {
@@ -77,6 +102,7 @@ void sqmatrix_copy_upper2full(sqmatrix F, sqmatrix U)
 	  for (; j < U.p; ++j)
 	       F.data[i*U.p + j] = U.data[i*U.p + j];
      }
+     sqmatrix_assert_hermitian(F);
 }
 
 /* Asym = (A + adjoint(A)) / 2.  Asym is thus Hermitian. */
@@ -95,6 +121,7 @@ void sqmatrix_symmetrize(sqmatrix Asym, sqmatrix A)
 			     0.5 * (SCALAR_IM(A.data[ij]) -
 				    SCALAR_IM(A.data[ji])));
 	  }
+     sqmatrix_assert_hermitian(Asym);
 }
 
 /* trace(U) */
@@ -172,6 +199,7 @@ void sqmatrix_invert(sqmatrix U, short positive_definite,
 {
      int i, j;
 
+     sqmatrix_assert_hermitian(U);
      if (positive_definite) {
 	  /* factorize U: */
 	  lapackglue_potrf('U', U.p, U.data, U.p);
@@ -219,6 +247,7 @@ void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W)
 {
      real *work;
 
+     sqmatrix_assert_hermitian(U);
      CHK_MALLOC(work, real, 3*U.p - 2);
 
      if (W.p * W.p >= 3 * U.p - 1)
@@ -242,6 +271,7 @@ void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W)
 {
      real *eigenvals;
 
+     sqmatrix_assert_hermitian(U);
      CHECK(Usqrt.p == U.p && U.p == W.p, "matrices not conformant");
 
      CHK_MALLOC(eigenvals, real, U.p);

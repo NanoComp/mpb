@@ -91,6 +91,7 @@ extern scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y);
 
 /* sqmatrix operations, defined in sqmatrix.c: */
 
+extern void sqmatrix_assert_hermitian(sqmatrix A);
 extern void sqmatrix_copy(sqmatrix A, sqmatrix B);
 extern void sqmatrix_resize(sqmatrix *A, int p, short preserve_data);
 extern void sqmatrix_copy_upper2full(sqmatrix F, sqmatrix U);
