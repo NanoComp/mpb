@@ -38,6 +38,32 @@
 #  define PROF_ITERS 1
 #endif
 
+#define MESH_SIZE 7
+
+/*************************************************************************/
+
+typedef struct {
+     real eps_high, eps_low, eps_high_x;
+} epsilon_data;
+
+#define INVERSION_SYM 0
+
+static real epsilon(real r[3], void *edata_v)
+{
+     epsilon_data *edata = (epsilon_data *) edata_v;
+
+#if INVERSION_SYM
+     if (fabs(r[0]) < 0.5*edata->eps_high_x 
+	 || fabs(r[0]-1.0) < 0.5*edata->eps_high_x)
+	  return edata->eps_high;
+#else
+     if (r[0] < edata->eps_high_x && r[0] >= 0.0 ||
+	  r[0] >= 1.0 && r[0] - 1.0 < edata->eps_high_x)
+	  return edata->eps_high;
+#endif
+     return edata->eps_low;
+}
+
 /*************************************************************************/
 
 /* routines for analytic calculation of Bragg bands: */
@@ -148,9 +174,12 @@ void usage(void)
 	    "   -e           Solve for TE polarization only.\n"
 	    "   -m           Solve for TM polarization only.\n"
 	    "   -t <freq>    Set target frequency [dflt. none].\n"
-	    "   -c <tol>     Set convergence tolerance [dflt. %e].\n",
+	    "   -c <tol>     Set convergence tolerance [dflt. %e].\n"
+	    "   -g <NMESH>   Set mesh size [dflt. %d].\n"
+	    "   -1           Stop after first computation.\n"
+	    "   -v           Verbose output.\n",
 	    KX, NUM_BANDS, sqrt(EPS_HIGH), EPS_HIGH_X, NX, NY, NZ,
-	    ERROR_TOL);
+	    ERROR_TOL, MESH_SIZE);
 }
 
 /*************************************************************************/
@@ -161,6 +190,7 @@ int main(int argc, char **argv)
      maxwell_target_data *mtdata = NULL;
      int local_N, N_start, alloc_N;
      real G1[3] = {1,0,0}, G2[3] = {0,100,0}, G3[3] = {0,0,100};
+     real R1[3] = {1,0,0}, R2[3] = {0,1,0}, R3[3] = {0,0,1};
      real kvector[3] = {KX,0,0};
      evectmatrix H, Hstart, W[NWORK];
      real *eigvals;
@@ -169,16 +199,22 @@ int main(int argc, char **argv)
      polarization_t polarization = NO_POLARIZATION;
      int nx = NX, ny = NY, nz = NZ;
      int num_bands = NUM_BANDS;
-     real high_eps = EPS_HIGH;
-     real high_index_fill = EPS_HIGH_X;
      real target_freq;
      int do_target = 0;
      evectoperator op;
      evectpreconditioner pre_op;
      void *op_data, *pre_op_data;
      real error_tol = ERROR_TOL;
+     int mesh_size = MESH_SIZE, mesh[3];
+     epsilon_data ed;
+     int stop1 = 0;
+     int verbose = 0;
 
      srand(time(NULL));
+
+     ed.eps_high = EPS_HIGH;
+     ed.eps_low = EPS_LOW;
+     ed.eps_high_x = EPS_HIGH_X;
 
 #ifdef HAVE_GETOPT
      {
@@ -186,7 +222,7 @@ int main(int argc, char **argv)
           extern int optind;
           int c;
 
-          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:emt:c:")) != -1)
+          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:emt:c:g:1v")) != -1)
 	       switch (c) {
 		   case 'h':
 			usage();
@@ -203,13 +239,13 @@ int main(int argc, char **argv)
 			CHECK(num_bands > 0, "num_bands must be positive");
 			break;
 		   case 'n':
-			high_eps = atof(optarg);
-			CHECK(high_eps > 0.0, "index must be positive");
-			high_eps = high_eps * high_eps;
+			ed.eps_high = atof(optarg);
+			CHECK(ed.eps_high > 0.0, "index must be positive");
+			ed.eps_high = ed.eps_high * ed.eps_high;
 			break;
 		   case 'f':
-			high_index_fill = atof(optarg);
-			CHECK(high_index_fill > 0.0, "fill must be positive");
+			ed.eps_high_x = atof(optarg);
+			CHECK(ed.eps_high_x > 0.0, "fill must be positive");
 			break;
 		   case 'x':
 			nx = atoi(optarg);
@@ -236,6 +272,16 @@ int main(int argc, char **argv)
 		   case 'c':
 			error_tol = fabs(atof(optarg));
 			break;
+		   case 'g':
+			mesh_size = atoi(optarg);
+			CHECK(mesh_size > 0, "mesh size must be positive");
+			break;
+		   case '1':
+			stop1 = 1;
+			break;
+		   case 'v':
+			verbose = 1;
+			break;
 		   default:
 			usage();
 			exit(EXIT_FAILURE);
@@ -247,6 +293,12 @@ int main(int argc, char **argv)
 	  }
      }     
 #endif
+
+#ifdef ENABLE_PROF
+     stop1 = 1;
+#endif
+
+     mesh[0] = mesh[1] = mesh[2] = mesh_size;
 
      printf("Creating Maxwell data...\n");
      mdata = create_maxwell_data(nx, ny, nz, &local_N, &N_start, &alloc_N,
@@ -261,19 +313,21 @@ int main(int argc, char **argv)
 
      printf("Initializing dielectric...\n");
      /* set up dielectric function (a simple Bragg mirror) */
-     for (i = 0; i < nx; ++i) {
-	  real epsinv = (i < high_index_fill*nx) ? (1/high_eps) : (1/EPS_LOW);
+     set_maxwell_dielectric(mdata, mesh, R1, R2, R3, epsilon, &ed);
 
-	  for (j = 0; j < ny; ++j)
-	       for (k = 0; k < nz; ++k) {
-		    int ijk = k + nz * (j + ny * i); /* row-major index */
-		    mdata->eps_inv[ijk].m00 = epsinv;
-		    mdata->eps_inv[ijk].m11 = epsinv;
-		    mdata->eps_inv[ijk].m22 = epsinv;
-		    mdata->eps_inv[ijk].m01 = 0.0;
-		    mdata->eps_inv[ijk].m02 = 0.0;
-		    mdata->eps_inv[ijk].m12 = 0.0;
-	       }
+     if (verbose && ny == 1 && nz == 1) {
+	  printf("dielectric function:\n");
+	  for (i = 0; i < nx; ++i) {
+	       if (mdata->eps_inv[i].m00 == mdata->eps_inv[i].m11)
+		    printf("  eps(%g) = %g\n", i * 1.0 / nx, 
+			   1.0/mdata->eps_inv[i].m00);
+	  
+	       else
+		    printf("  eps(%g) = x: %g OR y: %g\n", i * 1.0 / nx, 
+			   1.0/mdata->eps_inv[i].m00,
+			   1.0/mdata->eps_inv[i].m11);
+	  }
+	  printf("\n");
      }
 
      printf("Allocating fields...\n");
@@ -328,9 +382,9 @@ int main(int argc, char **argv)
 	    "error");
      for (i = 0; i < num_bands; ++i) {
 	  real freq = sqrt(eigvals[i]);
-	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(high_eps),
-					high_index_fill, sqrt(EPS_LOW),
-					1.0 - high_index_fill, 1.0e-7);
+	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(ed.eps_high),
+					ed.eps_high_x, sqrt(ed.eps_low),
+					1.0 - ed.eps_high_x, 1.0e-7);
 	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
 		 fabs(freq - exact_freq) / exact_freq);
      }
@@ -338,7 +392,8 @@ int main(int argc, char **argv)
 
      }
 
-#ifndef ENABLE_PROF
+     if (!stop1) {
+
      /*****************************************/
 
      printf("\nSolving for eigenvectors without preconditioning...\n");
@@ -358,9 +413,9 @@ int main(int argc, char **argv)
 	    "error");
      for (i = 0; i < num_bands; ++i) {
 	  real freq = sqrt(eigvals[i]);
-	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(high_eps),
-					high_index_fill, sqrt(EPS_LOW),
-					1.0 - high_index_fill, 1.0e-7);
+	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(ed.eps_high),
+					ed.eps_high_x, sqrt(ed.eps_low),
+					1.0 - ed.eps_high_x, 1.0e-7);
 	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
 		 fabs(freq - exact_freq) / exact_freq);
      }
@@ -385,9 +440,9 @@ int main(int argc, char **argv)
 	    "error");
      for (i = 0; i < num_bands; ++i) {
 	  real freq = sqrt(eigvals[i]);
-	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(high_eps),
-					high_index_fill, sqrt(EPS_LOW),
-					1.0 - high_index_fill, 1.0e-7);
+	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(ed.eps_high),
+					ed.eps_high_x, sqrt(ed.eps_low),
+					1.0 - ed.eps_high_x, 1.0e-7);
 	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
 		 fabs(freq - exact_freq) / exact_freq);
      }
@@ -411,16 +466,17 @@ int main(int argc, char **argv)
 	    "error");
      for (i = 0; i < num_bands; ++i) {
 	  real freq = sqrt(eigvals[i]);
-	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(high_eps),
-					high_index_fill, sqrt(EPS_LOW),
-					1.0 - high_index_fill, 1.0e-7);
+	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(ed.eps_high),
+					ed.eps_high_x, sqrt(ed.eps_low),
+					1.0 - ed.eps_high_x, 1.0e-7);
 	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
 		 fabs(freq - exact_freq) / exact_freq);
      }
      printf("\n");
 
      /*****************************************/
-#endif
+
+     }
      
      destroy_evectmatrix(H);
      destroy_evectmatrix(Hstart);

@@ -80,7 +80,7 @@ typedef struct {
      real *k_plus_G_normsqr;
 
      symmetric_matrix *eps_inv;
-     real *eps_inv_mean;
+     real eps_inv_mean;
 } maxwell_data;
 
 extern maxwell_data *create_maxwell_data(int nx, int ny, int nz,
@@ -95,6 +95,14 @@ extern void update_maxwell_data_k(maxwell_data *d, real k[3],
 
 extern void set_maxwell_data_polarization(maxwell_data *d,
 					  polarization_t polarization);
+
+typedef real (*dielectric_function) (real r[3], void *epsilon_data);
+
+extern void set_maxwell_dielectric(maxwell_data *md,
+				   int mesh_size[3],
+				   real R1[3], real R2[3], real R3[3],
+				   dielectric_function epsilon,
+				   void *epsilon_data);
 
 extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 			     int is_current_eigenvector);

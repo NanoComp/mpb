@@ -179,13 +179,6 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 
      fft_data = d->fft_data;
 
-     if (is_current_eigenvector) {
-	  e_field_sums = (real *) malloc(sizeof(real) * d->num_fft_bands);
-	  CHECK(e_field_sums, "out of memory!");
-	  for (b = 0; b < Xin.p; ++b)
-	       d->eps_inv_mean[b] = 0.0;
-     }
-
      scale = -1.0 / Xout.N;  /* scale factor to normalize FFT; 
 				negative sign comes from 2 i's from curls */
 
@@ -204,55 +197,19 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 
      /********************************************/
 
-     /* Now, multiply fft_data by 1/epsilon using FFT/IFFT pair.
-        While we're at it, compute avererage 1/epsilon for each band
-	(if is_current_eigenvector is true). */
+     /* Now, multiply fft_data by 1/epsilon using FFT/IFFT pair. */
 
      compute_fft(+1, d, fft_data, d->num_fft_bands*3, d->num_fft_bands*3, 1);
 
-     if (is_current_eigenvector)
-	  for (b = 0; b < d->num_fft_bands; ++b)
-	       e_field_sums[b] = 0.0;
-
      cdata = (scalar_complex *) fft_data;
 
-     if (is_current_eigenvector)
-	  for (i = 0; i < d->fft_output_size; ++i) {
-	       symmetric_matrix eps_inv = d->eps_inv[i];
-	       for (b = 0; b < d->num_fft_bands; ++b) {
-		    int ib = 3 * (i * d->num_fft_bands + b);
-		    scalar_complex prod0, prod1, prod2;
-		    
-		    prod0 = cdata[ib];
-		    prod1 = cdata[ib + 1];
-		    prod2 = cdata[ib + 2];
-		    e_field_sums[b] += prod0.re * prod0.re +
-			               prod0.im * prod0.im + 
-		                       prod1.re * prod1.re +
-                                       prod1.im * prod1.im +
-		                       prod2.re * prod2.re +
-                                       prod2.im * prod2.im;
-		    
-		    assign_matrix_vector(&cdata[ib], eps_inv, &cdata[ib]);
-		    
-		    d->eps_inv_mean[b] +=
-			 prod0.re*cdata[ib].re   + prod0.im*cdata[ib].im   +
-			 prod1.re*cdata[ib+1].re + prod1.im*cdata[ib+1].im +
-			 prod2.re*cdata[ib+2].re + prod2.im*cdata[ib+2].im;
-	       }
+     for (i = 0; i < d->fft_output_size; ++i) {
+	  symmetric_matrix eps_inv = d->eps_inv[i];
+	  for (b = 0; b < d->num_fft_bands; ++b) {
+	       int ib = 3 * (i * d->num_fft_bands + b);
+	       assign_matrix_vector(&cdata[ib], eps_inv, &cdata[ib]);
 	  }
-     else
-          for (i = 0; i < d->fft_output_size; ++i) {
-               symmetric_matrix eps_inv = d->eps_inv[i];
-               for (b = 0; b < d->num_fft_bands; ++b) {
-                    int ib = 3 * (i * d->num_fft_bands + b);
-		    assign_matrix_vector(&cdata[ib], eps_inv, &cdata[ib]);
-	       }
-	  }
-
-     if (is_current_eigenvector)
-	  for (b = 0; b < d->num_fft_bands; ++b)
-	       d->eps_inv_mean[b] /= e_field_sums[b];
+     }
 
      compute_fft(-1, d, fft_data, d->num_fft_bands*3, d->num_fft_bands*3, 1);
 
@@ -281,9 +238,6 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
      }
 
 #endif
-
-     if (is_current_eigenvector)
-	  free(e_field_sums);
 }
 
 void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,

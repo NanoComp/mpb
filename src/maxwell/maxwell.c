@@ -133,12 +133,9 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
      d->k_plus_G = (k_data*) malloc(sizeof(k_data) * *local_N);
      d->k_plus_G_normsqr = (real*) malloc(sizeof(real) * *local_N);
-     d->eps_inv_mean = (real*) malloc(sizeof(real) * num_bands);
-     CHECK(d->k_plus_G && d->k_plus_G_normsqr && d->eps_inv_mean,
-	   "out of memory");
+     CHECK(d->k_plus_G && d->k_plus_G_normsqr, "out of memory");
 
-     for (i = 0; i < num_bands; ++i)
-	  d->eps_inv_mean[i] = 1.0;
+     d->eps_inv_mean = 1.0;
 
      d->local_N = *local_N;
      d->N_start = *N_start;
@@ -172,7 +169,6 @@ void destroy_maxwell_data(maxwell_data *d)
 	  free(d->fft_data);
 	  free(d->k_plus_G);
 	  free(d->k_plus_G_normsqr);
-	  free(d->eps_inv_mean);
 
 	  free(d);
      }
@@ -313,4 +309,152 @@ void destroy_maxwell_target_data(maxwell_target_data *d)
 	  destroy_evectmatrix(d->T);
 	  free(d);
      }
+}
+
+/* Set Vinv = inverse of V, where both V and Vinv are symmetric matrices. */
+static void sym_matrix_invert(symmetric_matrix *Vinv, symmetric_matrix V)
+{
+     double detinv;
+     
+     /* compute the determinant: */
+     detinv = V.m00*V.m11*V.m22 - V.m02*V.m11*V.m02 +
+	      2.0 * V.m01*V.m12*V.m02 -
+	      V.m01*V.m01*V.m22 - V.m12*V.m12*V.m00;
+
+     /* don't bother to check for singular matrices, as that shouldn't
+	be possible in the context in which this is used */
+     detinv = 1.0/detinv;
+     
+     Vinv->m00 = detinv * (V.m11*V.m22 - V.m12*V.m12);
+     Vinv->m11 = detinv * (V.m00*V.m22 - V.m02*V.m02);
+     Vinv->m22 = detinv * (V.m11*V.m00 - V.m01*V.m01);
+     
+     Vinv->m02 = detinv * (V.m01*V.m12 - V.m11*V.m02);
+     Vinv->m01 = -detinv * (V.m01*V.m22 - V.m12*V.m02);
+     Vinv->m12 = -detinv * (V.m00*V.m12 - V.m01*V.m02);
+}
+
+#define SMALL 1.0e-6
+
+void set_maxwell_dielectric(maxwell_data *md,
+			    int mesh_size[3],
+			    real R1[3], real R2[3], real R3[3],
+			    dielectric_function epsilon,
+			    void *epsilon_data)
+{
+     real s1[3], s2[3], s3[3];  /* grid step vectors */
+     real m1[3], m2[3], m3[3];  /* mesh step vectors */
+     real mesh_center[3];
+     int i, j, k, mi, mj, mk;
+     int mesh_prod = mesh_size[0] * mesh_size[1] * mesh_size[2];
+     real eps_inv_total = 0.0;
+     int nx, ny, nz, local_nx, local_x_start, local_x_end;
+
+     nx = md->nx; ny = md->ny; nz = md->nz;
+     local_nx = md->local_N / (ny * nz);
+     local_x_start = md->N_start / (ny * nz);
+
+     {
+	  int mesh_divisions[3];
+
+	  for (i = 0; i < 3; ++i) {
+	       mesh_divisions[i] = mesh_size[i] <= 1 ? 1 : mesh_size[i] - 1;
+	       mesh_center[i] = (mesh_size[i] - 1) * 0.5;
+	  }
+
+	  for (i = 0; i < 3; ++i) {
+	       s1[i] = R1[i] / nx;
+	       s2[i] = R2[i] / ny;
+	       s3[i] = R3[i] / nz;
+	       m1[i] = s1[i] / mesh_divisions[0];
+	       m2[i] = s2[i] / mesh_divisions[1];
+	       m3[i] = s3[i] / mesh_divisions[2];
+	  }
+     }
+
+     for (i = 0; i < local_nx; ++i)
+	  for (j = 0; j < ny; ++j)
+	       for (k = 0; k < nz; ++k) {
+		    real eps_mean = 0.0, eps_inv_mean = 0.0, norm_len;
+		    real R[3], norm[3] = { 0.0, 0.0, 0.0 };
+		    int ijk, i2 = i + local_x_start;
+
+		    R[0] = i2 * s1[0] + j * s2[0] + k * s3[0];
+		    R[1] = i2 * s1[1] + j * s2[1] + k * s3[1];
+		    R[2] = i2 * s1[2] + j * s2[2] + k * s3[2];
+
+		    for (mi = 0; mi < mesh_size[0]; ++mi)
+			 for (mj = 0; mj < mesh_size[1]; ++mj)
+			      for (mk = 0; mk < mesh_size[2]; ++mk) {
+				   real del[3], r[3], eps;
+
+				   del[0] = (mi - mesh_center[0])*m1[0] 
+					  + (mj - mesh_center[1])*m2[0]
+					  + (mk - mesh_center[2])*m3[0];
+				   r[0] = R[0] + del[0];
+				   del[1] = (mi - mesh_center[0])*m1[1] 
+					  + (mj - mesh_center[1])*m2[1]
+					  + (mk - mesh_center[2])*m3[1];
+				   r[1] = R[1] + del[1];
+				   del[2] = (mi - mesh_center[0])*m1[2] 
+					  + (mj - mesh_center[1])*m2[2]
+					  + (mk - mesh_center[2])*m3[2];
+				   r[2] = R[2] + del[2];
+
+				   eps = epsilon(r, epsilon_data);
+
+				   eps_mean += eps;
+				   eps_inv_mean += 1.0 / eps;
+
+				   norm[0] += eps * del[0];
+				   norm[1] += eps * del[1];
+				   norm[2] += eps * del[2];
+			      }
+		    
+		    eps_mean = eps_mean / mesh_prod;
+		    eps_inv_mean = mesh_prod / eps_inv_mean;
+
+		    norm_len = sqrt(norm[0] * norm[0] +
+				    norm[1] * norm[1] +
+				    norm[2] * norm[2]);
+
+		    ijk = (i * ny + j) * nz + k;
+		    
+		    if (norm_len > SMALL &&
+			fabs(eps_mean - eps_inv_mean) > SMALL) {
+			 symmetric_matrix eps;
+
+			 norm[0] /= norm_len;
+			 norm[1] /= norm_len;
+			 norm[2] /= norm_len;
+
+			 /* compute effective dielectric tensor: */
+
+			 eps.m00 = (eps_inv_mean - eps_mean) * norm[0]*norm[0]
+			           + eps_mean;
+			 eps.m11 = (eps_inv_mean - eps_mean) * norm[1]*norm[1]
+			           + eps_mean;
+			 eps.m22 = (eps_inv_mean - eps_mean) * norm[2]*norm[2]
+			           + eps_mean;
+			 eps.m01 = (eps_inv_mean - eps_mean) * norm[0]*norm[1];
+			 eps.m02 = (eps_inv_mean - eps_mean) * norm[0]*norm[2];
+			 eps.m12 = (eps_inv_mean - eps_mean) * norm[1]*norm[2];
+
+			 sym_matrix_invert(&md->eps_inv[ijk], eps);
+		    }
+		    else { /* undetermined normal vector and/or constant eps */
+			 md->eps_inv[ijk].m00 = 1.0 / eps_mean;
+			 md->eps_inv[ijk].m11 = 1.0 / eps_mean;
+			 md->eps_inv[ijk].m22 = 1.0 / eps_mean;
+			 md->eps_inv[ijk].m01 = 0.0;
+			 md->eps_inv[ijk].m02 = 0.0;
+			 md->eps_inv[ijk].m12 = 0.0;
+		    }
+
+		    eps_inv_total += md->eps_inv[ijk].m00
+			           + md->eps_inv[ijk].m11
+			           + md->eps_inv[ijk].m22;
+	       }
+
+     md->eps_inv_mean = eps_inv_total / (3 * md->local_N);
 }
