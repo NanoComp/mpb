@@ -59,6 +59,7 @@
 (define NO-POLARIZATION 0)
 (define TE 1)
 (define TM 2)
+(define PREV-POLARIZATION 3)
 
 ; (solve-kpoint kpoint) solves for the specified bands at the given k point.
 ; Requires that (init-params) has been called, and does not re-read the
@@ -90,21 +91,12 @@
 
 ; ****************************************************************
 
-; Some Scheme convenience functions:
+; The remainder of this file consists of Scheme convenience functions.
 
-; define a (run) function to do a vanilla calculation (solve for the
-; bands at all the k points).
-(define (run)
-  (set! interactive false)  ; don't be interactive if we call (run)
-  (init-params true)
-  (if (<= dimensions 2)
-      (begin                         ; solve for both TE and TM bands
-       (set-polarization TE)
-       (map solve-kpoint k-points)
-       (set-polarization TM)
-       (map solve-kpoint k-points))
-      (map solve-kpoint k-points))   ; solve without specifying polarization
-  )
+; ****************************************************************
+
+; functions to manipulate the fields; these are mainly convenient
+; wrappers for the external functions defined previously.
 
 (define (get-efield which-band)
   (get-dfield which-band)
@@ -119,3 +111,77 @@
 
 (define (compute-energy-in-objects . objects)
   (compute-energy-in-object-list objects))
+
+; ****************************************************************
+
+; (run) functions, to do vanilla calculations.  They all take zero or
+; more "band functions."  Each function should take a single
+; parameter, the band index, and is called for each band index at
+; every k point.  These are typically used to output the bands.
+
+(define (run-polarization p . band-functions)
+  (set! interactive false)  ; don't be interactive if we call (run)
+  (init-params true)
+  (set-polarization p)
+  (output-epsilon)          ; output epsilon immediately
+  (map (lambda (k)
+	 (solve-kpoint k)
+	 (map (lambda (f)
+		(do ((band 0 (+ band 1))) ((= band num-bands)) (f band)))
+	      band-functions))
+       k-points)
+  (display "done.\n"))
+
+(define (run . band-functions)
+  (apply run-polarization (cons NO-POLARIZATION band-functions)))
+
+(define (run-te . band-functions)
+  (apply run-polarization (cons TE band-functions)))
+
+(define (run-tm . band-functions)
+  (apply run-polarization (cons TM band-functions)))
+
+; ****************************************************************
+
+; Some predefined output functions (functions of the band index),
+; for passing to (run).
+
+(define (output-hfield which-band)
+  (get-hfield which-band)
+  (output-field))
+
+(define (output-dfield which-band)
+  (get-dfield which-band)
+  (output-field))
+
+(define (output-efield which-band)
+  (get-efield which-band)
+  (output-field))
+
+(define (output-hpwr which-band)
+  (get-hfield which-band)
+  (compute-field-energy)
+  (output-field))
+
+(define (output-dpwr which-band)
+  (get-dfield which-band)
+  (compute-field-energy)
+  (output-field))
+
+; The following function returns an output function that calls
+; output-func for bands with D energy in objects > min-energy.
+; For example, (output-dpwr-in-objects output-dfield 0.20 some-object)
+; would return an output function that would spit out the D field
+; for bands with at least %20 of their D energy in some-object.
+(define (output-dpwr-in-objects output-func min-energy . objects)
+  (lambda (which-band)
+    (get-dfield which-band)
+    (compute-field-energy)
+    (let ((energy (compute-energy-in-object-list objects)))
+        ; output the computed energy for grepping:
+	(display-many "dpwr:, " which-band ", " (list-ref freqs which-band)
+		      ", " energy "\n")
+	(if (>= energy min-energy)
+	    (output-func which-band)))))
+
+; ****************************************************************
