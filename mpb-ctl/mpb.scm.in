@@ -215,18 +215,20 @@
 ; data.  If band-range-data is null or too short, the needed entries
 ; will be created.
 (define (update-band-range-data band-range-data freqs k-point)
-  (if (null? freqs)
-      '()
-      (let ((br (if (null? band-range-data)
-		    (cons (cons infinity -1) (cons (- infinity) -1))
-		    (car band-range-data)))
-	    (br-rest (if (null? band-range-data) '() (cdr band-range-data))))
-	(let ((newmin (if (< (car freqs) (caar br))
-			  (cons (car freqs) k-point) (car br)))
-	      (newmax (if (> (car freqs) (cadr br))
-			  (cons (car freqs) k-point) (cdr br))))
-	  (cons (cons newmin newmax)
-		(update-band-range-data br-rest (cdr freqs) k-point))))))
+  (define (ubrd band-range-data freqs br-start)
+    (if (null? freqs)
+	(append (reverse br-start) band-range-data)
+	(let ((br (if (null? band-range-data)
+		      (cons (cons infinity -1) (cons (- infinity) -1))
+		      (car band-range-data)))
+	      (br-rest (if (null? band-range-data) '() (cdr band-range-data))))
+	  (let ((newmin (if (< (car freqs) (caar br))
+			    (cons (car freqs) k-point) (car br)))
+		(newmax (if (> (car freqs) (cadr br))
+			    (cons (car freqs) k-point) (cdr br))))
+	    (ubrd br-rest (cdr freqs) 
+		  (cons (cons newmin newmax) br-start))))))
+  (ubrd band-range-data freqs '()))
 
 ; Output the band range data in a nice format:
 (define (output-band-range-data br-data)
@@ -241,21 +243,22 @@
 ; Output any gaps in the given band ranges, and return a list
 ; of the gaps as a list of (percent freq-min freq-max) lists.
 (define (output-gaps band-range-data)
-  (define (ogaps br-cur br-rest i)
+  (define (ogaps br-cur br-rest i gaps)
     (if (null? br-rest)
-	'()
+	(reverse gaps)
 	(if (>= (cadr br-cur) (caaar br-rest))
-	    (ogaps (car br-rest) (cdr br-rest) (+ i 1))
+	    (ogaps (car br-rest) (cdr br-rest) (+ i 1) gaps)
 	    (let ((gap-size (/ (* 200 (- (caaar br-rest) (cadr br-cur)))
 			       (+ (caaar br-rest) (cadr br-cur)))))
 	      (display-many "Gap from band " i " (" (cadr br-cur)
 			    ") to band " (+ i 1) " (" (caaar br-rest) "), "
 			    gap-size "%\n")
-	      (cons (list gap-size (cadr br-cur) (caaar br-rest))
-		    (ogaps (car br-rest) (cdr br-rest) (+ i 1)))))))
+	      (ogaps (car br-rest) (cdr br-rest) (+ i 1)
+		     (cons (list gap-size (cadr br-cur) (caaar br-rest)) gaps))
+	      ))))
   (if (null? band-range-data)
       '()
-      (ogaps (car band-range-data) (cdr band-range-data) 1)))
+      (ogaps (car band-range-data) (cdr band-range-data) 1 '())))
 
 ; variables holding the band range data and current list of gaps, in
 ; the format returned by update-band-range-data and output-gaps, above:
