@@ -204,8 +204,9 @@
 	  (max-iters (list-ref sorted-iters (- num-runs 1)))
 	  (mean-iters (/ (fold-right + 0 sorted-iters) num-runs))
 	  (median-iters (/ (+ (list-ref sorted-iters (quotient num-runs 2))
-			      (list-ref sorted-iters (- (quotient num-runs 2)
-							1))) 2.0)))
+			      (list-ref sorted-iters
+					(- (quotient (+ num-runs 1) 2) 1))) 
+			   2.0)))
       (display-many "eigensolver iterations for " num-runs " k-points: "
 		    min-iters "-" max-iters
 		    ", mean = "  mean-iters ", median = " median-iters "\n"))))
