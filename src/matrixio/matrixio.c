@@ -445,7 +445,7 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
      int i;
      hid_t space_id, type_id, data_id;
      hsize_t *dims_copy;
-	  
+
      /* delete pre-existing datasets, or we'll have an error; I think
         we can only do this on the master process. (?) */
      if (matrixio_dataset_exists(id, name)) {
@@ -530,7 +530,7 @@ void matrixio_write_real_data(matrixio_id data_id,
      hsize_t *dims, *maxdims;
      hid_t space_id, type_id, mem_space_id;
      hssize_t *start;
-     hsize_t *strides, *count;
+     hsize_t *strides, *count, count_prod;
      int i;
      real *data_copy;
      int data_copy_stride = 1, free_data_copy = 0;
@@ -596,30 +596,45 @@ void matrixio_write_real_data(matrixio_id data_id,
      CHK_MALLOC(strides, hsize_t, rank);
      CHK_MALLOC(count, hsize_t, rank);
 
+     count_prod = 1;
      for (i = 0; i < rank; ++i) {
 	  start[i] = local_start[i];
 	  count[i] = local_dims[i];
 	  strides[i] = 1;
+	  count_prod *= count[i];
      }
 
-     H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
-			 start, NULL, count, NULL);
+     if (count_prod > 0) {
+	  H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
+			      start, NULL, count, NULL);
 
-     for (i = 0; i < rank; ++i)
-	  start[i] = 0;
-     strides[rank - 1] = data_copy_stride;
-     count[rank - 1] *= data_copy_stride;
-     mem_space_id = H5Screate_simple(rank, count, NULL);
-     count[rank - 1] = local_dims[rank - 1];
-     H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
-			 start, data_copy_stride <= 1 ? NULL : strides,
-			 count, NULL);
+	  for (i = 0; i < rank; ++i)
+	       start[i] = 0;
+	  strides[rank - 1] = data_copy_stride;
+	  count[rank - 1] *= data_copy_stride;
+	  mem_space_id = H5Screate_simple(rank, count, NULL);
+	  count[rank - 1] = local_dims[rank - 1];
+	  H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
+			      start, data_copy_stride <= 1 ? NULL : strides,
+			      count, NULL);
+     }
+     else { /* this can happen on leftover processes in MPI */
+	  /* Despite this, H5Dwrite still complains below
+	     for empty dataspaces...oh well.  We just have to
+	     suppress errors for now.  Of course, we could
+	     skip the H5Dwrite call entirely, but that will break
+	     if we are using collective operations (c.f. H5Pset_mpi). */
+	  H5Sselect_none(space_id);
+	  mem_space_id = H5Scopy(space_id); /* can't create an empty space */
+	  H5Sselect_none(mem_space_id);
+     }
 
      /*******************************************************************/
      /* Write the data, then free all the stuff we've allocated. */
 
-     H5Dwrite(data_id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
-	      (void*) data_copy);
+     SUPPRESS_HDF5_ERRORS(
+	  H5Dwrite(data_id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
+		   (void*) data_copy));
 
      if (free_data_copy)
 	  free(data_copy);

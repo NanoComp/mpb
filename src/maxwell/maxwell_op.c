@@ -589,8 +589,9 @@ void maxwell_target_operator1(evectmatrix Xin, evectmatrix Xout, void *data,
 void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 			     int is_current_eigenvector, evectmatrix Work)
 {
-     CHECK(Work.data && Work.data != Xin.data && Work.data != Xout.data,
-	   "maxwell_target_operator must have distinct workspace!");
+     if (Xin.n != 0)
+	  CHECK(Work.data && Work.data != Xin.data && Work.data != Xout.data,
+		"maxwell_target_operator must have distinct workspace!");
 
      maxwell_target_operator1(Xin, Work, data, is_current_eigenvector, Xout);
 

@@ -171,8 +171,16 @@ void blasglue_gemm(char transa, char transb, int m, int n, int k,
 {
      scalar alpha, beta;
 
-     if (m*n*k == 0)
+     if (m*n == 0)
 	  return;
+
+     if (k == 0) {
+	  int i, j;
+	  for (i = 0; i < m; ++i)
+	       for (j = 0; j < n; ++j)
+		    ASSIGN_ZERO(C[i*fdC + j]);
+	  return;
+     }
 
      CHECK(A != C && B != C, "gemm output array must be distinct");
      
@@ -187,8 +195,16 @@ void blasglue_herk(char uplo, char trans, int n, int k,
 		   real a, scalar *A, int fdA,
 		   real b, scalar *C, int fdC)
 {
-     if (n*k == 0)
+     if (n == 0)
 	  return;
+
+     if (k == 0) {
+	  int i, j;
+	  for (i = 0; i < n; ++i)
+	       for (j = 0; j < n; ++j)
+		    ASSIGN_ZERO(C[i*fdC + j]);
+	  return;
+     }
 
      CHECK(A != C, "herk output array must be distinct");
      
