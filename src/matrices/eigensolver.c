@@ -139,6 +139,25 @@ static real trace_func(real *trace_deriv,
 
 /**************************************************************************/
 
+/* Minimize the function func(x) to within a fractional tolerance (in x)
+   of "tolerance".  The df parameter of func should return the derivative
+   d(func)/dx at x.  The data parameter to linmin is passed unchanged
+   to func.
+
+   Looks for the minimum between xmin and xmax, with x0 an initial guess
+   for the minimum.  f_xmin and df_xmin should be the values of func
+   and its derivative at xmin.
+
+   x0 *must* be in the "downhill" direction from xmin.  Thus, if
+   df_xmin is negative, then we should have x0 > xmin, and the
+   opposite if df_xmin > 0.  xmax must be "downhill" from x0.  Thus,
+   if df_xmin > 0, we must have xmax < x0 < xmin, the opposite of what
+   you might expect.
+
+   Return value is the x that minimizes func between xmin and xmax.
+   Also, upon return, improvement is the fractional decrease that was
+   made in the function value relative to the initial guess x0. */
+
 static real linmin(real *improvement,
 		   real xmin, real f_xmin, real df_xmin, real xmax, real x0,
 		   real tolerance,
