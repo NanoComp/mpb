@@ -416,6 +416,19 @@ void solve_kpoint(vector3 kvector)
 			   mdata->current_k[1] * mdata->current_k[1] +
 			   mdata->current_k[2] * mdata->current_k[2]);
 	  if (kmag <= 1.1e-5 || kmag < tolerance) {
+	       /* hack: for some reason I don't comprehend, it is
+		  necessary to re-randomize the fields before doing
+		  a zero-k point, at least with the new "analytic" linmin
+		  in eigensolver.c.  Hey, it works, and it can't do any
+		  harm. */
+	       if (kpoint_index)
+		    randomize_fields();
+
+	       /* We have always had bad convergence for k ~ 0; there's
+		  probably some ill-conditioning thing going on since
+		  the lowest eigenvalues are ~ 0.  Anyway, the fix seems
+		  to put the correct lowest eigenvectors (constant fields)
+		  in "manually" as our starting guess. */
 	       if (verbose)
 		    printf("detected zero k; using special initial fields\n");
 	       maxwell_zero_k_constraint(H, (void *) mdata);
