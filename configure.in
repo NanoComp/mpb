@@ -12,14 +12,20 @@ if test "$ok" = "yes"; then
         AC_DEFINE(SCALAR_COMPLEX)
 fi
 
+# Use native cc if present
+AC_MSG_CHECKING([for vendor's cc to be used instead of gcc])
+AC_MSG_RESULT()
+AC_CHECK_PROG(CC, cc, cc)
+
+# Use native f77 if present
+AC_MSG_CHECKING([for vendor's f77 to be used instead of f77])
+AC_MSG_RESULT()
+AC_CHECK_PROGS(F77, f77 f90 xlf90)
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_RANLIB
 AC_PROG_MAKE_SET
-
-# Use native cc if present
-AC_MSG_CHECKING([for vendor's cc to be used instead of gcc])
-AC_CHECK_PROG(CC, cc, cc)
 
 CFLAGS="-O3"
 
@@ -60,16 +66,16 @@ dnl Check for FFTW libraries
 AC_CHECK_LIB(fftw, fftw)
 AC_CHECK_LIB(rfftw, rfftw)
 
-dnl Checks for IBM ESSL library: -lessl
-AC_CHECK_LIB(essl, dcft)
+dnl Checks for BLAS & LAPACK libraries:
+AC_CHECK_LIB(blas, main)
+AC_CHECK_LIB(lapack, main)
 
 dnl Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
 AC_CHECK_LIB(dgemm, main)
 AC_CHECK_LIB(sgemm, main)
 
-dnl Checks for BLAS & LAPACK libraries:
-AC_CHECK_LIB(blas, main)
-AC_CHECK_LIB(lapack, main)
+dnl Checks for IBM ESSL library: -lessl
+AC_CHECK_LIB(essl, dcft)
 
 dnl Checks for header files.
 AC_HEADER_STDC
