@@ -38,7 +38,6 @@
 #include <stdio.h>
 
 #include "../config.h"
-#include <fortranize.h>
 #include <check.h>
 
 #include "blasglue.h"
@@ -46,28 +45,31 @@
 
 /*************************************************************************/
 
-/* Define a macro F(x,X) that works similarly to the FORTRANIZE
+/* Define a macro F(x,X) that works similarly to the F77_FUNC
    macro except that it appends an appropriate BLAS prefix (c,z,s,d)
    to the routine name depending upon the type defined in scalar.h */
 
 #ifdef SCALAR_COMPLEX
 #  ifdef SCALAR_SINGLE_PREC
-#    define F(x,X) FORTRANIZE(c##x, C##X)
+#    define F(x,X) F77_FUNC(c##x, C##X)
 #  else
-#    define F(x,X) FORTRANIZE(z##x, Z##X)
+#    define F(x,X) F77_FUNC(z##x, Z##X)
 #  endif
 #else
 #  ifdef SCALAR_SINGLE_PREC
-#    define F(x,X) FORTRANIZE(s##x, S##X)
+#    define F(x,X) F77_FUNC(s##x, S##X)
 #  else
-#    define F(x,X) FORTRANIZE(d##x, D##X)
+#    define F(x,X) F77_FUNC(d##x, D##X)
 #  endif
 #endif
 
+/* FR(x,X) is for functions where we always pass real arguments,
+   even when SCALAR_COMPLEX is defined. */
+
 #ifdef SCALAR_SINGLE_PREC
-#  define FR(x,X) FORTRANIZE(s##x, S##X)
+#  define FR(x,X) F77_FUNC(s##x, S##X)
 #else
-#  define FR(x,X) FORTRANIZE(d##x, D##X)
+#  define FR(x,X) F77_FUNC(d##x, D##X)
 #endif
 
 /*************************************************************************/

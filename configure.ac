@@ -1,5 +1,6 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(src/matrices/matrices.c)
+AC_INIT
+AC_CONFIG_SRCDIR([src/matrices/matrices.c])
 AC_CONFIG_HEADER(src/config.h)
 
 MPB_VERSION=1.1.1
@@ -31,29 +32,29 @@ AC_ARG_PROGRAM
 
 AC_ARG_ENABLE(single, [  --enable-single         compile for single precision], enable_single=$enableval, enable_single=no)
 if test "$enable_single" = "yes"; then
-        AC_DEFINE(SCALAR_SINGLE_PREC)
+        AC_DEFINE(SCALAR_SINGLE_PREC,1,[Define to use single precision])
 fi
 
 AC_ARG_ENABLE(debug, [  --enable-debug          compile for debugging], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
 	CFLAGS="-g"
-	AC_DEFINE(DEBUG)
+	AC_DEFINE(DEBUG,1,[Define to turn on debugging checks])
 fi
 
 AC_ARG_ENABLE(debug-malloc, [  --enable-debug-malloc   use debug malloc/free], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
-	AC_DEFINE(DEBUG_MALLOC)
+	AC_DEFINE(DEBUG_MALLOC,1,[Define to use debugging malloc/free])
 fi
 
 AC_ARG_ENABLE(prof, [  --enable-prof           compile for profiling], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
 	CFLAGS="$CFLAGS -pg"
-	AC_DEFINE(ENABLE_PROF)
+	AC_DEFINE(ENABLE_PROF,1,[Define when using the profiler tool])
 fi
 
 AC_ARG_ENABLE(checks, [  --disable-checks        disable runtime checks], ok=$enableval, ok=yes)
 if test "$ok" = "no"; then
-	AC_DEFINE(CHECK_DISABLE)
+	AC_DEFINE(CHECK_DISABLE,1,[Define to disable sanity checks in code])
 fi
 
 BUILD_MPB_DATA=mpb-data  # mpb-data program to build, if any
@@ -64,7 +65,8 @@ AC_SUBST(INSTALL_MPB_SPLIT)
 
 AC_ARG_WITH(inv-symmetry,[  --with-inv-symmetry     take advantage of (and require) inv. sym.], inv_sym=$withval, inv_sym=no)
 if test "$inv_sym" = "no"; then
-        AC_DEFINE(SCALAR_COMPLEX)
+        AC_DEFINE(SCALAR_COMPLEX,1,[Define to use complex fields and
+	                            not to require inversion symmetry])
 	SCALAR_TYPE=complex
 else
 	SCALAR_TYPE=real
@@ -75,7 +77,8 @@ AC_SUBST(SCALAR_TYPE)
 
 AC_ARG_WITH(hermitian-epsilon,[  --with-hermitian-epsilon     allow complex-Hermitian dielectric tensors], hermitian_epsilon=$withval, hermitian_epsilon=no)
 if test "$hermitian_epsilon" = "yes"; then
-        AC_DEFINE(WITH_HERMITIAN_EPSILON)
+        AC_DEFINE(WITH_HERMITIAN_EPSILON,1,[Define to support Hermitian/complex
+                                            dielectric tensors.])
 fi
 
 # Add lots of compiler warnings to check for if we are using gcc:
@@ -100,6 +103,7 @@ AC_CHECK_LIB(m, sqrt)
 # are probably needed to link with the BLAS/LAPACK libraries.
 if test x != x"$F77"; then
 	AC_F77_LIBRARY_LDFLAGS
+	AC_F77_WRAPPERS
 	LIBS="$LIBS $FLIBS"
 fi
 
@@ -142,30 +146,35 @@ fi
 ##############################################################################
 # Checks for BLAS libraries:
 
-save_LIBS_0="$LIBS" # save, to check later if we found any library
-
-# Generic BLAS:
-AC_CHECK_LIB(blas, main)
-
 # remember current libs, so we can check if any libs were found below.
 save_LIBS="$LIBS"
 
+AC_F77_FUNC(sgemm)
+AC_F77_FUNC(dgemm)
+
+# BLAS linked to by default?
+AC_CHECK_FUNC($dgemm, [LIBS=" $LIBS"])
+
 AC_ARG_WITH(fastblas, [  --without-fastblas      do not use accelerated BLAS], ok=$withval, ok=yes)
-if test "$ok" = "no"; then
-	save_LIBS="xxxxxxxx"
-elif test "$ok" != "yes"; then
-	# user specified a BLAS library to try on the command line
-	AC_CHECK_LIB($ok, main)
+
+if test x"$save_LIBS" = x"$LIBS"; then
+	if test "$ok" = "no"; then
+		# Generic BLAS:
+		AC_CHECK_LIB(blas, $dgemm)
+	elif test "$ok" != "yes"; then
+		# user specified a BLAS library to try on the command line
+		AC_CHECK_LIB($ok, $dgemm)
+	fi
 fi
 
 if test x"$save_LIBS" = x"$LIBS"; then
 	# BLAS in Alpha CXML library?
-	AC_CHECK_LIB(cxml, dgemm_)
+	AC_CHECK_LIB(cxml, $dgemm)
 fi
 
 if test x"$save_LIBS" = x"$LIBS"; then
 	# BLAS in Alpha DXML library? (now called CXML, see above)
-	AC_CHECK_LIB(dxml, dgemm_)
+	AC_CHECK_LIB(dxml, $dgemm)
 fi
 
 if test x"$save_LIBS" = x"$LIBS"; then
@@ -173,22 +182,24 @@ if test x"$save_LIBS" = x"$LIBS"; then
 		# Check for BLAS in Sun Performance library:
 		# AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
 		AC_CHECK_LIB(sunmath, acosp,
-			AC_CHECK_LIB(sunperf, dgemm_,
-        			[LIBS="-xlic_lib=sunperf -lsunmath $LIBS"
-				 AC_DEFINE(HAVE_LIBSUNPERF)], , -lsunmath))
+			AC_CHECK_LIB(sunperf, $dgemm,
+        			[LIBS="-xlic_lib=sunperf -lsunmath $LIBS"],[],
+				[-lsunmath]))
 	fi
 fi
 
 if test x"$save_LIBS" = x"$LIBS"; then
 	# Check for BLAS in SCSL and SGIMATH libraries (prefer SCSL):
-	AC_CHECK_LIB(scs, dgemm_,
+	AC_CHECK_LIB(scs, $dgemm,
 	             LIBS="-lscs $LIBS", 
-		     AC_CHECK_LIB(complib.sgimath, dgemm_))
+		     AC_CHECK_LIB(complib.sgimath, $dgemm))
 fi
 
 if test x"$save_LIBS" = x"$LIBS"; then
+	# Generic BLAS lib is required:
+	AC_CHECK_LIB(blas, $dgemm)
 	# Checks for BLAS in IBM ESSL library
-	AC_CHECK_LIB(essl, dgemm)
+	AC_CHECK_LIB(essl, $dgemm, [LIBS="-lessl $LIBS"], [LIBS=$save_LIBS])
 fi
 
 if test x"$save_LIBS" = x"$LIBS"; then
@@ -197,36 +208,43 @@ if test x"$save_LIBS" = x"$LIBS"; then
 	if test x"$save_LIBS" != x"$LIBS"; then
 		# check for other atlas libs:
 		AC_CHECK_LIB(cblas, cblas_dgemm)
-		AC_CHECK_LIB(f77blas, main)
+		AC_CHECK_LIB(f77blas, $dgemm)
 	fi
 fi
 
 if test x"$save_LIBS" = x"$LIBS"; then
+	# Generic BLAS lib is required:
+	AC_CHECK_LIB(blas, $dgemm)
 	# Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
-	AC_CHECK_LIB(dgemm, main)
-	AC_CHECK_LIB(sgemm, main)
+	AC_CHECK_LIB(sgemm, $sgemm)
+	AC_CHECK_LIB(dgemm, $dgemm, [LIBS="-ldgemm $LIBS"],[LIBS=$save_LIBS])
 fi
 
 if test x"$save_LIBS" = x"$LIBS"; then
+	# Generic BLAS lib is required:
+	AC_CHECK_LIB(blas, $dgemm)
 	# Optimized BLAS for Pentium Pro (from ASCII Red project):
 	# (see http://www.cs.utk.edu/~ghenry/distrib/)
-	AC_CHECK_LIB(blasppro1.1o,main)
+	blas=blasppro1.1o
+	AC_CHECK_LIB($blas,$dgemm, [LIBS="-l$blas $LIBS"],[LIBS=$save_LIBS])
 fi
 
-if test x"$save_LIBS_0" = x"$LIBS"; then
-	AC_MSG_WARN([A BLAS library could not be found!!  This may cause the compilation to fail, unless your C compiler links to BLAS by default.])
+if test x"$save_LIBS" = x"$LIBS"; then
+	# Generic BLAS:
+	AC_CHECK_LIB(blas, $dgemm)
+fi
+
+if test x"$save_LIBS" = x"$LIBS"; then
+	AC_MSG_ERROR([BLAS was not found!])
 fi
 
 ##############################################################################
-save_LIBS_0="$LIBS" # save, to check later if we found any library
+AC_F77_FUNC(cheev)
 
 # Checks for LAPACK library
-AC_CHECK_LIB(lapack, main)
-
-if test x"$save_LIBS_0" = x"$LIBS"; then
-	AC_MSG_WARN([A LAPACK library could not be found!!  This may cause the compilation to fail, unless your C compiler links to LAPACK by default.])
-fi
-
+AC_CHECK_FUNC($cheev,[],
+	[AC_CHECK_LIB(lapack, $cheev, [LIBS="-llapack $LIBS"],
+		      [AC_MSG_ERROR([LAPACK was not found!])])])
 ##############################################################################
 # Check for MPI library
 
@@ -298,7 +316,7 @@ if test "$ok" = "yes"; then
 	save_LIBS_0="$LIBS" # save, to check later if we found any library
 	AC_CHECK_LIB(hdf5, H5Pcreate, [
 		AC_CHECK_HEADERS(hdf5.h, [LIBS="-lhdf5 $LIBS"
-			                    AC_DEFINE(HAVE_HDF5)])])
+                     AC_DEFINE(HAVE_HDF5,1,[Define if we have & link HDF5])])])
 	if test x"$save_LIBS_0" = x"$LIBS"; then
 		AC_MSG_WARN([Couldn't find the HDF5 library!!  Switching to --without-hdf5.])
 	fi
@@ -358,7 +376,7 @@ save_LIBS_0="$LIBS" # save, to check later if we found any library
 
 AC_ARG_WITH(libctl, [  --with-libctl=<dir>     specify libctl directory], ok=$withval, ok=yes)
 if test "$ok" = "no"; then
-        AC_ERROR(libctl is required and you may not disable it)
+        AC_MSG_ERROR([libctl is required and you may not disable it])
 elif test "$ok" != "yes"; then
 	LIBCTL_DIR="$ok"
 fi
@@ -374,14 +392,14 @@ if test x = x"$LIBCTL_DIR" -a -r /usr/share/libctl/base/ctl.scm; then
         LIBCTL_DIR="/usr/share/libctl"
 fi
 if test x = x"$LIBCTL_DIR"; then
-	AC_ERROR([could not find libctl files; use --with-libctl=<dir>])
+	AC_MSG_ERROR([could not find libctl files; use --with-libctl=<dir>])
 fi
 AC_MSG_RESULT($LIBCTL_DIR)
 AC_SUBST(LIBCTL_DIR)
 
 AC_CHECK_PROG(gen_ctl_io_ok, gen-ctl-io, yes, no)
 if test x"$gen_ctl_io_ok" = xno; then
-	AC_ERROR([could not find gen-ctl-io program; check your PATH])
+	AC_MSG_ERROR([could not find gen-ctl-io program; check your PATH])
 fi
 
 GEN_CTL_IO=gen-ctl-io
@@ -432,7 +450,7 @@ int main(void) {
 ], ok="yes", ok="no", ok="no")
 AC_MSG_RESULT($ok)
 if test "$ok" = "no"; then
-	AC_DEFINE(NO_FORTRAN_FUNCTIONS)
+	AC_DEFINE(NO_FORTRAN_FUNCTIONS,1,[Define if calling Fortran functions directly doesn't work.])
 fi
 
 ##############################################################################
@@ -454,4 +472,5 @@ fi
 
 ##############################################################################
 
-AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm mpb-ctl/mpb-split utils/Makefile)
+AC_CONFIG_FILES([Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm mpb-ctl/mpb-split utils/Makefile])
+AC_OUTPUT
