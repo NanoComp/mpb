@@ -170,9 +170,8 @@ a Pentium II.)  Note that MPB looks for the standard BLAS library with
 <code>-lblas</code>, so the library file should be called
 <code>libblas.a</code> and reside in a standard directory like
 <code>/usr/local/lib</code>.  (See also below for the
-<code>--with-fastblas=<i>lib</i></code> option to MPB's
-<code>configure</code> script and the <code>LDFLAGS</code> environment
-variable.)
+<code>--with-blas=<i>lib</i></code> option to MPB's
+<code>configure</code> script, to manually specify a library location.)
 
 <h2><a name="lapack">LAPACK</a></h2>
 
@@ -190,7 +189,9 @@ Applications on Linux (SAL) LAPACK page">SAL</a>.
 <code>liblapack.a</code> and be installed in a standard directory like
 <code>/usr/local/lib</code> (alternatively, you can specify another
 directory via the <code>LDFLAGS</code> environment variable as
-described earlier).
+described earlier).  (See also below for the
+<code>--with-lapack=<i>lib</i></code> option to MPB's
+<code>configure</code> script, to manually specify a library location.)
 
 <h2><a name="mpi">MPI</a> <i>(optional)</i></h2>
 
@@ -423,14 +424,17 @@ is either <code><i>prefix</i>/share/libctl</code>, where
 <code><i>prefix</i><code> is the installation prefix of libctl, or the
 original libctl source code directory.
 
-<p><dt><code>--without-fastblas</code>
-<dt><code>--with-fastblas=<i>lib</i></code>
+<p><dt><code>--with-blas=<i>lib</i></code>
 <dd>The <code>configure</code> script automatically attempts to detect
 accelerated BLAS libraries, like DXML (DEC/Alpha), SCSL and SGIMATH
-(SGI/MIPS), ESSL (IBM/PowerPC), ATLAS, and PHiPACK.  You can disable
-these by using <code>--without-fastblas</code>, or supply another
-library name to try via <code>--with-fastblas=<i>lib</i></code> (it
-will attempt to link with <code>-l<i>lib</i></code>).
+(SGI/MIPS), ESSL (IBM/PowerPC), ATLAS, and PHiPACK.  You can, however,
+force a specific library name to try via
+<code>--with-blas=<i>lib</i></code>.
+
+<p><dt><code>--with-lapack=<i>lib</i></code>
+<dd>Cause the <code>configure</code> script to look for a LAPACK
+library called <code><i>lib</i></code> (the default is to use
+<code>-llapack</code>).
 
 <p><dt><code>--disable-checks</code>
 <dd>Disable runtime checks.  (Not recommended; the disabled checks
