@@ -271,6 +271,7 @@
 ; ****************************************************************
 
 (define current-k (vector3 0)) ; current k point in the run function
+(define all-freqs '()) ; list of all freqs computed in a run
 
 ; (run) functions, to do vanilla calculations.  They all take zero or
 ; more "band functions."  Each function should take a single
@@ -279,6 +280,7 @@
 
 (define (run-polarization p reset-fields . band-functions)
   (begin-time "total elapsed time for run: "
+   (set! all-freqs '())
    (set! band-range-data '())
    (set! interactive? false)  ; don't be interactive if we call (run)
    (begin-time "elapsed time for initialization: "
@@ -289,6 +291,7 @@
 	 (map (lambda (k)
 		(set! current-k k)
 		(begin-time "elapsed time for k point: " (solve-kpoint k))
+		(set! all-freqs (cons freqs all-freqs))
 		(set! band-range-data 
 		      (update-band-range-data band-range-data freqs k))
 		(set! eigensolver-iters
@@ -303,6 +306,7 @@
 	       (output-band-range-data band-range-data)
 	       (set! gap-list (output-gaps band-range-data)))
 	     (set! gap-list '())))))
+  (set! all-freqs (reverse all-freqs)) ; put them in the right order
   (display "done.\n"))
 
 (define (run . band-functions)
