@@ -114,8 +114,10 @@ AC_CHECK_LIB(sunperf, dgemm_,
         [LIBS="-xlic_lib=sunperf $LIBS"; AC_DEFINE(HAVE_LIBSUNPERF)])
 AC_CHECK_LIB(M77, __pow_ri)
 
-# Check for BLAS in SGIMATH library:
-AC_CHECK_LIB(complib.sgimath, dgemm)
+# Check for BLAS in SCSL and SGIMATH libraries (prefer SCSL):
+AC_CHECK_LIB(scs, dgemm_,
+             LIBS="-lscs $LIBS", 
+	     AC_CHECK_LIB(complib.sgimath, dgemm_))
 
 # Checks for BLAS in IBM ESSL library
 AC_CHECK_LIB(essl, dgemm)
