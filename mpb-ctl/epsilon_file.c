@@ -31,6 +31,7 @@
 
 #include "../src/config.h"
 #include <check.h>
+#include <mpi_utils.h>
 #include <matrices.h>
 #include <matrixio.h>
 #include <maxwell.h>
@@ -116,7 +117,8 @@ void get_epsilon_file_func(const char *fname,
 	  epsilon_file_data *d;
 	  int rank = 3, dims[3];
 
-	  printf("Using background dielectric from file \"%s\"...\n", fname);
+	  mpi_one_printf("Using background dielectric from file \"%s\"...\n",
+			 fname);
 
 	  CHK_MALLOC(d, epsilon_file_data, 1);
 	  
@@ -130,8 +132,8 @@ void get_epsilon_file_func(const char *fname,
 	  d->ny = rank >= 2 ? dims[1] : 1;
 	  d->nz = rank >= 3 ? dims[2] : 1;
 
-	  printf("    ...read %dx%dx%d dielectric function\n",
-		 d->nx, d->ny, d->nz);
+	  mpi_one_printf("    ...read %dx%dx%d dielectric function\n",
+			 d->nx, d->ny, d->nz);
 
 	  *func = epsilon_file_func;
 	  *func_data = (void*) d;

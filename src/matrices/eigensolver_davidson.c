@@ -27,6 +27,7 @@
 
 #include "../config.h"
 #include <mpiglue.h>
+#include <mpi_utils.h>
 #include <check.h>
 #include <scalar.h>
 #include <matrices.h>
@@ -132,6 +133,7 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 	  for (E = 0.0, i = 0; i < Y.p; ++i) {
 	       E += (eigenvals[i] = eigenvals2[itarget + i]);
 	  }
+	  mpi_assert_equal(E);
 
 	  /* compute Y = best eigenvectors */
 	  for (i = 0; i <= ibasis; ++i) {
@@ -140,9 +142,10 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 				      S, itarget * q + Y.p * i, 1);
 	  }
 	  
-	  if (iteration > 0 && (flags & EIGS_VERBOSE) ||
-              MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
-              > FEEDBACK_TIME) {
+	  if (iteration > 0 && mpi_is_master() &&
+	      ((flags & EIGS_VERBOSE) ||
+	       MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
+	       > FEEDBACK_TIME)) {
                printf("    iteration %4d: "
                       "trace = %0.16g (%g%% change)\n", iteration, E,
 		      200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));

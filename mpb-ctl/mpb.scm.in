@@ -302,8 +302,7 @@
 							    (+ num-runs 1) 2)
 							   1))))))
 		  (display-many ", median = " median-iters))))
-	  (newline)
-	  (display-many "mean flops per iteration = "
+	  (display-many "\nmean flops per iteration = "
 			(/ eigensolver-flops (* num-runs mean-iters)) "\n")
 	  ))))
 
@@ -349,7 +348,7 @@
 	       (set! gap-list (output-gaps band-range-data)))
 	     (set! gap-list '())))))
   (set! all-freqs (reverse all-freqs)) ; put them in the right order
-  (display "done.\n"))
+  (display-many "done.\n"))
 
 (define (run . band-functions)
   (apply run-polarization

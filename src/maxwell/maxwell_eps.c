@@ -21,6 +21,7 @@
 
 #include "../config.h"
 #include <check.h>
+#include <mpi_utils.h>
 
 #include "maxwell.h"
 
@@ -487,9 +488,9 @@ void set_maxwell_dielectric(maxwell_data *md,
      mesh_prod_inv = 1.0 / mesh_prod;
 
 #ifdef DEBUG
-     printf("Using moment mesh (%d):\n", size_moment_mesh);
+     mpi_one_printf("Using moment mesh (%d):\n", size_moment_mesh);
      for (i = 0; i < size_moment_mesh; ++i)
-	  printf("   (%g, %g, %g) (%g)\n",
+	  mpi_one_printf("   (%g, %g, %g) (%g)\n",
 		 moment_mesh[i][0], moment_mesh[i][1], moment_mesh[i][2],
 		 moment_mesh_weights[i]);
 #endif
@@ -523,8 +524,8 @@ void set_maxwell_dielectric(maxwell_data *md,
 
 #  else /* HAVE_MPI */
 
-     local_n2 = md->fft_output_size / (n1 * n3);
-     local_y_start = md->fft_output_N_start / (n1 * n3);
+     local_n2 = md->local_ny;
+     local_y_start = md->local_y_start;
 
      /* first two dimensions are transposed in MPI output: */
      for (j = 0; j < local_n2; ++j)

@@ -320,7 +320,7 @@ void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d)
 	  }
      
      if (X.Nstart > 0)
-	  return;  /* DC frequency is not on this process*/
+	  return;  /* DC frequency is not on this process */
 		      
      if (d->polarization == TE_POLARIZATION ||
 	 d->polarization == EVEN_Z_POLARIZATION) {

@@ -176,7 +176,8 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 
      fftwnd_mpi(dir < 0 ? d->plan : d->iplan,
 		howmany,
-		(fftw_complex *) array);
+		(fftw_complex *) array, (fftw_complex *) NULL,
+		FFTW_TRANSPOSED_ORDER);
 
 #    endif /* HAVE_MPI */
 
@@ -404,6 +405,10 @@ void maxwell_vectorfield_makefull(maxwell_data *d, scalar_complex *field)
 #ifndef SCALAR_COMPLEX
      int i, j;
      int rank, n_other, n_last, n_last_stored, nx, ny, nz;
+
+#ifdef HAVE_MPI
+#  error not yet implemented!
+#endif
      
      nx = d->nx; ny = d->ny; nz = d->nz;
      n_other = d->other_dims;
@@ -478,6 +483,10 @@ void maxwell_scalarfield_makefull(maxwell_data *d, real *field)
 #ifndef SCALAR_COMPLEX
      int i, j;
      int rank, n_other, n_last, n_last_stored, nx, ny, nz;
+     
+#ifdef HAVE_MPI
+#  error not yet implemented!
+#endif
      
      nx = d->nx; ny = d->ny; nz = d->nz;
      n_other = d->other_dims;

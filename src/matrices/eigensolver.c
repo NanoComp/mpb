@@ -21,6 +21,7 @@
 
 #include "../config.h"
 #include <mpiglue.h>
+#include <mpi_utils.h>
 #include <check.h>
 #include <scalar.h>
 #include <matrices.h>
@@ -258,8 +259,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	     otherwise we start to encounter numerical problems. */
 	  if (flags & EIGS_REORTHOGONALIZE) {
 	       real traceU = SCALAR_RE(sqmatrix_trace(U));
+	       mpi_assert_equal(traceU);
 	       if (traceU > EIGS_TRACE_U_THRESHOLD * U.p) {
-		    printf("    re-orthonormalizing Y\n");
+		    mpi_one_printf("    re-orthonormalizing Y\n");
 		    sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
 		    evectmatrix_XeYS(G, Y, S1, 1); /* G = orthonormalize Y */
 		    evectmatrix_copy(Y, G);
@@ -282,18 +284,19 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  TIME_OP(time_ZtW, evectmatrix_XtY(YtAYU, Y, G));
 	  E = SCALAR_RE(sqmatrix_trace(YtAYU));
 	  CHECK(!BADNUM(E), "crazy number detected in trace!!\n");
+	  mpi_assert_equal(E);
 
 	  convergence_history[iteration % EIG_HISTORY_SIZE] =
 	       200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E));
 	  
-	  if (iteration > 0 && 
+	  if (iteration > 0 && mpi_is_master() &&
 	      ((flags & EIGS_VERBOSE) ||
 	       MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
 	       > FEEDBACK_TIME)) {
                printf("    iteration %4d: "
                       "trace = %0.16g (%g%% change)\n", iteration, E,
 		      convergence_history[iteration % EIG_HISTORY_SIZE]);
-               fflush(stdout); /* make sure output appears */
+	       fflush(stdout); /* make sure output appears */
                prev_feedback_time = MPIGLUE_CLOCK; /* reset feedback clock */
           }
 
@@ -332,7 +335,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	     any computations that we need with G.  (Yes, we're
 	     playing tricksy games here, but isn't it fun?) */
 
-	  traceGtX = SCALAR_RE(evectmatrix_traceXtY(G, X));
+	  mpi_assert_equal(traceGtX = SCALAR_RE(evectmatrix_traceXtY(G, X)));
 	  if (usingConjugateGradient) {
                if (use_polak_ribiere) {
                     /* assign G = G - prev_G and copy prev_G = G in the
@@ -347,6 +350,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                }
                else /* otherwise, use Fletcher-Reeves (ignore prev_G) */
                     gamma_numerator = traceGtX;
+	       mpi_assert_equal(gamma_numerator);
 	  }
 
 	  /* The motivation for the following code came from a trick I
@@ -406,7 +410,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		   convergence_history[(iteration+1) % EIG_HISTORY_SIZE]) {
 		    gamma = 0.0;
                     if (flags & EIGS_VERBOSE)
-                         printf("    dynamically resetting CG direction...\n");
+                         mpi_one_printf("    dynamically resetting CG direction...\n");
 		    for (i = 1; i < EIG_HISTORY_SIZE; ++i)
 			 convergence_history[(iteration+i) % EIG_HISTORY_SIZE]
 			      = 10000.0;
@@ -418,9 +422,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		       and just juse D = X */
                     gamma = 0.0;
                     if (flags & EIGS_VERBOSE)
-                         printf("    resetting CG direction...\n");
+                         mpi_one_printf("    resetting CG direction...\n");
                }
 
+	       mpi_assert_equal(gamma * d_scale);
                evectmatrix_aXpbY(gamma * d_scale, D, 1.0, X);
           }
 
@@ -440,6 +445,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	          matrix multiplications compared to the exact linmin. */
 
 	       d_norm = sqrt(SCALAR_RE(evectmatrix_traceXtY(D,D)) / Y.p);
+	       mpi_assert_equal(d_norm);
 
 	       /* dE = 2 * tr Gt D.  (Use prev_G instead of G so that
 		  it works even when we are using Polak-Ribiere.) */
@@ -455,6 +461,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       evectmatrix_XtY(S1, Y, G);  /* S1 = Yt A Y */
 	       
 	       E2 = SCALAR_RE(sqmatrix_traceAtB(S1, U));
+	       mpi_assert_equal(E2);
 
 	       /* Get finite-difference approximation for the 2nd derivative
 		  of the trace.  Equivalently, fit to a quadratic of the
@@ -472,12 +479,12 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       if (d2E < 0 || -0.5*dE*theta > 20.0 * fabs(E-prev_E)) {
 		    if (flags & EIGS_FORCE_APPROX_LINMIN) {
 			 if (flags & EIGS_VERBOSE)
-			      printf("    using previous stepsize\n");
+			      mpi_one_printf("    using previous stepsize\n");
 		    }
 		    else {
 			 if (flags & EIGS_VERBOSE)
-			      printf("    switching back to exact "
-				     "line minimization\n");
+			      mpi_one_printf("    switching back to exact "
+					     "line minimization\n");
 			 use_linmin = 1;
 			 evectmatrix_aXpbY(1.0, Y, -t / d_norm, D);
 			 prev_theta = atan(prev_theta); /* convert to angle */
@@ -494,6 +501,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       real dE, d2E;
 
 	       d_scale = sqrt(SCALAR_RE(evectmatrix_traceXtY(D, D)) / Y.p);
+	       mpi_assert_equal(d_scale);
 	       blasglue_scal(Y.p * Y.n, 1/d_scale, D.data, 1);
 
 	       A(D, G, Adata, 0, X); /* G = A D; X is scratch */
@@ -524,17 +532,17 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	       if (d2E < 0) {
 		    if (flags & EIGS_VERBOSE)
-			 printf("    near maximum in trace\n");
+			 mpi_one_printf("    near maximum in trace\n");
 		    theta = dE > 0 ? -fabs(prev_theta) : fabs(prev_theta);
 	       }
 	       else if (-0.5*dE*theta > 2.0 * fabs(E-prev_E)) {
 		    if (flags & EIGS_VERBOSE)
-			 printf("    large trace change predicted (%g%%)\n",
-				-0.5*dE*theta/E * 100.0);
+			 mpi_one_printf("    large trace change predicted "
+					"(%g%%)\n", -0.5*dE*theta/E * 100.0);
 	       }
 	       if (fabs(theta) >= K_PI) {
 		    if (flags & EIGS_VERBOSE)
-			 printf("    large theta (%g)\n", theta);
+			 mpi_one_printf("    large theta (%g)\n", theta);
 		    theta = dE > 0 ? -fabs(prev_theta) : fabs(prev_theta);
 	       }
 
@@ -542,6 +550,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		  (tfd.YtAY == S1). */
 	       sqmatrix_AeBC(S1, YtAYU, 0, YtY, 1);
 
+	       mpi_assert_equal(theta);
 	       {
 		    double new_E, new_dE;
 		    TIME_OP(time_linmin,
@@ -552,6 +561,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 					   flags & EIGS_VERBOSE));
 		    linmin_improvement = fabs(E - new_E) * 2.0/fabs(E + new_E);
 	       }
+	       mpi_assert_equal(theta);
 
 	       CHECK(fabs(theta) <= K_PI, "converged out of bounds!");
 
@@ -594,15 +604,15 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		   linmin_improvement <= APPROX_LINMIN_IMPROVEMENT_THRESHOLD &&
 		   t_exact > t_approx * APPROX_LINMIN_SLOWDOWN_GUESS) {
 		    if ((flags & EIGS_VERBOSE) && use_linmin)
-			 printf("    switching to approximate "
+			 mpi_one_printf("    switching to approximate "
 				"line minimization (decrease time by %g%%)\n",
 				(t_exact - t_approx) * 100.0 / t_exact);
 		    use_linmin = 0;
 	       }
 	       else if (!(flags & EIGS_FORCE_APPROX_LINMIN)) {
 		    if ((flags & EIGS_VERBOSE) && !use_linmin)
-			 printf("    switching back to exact "
-				"line minimization\n");
+			 mpi_one_printf("    switching back to exact "
+					"line minimization\n");
 		    use_linmin = 1;
 		    prev_theta = atan(prev_theta); /* convert to angle */
 	       }

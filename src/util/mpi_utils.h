@@ -15,8 +15,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef MPI_UTIL_H
-#define MPI_UTIL_H
+#ifndef MPI_UTILS_H
+#define MPI_UTILS_H
 
 #include <stdio.h>
 
@@ -32,6 +32,14 @@ extern void mpi_one_fprintf(FILE *f, const char *template, ...)
 #endif
 ;
 
+extern void mpi_one_printf(const char *template, ...)
+#ifdef __GNUC__
+     __attribute__ ((format (printf, 1, 2)))
+#endif
+;
+
 extern int mpi_is_master(void);
 
-#endif /* MPI_UTIL_H */
+extern void mpi_assert_equal(double x);
+
+#endif /* MPI_UTILS_H */

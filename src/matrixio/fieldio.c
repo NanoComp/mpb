@@ -30,7 +30,7 @@
 #define TWOPI 6.2831853071795864769252867665590057683943388
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
 
-/* note that kvector here is given in the cartesian basis */
+/* note that kvector here is given in the reciprocal basis */
 void fieldio_write_complex_field(scalar_complex *field,
 				 int rank,
 				 const int dims[3],
@@ -38,7 +38,6 @@ void fieldio_write_complex_field(scalar_complex *field,
 				 int local_nx, int local_x_start,
 				 const int copies[3],
 				 const real kvector[3],
-				 real R[3][3],
 				 matrixio_id file_id)
 {
      int i, j, k, component, ri_part;
@@ -59,12 +58,8 @@ void fieldio_write_complex_field(scalar_complex *field,
      local_dims[0] = local_nx;
      localN = local_dims[0] * local_dims[1] * local_dims[2];
 
-     for (i = 0; i < 3; ++i) {
-	  s[i] = 0;
-	  for (j = 0; j < 3; ++j)
-	       s[i] += R[i][j] * kvector[j];
-	  s[i] *= TWOPI / dims[i];
-     }
+     for (i = 0; i < 3; ++i)
+	  s[i] = TWOPI * kvector[i] / dims[i];
 
      /* create data sets for writing */
      for (component = 0; component < 3; ++component)

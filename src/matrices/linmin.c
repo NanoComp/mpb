@@ -21,6 +21,8 @@
 #include <stdio.h>
 
 #include "../config.h"
+#include <mpi_utils.h>
+#include <check.h>
 
 #include "linmin.h"
 
@@ -76,6 +78,8 @@ double linmin(double *converged_f, double *converged_df,
 	  
 	  while (*task == 'F') {
 	       f_x = f(x, &df_x, f_data);
+	       mpi_assert_equal(x);
+	       mpi_assert_equal(f_x);
 	       ++iters;
 	       dcsrch(&x, &f_x, &df_x, &f_tol, &df_tol, &x_tol,
 		      task, &x_min, &x_max, isave, dsave);
@@ -83,13 +87,13 @@ double linmin(double *converged_f, double *converged_df,
 
 	  if (*task != 'C') {  /* not converged; warning or error */
 	       if (verbose || *task == 'E')
-		    fprintf(stderr, "linmin: %s\n", task);
-	       if (*task == 'E')
-		    exit(EXIT_FAILURE);
+		    mpi_one_fprintf(stderr, "linmin: %s\n", task);
+	       CHECK(*task != 'E', "linmin failure");
 	  }
 
 	  if (verbose)
-	       printf("    linmin: converged after %d iterations.\n", iters);
+	       mpi_one_printf("    linmin: converged after %d iterations.\n",
+			      iters);
 
 	  *converged_f = f_x;
 	  *converged_df = df_x;

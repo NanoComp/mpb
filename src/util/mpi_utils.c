@@ -36,6 +36,18 @@ void mpi_die(const char *template, ...)
      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
 }
 
+/* Like printf, except only does anything on master process. */
+void mpi_one_printf(const char *template, ...)
+{
+     if (mpi_is_master()) {
+	  va_list ap;
+	  va_start(ap, template);
+	  vprintf(template, ap);
+	  va_end(ap);
+     }
+}
+
+/* Like fprintf, except only does anything on master process. */
 void mpi_one_fprintf(FILE *f, const char *template, ...)
 {
      if (mpi_is_master()) {
@@ -46,9 +58,23 @@ void mpi_one_fprintf(FILE *f, const char *template, ...)
      }
 }
 
+/* Return whether we are the master process (rank == 0). */
 int mpi_is_master(void)
 {
      int process_rank;
      MPI_Comm_rank(MPI_COMM_WORLD, &process_rank);
      return (process_rank == 0);
+}
+
+/* When debugging, checks to see that x is the same over all processes,
+   and abort the program if it is not. */
+void mpi_assert_equal(double x)
+{
+#ifdef DEBUG
+     double xmin = x, xmax = x;
+
+     MPI_Allreduce(&xmin, &xmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+     MPI_Allreduce(&xmax, &xmax, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+     CHECK(xmin == x && xmax == x, "mpi_assert_equal failure");
+#endif
 }

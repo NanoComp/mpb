@@ -30,7 +30,7 @@ evectmatrix create_evectmatrix(int N, int c, int p,
 {
      evectmatrix X;
  
-     CHECK(localN <= N && allocN >= localN && Nstart <= localN,
+     CHECK(localN <= N && allocN >= localN && Nstart < N,
 	   "invalid N arguments");
     
      X.N = N;

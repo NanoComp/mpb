@@ -34,6 +34,7 @@
 /* Header files for my eigensolver routines: */
 #include "../src/config.h"
 #include <mpiglue.h>
+#include <mpi_utils.h>
 #include <check.h>
 #include <blasglue.h>
 #include <matrices.h>
@@ -57,6 +58,22 @@ extern int verbose;
 
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
+
+/**************************************************************************/
+
+/* The following are hook functions called from main() when
+   starting the program and just before exiting.   We use
+   them to initialize MPI. */
+
+void ctl_start_hook(int *argc, char ***argv)
+{
+     MPI_Init(argc, argv);
+}
+
+void ctl_stop_hook(void)
+{
+     MPI_Finalize();
+}
 
 /**************************************************************************/
 
@@ -238,11 +255,11 @@ void randomize_fields(void)
      int i;
 
      if (!mdata) {
-	  fprintf(stderr,
+	  mpi_one_fprintf(stderr,
 		  "init-params must be called before randomize-fields!\n");
 	  return;
      }
-     printf("Initializing fields to random numbers...\n");
+     mpi_one_printf("Initializing fields to random numbers...\n");
      for (i = 0; i < H.n * H.p; ++i) {
 	  ASSIGN_SCALAR(H.data[i], rand() * 1.0 / RAND_MAX,
 			rand() * 1.0 / RAND_MAX);
@@ -267,7 +284,7 @@ void set_polarization(integer p)
      static int last_p = -2;  /* initialize to some non-value */
 
      if (!mdata) {
-	  fprintf(stderr,
+	  mpi_one_fprintf(stderr,
 		  "init-params must be called before set-polarization!\n");
 	  return;
      }
@@ -277,35 +294,35 @@ void set_polarization(integer p)
 
      switch (p) {
 	 case 0:
-	      printf("Solving for non-polarized bands.\n");
+	      mpi_one_printf("Solving for non-polarized bands.\n");
 	      set_maxwell_data_polarization(mdata, NO_POLARIZATION);
 	      break;
 	 case 1:
-	      printf("Solving for TE-polarized bands.\n");
+	      mpi_one_printf("Solving for TE-polarized bands.\n");
 	      set_maxwell_data_polarization(mdata, TE_POLARIZATION);
 	      CHECK(mdata->polarization == TE_POLARIZATION,
 		    "TE polarization is only valid for 2d simulations");
 	      break;
 	 case 2:
-	      printf("Solving for TM-polarized bands.\n");
+	      mpi_one_printf("Solving for TM-polarized bands.\n");
 	      set_maxwell_data_polarization(mdata, TM_POLARIZATION);
 	      CHECK(mdata->polarization == TM_POLARIZATION,
 		    "TM polarization is only valid for 2d simulations");
 	      break;
 	 case 3:
-	      printf("Solving for bands even about z=0.\n");
+	      mpi_one_printf("Solving for bands even about z=0.\n");
 	      set_maxwell_data_polarization(mdata, EVEN_Z_POLARIZATION);
 	      CHECK(mdata->polarization == EVEN_Z_POLARIZATION,
 		    "even symmetry is only valid for in-plane k-points");
 	      break;
 	 case 4:
-	      printf("Solving for bands odd about z=0.\n");
+	      mpi_one_printf("Solving for bands odd about z=0.\n");
 	      set_maxwell_data_polarization(mdata, ODD_Z_POLARIZATION);
 	      CHECK(mdata->polarization == ODD_Z_POLARIZATION,
 		    "odd symmetry is only valid for in-plane k-points");
 	      break;
 	 default:
-	      fprintf(stderr, "Unknown polarization type!\n");
+	      mpi_one_fprintf(stderr, "Unknown polarization type!\n");
 	      return;
      }
 
@@ -347,14 +364,15 @@ void init_params(integer p, boolean reset_fields)
      /* Output a bunch of stuff so that the user can see what we're
 	doing and what we've read in. */
      
-     printf("init-params: initializing eigensolver data\n");
+     mpi_one_printf("init-params: initializing eigensolver data\n");
 #ifndef SCALAR_COMPLEX
-     printf("  -- assuming INVERSION SYMMETRY in the geometry.\n");
+     mpi_one_printf("  -- assuming INVERSION SYMMETRY in the geometry.\n");
 #endif
      
-     printf("Computing %d bands with %e tolerance.\n", num_bands, tolerance);
+     mpi_one_printf("Computing %d bands with %e tolerance.\n",
+		    num_bands, tolerance);
      if (target_freq != 0.0)
-	  printf("Target frequency is %g\n", target_freq);
+	  mpi_one_printf("Target frequency is %g\n", target_freq);
      
      nx = grid_size.x;
      ny = grid_size.y;
@@ -368,7 +386,7 @@ void init_params(integer p, boolean reset_fields)
 	       block_size = (num_bands - block_size - 1) / (-block_size);
 	       block_size = (num_bands + block_size - 1) / block_size;
 	  }
-	  printf("Solving for %d bands at a time.\n", block_size);
+	  mpi_one_printf("Solving for %d bands at a time.\n", block_size);
      }
      else
 	  block_size = num_bands;
@@ -378,9 +396,9 @@ void init_params(integer p, boolean reset_fields)
 	  if (true_rank < dimensions)
 	       dimensions = true_rank;
 	  else if (true_rank > dimensions) {
-	       fprintf(stderr, 
-		       "WARNING: rank of grid is > dimensions.\n"
-		       "         setting extra grid dims. to 1.\n");
+	       mpi_one_fprintf(stderr, 
+			       "WARNING: rank of grid is > dimensions.\n"
+			       "         setting extra grid dims. to 1.\n");
 	       /* force extra dims to be 1: */
 	       if (dimensions <= 2)
 		    nz = 1;
@@ -389,11 +407,11 @@ void init_params(integer p, boolean reset_fields)
 	  }
      }
 
-     printf("Working in %d dimensions.\n", dimensions);
+     mpi_one_printf("Working in %d dimensions.\n", dimensions);
 
-     printf("Grid size is %d x %d x %d.\n", nx, ny, nz);
+     mpi_one_printf("Grid size is %d x %d x %d.\n", nx, ny, nz);
 
-     printf("Mesh size is %d.\n", mesh_size);
+     mpi_one_printf("Mesh size is %d.\n", mesh_size);
      mesh[0] = mesh_size;
      mesh[1] = (dimensions > 1) ? mesh_size : 1;
      mesh[2] = (dimensions > 2) ? mesh_size : 1;
@@ -401,19 +419,19 @@ void init_params(integer p, boolean reset_fields)
      Rm.c0 = vector3_scale(geometry_lattice.size.x, geometry_lattice.basis.c0);
      Rm.c1 = vector3_scale(geometry_lattice.size.y, geometry_lattice.basis.c1);
      Rm.c2 = vector3_scale(geometry_lattice.size.z, geometry_lattice.basis.c2);
-     printf("Lattice vectors:\n");
-     printf("     (%g, %g, %g)\n", Rm.c0.x, Rm.c0.y, Rm.c0.z);  
-     printf("     (%g, %g, %g)\n", Rm.c1.x, Rm.c1.y, Rm.c1.z);
-     printf("     (%g, %g, %g)\n", Rm.c2.x, Rm.c2.y, Rm.c2.z);
+     mpi_one_printf("Lattice vectors:\n");
+     mpi_one_printf("     (%g, %g, %g)\n", Rm.c0.x, Rm.c0.y, Rm.c0.z);  
+     mpi_one_printf("     (%g, %g, %g)\n", Rm.c1.x, Rm.c1.y, Rm.c1.z);
+     mpi_one_printf("     (%g, %g, %g)\n", Rm.c2.x, Rm.c2.y, Rm.c2.z);
   
      Gm = matrix3x3_inverse(matrix3x3_transpose(Rm));
-     printf("Reciprocal lattice vectors (/ 2 pi):\n");
-     printf("     (%g, %g, %g)\n", Gm.c0.x, Gm.c0.y, Gm.c0.z);  
-     printf("     (%g, %g, %g)\n", Gm.c1.x, Gm.c1.y, Gm.c1.z);
-     printf("     (%g, %g, %g)\n", Gm.c2.x, Gm.c2.y, Gm.c2.z);
+     mpi_one_printf("Reciprocal lattice vectors (/ 2 pi):\n");
+     mpi_one_printf("     (%g, %g, %g)\n", Gm.c0.x, Gm.c0.y, Gm.c0.z);  
+     mpi_one_printf("     (%g, %g, %g)\n", Gm.c1.x, Gm.c1.y, Gm.c1.z);
+     mpi_one_printf("     (%g, %g, %g)\n", Gm.c2.x, Gm.c2.y, Gm.c2.z);
      
      if (eigensolver_nwork > MAX_NWORK) {
-	  printf("(Reducing nwork = %d to maximum: %d.)\n",
+	  mpi_one_printf("(Reducing nwork = %d to maximum: %d.)\n",
 		 eigensolver_nwork, MAX_NWORK);
 	  eigensolver_nwork = MAX_NWORK;
      }
@@ -424,32 +442,34 @@ void init_params(integer p, boolean reset_fields)
      /* we must do this to correct for a non-orthogonal lattice basis: */
      geom_fix_objects();
 
-     printf("Geometric objects:\n");
-     for (i = 0; i < geometry.num_items; ++i) {
-	  display_geometric_object_info(5, geometry.items[i]);
-
-	  if (geometry.items[i].material.which_subclass == DIELECTRIC)
-	       printf("%*sdielectric constant epsilon = %g\n", 5 + 5, "",
-		      geometry.items[i].material.
-		      subclass.dielectric_data->epsilon);
-     }
+     mpi_one_printf("Geometric objects:\n");
+     if (mpi_is_master())
+	  for (i = 0; i < geometry.num_items; ++i) {
+	       display_geometric_object_info(5, geometry.items[i]);
+	       
+	       if (geometry.items[i].material.which_subclass == DIELECTRIC)
+		    printf("%*sdielectric constant epsilon = %g\n",
+			   5 + 5, "",
+			   geometry.items[i].material.
+			   subclass.dielectric_data->epsilon);
+	  }
 
      destroy_geom_box_tree(geometry_tree);  /* destroy any tree from
 					       previous runs */
      geometry_tree =  create_geom_box_tree();
-     if (verbose) {
+     if (verbose && mpi_is_master()) {
 	  printf("Geometry object bounding box tree:\n");
 	  display_geom_box_tree(5, geometry_tree);
      }
      geom_box_tree_stats(geometry_tree, &tree_depth, &tree_nobjects);
-     printf("Geometric object tree has depth %d and %d object nodes"
+     mpi_one_printf("Geometric object tree has depth %d and %d object nodes"
 	    " (vs. %d actual objects)\n",
 	    tree_depth, tree_nobjects, geometry.num_items);
 
-     printf("%d k-points:\n", k_points.num_items);
+     mpi_one_printf("%d k-points:\n", k_points.num_items);
      for (i = 0; i < k_points.num_items; ++i)
-	  printf("     (%g,%g,%g)\n", k_points.items[i].x,
-		 k_points.items[i].y, k_points.items[i].z);
+	  mpi_one_printf("     (%g,%g,%g)\n", k_points.items[i].x,
+			 k_points.items[i].y, k_points.items[i].z);
      
      if (mdata) {  /* need to clean up from previous init_params call */
 	  if (nx == mdata->nx && ny == mdata->ny && nz == mdata->nz &&
@@ -478,12 +498,12 @@ void init_params(integer p, boolean reset_fields)
 	  srand(314159 * (rank + 1));
      }
 
-     printf("Creating Maxwell data...\n");
+     mpi_one_printf("Creating Maxwell data...\n");
      mdata = create_maxwell_data(nx, ny, nz, &local_N, &N_start, &alloc_N,
                                  block_size, NUM_FFT_BANDS);
      CHECK(mdata, "NULL mdata");
 
-     printf("Initializing dielectric function...\n");
+     mpi_one_printf("Initializing dielectric function...\n");
      {
 	  epsilon_func_data d;
 	  get_epsilon_file_func(epsilon_input_file,
@@ -498,7 +518,7 @@ void init_params(integer p, boolean reset_fields)
 	  mtdata = NULL;
 
      if (!have_old_fields) {
-	  printf("Allocating fields...\n");
+	  mpi_one_printf("Allocating fields...\n");
 	  H = create_evectmatrix(nx * ny * nz, 2, num_bands,
 				 local_N, N_start, alloc_N);
 	  nwork_alloc = eigensolver_nwork;
@@ -519,10 +539,11 @@ void init_params(integer p, boolean reset_fields)
      {
 	  int ierr = check_maxwell_dielectric(mdata);
 	  if (ierr == 1)
-	       fprintf(stderr,
+	       mpi_one_fprintf(stderr,
 		       "ERROR: non positive-definite dielectric tensor\n");
 	  else if (ierr == 2)
-	       fprintf(stderr, "ERROR: dielectric tensor must not couple xy "
+	       mpi_one_fprintf(stderr, 
+		       "ERROR: dielectric tensor must not couple xy "
 		       "plane with z direction for 2D TE/TM calculations\n");
 	  CHECK(!ierr, "invalid dielectric function\n");
      }
@@ -580,24 +601,25 @@ void solve_kpoint(vector3 kvector)
      deflation_data deflation;
      polarization_t prev_pol;
 
-     printf("solve_kpoint (%g,%g,%g):\n",
-	    kvector.x, kvector.y, kvector.z);
+     mpi_one_printf("solve_kpoint (%g,%g,%g):\n",
+		    kvector.x, kvector.y, kvector.z);
 
      curfield_type = '-'; /* reset curfield, invalidating stored fields */
 
      if (num_bands == 0) {
-	  printf("  num-bands is zero, not solving for any bands\n");
+	  mpi_one_printf("  num-bands is zero, not solving for any bands\n");
 	  return;
      }
 
      if (!mdata) {
-	  fprintf(stderr, "init-params must be called before solve-kpoint!\n");
+	  mpi_one_fprintf(stderr,
+			  "init-params must be called before solve-kpoint!\n");
 	  return;
      }
 
      /* if this is the first k point, print out a header line for
 	for the frequency grep data: */
-     if (!kpoint_index) {
+     if (!kpoint_index && mpi_is_master()) {
 	  printf("%sfreqs:, k index, kx, ky, kz, kmag/2pi",
 		 polarization_strings[mdata->polarization]);
 	  for (i = 0; i < num_bands; ++i)
@@ -653,7 +675,8 @@ void solve_kpoint(vector3 kvector)
 	       evectmatrix_resize(&Hblock, num_bands - ib, 0);
 	  }
 
-	  printf("Solving for bands %d to %d...\n", ib + 1, ib + Hblock.p);
+	  mpi_one_printf("Solving for bands %d to %d...\n",
+			 ib + 1, ib + Hblock.p);
 
 	  constraints = NULL;
 	  constraints = evect_add_constraint(constraints,
@@ -742,14 +765,14 @@ void solve_kpoint(vector3 kvector)
 
 	  evect_destroy_constraints(constraints);
 	  
-	  printf("Finished solving for bands %d to %d after %d iterations.\n",
-		 ib + 1, ib + Hblock.p, num_iters);
+	  mpi_one_printf("Finished solving for bands %d to %d after "
+			 "%d iterations.\n", ib + 1, ib + Hblock.p, num_iters);
 	  total_iters += num_iters * Hblock.p;
      }
 
      if (num_bands - ib0 > Hblock.alloc_p)
-	  printf("Finished k-point with %g mean iterations per band.\n",
-		 total_iters * 1.0 / num_bands);
+	  mpi_one_printf("Finished k-point with %g mean iterations/band.\n",
+			 total_iters * 1.0 / num_bands);
 
      /* Manually put in constant (zero-frequency) solutions for k=0: */
      if (mdata->zero_k && !mtdata) {
@@ -786,23 +809,23 @@ void solve_kpoint(vector3 kvector)
      freqs.num_items = num_bands;
      CHK_MALLOC(freqs.items, number, freqs.num_items);
      
-     printf("%sfreqs:, %d, %g, %g, %g, %g",
-	    polarization_strings[mdata->polarization],
-	    ++kpoint_index, k[0], k[1], k[2],
-	    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
+     mpi_one_printf("%sfreqs:, %d, %g, %g, %g, %g",
+		    polarization_strings[mdata->polarization],
+		    ++kpoint_index, k[0], k[1], k[2],
+		    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
      for (i = 0; i < num_bands; ++i) {
 	  freqs.items[i] = sqrt(eigvals[i]);
-	  printf(", %g", freqs.items[i]);
+	  mpi_one_printf(", %g", freqs.items[i]);
      }
-     printf("\n");
+     mpi_one_printf("\n");
 
      z_parity.num_items = num_bands;
      z_parity.items = maxwell_zparity(H, mdata);
-     printf("%szparity:, %d", polarization_strings[mdata->polarization],
-	    kpoint_index);
+     mpi_one_printf("%szparity:, %d", 
+		    polarization_strings[mdata->polarization], kpoint_index);
      for (i = 0; i < num_bands; ++i)
-	  printf(", %g", z_parity.items[i]);
-     printf("\n");
+	  mpi_one_printf(", %g", z_parity.items[i]);
+     mpi_one_printf("\n");
 
      eigensolver_flops = evectmatrix_flops;
 
@@ -825,11 +848,11 @@ number_list compute_group_velocity_component(vector3 d)
      group_v.num_items = 0;  group_v.items = (number *) NULL;
 
      if (!mdata) {
-	  fprintf(stderr, "init-params must be called first!\n");
+	  mpi_one_fprintf(stderr, "init-params must be called first!\n");
 	  return group_v;
      }
      if (!kpoint_index) {
-	  fprintf(stderr, "solve-kpoint must be called first!\n");
+	  mpi_one_fprintf(stderr, "solve-kpoint must be called first!\n");
 	  return group_v;
      }
 
@@ -897,15 +920,18 @@ number_list compute_group_velocity_component(vector3 d)
 void get_dfield(int which_band)
 {
      if (!mdata) {
-	  fprintf(stderr, "init-params must be called before get-dfield!\n");
+	  mpi_one_fprintf(stderr,
+			  "init-params must be called before get-dfield!\n");
 	  return;
      }
      if (!kpoint_index) {
-	  fprintf(stderr, "solve-kpoint must be called before get-dfield!\n");
+	  mpi_one_fprintf(stderr,
+			  "solve-kpoint must be called before get-dfield!\n");
 	  return;
      }
      if (which_band < 1 || which_band > H.p) {
-	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",H.p);
+	  mpi_one_fprintf(stderr,
+			  "must have 1 <= band index <= num_bands (%d)\n",H.p);
 	  return;
      }
 
@@ -918,15 +944,18 @@ void get_dfield(int which_band)
 void get_hfield(integer which_band)
 {
      if (!mdata) {
-	  fprintf(stderr, "init-params must be called before get-hfield!\n");
+	  mpi_one_fprintf(stderr,
+			  "init-params must be called before get-hfield!\n");
 	  return;
      }
      if (!kpoint_index) {
-	  fprintf(stderr, "solve-kpoint must be called before get-hfield!\n");
+	  mpi_one_fprintf(stderr,
+			  "solve-kpoint must be called before get-hfield!\n");
 	  return;
      }
      if (which_band < 1 || which_band > H.p) {
-	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",H.p);
+	  mpi_one_fprintf(stderr,
+			  "must have 1 <= band index <= num_bands (%d)\n",H.p);
 	  return;
      }
 
@@ -939,7 +968,7 @@ void get_hfield(integer which_band)
 void get_efield_from_dfield(void)
 {
      if (!curfield || curfield_type != 'd') {
-	  fprintf(stderr, "get-dfield must be called before "
+	  mpi_one_fprintf(stderr, "get-dfield must be called before "
 		  "get-efield-from-dfield!\n");
 	  return;
      }
@@ -963,7 +992,8 @@ void get_epsilon(void)
      int fill_count = 0;
 
      if (!mdata) {
-	  fprintf(stderr, "init-params must be called before get-epsilon!\n");
+	  mpi_one_fprintf(stderr,
+			  "init-params must be called before get-epsilon!\n");
 	  return;
      }
 
@@ -1021,11 +1051,11 @@ void get_epsilon(void)
      eps_mean /= N;
      eps_inv_mean = N/eps_inv_mean;
 
-     printf("epsilon: %g-%g, mean %g, harm. mean %g, "
-	    "%g%% > 1, %g%% \"fill\"\n",
-	    eps_low, eps_high, eps_mean, eps_inv_mean,
-	    (100.0 * fill_count) / N, 
-	    100.0 * (eps_mean-eps_low) / (eps_high-eps_low));
+     mpi_one_printf("epsilon: %g-%g, mean %g, harm. mean %g, "
+		    "%g%% > 1, %g%% \"fill\"\n",
+		    eps_low, eps_high, eps_mean, eps_inv_mean,
+		    (100.0 * fill_count) / N, 
+		    100.0 * (eps_mean-eps_low) / (eps_high-eps_low));
 }
 
 /**************************************************************************/
@@ -1044,7 +1074,7 @@ number_list compute_field_energy(void)
      number_list retval = { 0, 0 };
 
      if (!curfield || !strchr("dh", curfield_type)) {
-	  fprintf(stderr, "The D or H field must be loaded first.\n");
+	  mpi_one_fprintf(stderr, "The D or H field must be loaded first.\n");
 	  return retval;
      }
 
@@ -1107,14 +1137,14 @@ number_list compute_field_energy(void)
      for (i = 0; i < N; ++i)
 	  energy_density[i] *= normalization;
 
-     printf("%c-energy-components:, %d, %d",
+     mpi_one_printf("%c-energy-components:, %d, %d",
 	    curfield_type, kpoint_index, curfield_band);
      for (i = 0; i < 6; ++i) {
 	  comp_sum[i] *= normalization;
 	  if (i % 2 == 1)
-	       printf(", %g", comp_sum[i] + comp_sum[i-1]);
+	       mpi_one_printf(", %g", comp_sum[i] + comp_sum[i-1]);
      }
-     printf("\n");
+     mpi_one_printf("\n");
 
      /* remember that we now have energy density; denoted by capital D/H */
      curfield_type = toupper(curfield_type);
@@ -1166,7 +1196,7 @@ void fix_field_phase(void)
      scalar phase;
 
      if (!curfield || !strchr("dhe", curfield_type)) {
-          fprintf(stderr, "The D, H, or E field must be loaded first.\n");
+          mpi_one_fprintf(stderr, "The D/H/E field must be loaded first.\n");
           return;
      }
      N = mdata->fft_output_size * 3;
@@ -1231,7 +1261,7 @@ void fix_field_phase(void)
 	  }
      }
      if (i >= 0)  /* convert index to global index in distributed array: */
-	  maxabs_index += mdata->local_x_start * mdata->ny * mdata->nz;
+	  maxabs_index += mdata->local_y_start * mdata->nx * mdata->nz;
      {
 	  /* compute maximum index and corresponding sign over all the 
 	     processors, using the MPI_MAXLOC reduction operation: */
@@ -1243,9 +1273,9 @@ void fix_field_phase(void)
      ASSIGN_SCALAR(phase,
 		   SCALAR_RE(phase)*maxabs_sign, SCALAR_IM(phase)*maxabs_sign);
 
-     printf("Fixing %c-field (band %d) phase by %g + %gi; max ampl. = %g\n",
-	    curfield_type, curfield_band,
-	    SCALAR_RE(phase), SCALAR_IM(phase), maxabs);
+     mpi_one_printf("Fixing %c-field (band %d) phase by %g + %gi; "
+		    "max ampl. = %g\n", curfield_type, curfield_band,
+		    SCALAR_RE(phase), SCALAR_IM(phase), maxabs);
 
      /* Now, multiply everything by this phase, *including* the
 	stored "raw" eigenvector in H, so that any future fields
@@ -1273,7 +1303,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
      real epsilon, energy_sum = 0.0;
 
      if (!curfield || !strchr("DH", curfield_type)) {
-          fprintf(stderr, "The D or H energy density must be loaded first.\n");
+          mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
           return 0.0;
      }
 
@@ -1339,26 +1369,54 @@ void output_field_extended(vector3 copiesv, integer which_component,
      int copies[3];
      matrixio_id file_id = -1;
      int attr_dims[2] = {3, 3};
-
-     copies[0] = copiesv.x;
-     copies[1] = copiesv.y;
-     copies[2] = copiesv.z;
+     real output_k[3]; /* kvector in reciprocal lattice basis */
+     real output_R[3][3];
 
      if (!curfield) {
-	  fprintf(stderr, 
+	  mpi_one_fprintf(stderr, 
 		  "fields, energy dens., or epsilon must be loaded first.\n");
 	  return;
      }
      
-     /* this will need to be fixed for MPI, where we transpose the data */
-#if defined(HAVE_MPI)
-#  error broken, please fix
-#endif
+#ifdef HAVE_MPI
+     /* The first two dimensions (x and y) of the position-space fields
+	are transposed when we use MPI, so we need to transpose everything. */
+     dims[0] = mdata->ny;
+     dims[1] = mdata->nx;
+     dims[2] = mdata->nz;
+     local_nx = mdata->local_ny;
+     local_x_start = mdata->local_y_start;
+     copies[0] = copiesv.y;
+     copies[1] = copiesv.x;
+     copies[2] = copiesv.z;
+     output_k[0] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
+	  + R[1][0]*mdata->current_k[2];
+     output_k[1] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
+	  + R[0][0]*mdata->current_k[2];
+     output_k[2] = R[2][0]*mdata->current_k[0] + R[2][1]*mdata->current_k[1]
+	  + R[2][0]*mdata->current_k[2];
+     output_R[0][0]=R[1][0]; output_R[0][1]=R[1][1]; output_R[0][2]=R[1][2];
+     output_R[1][0]=R[0][0]; output_R[1][1]=R[0][1]; output_R[1][2]=R[0][2];
+     output_R[2][0]=R[2][0]; output_R[2][1]=R[2][1]; output_R[2][2]=R[2][2];
+#else /* ! HAVE_MPI */
      dims[0] = mdata->nx;
      dims[1] = mdata->ny;
      dims[2] = mdata->nz;
      local_nx = mdata->local_nx;
      local_x_start = mdata->local_x_start;
+     copies[0] = copiesv.x;
+     copies[1] = copiesv.y;
+     copies[2] = copiesv.z;
+     output_k[0] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
+	  + R[0][0]*mdata->current_k[2];
+     output_k[1] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
+	  + R[1][0]*mdata->current_k[2];
+     output_k[2] = R[2][0]*mdata->current_k[0] + R[2][1]*mdata->current_k[1]
+	  + R[2][0]*mdata->current_k[2];
+     output_R[0][0]=R[0][0]; output_R[0][1]=R[0][1]; output_R[0][2]=R[0][2];
+     output_R[1][0]=R[1][0]; output_R[1][1]=R[1][1]; output_R[1][2]=R[1][2];
+     output_R[2][0]=R[2][0]; output_R[2][1]=R[2][1]; output_R[2][2]=R[2][2];
+#endif /* ! HAVE_MPI */
      
      if (strchr("dhe", curfield_type)) { /* outputting vector field */
 	  maxwell_vectorfield_makefull(mdata, curfield);
@@ -1374,22 +1432,14 @@ void output_field_extended(vector3 copiesv, integer which_component,
 		  curfield_type, kpoint_index, curfield_band, 
 		  freqs.items[curfield_band - 1]);
 	  fname2 = fix_fname(fname, filename_prefix, mdata->polarization);
-	  printf("Outputting fields to %s...\n", fname2);
+	  mpi_one_printf("Outputting fields to %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
 	  fieldio_write_complex_field(curfield, 3, dims, which_component,
 				      local_nx, local_x_start,
-				      copies, mdata->current_k, R, file_id);
+				      copies, output_k, file_id);
 	  free(fname2);
-	  {
-	       /* convert mdata->current_k back to the reciprocal basis */
-	       real k[3] = {0,0,0};
-	       int i, j;
-	       for (i = 0; i < 3; ++i)
-		    for (j = 0; j < 3; ++j)
-			 k[i] += R[i][j] * mdata->current_k[j];
-	       matrixio_write_data_attr(file_id, "Bloch wavevector",
-					k, 1, attr_dims);
-	  }
+	  matrixio_write_data_attr(file_id, "Bloch wavevector",
+				   output_k, 1, attr_dims);
      }
      else if (strchr("DHn", curfield_type)) { /* scalar field */
 	  maxwell_scalarfield_makefull(mdata, (real*) curfield);
@@ -1410,20 +1460,20 @@ void output_field_extended(vector3 copiesv, integer which_component,
 			     /* no polarization suffix for epsilon: */
 			     curfield_type == 'n' ? NO_POLARIZATION :
 			     mdata->polarization);
-	  printf("Outputting %s...\n", fname2);
+	  mpi_one_printf("Outputting %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
 	  fieldio_write_real_vals((real *) curfield, 3, dims,
 				  local_nx, local_x_start, copies, file_id);
 	  free(fname2);
      }
      else
-	  fprintf(stderr, "unknown field type!\n");
+	  mpi_one_fprintf(stderr, "unknown field type!\n");
 
      if (file_id >= 0) {
 	  real rcopies[3];
 
 	  matrixio_write_data_attr(file_id, "lattice vectors",
-				   &R[0][0], 2, attr_dims);
+				   &output_R[0][0], 2, attr_dims);
 	  rcopies[0] = copies[0] < 1 ? 1 : copies[0];
 	  rcopies[1] = copies[1] < 1 ? 1 : copies[1];
 	  rcopies[2] = copies[2] < 1 ? 1 : copies[2];
@@ -1452,12 +1502,15 @@ void output_field_extended(vector3 copiesv, integer which_component,
 number compute_energy_in_object_list(geometric_object_list objects)
 {
      int i, j, k, n1, n2, n3, n_other, n_last, rank, last_dim;
+#ifdef HAVE_MPI
+     int local_n2, local_y_start;
+#endif
      real s1, s2, s3, c1, c2, c3;
      real *energy = (real *) curfield;
      real energy_sum = 0;
 
      if (!curfield || !strchr("DH", curfield_type)) {
-          fprintf(stderr, "The D or H energy density must be loaded first.\n");
+          mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
           return 0.0;
      }
 
@@ -1499,7 +1552,18 @@ number compute_energy_in_object_list(geometric_object_list objects)
 	  int index = ((i * n2 + j) * n3 + k);
 
 #  else /* HAVE_MPI */
-#    error not yet implemented!
+
+     local_n2 = md->local_ny;
+     local_y_start = md->local_y_start;
+
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int i2 = i, j2 = j + local_y_start, k2 = k;
+	  int index = ((j * n1 + i) * n3 + k);
+
 #  endif
 
 #else /* not SCALAR_COMPLEX */

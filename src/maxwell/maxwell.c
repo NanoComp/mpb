@@ -157,7 +157,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 	are not in a cartesian basis (or even a constant basis).   We also
         require that this scratch array is big enough to hold local_N
         complex vectors, so that we can use it to compute fields for output. */
-     fft_data_size *= d->num_fft_bands;
+     fft_data_size *= d->max_fft_bands;
      fft_data_size = MAX2(*local_N, fft_data_size);
      CHK_MALLOC(d->fft_data, scalar,
 		3 * fft_data_size * (sizeof(scalar_complex) / sizeof(scalar)));

@@ -35,8 +35,13 @@ typedef double mpiglue_clock_t;
 #include <time.h>
 #include <check.h>
 
+#define MPI_Init(argc,argv) 0
+#define MPI_Finalize() 0
+
 #define MPI_Allreduce(sb, rb, n, t, op, comm) \
 CHECK((sb) == (rb), "MPI_Allreduce stub doesn't work for sendbuf != recvbuf")
+
+#define MPI_Bcast(b, n, t, root, comm) 0
 
 #define MPI_Abort(comm, errcode) exit(errcode)
 
