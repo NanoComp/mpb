@@ -18,12 +18,12 @@ dnl
 dnl The user can force a particular library/compiler by setting the
 dnl MPICC/MPICXX/MPIF77 and/or MPILIBS environment variables.
 dnl
-dnl ACTION-IF-FOUND is a list of shell commands to run if a MPI
+dnl ACTION-IF-FOUND is a list of shell commands to run if an MPI
 dnl library is found, and ACTION-IF-NOT-FOUND is a list of commands
 dnl to run it if it is not found.  If ACTION-IF-FOUND is not specified,
 dnl the default action will define HAVE_MPI.
 dnl
-dnl @version $Id: acx_mpi.m4,v 1.2 2002/09/24 19:48:10 stevenj Exp $
+dnl @version $Id: acx_mpi.m4,v 1.3 2002/09/24 19:49:08 stevenj Exp $
 dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
 
 AC_DEFUN([ACX_MPI], [
