@@ -61,7 +61,11 @@ scalar sqmatrix_traceAtB(sqmatrix A, sqmatrix B)
 }
 
 /* A = B * C.  If bdagger != 0, then adjoint(B) is used; similarly for C. 
-   A must be distinct from B and C.  */
+   A must be distinct from B and C.   Note that since the matrices
+   are stored in row-major order, the most efficient operation should
+   be B * adjoint(C), assuming the BLAS is sane.  i.e. if C is hermitian,
+   you should use cdagger = 1.  Conversely, the worst operation is
+   probably adjoint(B) * C. */
 void sqmatrix_AeBC(sqmatrix A, sqmatrix B, short bdagger,
 		   sqmatrix C, short cdagger)
 {
