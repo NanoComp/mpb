@@ -136,9 +136,9 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
      CHECK(rank > 1, "rank < 2 MPI computations are not supported");
 
-     d->iplan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
-				       FFTW_REAL_TO_COMPLEX,
-				       FFTW_ESTIMATE | FFTW_IN_PLACE);
+     d->iplan = rfftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
+					FFTW_REAL_TO_COMPLEX,
+					FFTW_ESTIMATE | FFTW_IN_PLACE);
 
      /* Unlike fftwnd_mpi, we do *not* pass transposed dimensions for
 	the reverse transform here--we always pass the dimensions of the
