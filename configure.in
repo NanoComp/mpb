@@ -99,4 +99,4 @@ AC_C_INLINE
 dnl Checks for library functions.
 AC_CHECK_FUNCS(getopt)
 
-AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/maxwell/Makefile)
+AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/maxwell/Makefile photon-ctl/Makefile)

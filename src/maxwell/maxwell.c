@@ -41,7 +41,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->current_k[0] = d->current_k[1] = d->current_k[2] = 0.0;
      d->polarization = NO_POLARIZATION;
 
-     d->last_dim = n[rank - 1];
+     d->last_dim_size = d->last_dim = n[rank - 1];
 
      /* ----------------------------------------------------- */
 #ifndef HAVE_MPI 
@@ -69,8 +69,8 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 					    (FFTW_COMPLEX*) d->fft_data,
 					    3 * num_fft_bands);
 #    else /* not SCALAR_COMPLEX */
-     d->fft_output_size = fft_data_size = 
-	  d->other_dims * 2 * (d->last_dim / 2 + 1);
+     d->last_dim_size = 2 * (d->last_dim / 2 + 1);
+     d->fft_output_size = fft_data_size = d->other_dims * d->last_dim_size;
      d->plan = rfftwnd_create_plan(rank, n, FFTW_FORWARD,
 				   FFTW_ESTIMATE | FFTW_IN_PLACE,
 				   REAL_TO_COMPLEX);
@@ -81,7 +81,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 #  endif /* HAVE_FFTW */
 
 #else /* HAVE_MPI */
-     /*----------------------------------------------------- */
+     /* ----------------------------------------------------- */
 
 #  ifdef HAVE_FFTW
 
@@ -338,23 +338,41 @@ static void sym_matrix_invert(symmetric_matrix *Vinv, symmetric_matrix V)
 
 #define SMALL 1.0e-6
 
+/* The following function initializes the dielectric tensor md->eps_inv,
+   using the dielectric function epsilon(r, epsilon_data).
+
+   epsilon is averaged over a rectangular mesh spanning the space between
+   grid points; the size of the mesh is given by mesh_size.
+
+   R1, R2, and R2 are the spatial lattice vectors, and are used to convert
+   the discretization grid into spatial coordinates (with the origin at
+   the (0,0,0) grid element.
+
+   In most places, the dielectric tensor is equal to 1/eps * identity,
+   but at dielectric interfaces it varies depending upon the polarization
+   of the field (for faster convergence).  In particular, it depends upon
+   the direction of the field relative to the surface normal vector, so
+   we must compute the latter.  The surface normal is approximated by
+   the "dipole moment" of the dielectric function over the mesh.
+
+   Implementation note: md->eps_inv is chosen to have dimensions matching
+   the output of the FFT.  Thus, its dimensions depend upon whether we are
+   doing a real or complex and serial or parallel FFT. */
+
 void set_maxwell_dielectric(maxwell_data *md,
 			    int mesh_size[3],
-			    real R1[3], real R2[3], real R3[3],
+			    real R[3][3],
 			    dielectric_function epsilon,
 			    void *epsilon_data)
 {
-     real s1[3], s2[3], s3[3];  /* grid step vectors */
-     real m1[3], m2[3], m3[3];  /* mesh step vectors */
+     real s1, s2, s3, m1, m2, m3;  /* grid/mesh steps */
      real mesh_center[3];
-     int i, j, k, mi, mj, mk;
+     int i, j, k;
      int mesh_prod = mesh_size[0] * mesh_size[1] * mesh_size[2];
      real eps_inv_total = 0.0;
-     int nx, ny, nz, local_nx, local_x_start, local_x_end;
+     int nx, ny, nz, local_ny, local_y_start, local_x_end;
 
      nx = md->nx; ny = md->ny; nz = md->nz;
-     local_nx = md->local_N / (ny * nz);
-     local_x_start = md->N_start / (ny * nz);
 
      {
 	  int mesh_divisions[3];
@@ -364,99 +382,137 @@ void set_maxwell_dielectric(maxwell_data *md,
 	       mesh_center[i] = (mesh_size[i] - 1) * 0.5;
 	  }
 
-	  for (i = 0; i < 3; ++i) {
-	       s1[i] = R1[i] / nx;
-	       s2[i] = R2[i] / ny;
-	       s3[i] = R3[i] / nz;
-	       m1[i] = s1[i] / mesh_divisions[0];
-	       m2[i] = s2[i] / mesh_divisions[1];
-	       m3[i] = s3[i] / mesh_divisions[2];
-	  }
+	       s1 = 1.0 / nx;
+	       s2 = 1.0 / ny;
+	       s3 = 1.0 / nz;
+	       m1 = s1 / mesh_divisions[0];
+	       m2 = s2 / mesh_divisions[1];
+	       m3 = s3 / mesh_divisions[2];
      }
 
-     for (i = 0; i < local_nx; ++i)
+
+     /* Here we have different loops over the coordinates, depending
+	upon whether we are using complex or real and serial or
+        parallel transforms.  Each loop must define, in its body,
+        variables (i2,j2,k2) describing the coordinate of the current
+        point, and eps_index describing the corresponding index in 
+	the array md->eps_inv[]. */
+
+#ifdef SCALAR_COMPLEX
+
+#  ifndef HAVE_MPI
+
+     for (i = 0; i < nx; ++i)
 	  for (j = 0; j < ny; ++j)
-	       for (k = 0; k < nz; ++k) {
-		    real eps_mean = 0.0, eps_inv_mean = 0.0, norm_len;
-		    real R[3], norm[3] = { 0.0, 0.0, 0.0 };
-		    int ijk, i2 = i + local_x_start;
+	       for (k = 0; k < nz; ++k)
+     {
+#         define i2 i
+#         define j2 j
+#         define k2 k
+	  int eps_index = ((i * ny + j) * nz + k);
 
-		    R[0] = i2 * s1[0] + j * s2[0] + k * s3[0];
-		    R[1] = i2 * s1[1] + j * s2[1] + k * s3[1];
-		    R[2] = i2 * s1[2] + j * s2[2] + k * s3[2];
+#  else /* HAVE_MPI */
 
-		    for (mi = 0; mi < mesh_size[0]; ++mi)
-			 for (mj = 0; mj < mesh_size[1]; ++mj)
-			      for (mk = 0; mk < mesh_size[2]; ++mk) {
-				   real del[3], r[3], eps;
+     local_ny = md->fft_output_size / (nx * nz);
+     local_y_start = md->fft_output_N_start / (nx * nz);
 
-				   del[0] = (mi - mesh_center[0])*m1[0] 
-					  + (mj - mesh_center[1])*m2[0]
-					  + (mk - mesh_center[2])*m3[0];
-				   r[0] = R[0] + del[0];
-				   del[1] = (mi - mesh_center[0])*m1[1] 
-					  + (mj - mesh_center[1])*m2[1]
-					  + (mk - mesh_center[2])*m3[1];
-				   r[1] = R[1] + del[1];
-				   del[2] = (mi - mesh_center[0])*m1[2] 
-					  + (mj - mesh_center[1])*m2[2]
-					  + (mk - mesh_center[2])*m3[2];
-				   r[2] = R[2] + del[2];
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_ny; ++j)
+          for (i = 0; i < nx; ++i)
+	       for (k = 0; k < nz; ++k)
+     {
+#         define i2 i
+	  int j2 = j + local_y_start;
+#         define k2 k
+	  int eps_index = ((j * nx + i) * nz + k);
 
-				   eps = epsilon(r, epsilon_data);
+#  endif
 
-				   eps_mean += eps;
-				   eps_inv_mean += 1.0 / eps;
+#else /* not SCALAR_COMPLEX */
 
-				   norm[0] += eps * del[0];
-				   norm[1] += eps * del[1];
-				   norm[2] += eps * del[2];
-			      }
-		    
-		    eps_mean = eps_mean / mesh_prod;
-		    eps_inv_mean = mesh_prod / eps_inv_mean;
+#  ifndef HAVE_MPI
 
-		    norm_len = sqrt(norm[0] * norm[0] +
-				    norm[1] * norm[1] +
-				    norm[2] * norm[2]);
+#  else /* HAVE_MPI */
 
-		    ijk = (i * ny + j) * nz + k;
-		    
-		    if (norm_len > SMALL &&
-			fabs(eps_mean - eps_inv_mean) > SMALL) {
-			 symmetric_matrix eps;
+#    error not yet implemented!
 
-			 norm[0] /= norm_len;
-			 norm[1] /= norm_len;
-			 norm[2] /= norm_len;
+#  endif
 
-			 /* compute effective dielectric tensor: */
+#endif /* not SCALAR_COMPLEX */
 
-			 eps.m00 = (eps_inv_mean - eps_mean) * norm[0]*norm[0]
-			           + eps_mean;
-			 eps.m11 = (eps_inv_mean - eps_mean) * norm[1]*norm[1]
-			           + eps_mean;
-			 eps.m22 = (eps_inv_mean - eps_mean) * norm[2]*norm[2]
-			           + eps_mean;
-			 eps.m01 = (eps_inv_mean - eps_mean) * norm[0]*norm[1];
-			 eps.m02 = (eps_inv_mean - eps_mean) * norm[0]*norm[2];
-			 eps.m12 = (eps_inv_mean - eps_mean) * norm[1]*norm[2];
-
-			 sym_matrix_invert(&md->eps_inv[ijk], eps);
+	  int mi, mj, mk;
+	  real eps_mean = 0.0, eps_inv_mean = 0.0, norm_len;
+	  real norm0, norm1, norm2, moment0=0.0, moment1=0.0, moment2=0.0;
+	  real del0, del1, del2;
+	  short means_different_p;
+	  
+	  for (mi = 0; mi < mesh_size[0]; ++mi)
+	       for (mj = 0; mj < mesh_size[1]; ++mj)
+		    for (mk = 0; mk < mesh_size[2]; ++mk) {
+			 real r[3], eps;
+			 
+			 del0 = (mi - mesh_center[0]) * m1;
+			 r[0] = i2 * s1 + del0;
+			 del1 = (mj - mesh_center[1]) * m2;
+			 r[1] = j2 * s2 + del1;
+			 del2 = (mk - mesh_center[2]) * m3;
+			 r[2] = k2 * s3 + del2;
+			 
+			 eps = epsilon(r, epsilon_data);
+			 
+			 eps_mean += eps;
+			 eps_inv_mean += 1.0 / eps;
+			 
+			 moment0 += eps * del0;
+			 moment1 += eps * del1;
+			 moment2 += eps * del2;
 		    }
-		    else { /* undetermined normal vector and/or constant eps */
-			 md->eps_inv[ijk].m00 = 1.0 / eps_mean;
-			 md->eps_inv[ijk].m11 = 1.0 / eps_mean;
-			 md->eps_inv[ijk].m22 = 1.0 / eps_mean;
-			 md->eps_inv[ijk].m01 = 0.0;
-			 md->eps_inv[ijk].m02 = 0.0;
-			 md->eps_inv[ijk].m12 = 0.0;
-		    }
+     
+	  eps_mean = eps_mean / mesh_prod;
+	  eps_inv_mean = mesh_prod / eps_inv_mean;
 
-		    eps_inv_total += md->eps_inv[ijk].m00
-			           + md->eps_inv[ijk].m11
-			           + md->eps_inv[ijk].m22;
-	       }
+	  means_different_p = fabs(eps_mean - eps_inv_mean) > SMALL;
 
-     md->eps_inv_mean = eps_inv_total / (3 * md->local_N);
+	  if (means_different_p) {
+	       /* need to convert moment from lattice to cartesian coords: */
+	       norm0 = R[0][0]*moment0 + R[1][0]*moment1 + R[2][0]*moment2;
+	       norm1 = R[0][1]*moment0 + R[1][1]*moment1 + R[2][1]*moment2;
+	       norm2 = R[0][2]*moment0 + R[1][2]*moment1 + R[2][2]*moment2;
+	  
+	       norm_len = sqrt(norm0*norm0 + norm1*norm1 + norm2*norm2);
+	  }
+	  
+	  if (means_different_p && norm_len > SMALL) {
+	       symmetric_matrix eps;
+	       
+	       norm0 /= norm_len;
+	       norm1 /= norm_len;
+	       norm2 /= norm_len;
+	       
+	       /* compute effective dielectric tensor: */
+	       
+	       eps.m00 = (eps_inv_mean-eps_mean) * norm0*norm0 + eps_mean;
+	       eps.m11 = (eps_inv_mean-eps_mean) * norm1*norm1 + eps_mean;
+	       eps.m22 = (eps_inv_mean-eps_mean) * norm2*norm2 + eps_mean;
+	       eps.m01 = (eps_inv_mean-eps_mean) * norm0*norm1;
+	       eps.m02 = (eps_inv_mean-eps_mean) * norm0*norm2;
+	       eps.m12 = (eps_inv_mean-eps_mean) * norm1*norm2;
+
+	       sym_matrix_invert(&md->eps_inv[eps_index], eps);
+	  }
+	  else { /* undetermined normal vector and/or constant eps */
+	       md->eps_inv[eps_index].m00 = 1.0 / eps_mean;
+	       md->eps_inv[eps_index].m11 = 1.0 / eps_mean;
+	       md->eps_inv[eps_index].m22 = 1.0 / eps_mean;
+	       md->eps_inv[eps_index].m01 = 0.0;
+	       md->eps_inv[eps_index].m02 = 0.0;
+	       md->eps_inv[eps_index].m12 = 0.0;
+	  }
+	  
+	  eps_inv_total += (md->eps_inv[eps_index].m00 + 
+			    md->eps_inv[eps_index].m11 + 
+			    md->eps_inv[eps_index].m22);
+     }  /* end of loop body */
+     
+     md->eps_inv_mean = eps_inv_total / (3 * md->fft_output_size);
 }

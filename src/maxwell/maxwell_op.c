@@ -170,7 +170,7 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
      scalar *fft_data;
      scalar_complex *cdata;
      real scale;
-     int i, b;
+     int i, j, b;
      real *e_field_sums = 0;
      
      CHECK(d, "null maxwell data pointer!");
@@ -185,20 +185,23 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 	  cur_band_start += d->num_fft_bands) {
 	  int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
 
-#ifdef SCALAR_COMPLEX
-
 	  /********************************************/
 	  
 	  /* first, compute fft_data = curl(Xin): */
-	  for (i = 0; i < Xin.localN; ++i) {
-	       k_data cur_k = d->k_plus_G[i];
-	       for (b = 0; b < cur_num_bands; ++b)
-		    assign_cross_t2c(&fft_data[3*(i * cur_num_bands + b)], 
-				     cur_k, 
-				     &Xin.data[i * 2 * Xin.p + 
-					      b + cur_band_start],
-				     Xin.p, scale);
-	  }
+	  for (i = 0; i < d->other_dims; ++i)
+	       for (j = 0; j < d->last_dim; ++j) {
+		    int ij = i * d->last_dim + j;
+		    int ij2 = i * d->last_dim_size + j;
+		    k_data cur_k = d->k_plus_G[ij];
+
+		    for (b = 0; b < cur_num_bands; ++b)
+			 assign_cross_t2c(&fft_data[3 * (ij2*cur_num_bands 
+							 + b)], 
+					  cur_k, 
+					  &Xin.data[ij * 2 * Xin.p + 
+						    b + cur_band_start],
+					  Xin.p, scale);
+	       }
 
 	  /********************************************/
 
@@ -222,24 +225,24 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 	  /********************************************/
 	  
 	  /* finally, compute Xout = curl(fft_data): */
-	  for (i = 0; i < Xout.localN; ++i) {
-	       k_data cur_k = d->k_plus_G[i];
-	       for (b = 0; b < cur_num_bands; ++b)
-		    assign_cross_c2t(&Xout.data[i * 2 * Xout.p + 
-					       b + cur_band_start], Xout.p,
-				     cur_k, &fft_data[3 * (i * cur_num_bands
-							   + b)]);
-	  }
+	  for (i = 0; i < d->other_dims; ++i)
+	       for (j = 0; j < d->last_dim; ++j) {
+		    int ij = i * d->last_dim + j;
+		    int ij2 = i * d->last_dim_size + j;
+		    k_data cur_k = d->k_plus_G[ij];
+
+		    for (b = 0; b < cur_num_bands; ++b)
+			 assign_cross_c2t(&Xout.data[ij * 2 * Xout.p + 
+						     b + cur_band_start],
+					  Xout.p,
+					  cur_k, 
+					  &fft_data[3 * (ij2*cur_num_bands
+							 + b)]);
+	       }
 	  
 	  /********************************************/
 
      } /* end of cur_band_start loop */
-
-#else /* not SCALAR_COMPLEX */
-
-#error Not supported yet!
-
-#endif /* not SCALAR_COMPLEX */
 }
 
 void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,

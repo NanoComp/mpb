@@ -10,7 +10,7 @@ RANLIB = @RANLIB@
 # Subdirectories to make in:
 
 LIBSUBDIRS = src/util src/matrices src/maxwell
-SUBDIRS = $(LIBSUBDIRS) tests
+SUBDIRS = $(LIBSUBDIRS) tests photon-ctl
 
 all: all-recursive
 

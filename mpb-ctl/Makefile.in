@@ -1,0 +1,91 @@
+# libctl: flexible Guile-based control files for scientific software
+# Copyright (C) 1998 Steven G. Johnson
+#
+# This file may be used without restriction.  It is in the public
+# domain, and is NOT restricted by the terms of any GNU license.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# Steven G. Johnson can be contacted at stevenj@alum.mit.edu.
+
+##############################################################################
+
+SPECIFICATION_FILE = photon.scm
+PROGRAM_NAME = photon
+LIBCTL_DIR = ../../libctl
+
+MYLIBS = ../src/maxwell/maxwell.a \
+         ../src/matrices/matrices.a \
+         ../src/util/util.a
+
+MY_OBJECTS = photon.o \
+             $(LIBCTL_DIR)/utils/libgeom/geom.o \
+             main.o
+MY_HEADERS = 
+MY_INCLUDE_FLAGS = -I. -I$(LIBCTL_DIR)/utils/libgeom/
+MY_DEFINE_FLAGS = 
+
+##############################################################################
+
+CC = @CC@
+CFLAGS = @CFLAGS@ `guile-config compile` \
+         -I../src/util -I../src/matrices -I../src/maxwell
+
+##############################################################################
+
+LIBS = $(MYLIBS) @LIBS@ @FLIBS@ `guile-config link`
+LDFLAGS = @LDFLAGS@
+
+##############################################################################
+
+LIBCTL_SCM_INCLUDE_SRC = $(LIBCTL_DIR)/src/include.scm
+LIBCTL_SCM_SRC = $(LIBCTL_DIR)/src/ctl.scm
+LIBCTL_C_SRC = $(LIBCTL_DIR)/src/ctl.c
+LIBCTL_OBJ = $(LIBCTL_C_SRC:.c=.o)
+LIBCTL_HEADERS = $(LIBCTL_DIR)/src/ctl.h $(LIBCTL_DIR)/src/ctl-config.h
+
+CTL_IO_GEN_SRC = $(LIBCTL_DIR)/utils/ctl-io.scm
+CTL_IO_GEN = $(LIBCTL_DIR)/utils/gen-ctl-io
+
+INCLUDE_FLAGS = -I$(LIBCTL_DIR)/src -I`dirname $(SPECIFICATION_FILE)` \
+	        $(MY_INCLUDE_FLAGS)
+
+DEFINE_FLAGS = -DCTL_SCM='"'`pwd`/$(LIBCTL_SCM_SRC)'"' \
+               -DINCLUDE_SCM='"'`pwd`/$(LIBCTL_SCM_INCLUDE_SRC)'"' \
+               -DSPEC_SCM='"'`pwd`/$(SPECIFICATION_FILE)'"' \
+	       -DHAVE_GUILE_1_2 \
+	       $(MY_DEFINE_FLAGS)
+
+OBJECTS = $(MY_OBJECTS) $(LIBCTL_OBJ) ctl-io.o
+HEADERS = $(MY_HEADERS) $(LIBCTL_HEADERS) ctl-io.h
+
+##############################################################################
+
+all: $(PROGRAM_NAME)
+
+ctl-io.c: $(SPECIFICATION_FILE) \
+          $(CTL_IO_GEN_SRC) $(CTL_IO_GEN)
+	$(CTL_IO_GEN) $(SPECIFICATION_FILE)
+
+ctl-io.h: $(SPECIFICATION_FILE) \
+          $(CTL_IO_GEN_SRC) $(CTL_IO_GEN)
+	$(CTL_IO_GEN) $(SPECIFICATION_FILE)
+
+$(PROGRAM_NAME): $(HEADERS) $(OBJECTS) $(MYLIBS)
+	$(CC) $(LDFLAGS) $(CFLAGS) $(OBJECTS) $(LIBS) -o $@
+
+main.c: $(LIBCTL_DIR)/src/main.c
+	cp -f $(LIBCTL_DIR)/src/main.c $@
+
+.c.o: $(HEADERS)
+	$(CC) -c $(DEFINE_FLAGS) $(INCLUDE_FLAGS) $(CFLAGS) $< -o $@
+
+clean:
+	rm -f $(MY_OBJECTS) ctl-io.o ctl-io.c ctl-io.h main.c \
+              $(PROGRAM_NAME) core
+
+realclean: clean
+	rm -f $(LIBCTL_OBJ)

@@ -50,7 +50,7 @@ typedef struct {
      int nx, ny, nz;
      int local_nx, local_ny;
      int local_x_start, local_y_start;
-     int last_dim, other_dims;
+     int last_dim, last_dim_size, other_dims;
 
      int num_bands;
      int N, local_N, N_start, alloc_N;
@@ -100,7 +100,7 @@ typedef real (*dielectric_function) (real r[3], void *epsilon_data);
 
 extern void set_maxwell_dielectric(maxwell_data *md,
 				   int mesh_size[3],
-				   real R1[3], real R2[3], real R3[3],
+				   real R[3][3],
 				   dielectric_function epsilon,
 				   void *epsilon_data);
 
