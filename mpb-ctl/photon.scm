@@ -187,7 +187,8 @@
 	      band-functions))
        k-points)
   (if (> (length k-points) 1)
-      (set! gap-list (output-gaps band-range-data)))
+      (set! gap-list (output-gaps band-range-data))
+      (set! gap-list '()))
   (display "done.\n"))
 
 (define (run . band-functions)
