@@ -197,7 +197,7 @@
   (get-dfield which-band)
   (get-efield-from-dfield))
 
-(define filename-prefix "")
+(define-param filename-prefix "")
 
 (define (output-field . copies)
   (output-field-extended (apply vector3 copies) -1 filename-prefix))
