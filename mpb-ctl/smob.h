@@ -44,7 +44,7 @@ static scm_smobfuns T ## _smobfuns = { \
 
 /* T_SMOB(T, X) returns the T * with the guts of the X instance; it
    assumes X is a T SMOB instance, and could crash if it is not */
-#define T_SMOB(T, X)  ((T *)(gh_cdr(X)))
+#define T_SMOB(T, X)  ((T *)SCM2PTR(gh_cdr(X)))
 
 /* Since T_SMOB(X) can be dangerous if X is not a T
    object, we also have a SAFE_T_SMOB macro: */
