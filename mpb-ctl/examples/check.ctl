@@ -114,8 +114,6 @@
 
 )) ; if (not (using-mpi?))
 
-(exit 0)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; Square lattice of dielectric rods in air.
