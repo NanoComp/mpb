@@ -1,4 +1,25 @@
+2001-12-08  Steven G. Johnson  <stevenj@ab-initio>
+
+	* doc/user-ref.html: documented run-yeven, etc.
+
+2001-12-07  Steven G. Johnson  <stevenj@ab-initio>
+
+	* src/maxwell/maxwell_constraints.c: fixed bug in y-parity
+	constraint for 3d.  Thanks to Rumen Iliew for the bug report.
+
+2001-12-04  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.scm.in: added run-yeven-zeven, etcetera
+
 2001-11-20  Steven G. Johnson  <stevenj@ab-initio>
+
+	* NEWS: noted replacement of run-polarization by run-parity,
+	etcetera, in MPB 1.2; thanks to Karl Koch for pointing out this
+	omission.
+
+	* doc/user-ref.html: fixed missing </i> tag
+
+	* ChangeLog: updated
 
 	* NEWS, configure.ac: bumped version
 

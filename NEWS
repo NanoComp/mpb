@@ -1,8 +1,16 @@
-MPB 1.2.1 (11/20/00)
+MPB 1.2.2 (12/7/2001)
+
+  * Fixed bug that caused erroneous/failed convergence when EVEN-Y/ODD-Y
+    constraints were used in three dimensions.  Thanks to Rumen Iliew
+    for the bug report.
+
+  * Added convenience functions run-yeven, run-yodd, run-yeven-zeven, ...
+
+MPB 1.2.1 (11/20/2001)
 
   * Fixed serious crashing bug in 1.2; thanks to Karl Koch for the bug report.
 
-MPB 1.2 (11/15/00)
+MPB 1.2 (11/15/2001)
 
   * Added new y-parity computation and constraints.  See the new
     run-parity function, which allows you to simultaneously specify
