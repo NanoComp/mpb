@@ -74,10 +74,11 @@ extern void fieldio_write_complex_field(scalar_complex *field,
 					const int local_dims[3],
 					const int start[3],
 					int which_component,
+					int num_components,
 					const real kvector[3],
 					matrixio_id file_id,
 					int append,
-					matrixio_id data_id[6]);
+					matrixio_id data_id[]);
 extern void fieldio_write_real_vals(real *vals,
 				    int rank,
 				    const int dims[3],

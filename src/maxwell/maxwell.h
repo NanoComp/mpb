@@ -173,6 +173,10 @@ extern void maxwell_compute_e_from_d(maxwell_data *d,
 extern void maxwell_vectorfield_otherhalf(maxwell_data *d,
 					  scalar_complex *field,
 					  real phasex,real phasey,real phasez);
+extern void maxwell_cscalarfield_otherhalf(maxwell_data *d, 
+					   scalar_complex *field,
+					   real phasex, real phasey, 
+					   real phasez);
 extern void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field);
 
 void assign_symmatrix_vector(scalar_complex *newv,

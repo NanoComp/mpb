@@ -138,6 +138,7 @@
 (define-external-function fix-field-phase false false no-return-value)
 (define-external-function compute-field-energy false false 
 	(make-list-type 'number))
+(define-external-function compute-field-divergence false false no-return-value)
 
 (define-external-function get-epsilon-point false false 'number 'vector3)
 (define-external-function get-epsilon-inverse-tensor-point false false 
@@ -146,6 +147,8 @@
 (define get-scalar-field-point get-energy-point)
 (define-external-function get-bloch-field-point false false 'cvector3 'vector3)
 (define-external-function get-field-point false false 'cvector3 'vector3)
+(define-external-function get-bloch-cscalar-point false false 'cnumber 'vector3)
+(define-external-function get-cscalar-point false false 'cnumber 'vector3)
 
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
@@ -205,6 +208,8 @@
   'function (make-list-type 'SCM))
 (define (integrate-fields f . src) (apply integrate-fieldL (list f src)))
 (define-external-function rscalar-field-get-point false false 'number 
+  'SCM 'vector3)
+(define-external-function cscalar-field-get-point false false 'cnumber 
   'SCM 'vector3)
 (define-external-function cvector-field-get-point false false 'cvector3 
   'SCM 'vector3)
@@ -311,6 +316,10 @@
   (get-dfield which-band)
   (get-efield-from-dfield))
 
+(define (get-charge-density which-band)
+  (get-efield which-band)
+  (compute-field-divergence))
+
 (define-param filename-prefix "")
 
 (define (output-field)
@@ -324,6 +333,10 @@
 
 (define (output-field-z)
   (output-field-to-file 2 filename-prefix))
+
+(define (output-charge-density)
+  (get-charge-density)
+  (output-field-to-file -1 filename-prefix))
 
 (define (output-epsilon)
   (get-epsilon)

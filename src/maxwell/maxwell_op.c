@@ -660,6 +660,205 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
 #endif /* ! SCALAR_COMPLEX */
 }
 
+/* as vectorfield_otherhalf, but operates on a complex scalar field 
+   ... ugh, copy & paste job */
+void maxwell_cscalarfield_otherhalf(maxwell_data *d, scalar_complex *field,
+				    real phasex, real phasey, real phasez)
+{
+#ifndef SCALAR_COMPLEX
+     int i, j, jmin = 1;
+     int rank, n_other, n_last, n_last_stored, n_last_new, nx, ny, nz, nxmax;
+#  ifdef HAVE_MPI
+     int local_x_start;
+#  endif
+     scalar_complex pz, pxz, pyz, pxyz;
+
+     nxmax = nx = d->nx; ny = d->ny; nz = d->nz;
+     n_other = d->other_dims;
+     n_last = d->last_dim;
+     n_last_stored = d->last_dim_size / 2;
+     n_last_new = n_last - n_last_stored; /* < n_last_stored always */
+     rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
+
+#  ifdef HAVE_MPI
+     local_x_start = d->local_y_start;
+     CHECK(rank == 2 || rank == 3, "unsupported rfftwnd_mpi rank!");
+     if (rank == 2) {
+	  n_other = nx;
+	  n_last_new = ny = d->local_ny;
+	  if (local_x_start == 0)
+	       --n_last_new; /* DC frequency should not be in other half */
+	  else
+	       jmin = 0;
+	  if (local_x_start + ny == n_last_stored && n_last % 2 == 0)
+	       --n_last_new; /* Nyquist freq. should not be in other half */
+	  n_last_stored = ny;
+     }
+     else { /* rank == 3 */
+	  ny = nx;
+	  nx = d->local_ny;
+	  nxmax = local_x_start ? nx - 1 : nx;
+	  n_other = nx * ny;
+     }
+#  endif /* HAVE_MPI */
+
+     /* compute p = exp(i*phase) factors: */
+     phasex *= -TWOPI; phasey *= -TWOPI; phasez *= -TWOPI;
+     switch (rank) { /* treat z as the last/truncated dimension always */
+	 case 3: break;
+#  if defined(HAVE_MPI) && ! defined(SCALAR_COMPLEX)
+	 case 2: phasez = phasex; phasex = phasey; phasey = 0; break;
+#  else
+	 case 2: phasez = phasey; phasey = 0; break;
+#  endif
+	 case 1: phasez = phasex; phasex = phasey = 0; break;
+     }
+     CASSIGN_SCALAR(pz, cos(phasez), sin(phasez));
+     phasex += phasez;
+     CASSIGN_SCALAR(pxz, cos(phasex), sin(phasex));
+     phasex += phasey;
+     CASSIGN_SCALAR(pxyz, cos(phasex), sin(phasex));
+     phasey += phasez;
+     CASSIGN_SCALAR(pyz, cos(phasey), sin(phasey));
+
+/* convenience macros to copy cscalars, cscalars times phases, 
+   and conjugated cscalars (THIS IS THE ONLY CODE THAT WAS CHANGED
+   COMPARED TO vectorfield_otherhalf): */
+#  define ASSIGN_V(f,k,f2,k2) { f[k] = f2[k2]; }
+#  define ASSIGN_VP(f,k,f2,k2,p) { CASSIGN_MULT(f[k], f2[k2], p); }
+#  define ASSIGN_CV(f,k,f2,k2) { CASSIGN_CONJ(f[k], f2[k2]); }
+
+     /* First, swap the order of elements and multiply by exp(ikR)
+        phase factors.  We have to be careful here not to double-swap
+        any element pair; this is prevented by never swapping with a
+        "conjugated" point that is earlier in the array.  */
+
+     if (rank == 3) {
+	  int ix, iy;
+	  for (ix = 0; 2*ix <= nxmax; ++ix) {
+	       int xdiff, ixc;
+#  ifdef HAVE_MPI
+	       if (local_x_start == 0) {
+		    xdiff = ix != 0; ixc = (nx - ix) % nx;
+	       }
+	       else {
+		    xdiff = 1; ixc = nx-1 - ix;
+	       }
+#  else
+	       xdiff = ix != 0; ixc = (nx - ix) % nx;
+#  endif
+	       for (iy = 0; iy < ny; ++iy) {
+		    int ydiff = iy != 0;
+		    int i = ix * ny + iy, ic = ixc * ny + (ny - iy) % ny, jmax;
+		    if (ic < i)
+			 continue;
+		    jmax = n_last_new;
+		    if (ic == i)
+			 jmax = (jmax + 1) / 2;
+		    for (j = 1; j <= jmax; ++j) {
+			 int jc = n_last_new + 1 - j;
+			 int ij = i*n_last_stored + j;
+			 int ijc = ic*n_last_stored + jc;
+			 scalar_complex f_tmp[3];
+			 switch (xdiff*2 + ydiff) { /* pick exp(-ikR) phase */
+			     case 3: /* xdiff && ydiff */
+				  ASSIGN_VP(f_tmp, 0, field, ijc, pxyz);
+				  ASSIGN_VP(field, ijc, field, ij, pxyz);
+				  ASSIGN_V(field, ij, f_tmp, 0);
+				  break;
+			     case 2: /* xdiff && !ydiff */
+				  ASSIGN_VP(f_tmp, 0, field, ijc, pxz);
+				  ASSIGN_VP(field, ijc, field, ij, pxz);
+				  ASSIGN_V(field, ij, f_tmp, 0);
+				  break;
+			     case 1: /* !xdiff && ydiff */
+				  ASSIGN_VP(f_tmp, 0, field, ijc, pyz);
+				  ASSIGN_VP(field, ijc, field, ij, pyz);
+				  ASSIGN_V(field, ij, f_tmp, 0);
+				  break;
+			     case 0: /* !xdiff && !ydiff */
+				  ASSIGN_VP(f_tmp, 0, field, ijc, pz);
+				  ASSIGN_VP(field, ijc, field, ij, pz);
+				  ASSIGN_V(field, ij, f_tmp, 0);
+				  break;
+			 }
+		    }
+	       }
+	  }
+
+	  /* Next, conjugate, and remove the holes from the array
+	     corresponding to the DC and Nyquist frequencies (which were in
+	     the first half already): */
+	  for (i = 0; i < n_other; ++i)
+	       for (j = 1; j < n_last_new + 1; ++j) {
+		    int ij = i*n_last_stored + j, ijnew = i*n_last_new + j-1;
+		    ASSIGN_CV(field, ijnew, field, ij);
+	       }
+     }
+     else /* if (rank <= 2) */ {
+	  int i;
+	  if (rank == 1) /* (note that 1d MPI transforms are not allowed) */
+	       nx = 1; /* x dimension is handled by j (last dimension) loop */
+
+#  ifdef HAVE_MPI
+	  for (i = 0; i < nx; ++i)
+#  else
+	  for (i = 0; 2*i <= nx; ++i)
+#  endif
+	  {
+	       int xdiff = i != 0, ic = (nx - i) % nx;
+	       int jmax = n_last_new + (jmin - 1);
+#  ifndef HAVE_MPI
+	       if (ic == i)
+		    jmax = (jmax + 1) / 2;
+#  endif
+	       for (j = jmin; j <= jmax; ++j) {
+		    scalar_complex f_tmp[3];
+#  ifdef HAVE_MPI
+		    int jc = jmax + jmin - j;
+		    int ij = j * nx + i;
+		    int ijc = jc * nx + ic;
+		    if (ijc < ij)
+			 break;
+#  else  /* ! HAVE_MPI */
+		    int jc = n_last_new + 1 - j;
+		    int ij = i*n_last_stored + j;
+		    int ijc = ic*n_last_stored + jc;
+#  endif /* ! HAVE_MPI */
+		    if (xdiff) {
+			 ASSIGN_VP(f_tmp, 0, field, ijc, pxz);
+			 ASSIGN_VP(field, ijc, field, ij, pxz);
+			 ASSIGN_V(field, ij, f_tmp, 0);
+		    }
+		    else {
+			 ASSIGN_VP(f_tmp, 0, field, ijc, pz);
+			 ASSIGN_VP(field, ijc, field, ij, pz);
+			 ASSIGN_V(field, ij, f_tmp, 0);
+		    }
+	       }
+	  }
+
+	  /* Next, conjugate, and remove the holes from the array
+	     corresponding to the DC and Nyquist frequencies (which were in
+	     the first half already): */
+	  for (i = 0; i < nx; ++i)
+	       for (j = jmin; j < n_last_new + jmin; ++j) {
+#  ifdef HAVE_MPI
+		    int ij = j*nx + i, ijnew = (j-jmin)*nx + i;
+#  else
+		    int ij = i*n_last_stored + j, ijnew = i*n_last_new + j-1;
+#  endif
+		    ASSIGN_CV(field, ijnew, field, ij);
+	       }
+     }
+
+#  undef ASSIGN_V
+#  undef ASSIGN_VP
+#  undef ASSIGN_CV
+
+#endif /* ! SCALAR_COMPLEX */
+}
+
 /* Similar to vectorfield_otherhalf, above, except that it operates on
    a real scalar field, which is assumed to have come from e.g. the
    absolute values of a complex field (and thus no phase factors or

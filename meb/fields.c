@@ -736,7 +736,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  file_id = matrixio_create(fname2);
 	  free(fname2);
 	  fieldio_write_complex_field(curfield, 3, dims, local_dims, start,
-				      which_component, output_k,
+				      which_component, 3, output_k,
 				      file_id, 0, data_id);
 
 #ifndef SCALAR_COMPLEX
@@ -754,17 +754,17 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	       fieldio_write_complex_field(curfield + 
 					   3 * local_dims[1] * local_dims[2],
 					   3, dims, local_dims, start,
-					   which_component, NULL, 
+					   which_component, 3, NULL, 
 					   file_id, 1, data_id);
 	       local_dims[0] = 1;
 	       start[0] = 0;
 	       fieldio_write_complex_field(curfield, 3, dims,local_dims,start,
-					   which_component, NULL,
+					   which_component, 3, NULL,
 					   file_id, 1, data_id);
 	  }
 	  else {
 	       fieldio_write_complex_field(curfield, 3, dims,local_dims,start,
-					   which_component, NULL,
+					   which_component, 3, NULL,
 					   file_id, 1, data_id);
 	  }
 #endif

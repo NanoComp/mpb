@@ -45,6 +45,11 @@ static SCM rscalar_field_p(SCM obj)
      return gh_bool2scm(RSCALAR_FIELD_P(obj));
 }
 
+static SCM cscalar_field_p(SCM obj)
+{
+     return gh_bool2scm(CSCALAR_FIELD_P(obj));
+}
+
 static SCM cvector_field_p(SCM obj)
 {
      return gh_bool2scm(CVECTOR_FIELD_P(obj));
@@ -62,6 +67,9 @@ static int print_field_smob(SCM obj, SCM port, scm_print_state *pstate)
      switch (pf->type) {
 	 case RSCALAR_FIELD_SMOB:
 	      scm_puts(" real scalar field", port);
+	      break;
+	 case CSCALAR_FIELD_SMOB:
+	      scm_puts(" complex scalar field", port);
 	      break;
 	 case CVECTOR_FIELD_SMOB:
 	      scm_puts(" complex vector field", port);
@@ -108,6 +116,7 @@ void register_field_smobs(void)
 
      gh_new_procedure("field?", field_p, 1, 0, 0);
      gh_new_procedure("rscalar-field?", rscalar_field_p, 1, 0, 0);
+     gh_new_procedure("cscalar-field?", cscalar_field_p, 1, 0, 0);
      gh_new_procedure("cvector-field?", cvector_field_p, 1, 0, 0);
 }
 
@@ -135,6 +144,10 @@ field_smob *update_curfield_smob(void)
      else if (strchr("DHnR", curfield_type)) { /* real scalar field */
 	  curfield_smob.type = RSCALAR_FIELD_SMOB;
 	  curfield_smob.f.rs = (real *) curfield;
+     }
+     else if (strchr("C", curfield_type)) { /* complex scalar field */
+	  curfield_smob.type = CSCALAR_FIELD_SMOB;
+	  curfield_smob.f.cs = curfield;
      }
      else {
 	  curfield_smob.type = RSCALAR_FIELD_SMOB; /* arbitrary */
@@ -191,12 +204,27 @@ SCM rscalar_field_make(SCM f0)
      return field2scm(pf);
 }
 
+SCM cscalar_field_make(SCM f0)
+{
+     int i;
+     field_smob *pf;
+     field_smob *pf0 = assert_field_smob(f0);
+     CHK_MALLOC(pf, field_smob, 1);
+     *pf = *pf0;
+     pf->type = CSCALAR_FIELD_SMOB;
+     pf->type_char = 'C';
+     CHK_MALLOC(pf->f.cs, scalar_complex, pf->N);
+     for (i = 0; i < pf->N; ++i)
+	  CASSIGN_ZERO(pf->f.cs[i]);
+     return field2scm(pf);
+}
+
 SCM cvector_field_make(SCM f0)
 {
      int i;
      field_smob *pf;
      field_smob *pf0 = assert_field_smob(f0);
-     CHECK(mdata, "init-params must be called before rscalar-field-make");
+     CHECK(mdata, "init-params must be called before cvector-field-make");
      CHK_MALLOC(pf, field_smob, 1);
      *pf = *pf0;
      pf->type = CVECTOR_FIELD_SMOB;
@@ -220,6 +248,8 @@ SCM field_make(SCM f0)
      switch (pf0->type) {
 	 case RSCALAR_FIELD_SMOB:
 	      return rscalar_field_make(f0);
+	 case CSCALAR_FIELD_SMOB:
+	      return cscalar_field_make(f0);
 	 case CVECTOR_FIELD_SMOB:
 	      return cvector_field_make(f0);
      }
@@ -253,6 +283,11 @@ static void field_set(field_smob *fd, field_smob *fs)
 	      CHECK(fs->type_char != '-', "must load field for field-set!");
 	      for (i = 0; i < fs->N; ++i)
 		   fd->f.rs[i] = fs->f.rs[i];
+	      break;
+         case CSCALAR_FIELD_SMOB:
+	      CHECK(fs->type_char != '-', "must load field for field-set!");
+	      for (i = 0; i < fs->N; ++i)
+		   fd->f.cs[i] = fs->f.cs[i];
 	      break;
          case CVECTOR_FIELD_SMOB:
 	      CHECK(fs->type_char != '-', "must load field for field-set!");
@@ -302,6 +337,9 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 		   case RSCALAR_FIELD_SMOB:
 			item = gh_double2scm(ps[j]->f.rs[i]);
 			break;
+		   case CSCALAR_FIELD_SMOB:
+			item = cnumber2scm(cscalar2cnumber(ps[j]->f.cs[i]));
+			break;
 		   case CVECTOR_FIELD_SMOB:
 			item = 
 			     cvector32scm(cscalar32cvector3(ps[j]->f.cv+3*i));
@@ -313,6 +351,9 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 	  switch (pd->type) {
 	      case RSCALAR_FIELD_SMOB:
 		   pd->f.rs[i] = gh_scm2double(result);
+		   break;
+	      case CSCALAR_FIELD_SMOB:
+		   pd->f.cs[i] = cnumber2cscalar(scm2cnumber(result));
 		   break;
 	      case CVECTOR_FIELD_SMOB:
 		   cvector32cscalar3(pd->f.cv+3*i, scm2cvector3(result));
@@ -326,6 +367,9 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 	  switch (pd->type) {
 	      case RSCALAR_FIELD_SMOB:
 		   pd->type_char = 'R';
+		   break;
+	      case CSCALAR_FIELD_SMOB:
+		   pd->type_char = 'C';
 		   break;
 	      case CVECTOR_FIELD_SMOB:
 		   pd->type_char = 'c'; 
@@ -494,6 +538,10 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 			case RSCALAR_FIELD_SMOB:
 			     item = gh_double2scm(pf[ifield]->f.rs[index]);
 			     break;
+			case CSCALAR_FIELD_SMOB:
+			     item = cnumber2scm(cscalar2cnumber(
+				  pf[ifield]->f.cs[index]));
+			     break;
 			case CVECTOR_FIELD_SMOB:
                         item = cvector32scm(cscalar32cvector3(
 			     pf[ifield]->f.cv+3*index));
@@ -534,6 +582,10 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 				  case RSCALAR_FIELD_SMOB:
 				       item = gh_double2scm(
 					    pf[ifield]->f.rs[index]);
+				       break;
+				  case CSCALAR_FIELD_SMOB:
+				       item = cnumber2scm(cscalar2cnumber(
+					    pf[ifield]->f.cs[index]));
 				       break;
 				  case CVECTOR_FIELD_SMOB:
 				       item = cvector32scm(

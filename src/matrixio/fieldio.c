@@ -30,17 +30,18 @@
 #define TWOPI 6.2831853071795864769252867665590057683943388
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
 
-/* note that kvector here is given in the reciprocal basis */
+/* note that kvector here is given in the reciprocal basis 
+   ...data_id should be of length at 2*num_components */
 void fieldio_write_complex_field(scalar_complex *field,
 				 int rank,
 				 const int dims[3],
 				 const int local_dims[3],
 				 const int start[3],
-				 int which_component,
+				 int which_component, int num_components,
 				 const real *kvector,
 				 matrixio_id file_id,
 				 int append,
-				 matrixio_id data_id[6])
+				 matrixio_id data_id[])
 {
      int i, j, k, component, ri_part;
 
@@ -107,12 +108,12 @@ void fieldio_write_complex_field(scalar_complex *field,
      }
 
      /* write hyperslabs for each field component: */
-     for (component = 0; component < 3; ++component)
+     for (component = 0; component < num_components; ++component)
 	  if (component == which_component ||
 	      which_component < 0)
 	       for (ri_part = 0; ri_part < 2; ++ri_part) {
 		    char name[] = "x.i";
-		    name[0] = 'x' + component;
+		    name[0] = (num_components == 1 ? 'c' : 'x') + component;
 		    name[2] = ri_part ? 'i' : 'r';
 
 		    if (!append)
@@ -121,7 +122,8 @@ void fieldio_write_complex_field(scalar_complex *field,
 						      rank, dims);
 		    
 		    matrixio_write_real_data(
-			 data_id[component*2 + ri_part], local_dims, start, 6,
+			 data_id[component*2 + ri_part], local_dims, start, 
+			 2 * num_components,
 			 ri_part ? &field[component].im
 			 : &field[component].re);
 	       }

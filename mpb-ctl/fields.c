@@ -429,6 +429,59 @@ number_list compute_field_energy(void)
 
 /**************************************************************************/
 
+/* replace the current field with its scalar divergence; only works
+   for Bloch fields */
+
+void compute_field_divergence(void)
+{
+     int i, j, N;
+     scalar *field = (scalar *) curfield;
+     real scale;
+
+     if (!curfield || !strchr("dhec", curfield_type)) {
+          mpi_one_fprintf(stderr, "A Bloch-periodic field must be loaded.\n");
+          return;
+     }
+
+     /* convert back to Fourier space */
+     maxwell_compute_fft(-1, mdata, curfield, 3, 3, 1);
+
+     /* compute (k+G) dot field */
+     for (i = 0; i < mdata->other_dims; ++i)
+          for (j = 0; j < mdata->last_dim; ++j) {
+               int ij = i * mdata->last_dim_size + j;
+	       k_data cur_k = mdata->k_plus_G[ij];
+	       /* k+G = |k+G| (m x n) */
+	       real kx = cur_k.kmag * (cur_k.my*cur_k.nz-cur_k.mz*cur_k.ny);
+	       real ky = cur_k.kmag * (cur_k.mz*cur_k.nx-cur_k.mx*cur_k.nz);
+	       real kz = cur_k.kmag * (cur_k.mx*cur_k.ny-cur_k.my*cur_k.nz);
+	       ASSIGN_SCALAR(field[ij],
+			     SCALAR_RE(field[3*ij+0]) * kx +
+			     SCALAR_RE(field[3*ij+1]) * ky +
+			     SCALAR_RE(field[3*ij+2]) * kz,
+			     SCALAR_IM(field[3*ij+0]) * kx +
+			     SCALAR_IM(field[3*ij+1]) * ky +
+			     SCALAR_IM(field[3*ij+2]) * kz);
+	  }
+
+     /* convert scalar field back to position space */
+     maxwell_compute_fft(+1, mdata, curfield, 1, 1, 1);
+
+     /* multiply by i (from divergence) and normalization (from FFT)
+        and 2*pi (from k+G) */
+     scale = TWOPI / H.N;
+     N = mdata->fft_output_size;
+     for (i = 0; i < N; ++i) {
+	  CASSIGN_SCALAR(curfield[i],
+			 -CSCALAR_IM(curfield[i]) * scale,
+			 CSCALAR_RE(curfield[i]) * scale);
+     }
+
+     curfield_type = 'C'; /* complex (Bloch) scalar field */
+}
+
+/**************************************************************************/
+
 /* Fix the phase of the current field (e/h/d) to a canonical value.
    Also changes the phase of the corresponding eigenvector by the
    same amount, so that future calculations will have a consistent
@@ -739,6 +792,36 @@ cvector3 get_field_point(vector3 p)
      return F;
 }
 
+cnumber get_bloch_cscalar_point(vector3 p)
+{
+     CHECK(curfield && strchr("C", curfield_type),
+	   "cscalar must be must be loaded before get-*cscalar*-point");
+     
+     return cscalar2cnumber(f_interp_cval(p, mdata, &curfield[0].re, 2));
+}
+
+cnumber get_cscalar_point(vector3 p)
+{
+     scalar_complex s;
+
+     CHECK(curfield && strchr("C", curfield_type),
+	   "cscalar must be must be loaded before get-*cscalar*-point");
+     
+     s = f_interp_cval(p, mdata, &curfield[0].re, 2);
+
+     if (curfield_type == 'C') {
+	  scalar_complex phase;
+	  double phase_phi = TWOPI * 
+	       (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
+		cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
+		cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+	  CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
+	  CASSIGN_MULT(s, s, phase);
+     }
+
+     return cscalar2cnumber(s);
+}
+
 number rscalar_field_get_point(SCM fo, vector3 p)
 {
      field_smob *f = assert_field_smob(fo);
@@ -791,6 +874,36 @@ cvector3 cvector_field_get_point(SCM fo, vector3 p)
      F.y = cscalar2cnumber(field[1]);
      F.z = cscalar2cnumber(field[2]);
      return F;
+}
+
+cnumber cscalar_field_get_point_bloch(SCM fo, vector3 p)
+{
+     field_smob *f = assert_field_smob(fo);
+     CHECK(f->type == CSCALAR_FIELD_SMOB, 
+	   "invalid argument to cscalar-field-get-point-bloch");
+     return cscalar2cnumber(f_interp_cval(p, f, &f->f.cv[0].re, 2));
+}
+
+cnumber cscalar_field_get_point(SCM fo, vector3 p)
+{
+     scalar_complex s;
+     field_smob *f = assert_field_smob(fo);
+     CHECK(f->type == CSCALAR_FIELD_SMOB, 
+	   "invalid argument to cscalar-field-get-point");
+
+     s = f_interp_cval(p, f, &f->f.cv[0].re, 2);
+     
+     if (f->type_char == 'C') { /* have kvector */
+	  scalar_complex phase;
+	  double phase_phi = TWOPI * 
+	       (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
+		cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
+		cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+	  CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
+	  CASSIGN_MULT(s, s, phase);
+     }
+
+     return cscalar2cnumber(s);
 }
 
 /**************************************************************************/
@@ -1048,7 +1161,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  file_id = matrixio_create(fname2);
 	  free(fname2);
 	  fieldio_write_complex_field(curfield, 3, dims, local_dims, start,
-				      which_component, output_k,
+				      which_component, 3, output_k,
 				      file_id, 0, data_id);
 
 #ifndef SCALAR_COMPLEX
@@ -1066,22 +1179,75 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	       fieldio_write_complex_field(curfield + 
 					   3 * local_dims[1] * local_dims[2],
 					   3, dims, local_dims, start,
-					   which_component, NULL, 
+					   which_component, 3, NULL, 
 					   file_id, 1, data_id);
 	       local_dims[0] = 1;
 	       start[0] = 0;
 	       fieldio_write_complex_field(curfield, 3, dims,local_dims,start,
-					   which_component, NULL,
+					   which_component, 3, NULL,
 					   file_id, 1, data_id);
 	  }
 	  else {
 	       fieldio_write_complex_field(curfield, 3, dims,local_dims,start,
-					   which_component, NULL,
+					   which_component, 3, NULL,
 					   file_id, 1, data_id);
 	  }
 #endif
 
 	  for (i = 0; i < 6; ++i)
+	       if (data_id[i] >= 0)
+		    matrixio_close_dataset(data_id[i]);
+	  matrixio_write_data_attr(file_id, "Bloch wavevector",
+				   output_k, 1, attr_dims);
+     }
+     else if (strchr("C", curfield_type)) { /* outputting cmplx scalar field */
+	  matrixio_id data_id[2] = {-1,-1};
+	  int i;
+
+	  sprintf(fname, "%c.k%02d.b%02d",
+		  curfield_type, kpoint_index, curfield_band);
+	  sprintf(description, "%c field, kpoint %d, band %d, freq=%g",
+		  curfield_type, kpoint_index, curfield_band, 
+		  freqs.items[curfield_band - 1]);
+	  fname2 = fix_fname(fname, filename_prefix, mdata, 1);
+	  mpi_one_printf("Outputting complex scalar field to %s...\n", fname2);
+	  file_id = matrixio_create(fname2);
+	  free(fname2);
+	  fieldio_write_complex_field(curfield, 3, dims, local_dims, start,
+				      which_component, 1, output_k,
+				      file_id, 0, data_id);
+
+#ifndef SCALAR_COMPLEX
+	  /* Here's where it gets hairy. */
+	  maxwell_cscalarfield_otherhalf(mdata, curfield,
+					output_k[0], output_k[1], output_k[2]);
+	  start[last_dim_index] = last_dim_start;
+	  local_dims[last_dim_index] = last_dim_size;
+	  start[0] = first_dim_start;
+	  local_dims[0] = first_dim_size;
+	  if (write_start0_special) {
+	       /* The conjugated array half may be discontiguous.
+		  First, write the part not containing start[0], and
+		  then write the start[0] slab. */
+	       fieldio_write_complex_field(curfield + 
+					   local_dims[1] * local_dims[2],
+					   3, dims, local_dims, start,
+					   which_component, 1, NULL, 
+					   file_id, 1, data_id);
+	       local_dims[0] = 1;
+	       start[0] = 0;
+	       fieldio_write_complex_field(curfield, 3, dims,local_dims,start,
+					   which_component, 1, NULL,
+					   file_id, 1, data_id);
+	  }
+	  else {
+	       fieldio_write_complex_field(curfield, 3, dims,local_dims,start,
+					   which_component, 1, NULL,
+					   file_id, 1, data_id);
+	  }
+#endif
+
+	  for (i = 0; i < 2; ++i)
 	       if (data_id[i] >= 0)
 		    matrixio_close_dataset(data_id[i]);
 	  matrixio_write_data_attr(file_id, "Bloch wavevector",
