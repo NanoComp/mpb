@@ -19,6 +19,8 @@ MPB 1.2
     effective dielectric tensor.  (This feature is not yet supported if
     you configure --with-inv-symmetry and --with-hermitian-epsilon.)
 
+  * Noted new basis-size property of geometry-lattice, from libctl 1.5.
+
   * Group-velocity computation no longer silently invalidates fields
     that have been loaded with get-dfield, etcetera.  Thanks to Marin
     Soljacic for the bug report.
