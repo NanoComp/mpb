@@ -35,6 +35,21 @@
 
 /*****************************************************************************/
 
+/* Normally, HDF5 prints out all sorts of error messages, e.g. if a dataset
+   can't be found, in addition to returning an error code.  The following
+   macro can be wrapped around code to temporarily suppress error messages. */
+
+#define SUPPRESS_HDF5_ERRORS(statements) { \
+     H5E_auto_t xxxxx_err_func; \
+     void *xxxxx_err_func_data; \
+     H5Eget_auto(&xxxxx_err_func, &xxxxx_err_func_data); \
+     H5Eset_auto(NULL, NULL); \
+     { statements; } \
+     H5Eset_auto(xxxxx_err_func, xxxxx_err_func_data); \
+}
+
+/*****************************************************************************/
+
 /* Wrappers to write/read an attribute attached to id.  HDF5 attributes
    can *not* be attached to files, in which case we'll write/read it
    as an ordinary dataset.  Ugh. */
@@ -68,30 +83,21 @@ static hid_t open_attr(matrixio_id id, hid_t *type_id, hid_t *space_id,
 {
 #if defined(HAVE_HDF5)
      hid_t attr_id;
-     H5E_auto_t err_func;
-     void *err_func_data;
-
-     /* we need to turn off error reporting, so that HDF5 doesn't
-	print a message if we don't find the attribute. */
-     H5Eget_auto(&err_func, &err_func_data);
-     H5Eset_auto(NULL, NULL);
 
      if (H5I_FILE == H5Iget_type(id)) {
-          attr_id = H5Dopen(id, name);
+          SUPPRESS_HDF5_ERRORS(attr_id = H5Dopen(id, name));
 	  if (attr_id >= 0) {
 	       *type_id = H5Dget_type(attr_id);
 	       *space_id = H5Dget_space(attr_id);
 	  }
      }
      else {
-          attr_id = H5Aopen_name(id, name);
+          SUPPRESS_HDF5_ERRORS(attr_id = H5Aopen_name(id, name));
 	  if (attr_id >= 0) {
 	       *type_id = H5Aget_type(attr_id);
 	       *space_id = H5Aget_space(attr_id);
 	  }
      }
-
-     H5Eset_auto(err_func, err_func_data);
 
      return attr_id;
 #else
@@ -615,7 +621,7 @@ real *matrixio_read_real_data(matrixio_id id,
 	  if (H5Giterate(id, "/", NULL, find_dataset, &dname) < 0)
 	       return NULL;
      }
-     data_id = H5Dopen(id, dname);
+     SUPPRESS_HDF5_ERRORS(data_id = H5Dopen(id, dname));
      free(dname);
      if (data_id < 0)
 	  return NULL;
