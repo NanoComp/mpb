@@ -1,0 +1,33 @@
+/* The following symbols are automatically detected and defined by
+   the autoconf-produced configure script. */
+
+#ifndef CONFIG_H
+#define CONFIG_H
+
+/* Define to empty if the const keyword does not work.  */
+#undef const
+
+/* Define to empty if the inline keyword does not work. */
+#undef inline
+
+/* Define to use MPI: */
+#undef HAVE_MPI
+
+/* Define to use complex scalars (i.e. don't require inversion symmetry): */
+#undef SCALAR_COMPLEX
+
+/* Define to use single precision: */
+#undef SCALAR_SINGLE_PREC
+
+/* Define if you have the FFTW library: */
+#undef HAVE_LIBFFTW
+
+/* check if we have FFTW: */
+#ifdef HAVE_LIBFFTW
+#  define HAVE_FFTW
+#endif
+
+/* define to disable CHECK macros */
+#undef CHECK_DISABLE
+
+#endif /* CONFIG_H */

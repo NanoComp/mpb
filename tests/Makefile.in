@@ -1,0 +1,28 @@
+# Variables substituted by the autoconf configure script:
+
+CC = @CC@
+CFLAGS = @CFLAGS@ -I../src/util -I../src/matrices -I../src/maxwell
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@ @FLIBS@
+RANLIB = @RANLIB@
+@SET_MAKE@
+
+MYLIBS = ../src/maxwell/maxwell.a \
+         ../src/matrices/matrices.a \
+         ../src/util/util.a 
+
+all: blastest eigs_test
+
+libs:
+
+blastest: blastest.o
+	$(CC) $(CFLAGS) $(LDFLAGS) blastest.o $(MYLIBS) $(LIBS) -o $@
+
+eigs_test: eigs_test.o
+	$(CC) $(CFLAGS) $(LDFLAGS) eigs_test.o $(MYLIBS) $(LIBS) -o $@
+
+.c.o:
+	$(CC) -c $(CFLAGS) $< -o $@
+
+clean: 
+	rm -f blastest eigs_test blastest.o eigstest.o core

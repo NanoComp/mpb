@@ -1,0 +1,41 @@
+# Variables substituted by the autoconf configure script:
+
+CC = @CC@
+CFLAGS = @CFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+RANLIB = @RANLIB@
+@SET_MAKE@
+
+# Subdirectories to make in:
+
+LIBSUBDIRS = src/util src/matrices src/maxwell
+SUBDIRS = $(LIBSUBDIRS) tests
+
+all: all-recursive
+
+libs: libs-recursive
+
+clean: clean-recursive
+	rm config.cache
+
+# Recursive makes in subdirectories:
+# (borrowed from automake)
+
+all-recursive clean-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+          target=`echo $@ | sed s/-recursive//`; \
+          echo "Making $$target in $$subdir"; \
+          (cd $$subdir && $(MAKE) $$target) \
+           || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+        done && test -z "$$fail"
+
+libs-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	list='$(LIBSUBDIRS)'; for subdir in $$list; do \
+          target=`echo $@ | sed s/-recursive//`; \
+          echo "Making $$target in $$subdir"; \
+          (cd $$subdir && $(MAKE) $$target) \
+           || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+        done && test -z "$$fail"

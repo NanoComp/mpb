@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <config.h>
 #include <blasglue.h>
 #include <check.h>
 

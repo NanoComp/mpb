@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <config.h>
+
 #ifdef HAVE_MALLOC_H
 #include <malloc.h>
 #endif

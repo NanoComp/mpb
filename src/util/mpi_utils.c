@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <config.h>
 #include <mpiglue.h>
 
 #include "mpi_utils.h"

@@ -16,6 +16,7 @@ typedef struct {
      int nx, ny, nz;
      int local_nx, local_ny;
      int local_x_start, local_y_start;
+     int last_dim, other_dims;
 
      int num_fft_bands;
 
@@ -55,10 +56,8 @@ typedef struct {
 
 extern maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 					 int *local_N, int *alloc_N,
-					 epsilon_function eps,
 					 int num_bands,
-					 int num_fft_bands,
-					 real k[3]);
+					 int num_fft_bands);
 
 extern void update_maxwell_data_k(maxwell_data *d, real k[3],
 				  real G1[3], real G2[3], real G3[3]);

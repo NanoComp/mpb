@@ -1,0 +1,28 @@
+# Variables substituted by the autoconf configure script:
+
+CC = @CC@
+CFLAGS = @CFLAGS@ -I../util -I../matrices
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+RANLIB = @RANLIB@
+@SET_MAKE@
+
+AR = ar
+
+all: libs
+
+OBJECTS = maxwell.o
+LIBNAME = maxwell.a
+
+libs: $(LIBNAME)
+
+maxwell.a: $(OBJECTS)
+	rm -f $@
+	$(AR) r $@ $(OBJECTS)
+	$(RANLIB) $@
+
+.c.o:
+	$(CC) -c $(CFLAGS) $< -o $@
+
+clean: 
+	rm -f $(OBJECTS) core $(LIBNAME)

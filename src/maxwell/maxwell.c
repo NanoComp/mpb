@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include <config.h>
 #include <check.h>
 
 #include "maxwell.h"
@@ -10,7 +11,6 @@
 
 maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				  int *local_N, int *alloc_N,
-				  epsilon_function eps,
 				  int num_bands,
 				  int num_fft_bands)
 {
@@ -252,9 +252,8 @@ static void assign_matrix_vector(scalar_complex *newv, const real *matrix,
      newv[2].im = m02 * v0.im + m12 * v1.im + m22 * v2.im;     
 }
 
-/* Compute Xout = curl(1/epsilon * curl(Xin))
-typedef void maxwell_operator(evectmatrix Xin, evectmatrix Xout,
-			      void *data)
+/* Compute Xout = curl(1/epsilon * curl(Xin)) */
+void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
 {
      maxwell_data *d = (maxwell_data *) data;
      int cur_band_start;
@@ -269,13 +268,13 @@ typedef void maxwell_operator(evectmatrix Xin, evectmatrix Xout,
      fft_data = d->fft_data;
      kpG = d->k_plus_G;
 
-#ifdef SCALAR_COMPEX
+#ifdef SCALAR_COMPLEX
 
      /* first, compute Xout = curl(Xin): */
      for (i = 0; i < Xin.localN; ++i)
 	  for (b = 0; b < 3 * Xin.p; ++b)
-	       assign_cross(Xout.data[i * 3 * Xin.p + b], 
-			    kpG[i], Xin.data[i * 3 * Xin.p + b]);
+	       assign_cross(&Xout.data[i * 3 * Xin.p + b], 
+			    &kpG[i], &Xin.data[i * 3 * Xin.p + b]);
 
      /* Now, multiply Xout by 1/epsilon using FFT/IFFT pair: */
 
@@ -284,17 +283,17 @@ typedef void maxwell_operator(evectmatrix Xin, evectmatrix Xout,
      cdata = (scalar_complex *) Xout.data;
      for (i = 0; i < Xout.localN; ++i)
 	  for (b = 0; b < Xout.p; ++b)
-	       assign_matrix_vector(cdata[3 * (i * Xout.p + b)],
-				    d->eps_inv[EPS_MATRIX_COMPONENTS * i],
-				    cdata[3 * (i * Xout.p + b)]);
+	       assign_matrix_vector(&cdata[3 * (i * Xout.p + b)],
+				    &d->eps_inv[EPS_MATRIX_COMPONENTS * i],
+				    &cdata[3 * (i * Xout.p + b)]);
 
      compute_fft(-1, d, Xout.data, Xout.p * Xout.c, Xout.p * Xout.c, 1);
 
      /* finally, compute Xout = curl(Xout): */
      for (i = 0; i < Xout.localN; ++i)
 	  for (b = 0; b < 3 * Xout.p; ++b)
-	       assign_cross(Xout.data[i * 3 * Xout.p + b], 
-			    kpG[i], Xout.data[i * 3 * Xout.p + b]);
+	       assign_cross(&Xout.data[i * 3 * Xout.p + b], 
+			    &kpG[i], &Xout.data[i * 3 * Xout.p + b]);
 
 #else /* not SCALAR_COMPLEX */
 

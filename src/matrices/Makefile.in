@@ -1,0 +1,28 @@
+# Variables substituted by the autoconf configure script:
+
+CC = @CC@
+CFLAGS = @CFLAGS@ -I../util -I.
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+RANLIB = @RANLIB@
+@SET_MAKE@
+
+AR = ar
+
+all: libs
+
+OBJECTS = eigensolver.o evectmatrix.o sqmatrix.o matrices.o blasglue.o
+LIBNAME = matrices.a
+
+libs: $(LIBNAME)
+
+matrices.a: $(OBJECTS)
+	rm -f $@
+	$(AR) r $@ $(OBJECTS)
+	$(RANLIB) $@
+
+.c.o:
+	$(CC) -c $(CFLAGS) $< -o $@
+
+clean: 
+	rm -f $(OBJECTS) core $(LIBNAME)

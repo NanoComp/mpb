@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include <config.h>
 #include <check.h>
 #include <scalar.h>
 #include <matrices.h>
