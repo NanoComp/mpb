@@ -16,4 +16,9 @@
 
 #endif
 
+#ifdef DEBUG
+#define malloc debug_malloc
+#define free debug_free
+#endif
+
 #endif /* CHECK_H */
