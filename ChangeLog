@@ -1,3 +1,19 @@
+2002-03-11  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/epsilon_file.c: included missing header
+
+	* mpb-ctl/epsilon_file.c, mpb-ctl/mpb.c: whoops, slight fix
+
+	* NEWS: added release date
+
+2002-03-10  Steven G. Johnson  <stevenj@ab-initio>
+
+	* doc/analysis-tutorial.html: fixed h5utils URL
+
+2002-03-09  Steven G. Johnson  <stevenj@ab-initio>
+
+	* AUTHORS: added AUTHORS file to be GNU-ly correct
+
 2002-03-08  Steven G. Johnson  <stevenj@ab-initio>
 
 	* mpb-ctl/mpb.c: use ctl_fix_path on epsilon_input_file in case
