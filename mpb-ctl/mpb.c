@@ -417,9 +417,10 @@ void solve_kpoint(vector3 kvector)
 			   mdata->current_k[2] * mdata->current_k[2]);
 	  if (kmag <= 1.1e-5 || kmag < tolerance) {
 	       /* hack: for some reason I don't comprehend, it is
-		  necessary to re-randomize the fields before doing
-		  a zero-k point, at least with the new "analytic" linmin
-		  in eigensolver.c.  Hey, it works, and it can't do any
+		  necessary to re-randomize the fields before doing a
+		  zero-k point in order to get good convergence, at
+		  least with the new "analytic" linmin in
+		  eigensolver.c.  Hey, it works, and it can't do any
 		  harm. */
 	       if (kpoint_index)
 		    randomize_fields();
