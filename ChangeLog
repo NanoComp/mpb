@@ -1,3 +1,167 @@
+2002-08-27  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/examples/dos.scm: comment
+
+	* mpb-ctl/examples/dos.scm: first arg to interpolate must be
+	non-negative
+
+	* mpb-ctl/examples/dos.scm: minor
+
+	* mpb-ctl/examples/dos.scm: fixed hyphenation
+
+	* mpb-ctl/examples/dos.scm: credit Doug
+
+	* mpb-ctl/examples/dos.scm: some fixes
+
+	* mpb-ctl/examples/dos.scm: remove debugging print
+
+	* mpb-ctl/examples/dos.scm: include dos.scm in example doc
+
+	* mpb-ctl/examples/dos.scm: added example density-of-states
+	function
+
+2002-06-19  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.scm.in: whoops, find-k was outputting in reverse
+	order
+
+2002-06-13  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.scm.in: added find-k routine to solve for k's at a
+	given a frequency
+
+	* mpb-ctl/mpb.c: don't print error if randomize-fields is called
+	before init-params, so that we can ensure that fields are random
+	when calling run-parity without knowing whether run was already
+	called.
+
+2002-06-12  Steven G. Johnson  <stevenj@ab-initio>
+
+	* configure.ac: print messages to remind when options like
+	--with-inv-symmetry are set
+
+2002-06-11  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/field-smob.c: fixed handling of curfield='-'
+
+2002-06-10  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/fields.c: whoops, fixed field normalization for non-unit
+	cells
+
+2002-06-03  Steven G. Johnson  <stevenj@ab-initio>
+
+	* configure.ac: warn if zlib is not found (thanks to Kevin
+	Hennessy for the bug report)
+
+2002-04-30  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/fields.c: fixed floating-point error on Alphas for
+	homogeneous structures, reported by F. Lopez-Tejeira
+
+2002-04-17  Steven G. Johnson  <stevenj@ab-initio>
+
+	* configure.ac: make sure libctl is an appropriate version; thanks
+	to Patricia Max for the suggestion
+
+2002-04-03  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/epsilon.c: fixed error message (--with-hermitian-epsilon
+	is not --with-hermitian-eps)
+
+	* mpb-ctl/epsilon.c: fix check of real epsilon-offdiag for
+	non-hermitian-eps (thanks to Doug Allan)
+
+2002-03-24  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/field-smob.c: integrate-fields passes position vector
+
+2002-03-23  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/field-smob.c, mpb-ctl/field-smob.h, mpb-ctl/fields.c,
+	mpb-ctl/matrix-smob.c, mpb-ctl/matrix-smob.h: added assert_*_smob
+	functions to replace SAFE_*, getting rid of many compiler warnings
+	as well as CHECK statements
+
+	* mpb-ctl/smob.h: use SCM2PTR, like Guile source, to be safe;
+	still doesn't eliminate annoying warnings
+
+	* mpb-ctl/field-smob.c, mpb-ctl/field-smob.h, mpb-ctl/fields.c,
+	mpb-ctl/mpb.h, mpb-ctl/mpb.scm.in: fixed whoopses, added
+	*-field-get-point (FIXME: handle arbitrary smobs) (FIXME: save k
+	in smob?)
+
+	* mpb-ctl/field-smob.c, mpb-ctl/fields.c: checked in fields.c
+	(whoops) and RENORMALIZED FIELDS and INTEGRALS: all integrals are
+	now integrals and not sums (i.e. we include the dV factor) and
+	fields are properly unit-normalized
+
+2002-03-22  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/field-smob.c: whoops
+
+	* mpb-ctl/Makefile.in, mpb-ctl/field-smob.c, mpb-ctl/field-smob.h,
+	mpb-ctl/mpb.c, mpb-ctl/mpb.h, mpb-ctl/mpb.scm.in,
+	src/util/check.h, src/util/debug_malloc.c: added field-smob
+
+2002-03-21  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/matrix-smob.c: use CHK_MALLOC
+
+	* mpb-ctl/matrix-smob.c: whoops
+
+	* mpb-ctl/matrix-smob.c: allow very small imaginary part in
+	scale_eigenvector for mpbi (since we can get this in the
+	phase-fixing routines just by fp error)
+
+	* mpb-ctl/mpb.scm.in: get rid of debugging print
+
+	* mpb-ctl/matrix-smob.c: get rid of debugging printf
+
+	* tests/blastest.c: whoops
+
+	* mpb-ctl/Makefile.in, mpb-ctl/epsilon.c, mpb-ctl/matrix-smob.c,
+	mpb-ctl/matrix-smob.h, mpb-ctl/mpb.c, mpb-ctl/mpb.h,
+	mpb-ctl/mpb.scm.in, mpb-ctl/smob.h, src/matrices/blasglue.c,
+	src/matrices/blasglue.h, src/matrices/eigensolver.c,
+	src/matrices/evectmatrix.c, src/matrices/matrices.h,
+	src/matrices/sqmatrix.c: added evectmatrix/sqmatrix smobs and
+	several new functions, split mpb.c source files, mpb-split now
+	uses full path...
+
+2002-03-20  Steven G. Johnson  <stevenj@ab-initio>
+
+	* src/maxwell/maxwell_eps.c: fixed Stroud code URL
+
+2002-03-19  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.scm.in: allow-negative-epsilon should use the
+	targeted solver
+
+2002-03-14  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/Makefile.in, mpb-ctl/mpb-split.1, mpb-ctl/mpb.1,
+	utils/mpb-data.1: man page cleanups, added mpb-split man page
+
+2002-03-13  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/Makefile.in: whoops, slight fix
+
+	* mpb-ctl/Makefile.in: 'make install' (and in particular,
+	installing mpb-split) should not write to the source directory.
+	(This was biting me on NFS systems where root didn't have write
+	access to my home directory.)
+
+	* mpb-ctl/Makefile.in, utils/Makefile.in: use mandir
+
+	* doc/developer.html, doc/license.html: fixed OE url, added bibtex
+
+2002-03-11  Steven G. Johnson  <stevenj@ab-initio>
+
+	* NEWS: S. Lantz is at Cornell, not Corning.
+
+	* doc/license.html: whoops, updated copyright year
+
 2002-03-11  Steven G. Johnson  <stevenj@ab-initio>
 
 	* mpb-ctl/epsilon_file.c: included missing header
