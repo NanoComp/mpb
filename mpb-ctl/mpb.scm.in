@@ -50,6 +50,9 @@
 (define-input-var mesh-size 3 'integer positive?)
 
 (define-input-var filename-prefix "" 'string)
+
+(define-input-var epsilon-input-file "" 'string)
+
 (define-input-var simple-preconditioner? false 'boolean)
 (define-input-var deterministic? false 'boolean)
 (define-input-var eigensolver-flags EIGS_DEFAULT_FLAGS 'integer)

@@ -190,7 +190,7 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 void set_maxwell_dielectric(maxwell_data *md,
 			    const int mesh_size[3],
 			    real R[3][3], real G[3][3],
-			    dielectric_function epsilon,
+			    maxwell_dielectric_function epsilon,
 			    void *epsilon_data)
 {
      real s1, s2, s3, m1, m2, m3;  /* grid/mesh steps */

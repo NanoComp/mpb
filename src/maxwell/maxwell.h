@@ -113,12 +113,12 @@ extern void update_maxwell_data_k(maxwell_data *d, real k[3],
 extern void set_maxwell_data_polarization(maxwell_data *d,
 					  polarization_t polarization);
 
-typedef real (*dielectric_function) (real r[3], void *epsilon_data);
+typedef real (*maxwell_dielectric_function) (real r[3], void *epsilon_data);
 
 extern void set_maxwell_dielectric(maxwell_data *md,
 				   const int mesh_size[3],
 				   real R[3][3], real G[3][3],
-				   dielectric_function epsilon,
+				   maxwell_dielectric_function epsilon,
 				   void *epsilon_data);
 
 extern void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,

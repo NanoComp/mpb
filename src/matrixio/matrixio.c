@@ -139,6 +139,7 @@ matrixio_id matrixio_open(const char *fname)
 
      return id;
 #else
+     CHECK(0, "no matrixio implementation is linked");
      return 0;
 #endif
 }
@@ -294,7 +295,7 @@ void matrixio_write_real_data(matrixio_id data_id,
 		    data_copy[i] = data[i * stride];
 	  }
 	  else {
-	       data_copy = 1;
+	       data_copy = data;
 	       data_copy_stride = stride;
 	  }
      }
@@ -346,43 +347,102 @@ void matrixio_write_real_data(matrixio_id data_id,
 #endif
 }
 
-void matrixio_read_real_data(matrixio_id id,
-			     const char *name,
-			     int rank, const int *dims,
-			     int local_dim0, int local_dim0_start,
-			     int stride,
-			     real *data)
+#if defined(HAVE_HDF5)
+/* check if the given name is a dataset in group_id, and if so set d
+   to point to a char** with a copy of name. */
+static herr_t find_dataset(hid_t group_id, const char *name, void *d)
+{
+     char **dname = (char **) d;
+     H5G_stat_t info;
+
+     H5Gget_objinfo(group_id, name, 1, &info);
+     if (info.type == H5G_DATASET) {
+	  *dname = malloc(sizeof(char) * (strlen(name) + 1));
+	  CHECK(dname, "out of memory");
+	  strcpy(*dname, name);
+	  return 1;
+     }
+     return 0;
+}
+#endif
+
+/* Read real data from the file/group 'id', from the dataset 'name'.
+
+   If name is NULL, reads from the first dataset in 'id'.
+
+   If data is non-NULL, then data must have dimensions given in rank
+   and dims (* stride); actually, what is read in is the hyperslab given by the
+   local_dim0* parameters.  The dataset is read into 'data' with the
+   given 'stride'.  Returns the data pointer.
+
+   If data is NULL, then upon output rank and dims point to the size
+   of the array, and a pointer to the (malloc'ed) data is returned.
+   On input, *rank should point to the maximum allowed rank (e.g. the
+   length of the dims array)!  The local_dim* and stride parameters
+   are ignored here. */
+real *matrixio_read_real_data(matrixio_id id,
+			      const char *name,
+			      int *rank, int *dims,
+			      int local_dim0, int local_dim0_start,
+			      int stride,
+			      real *data)
 {
 #if defined(HAVE_HDF5)
      hid_t space_id, type_id, data_id, mem_space_id;
-     hssize_t *start;
-     hsize_t *dims_copy, *maxdims, *strides, *count;
+     hsize_t *dims_copy, *maxdims;
+     char *dname;
      int i;
 
-     CHECK(rank > 0, "non-positive rank");
+     CHECK(*rank > 0, "non-positive rank");
 
      /*******************************************************************/
      /* Open the data set and check the dimensions: */
 
-     data_id = H5Dopen(id, name);
+     if (name) {
+	  dname = (char*) malloc(sizeof(char) * (strlen(name) + 1));
+	  CHECK(dname, "out of memory!");
+	  strcpy(dname, name);
+     }
+     else {
+	  CHECK(H5Giterate(id, "/", NULL, find_dataset, &dname) > 0,
+		"couldn't find dataset in HDF5 file");
+     }
+     CHECK((data_id = H5Dopen(id, dname)) >= 0, 
+	   "error opening dataset in HDF5 file");
+     free(dname);
 
-     space_id = H5Dget_space(data_id);
+     CHECK((space_id = H5Dget_space(data_id)) >= 0,
+	   "error in H5Dget_space");
 
-     CHECK(rank == H5Sget_simple_extent_ndims(space_id),
-	   "rank in HDF5 file doesn't match expected rank");
+     {
+	  int filerank = H5Sget_simple_extent_ndims(space_id);
+
+	  if (data) {
+	       CHECK(*rank == filerank,
+		     "rank in HDF5 file doesn't match expected rank");
+	  }
+	  else {
+	       CHECK(*rank >= filerank,
+		     "rank in HDF5 file is too big");
+	       *rank = filerank;
+	  }
+     }
      
-     dims_copy = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     maxdims = (hsize_t *) malloc(sizeof(hsize_t) * rank);
+     dims_copy = (hsize_t *) malloc(sizeof(hsize_t) * *rank);
+     maxdims = (hsize_t *) malloc(sizeof(hsize_t) * *rank);
      CHECK(dims_copy && maxdims, "out of memory!");
 
      H5Sget_simple_extent_dims(space_id, dims_copy, maxdims);
-
      free(maxdims);
 
-     for (i = 0; i < rank; ++i) {
-	  CHECK(dims_copy[i] == dims[i],
-		"array size in HDF5 file doesn't match expected size");
-     }
+     if (data)
+	  for (i = 0; i < *rank; ++i) {
+	       CHECK(dims_copy[i] == dims[i],
+		     "array size in HDF5 file doesn't match expected size");
+	  }
+     else
+	  for (i = 0; i < *rank; ++i)
+	       dims[i] = dims_copy[i];
 
 #ifdef SCALAR_SINGLE_PREC
      type_id = H5T_NATIVE_FLOAT;
@@ -394,43 +454,68 @@ void matrixio_read_real_data(matrixio_id id,
      /* Before we can read the data from the data set, we must define
 	the dimensions and "selections" of the arrays to be read & written: */
 
-     start = (hssize_t *) malloc(sizeof(hssize_t) * rank);
-     strides = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     count = (hsize_t *) malloc(sizeof(hsize_t) * rank);
-     CHECK(start && strides && count, "out of memory!");
+     if (data) {
+	  hssize_t *start;
+	  hsize_t *strides, *count;
 
-     for (i = 0; i < rank; ++i) {
-	  start[i] = 0;
-	  strides[i] = 1;
-	  count[i] = dims[i];
+	  start = (hssize_t *) malloc(sizeof(hssize_t) * *rank);
+	  strides = (hsize_t *) malloc(sizeof(hsize_t) * *rank);
+	  count = (hsize_t *) malloc(sizeof(hsize_t) * *rank);
+	  CHECK(start && strides && count, "out of memory!");
+	  
+	  for (i = 0; i < *rank; ++i) {
+	       start[i] = 0;
+	       strides[i] = 1;
+	       count[i] = dims[i];
+	  }
+	  
+	  dims_copy[0] = local_dim0;
+	  dims_copy[*rank - 1] *= stride;
+	  start[0] = 0;
+	  strides[*rank - 1] = stride;
+	  count[0] = local_dim0;
+	  mem_space_id = H5Screate_simple(*rank, dims_copy, NULL);
+	  H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
+			      start, strides, count, NULL);
+	  
+	  start[0] = local_dim0_start;
+	  count[0] = local_dim0;
+	  H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
+			      start, NULL, count, NULL);
+
+	  free(count);
+	  free(strides);
+	  free(start);
      }
+     else {
+	  int N = 1;
+	  for (i = 0; i < *rank; ++i)
+	       N *= dims[i];
+	  data = (real *) malloc(sizeof(real) * N);
+	  CHECK(data, "out of memory!");
 
-     dims_copy[0] = local_dim0;
-     dims_copy[rank - 1] *= stride;
-     start[0] = 0;
-     strides[rank - 1] = stride;
-     count[0] = local_dim0;
-     mem_space_id = H5Screate_simple(rank, dims_copy, NULL);
-     H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
-			 start, strides, count, NULL);
-
-     start[0] = local_dim0_start;
-     count[0] = local_dim0;
-     H5Sselect_hyperslab(space_id, H5S_SELECT_SET,
-			 start, NULL, count, NULL);
+	  mem_space_id = H5S_ALL;
+	  H5Sclose(space_id);
+	  space_id = H5S_ALL;
+     }
 
      /*******************************************************************/
      /* Read the data, then free all the H5 identifiers. */
 
-     H5Dread(data_id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
-	      (void*) data);
+     CHECK(H5Dread(data_id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
+		   (void*) data) >= 0,
+	   "error reading HDF5 dataset");
 
-     H5Sclose(mem_space_id);
-     free(count);
-     free(strides);
-     free(start);
+     if (mem_space_id != H5S_ALL)
+	  H5Sclose(mem_space_id);
      free(dims_copy);
-     H5Sclose(space_id);
+     if (space_id != H5S_ALL)
+	  H5Sclose(space_id);
      H5Dclose(data_id);
+
+     return data;
+#else
+     CHECK(0, "no matrixio implementation is linked");
+     return NULL;
 #endif
 }

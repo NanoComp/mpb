@@ -48,7 +48,7 @@ void evectmatrixio_writeall_raw(const char *filename, evectmatrix a)
 
 void evectmatrixio_readall_raw(const char *filename, evectmatrix a)
 {
-     int dims[3];
+     int rank = 3, dims[3];
      matrixio_id file_id;
 
      dims[0] = a.N;
@@ -57,7 +57,7 @@ void evectmatrixio_readall_raw(const char *filename, evectmatrix a)
 
      file_id = matrixio_open(filename);     
      
-     matrixio_read_real_data(file_id, "rawdata", 3, dims, 
+     matrixio_read_real_data(file_id, "rawdata", &rank, dims, 
 			     a.localN, a.Nstart, 1, (real *) a.data);
 
      matrixio_close(file_id);

@@ -48,6 +48,9 @@
 /* Routines from libctl/utils/geom.c: */
 #include <ctlgeom.h>
 
+/* shared declarations for the files in mpb-ctl: */
+#include "mpb.h"
+
 /* this integer flag is defined by main.c from libctl, and is
    set when the user runs the program with --verbose */
 extern int verbose;
@@ -100,6 +103,11 @@ geom_box_tree geometry_tree = NULL; /* recursive tree of geometry objects
 
 /**************************************************************************/
 
+typedef struct {
+     maxwell_dielectric_function eps_file_func;
+     void *eps_file_func_data;
+} epsilon_func_data;
+
 /* Given a position r in the basis of the lattice vectors, return the
    corresponding dielectric constant.  edata is ignored.  Should be
    called from within init_params (or after init_params), so that the
@@ -110,8 +118,10 @@ geom_box_tree geometry_tree = NULL; /* recursive tree of geometry objects
 
 static real epsilon_func(real r[3], void *edata)
 {
+     epsilon_func_data *d = (epsilon_func_data *) edata;
      material_type material;
      vector3 p;
+     boolean inobject;
 
      /* p needs to be in the lattice *unit* vector basis, while r is
 	in the lattice vector basis.  Also, shift origin to the center
@@ -122,12 +132,18 @@ static real epsilon_func(real r[3], void *edata)
 
      /* call search routine from libctl/utils/libgeom/geom.c: */
 #if USE_GEOMETRY_TREE
-     material = material_of_point_in_tree(p, geometry_tree);
+     material = material_of_point_in_tree_inobject(p, geometry_tree, 
+						   &inobject);
 #else
-     material = material_of_point(p);
+     material = material_of_point_inobject(p, &inobject);
 #endif
 
-     return material.epsilon;
+     /* if we aren't in any geometric object and we have an epsilon
+	file, use that. */
+     if (!inobject && d->eps_file_func)
+	  return d->eps_file_func(r, d->eps_file_func_data);
+     else
+	  return material.epsilon;
 }
 
 /**************************************************************************/
@@ -328,7 +344,13 @@ void init_params(int p, boolean reset_fields)
      CHECK(mdata, "NULL mdata");
 
      printf("Initializing dielectric function...\n");
-     set_maxwell_dielectric(mdata, mesh, R, G, epsilon_func, NULL);
+     {
+	  epsilon_func_data d;
+	  get_epsilon_file_func(epsilon_input_file,
+				&d.eps_file_func, &d.eps_file_func_data);
+	  set_maxwell_dielectric(mdata, mesh, R, G, epsilon_func, &d);
+	  destroy_epsilon_file_func_data(d.eps_file_func_data);
+     }
 
      if (target_freq != 0.0)
 	  mtdata = create_maxwell_target_data(mdata, target_freq);

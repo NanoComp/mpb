@@ -44,12 +44,12 @@ extern void matrixio_write_real_data(matrixio_id data_id,
                               const int *local_dims, const int *local_start,
                               int stride,
                               real *data);
-extern void matrixio_read_real_data(matrixio_id id,
-                             const char *name,
-                             int rank, const int *dims,
-                             int local_dim0, int local_dim0_start,
-                             int stride,
-                             real *data);
+extern real *matrixio_read_real_data(matrixio_id id,
+				     const char *name,
+				     int *rank, int *dims,
+				     int local_dim0, int local_dim0_start,
+				     int stride,
+				     real *data);
 
 extern void evectmatrixio_writeall_raw(const char *filename, evectmatrix a);
 extern void evectmatrixio_readall_raw(const char *filename, evectmatrix a);

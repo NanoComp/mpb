@@ -41,7 +41,8 @@ precedence.  Defaults to no objects (empty list).
 
 <p><dt><code>default-material</code> [<code>material-type</code> class]
 <dd>Holds the default material that is used for points not in any
-object of the geometry list.  Defaults to air (epsilon of 1).
+object of the geometry list.  Defaults to air (epsilon of 1).  See
+also <code>epsilon-input-file</code>, below.
 
 <p><dt><code>ensure-periodicity</code> [<code>boolean</code>]
 <dd>If true (the default), then geometric objects are treated as if
@@ -71,7 +72,11 @@ a grid with <code>mesh-size</code> points on a side.  Defaults to 3.
 Increasing<code>mesh-size</code> makes the the average dielectric
 constant sensitive to smaller structural variations without increasing
 the grid size, but also means that computing the dielectric function
-will take longer.
+will take longer.  (Using a <code>mesh-size</code> of <code>1</code>
+turns <em>off</em> dielectric function averaging and the creation of
+an effective dielectric tensor at interfaces.  Be sure you know what
+you're doing before you worsen convergence in this way.)
+
 
 <p><dt><code>dimensions</code> [<code>integer</code>]
 <dd>Explicitly specifies the dimensionality of the simulation; if the
@@ -108,6 +113,21 @@ been reached (when the eigenvalues have a fractional change less than
 <p><dt><code>filename-prefix</code> [<code>string</code>]
 <dd>A string prepended to all output filenames.  Defaults to
 <code>""</code> (no prefix).
+
+<p><dt><code>epsilon-input-file</code> [<code>string</code>]
+<dd>If this string is not <code>""</code> (the default), then it
+should be the name of an HDF5 file whose first/only dataset defines a
+dielectric function (over some discrete grid).  This dielectric
+function is then used in place of <code>default-material</code>
+(<i>i.e.</i> where there are no <code>geometry</code> objects).  The
+grid of the epsilon file dataset need not match
+<code>grid-size</code>; it is scaled and/or linearly interpolated as
+needed.  The lattice vectors are assumed to be the same as
+<code>geometry-lattice</code> for the epsilon file.  [ Note that, even
+if the grid sizes match and there are no geometric objects, the
+dielectric function used by MPB will not be exactly the dielectric
+function of the epsilon file, unless you also set
+<code>mesh-size</code> to <code>1</code> (see above). ]
 
 <p><dt><code>simple-preconditioner?</code> [<code>boolean</code>]
 <dd>Whether or not to use a simplified preconditioner; defaults to

@@ -24,7 +24,7 @@ PROGRAM_NAME = mpb
 VERSION_STRING = "MIT Photonic Bands @MPB_VERSION@, Copyright (C) 1999 by MIT."
 
 # objects for program sources:
-OBJECTS = mpb.o \
+OBJECTS = mpb.o epsilon_file.o \
 	  geom.o     # since we use the geom.scm utilities
 
 HEADERS =            # any extra header files you are dependent on
