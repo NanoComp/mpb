@@ -572,7 +572,7 @@ void matrixio_write_real_data(matrixio_id data_id,
      hsize_t *strides, *count, count_prod;
      int i;
      real *data_copy;
-     int data_copy_stride = 1, free_data_copy = 0;
+     int data_copy_stride = 1, free_data_copy = 0, do_write = 1;
 
      /*******************************************************************/
      /* Get dimensions of dataset */
@@ -658,22 +658,18 @@ void matrixio_write_real_data(matrixio_id data_id,
 			      count, NULL);
      }
      else { /* this can happen on leftover processes in MPI */
-	  /* Despite this, H5Dwrite still complains below
-	     for empty dataspaces...oh well.  We just have to
-	     suppress errors for now.  Of course, we could
-	     skip the H5Dwrite call entirely, but that will break
-	     if we are using collective operations (c.f. H5Pset_mpi). */
 	  H5Sselect_none(space_id);
 	  mem_space_id = H5Scopy(space_id); /* can't create an empty space */
 	  H5Sselect_none(mem_space_id);
+	  do_write = 0;  /* HDF5 complains about empty dataspaces otherwise */
      }
 
      /*******************************************************************/
      /* Write the data, then free all the stuff we've allocated. */
 
-     SUPPRESS_HDF5_ERRORS(
+     if (do_write)
 	  H5Dwrite(data_id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
-		   (void*) data_copy));
+		   (void*) data_copy);
 
      if (free_data_copy)
 	  free(data_copy);
