@@ -9,6 +9,7 @@
 #include <eigensolver.h>
 
 static sqmatrix A;
+static int usePreconditioner = 1;
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -20,11 +21,13 @@ extern void printmat_matlab(scalar *A, int m, int n);
 
 extern void debug_check_memory_leaks(void);
 
+#define NWORK 3
+
 int main(int argc, char **argv)
 {
      int i, j, n = 0, p;
      sqmatrix X, U;
-     evectmatrix Y, W[3];
+     evectmatrix Y, Ystart, W[NWORK];
      real *eigvals, *eigvals_dense, sum = 0.0;
      int num_iters;
 
@@ -45,7 +48,15 @@ int main(int argc, char **argv)
 
      /* assign A = adjoint(X) * X to get a Hermitian matrix: */
      sqmatrix_AeBC(A, X, 1, X, 0);
-     sqmatrix_AeBC(U, X, 1, X, 0); /* also assign U */
+
+     /* increase diagonal elements of A so that our preconditioner
+	has a chance of being useful: */
+     for (i = 0; i < n; ++i)
+       ASSIGN_SCALAR(A.data[i * n + i],
+		     n * SCALAR_RE(A.data[i * n + i]),
+		     n * SCALAR_IM(A.data[i * n + i]));
+
+     sqmatrix_copy(U, A);
      
      if (n <= 20) {
 	  printf("Solving for eigenvalues of %d x %d matrix: \nA = ", n, n);
@@ -70,15 +81,17 @@ int main(int argc, char **argv)
      printmat(U.data, p, n);
 
      Y = create_evectmatrix(n, 1, p, n, 0, n);
-     for (i = 0; i < 3; ++i)
+     Ystart = create_evectmatrix(n, 1, p, n, 0, n);
+     for (i = 0; i < NWORK; ++i)
 	  W[i] = create_evectmatrix(n, 1, p, n, 0, n);
      eigvals = (real*) malloc(sizeof(real) * p);
      CHECK(eigvals, "out of memory");
 
      for (i = 0; i < n*p; ++i)
-	  ASSIGN_REAL(Y.data[i], rand() * 1.0 / RAND_MAX);
+	  ASSIGN_REAL(Ystart.data[i], rand() * 1.0 / RAND_MAX);
 
-     eigensolver(Y, eigvals, Aop, Cop, W, 3, 1e-10, &num_iters);
+     evectmatrix_copy(Y, Ystart);
+     eigensolver(Y, eigvals, Aop, Cop, W, NWORK, 1e-10, &num_iters);
 
      printf("\nSolved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -89,12 +102,47 @@ int main(int argc, char **argv)
      printf("\nEigenvalue sum = %f\n", sum);
      printf("Eigenvectors are (by column): \n");
      printmat(Y.data, n, p);
-     
+
+     printf("\nSolving without conjugate-gradient...\n");
+     evectmatrix_copy(Y, Ystart);
+     eigensolver(Y, eigvals, Aop, Cop, W, NWORK - 1, 1e-10, &num_iters);
+     printf("Solved for eigenvectors after %d iterations.\n", num_iters);
+     printf("\nEigenvalues = ");
+     for (sum = 0.0, i = 0; i < p; ++i) {
+       sum += eigvals[i];
+       printf("  %f", eigvals[i]);
+     }
+     printf("\nEigenvalue sum = %f\n", sum);
+
+     printf("\nSolving without preconditioning...\n");
+     usePreconditioner = 0;
+     evectmatrix_copy(Y, Ystart);
+     eigensolver(Y, eigvals, Aop, Cop, W, NWORK, 1e-10, &num_iters);
+     printf("Solved for eigenvectors after %d iterations.\n", num_iters);
+     printf("\nEigenvalues = ");
+     for (sum = 0.0, i = 0; i < p; ++i) {
+       sum += eigvals[i];
+       printf("  %f", eigvals[i]);
+     }
+     printf("\nEigenvalue sum = %f\n", sum);
+
+     printf("\nSolving without conjugate-gradient or preconditioning...\n");
+     evectmatrix_copy(Y, Ystart);
+     eigensolver(Y, eigvals, Aop, Cop, W, NWORK - 1, 1e-10, &num_iters);
+     printf("Solved for eigenvectors after %d iterations.\n", num_iters);
+     printf("\nEigenvalues = ");
+     for (sum = 0.0, i = 0; i < p; ++i) {
+       sum += eigvals[i];
+       printf("  %f", eigvals[i]);
+     }
+     printf("\nEigenvalue sum = %f\n", sum);
+
      destroy_sqmatrix(A);
      destroy_sqmatrix(X);
      destroy_sqmatrix(U);
      destroy_evectmatrix(Y);
-     for (i = 0; i < 3; ++i)
+     destroy_evectmatrix(Ystart);
+     for (i = 0; i < NWORK; ++i)
 	  destroy_evectmatrix(W[i]);
 
      free(eigvals);
@@ -121,22 +169,22 @@ void Cop(evectmatrix Xin, evectmatrix Xout)
      CHECK(A.p == Xin.n && A.p == Xout.n && Xin.p == Xout.p,
            "matrices not conformant");
 
-#ifdef NO_PRECONDITIONER
-     evectmatrix_copy(Xout, Xin);
-#else
-     for (in = 0; in < Xin.n; ++in)
-	  for (ip = 0; ip < Xin.p; ++ip) {
-	       scalar xin = Xin.data[in * Xin.p + ip];
-	       real diag;
-	       
-	       diag = SCALAR_NORMSQR(A.data[in * A.p + in]);
-	       diag = (diag == 0.0) ? 1.0 : 1.0 / sqrt(diag);
-	       
-	       ASSIGN_SCALAR(Xout.data[in * Xout.p + ip],
-			     diag * SCALAR_RE(xin),
-			     diag * SCALAR_IM(xin));
-	       }
-#endif
+     if (usePreconditioner)
+       evectmatrix_copy(Xout, Xin);
+     else
+       for (in = 0; in < Xin.n; ++in) {
+	 real diag;
+	 
+	 diag = SCALAR_NORMSQR(A.data[in * A.p + in]);
+	 diag = (diag == 0.0) ? 1.0 : 1.0 / sqrt(diag);
+	   
+	 for (ip = 0; ip < Xin.p; ++ip) {
+	   scalar xin = Xin.data[in * Xin.p + ip];
+	   ASSIGN_SCALAR(Xout.data[in * Xout.p + ip],
+			 diag * SCALAR_RE(xin),
+			 diag * SCALAR_IM(xin));
+	 }
+       }
 }
 
 void printmat(scalar *A, int m, int n)
