@@ -29,10 +29,9 @@
 (set! grid-size (vector3 32 32 32))
 (set! num-bands 20)
 
-; Define a band function to output the dpwr for the fields only
-; at the K point.
-(define (output-dpwr-only-at-K band)
+; Define a band function to output the magnetic fields only at the K point:
+(define (output-hfield-only-at-K band)
   (if (vector3= current-k K)
-      (output-dpwr band)))
+      (output-hfield band)))
 
-(run output-dpwr-only-at-K)
+(run output-hfield-only-at-K)
