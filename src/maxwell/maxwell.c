@@ -123,7 +123,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				       FFTW_FORWARD,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
 
-     fftwnd_mpi_local_sizes(plan, &d->local_nx, &d->local_x_start,
+     fftwnd_mpi_local_sizes(d->plan, &d->local_nx, &d->local_x_start,
 			    &d->local_ny, &d->local_y_start,
 			    &fft_data_size);
      

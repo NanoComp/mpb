@@ -1560,8 +1560,8 @@ number compute_energy_in_object_list(geometric_object_list objects)
 
 #  else /* HAVE_MPI */
 
-     local_n2 = md->local_ny;
-     local_y_start = md->local_y_start;
+     local_n2 = mdata->local_ny;
+     local_y_start = mdata->local_y_start;
 
      /* first two dimensions are transposed in MPI output: */
      for (j = 0; j < local_n2; ++j)

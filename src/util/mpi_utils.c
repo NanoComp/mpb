@@ -20,6 +20,7 @@
 #include <stdarg.h>
 
 #include "../config.h"
+#include <check.h>
 #include <mpiglue.h>
 
 #include "mpi_utils.h"

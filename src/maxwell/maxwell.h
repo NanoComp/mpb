@@ -25,19 +25,19 @@
 #  include <fftw.h>
 #  include <rfftw.h>
 #  ifdef HAVE_MPI
-#    include <fftwnd_mpi.h>
+#    include <fftw_mpi.h>
 #  endif
 #elif defined(HAVE_LIBDFFTW)
 #  include <dfftw.h>
 #  include <drfftw.h>
 #  ifdef HAVE_MPI
-#    include <dfftwnd_mpi.h>
+#    include <dfftw_mpi.h>
 #  endif
 #elif defined(HAVE_LIBSFFTW)
 #  include <sfftw.h>
 #  include <srfftw.h>
 #  ifdef HAVE_MPI
-#    include <sfftwnd_mpi.h>
+#    include <sfftw_mpi.h>
 #  endif
 #endif
 

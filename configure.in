@@ -255,6 +255,8 @@ if test "x$with_mpi" = "xyes"; then
 	if test x = x"`echo $LIBS | egrep 'l[[ds]]*fftw_mpi'`"; then
 		AC_MSG_ERROR(couldn't find fftw_mpi library for --with-mpi)
 	fi
+
+	AC_DEFINE(HAVE_MPI,1,[Define if you have & link an MPI library.])
 fi
 
 # ----------------------------------------------------------------------
