@@ -1817,7 +1817,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
 			 {
 			      int last_index;
 #  ifdef HAVE_MPI
-			      if (nz == 1)
+			      if (n3 == 1)
 				   last_index = j + local_y_start;
 			      else
 				   last_index = k;
@@ -1967,7 +1967,7 @@ number compute_energy_integral(function f)
 	       {
 		    int last_index;
 #  ifdef HAVE_MPI
-		    if (nz == 1)
+		    if (n3 == 1)
 			 last_index = j + local_y_start;
 		    else
 			 last_index = k;
