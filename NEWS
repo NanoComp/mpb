@@ -1,3 +1,7 @@
+  * Added first-brillouin-zone function to transform an arbitrary
+    k-point into an equivalent point in the first Brillouin zone.
+    Thanks to Payam Rabiei for the suggestion.
+
 MPB 0.12 (7/9/2000)
 
   * Added fix-*field-phase functions to allow a deterministic phase
