@@ -77,7 +77,10 @@ Of course, substitute whatever installation directory you used.  Do
 this <em>before</em> you run the <code>configure</code> scripts,
 etcetera.  You may need to include multiple <code>-L</code> and
 <code>-I</code> flags (separated by spaces) if your machine has stuff
-installed in several non-standard locations.
+installed in several non-standard locations.  Bourne shell users
+(e.g. <code>bash</code> or <code>ksh</code>) should use the
+"<code>export FOO=bar</code>" syntax instead <code>csh</code>'s
+"<code>setenv FOO bar</code>", of course.
 
 <p>You might also need to update your <code>PATH</code> so that you
 can run the executables you installed (although
@@ -120,9 +123,7 @@ a line "<code>/usr/local/lib</code>" (or whatever) is in
 <p>If you don't want to type these commands every time you log in, you
 can put them in your <code>~/.cshrc</code> file (or
 <code>~/.profile</code>, or <code>~/.bash_profile</code>, depending on
-your shell).  Bourne shell users (e.g. <code>bash</code> or
-<code>ksh</code>) should use the "<code>export FOO=bar</code>" syntax
-instead <code>csh</code>'s "<code>setenv FOO bar</code>", of course.
+your shell).  
 
 <h2><a name="blas">BLAS</a></h2>
 
