@@ -159,11 +159,15 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 	       int ibasis2 = (ibasis + 1) % nbasis;
 
 	       /* compute V[ibasis2] = AY */
+#if 1
 	       for (i = 0; i <= ibasis; ++i) {
 		    evectmatrix_aXpbYS_sub(i ? 1.0 : 0.0, V[ibasis2],
 					   1.0, AV[i],
 					   S, itarget * q + Y.p * i, 1);
 	       }
+#else
+	       A(Y, V[ibasis2], Adata, 1, Y);
+#endif
 	  
 	       /* handle restart case: */
 	       if (ibasis2 == 0) {
