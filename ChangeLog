@@ -1,3 +1,67 @@
+2001-02-19  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/analysis-tutorial.html, mpb-ctl/examples/diamond.ctl,
+	mpb-ctl/mpb.scm.in, src/maxwell/maxwell_eps.c: a couple
+	compilation fixes, and noted use of define-param in the manual
+
+	* mpb-ctl/examples/check.ctl: whoops, got rid of premature exit
+
+	* mpb-ctl/examples/check.ctl: improved accuracy in 1d tests...but
+	there still seem to be occasional discrepancies.  What is going
+	on?
+
+	* doc/user-ref.html: clarification
+
+	* TODO: updated
+
+	* doc/license.html: compound adjectives are hyphenated, but *not*
+	adverbs modifying adjectives
+
+	* doc/index.html, doc/installation.html, doc/user-ref.html:
+	parallel doc cleanups
+
+	* configure.in, doc/user-ref.html, mpb-ctl/Makefile.in,
+	mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, mpb-ctl/mpb-split, NEWS: added
+	mpb-split for simpler parallelization without MPI
+
+2001-02-18  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/installation.html: fixed autoconf URL
+
+	* src/maxwell/maxwell.c: whoops, non-constant array initializers
+	are not allowed
+
+2001-02-17  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/installation.html: mention parallel HDF5
+
+	* doc/installation.html: fixed typo
+
+	* doc/user-ref.html, doc/installation.html: noted mpbi-mpi in
+	manual
+
+	* mpb-ctl/mpb.c: fixed counting statistics for mpbi-mpi
+
+	* src/maxwell/maxwell_op.c: fixed field output for 2d mpbi-mpi
+
+	* mpb-ctl/Makefile.in: fixed copyright year
+
+	* src/matrixio/matrixio.c: don't call H5Dwrite at all for empty
+	dataspaces (e.g. in leftover processes under MPI)
+
+	* src/maxwell/maxwell_op.c: bug fixed for mpbi-mpi field output
+
+	* mpb-ctl/examples/hole-slab.ctl: There sees to be some funny
+	rounding problem on the Origin (at least) that causes it to get
+	confused about whether x=0 and/or y=0 is inside the eps block.
+
+	* doc/user-ref.html: fixed broken <code> tag
+
+	* mpb-ctl/mpb.c: undid erroneous cleanups (although they wouldn't
+	have technically caused problems)
+
+	* ChangeLog: updated
+
 2001-02-17  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/maxwell/maxwell.c: whoops, fixed typo
