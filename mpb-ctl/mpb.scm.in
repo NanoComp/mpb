@@ -58,6 +58,7 @@
 (define-input-var eigensolver-flags EIGS_DEFAULT_FLAGS 'integer)
 
 (define-output-var freqs (make-list-type 'number))
+(define-output-var z-parity (make-list-type 'number))
 (define-output-var iterations 'integer)
 
 ; ****************************************************************

@@ -497,8 +497,11 @@ void solve_kpoint(vector3 kvector)
 
      printf("Finished solving for bands after %d iterations.\n", num_iters);
      
-     if (num_write_output_vars > 1)
-	  free(freqs.items); /* clean up from prev. call */
+     if (num_write_output_vars > 1) {
+	  /* clean up from prev. call */
+	  free(freqs.items);
+	  free(z_parity.items);
+     }
 
      iterations = num_iters; /* iterations output variable */
 
@@ -514,6 +517,14 @@ void solve_kpoint(vector3 kvector)
 	  freqs.items[i] = sqrt(eigvals[i]);
 	  printf(", %g", freqs.items[i]);
      }
+     printf("\n");
+
+     z_parity.num_items = num_bands;
+     z_parity.items = maxwell_zparity(H, mdata);
+     printf("%szparity:, %d", polarization_strings[mdata->polarization],
+	    kpoint_index);
+     for (i = 0; i < num_bands; ++i)
+	  printf(", %g", z_parity.items[i]);
      printf("\n");
 
      free(eigvals);

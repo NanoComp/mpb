@@ -1,19 +1,19 @@
+  * Added run-even and run-odd functions, so you can now compute only
+    even/odd states (with respect to a z=0 mirror plane) in systems with
+    sufficient symmetry.  See also the new z-parity output variable.
+
+  * Added epsilon-input-file variable, so that you can now read the
+    dielectric function from a file.
+
   * configure should work even when there is no Fortran compiler on your
     system (assuming your BLAS, etc., libraries work without Fortran libs).
     Thanks to Antti Renko for the bug report.
-
-  * Added run-even and run-odd functions, so you can now compute only
-    even/odd states (with respect to a z=0 mirror plane) in systems with
-    sufficient symmetry.
 
   * Fixed problems detecting BLAS and LAPACK shared libraries in configure.
     Thanks to Karri Varris for the bug report.
 
   * Fixed trailing spaces in sed command, which were breaking 'make install'
     on some systems.  (Thanks to Ron Chase for the bug report.)
-
-  * Added epsilon-input-file variable, so that you can now read the
-    dielectric function from a file.
 
 MPB 0.80.1 (11/22/1999)
 

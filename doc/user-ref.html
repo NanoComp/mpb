@@ -189,6 +189,19 @@ the <code>run</code> functions when two or more k-points are solved.
 <p><dt><code>iterations</code> [<code>integer</code>]
 <dd>The number of iterations required for convergence of the last k point.
 
+<p><dt><code>z-parity</code> [list of <code>number</code>]
+<dd>A list of the "z-parities" of each band computed for the last k
+point (in the same order as <code>freqs</code>).  The z-parity of a
+state is defined as the expectation value of the mirror-flip operation
+through z=0.  For true even and odd eigenstates (see
+<code>run-even</code> and <code>run-odd</code>), this will be +1 and
+-1, respectively; for other states it will be something in between.
+This is useful when you have a nearly symmetric structure, such as a
+waveguide with a substrate underneath, and you want to tell which
+bands are even-like (z-parity &gt; 0) and odd-like (z-parity &lt; 0).
+The value of this variable is included in the output as a
+comma-delimited line prefixed with "<code>zparity:</code>".
+
 </dl>
 
 <h2>Classes</h2>
@@ -456,15 +469,15 @@ behave identically to <code>run</code>.
 <dd>These are the same as the <code>run</code> function except that
 they constrain their solutions to have even and odd symmetry with
 respect to the z=0 plane.  You should use these functions
-<em>only</em> for structures that are symmetric through z=0, where the
-third basis vector is in the z direction (0,0,1), and when the k
-vectors are in the xy plane.  Under these conditions, the eigenmodes
-always have either even or odd symmetry.  The even/odd distinction is
-strongly analogous to TE/TM, respectively, and is equivalent in 2d; it
-is useful for structures such as waveguides and photonic-crystal
-slabs.  (For example, see the paper by S. G. Johnson <i>et al.</i>,
-"Guided modes in photonic crystal slabs," <i>PRB</i> <b>60</b>, 5751,
-August 1999.)
+<em>only</em> for structures that are symmetric through the z=0 mirror
+plane, where the third basis vector is in the z direction (0,0,1), and
+when the k vectors are in the xy plane.  Under these conditions, the
+eigenmodes always have either even or odd symmetry.  The even/odd
+distinction is strongly analogous to TE/TM, respectively, and is
+equivalent in 2d; it is useful for structures such as waveguides and
+photonic-crystal slabs.  (For example, see the paper by S. G. Johnson
+<i>et al.</i>, "Guided modes in photonic crystal slabs," <i>PRB</i>
+<b>60</b>, 5751, August 1999.)
 
 <p><dt><code>(run-polarization <i>p reset-fields band-func ...</i>)</code>
 <dd>Like the <code>run</code> function, except that it takes two extra
