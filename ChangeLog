@@ -1,3 +1,213 @@
+2000-01-02  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/user-tutorial.html: slight
+	fix
+
+	* /home/a/stevenj/Repository/mpb/NEWS: noted more changes
+
+	* /home/a/stevenj/Repository/mpb/doc/user-tutorial.html: noted
+	polarization (e.g. ".te") in the output filenames.
+
+	* /home/a/stevenj/Repository/mpb/doc/user-tutorial.html: slight
+	rewording
+
+	* /home/a/stevenj/Repository/mpb/NEWS,
+	/home/a/stevenj/Repository/mpb/configure.in: version-numbering
+	scheme is now 0.8, 0.9, 0.10, ...
+
+	* /home/a/stevenj/Repository/mpb/doc/introduction.html: small
+	formatting fix
+
+	* /home/a/stevenj/Repository/mpb/TODO: updated
+
+	* /home/a/stevenj/Repository/mpb/NEWS: slight rewording
+
+	* /home/a/stevenj/Repository/mpb/NEWS: added version number to
+	NEWS
+
+	* /home/a/stevenj/Repository/mpb/NEWS: removed inconsistent parens
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/NEWS,
+	/home/a/stevenj/Repository/mpb/doc/user-ref.html,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: added z-parity
+	output var
+
+	* /home/a/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c: fixed
+	counting bug in zparity computation
+
+	* /home/a/stevenj/Repository/mpb/NEWS,
+	/home/a/stevenj/Repository/mpb/configure.in: configure works
+	without f77 compiler, hopefully
+
+2000-01-01  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/tests/maxwell_test.c,
+	/home/a/stevenj/Repository/mpb/src/util/check.h,
+	/home/a/stevenj/Repository/mpb/src/util/debug_malloc.c,
+	/home/a/stevenj/Repository/mpb/src/util/fortranize.h,
+	/home/a/stevenj/Repository/mpb/src/util/mpi_utils.c,
+	/home/a/stevenj/Repository/mpb/src/util/mpi_utils.h,
+	/home/a/stevenj/Repository/mpb/src/util/mpiglue.h,
+	/home/a/stevenj/Repository/mpb/tests/blastest.c,
+	/home/a/stevenj/Repository/mpb/tests/eigs_test.c,
+	/home/a/stevenj/Repository/mpb/tests/malloctest.c,
+	/home/a/stevenj/Repository/mpb/src/matrixio/matrixio.c,
+	/home/a/stevenj/Repository/mpb/src/matrixio/matrixio.h,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell.c,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell.h,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell_eps.c,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell_op.c,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/blasglue.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/evectmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/scalar.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/sqmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/matrixio/evectmatrixio.c,
+	/home/a/stevenj/Repository/mpb/src/matrixio/fieldio.c,
+	/home/a/stevenj/Repository/mpb/doc/license.html,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/epsilon_file.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.h,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/src/matrices/blasglue.c,
+	/home/a/stevenj/Repository/mpb/COPYRIGHT: bumped copyright year
+
+	* /home/a/stevenj/Repository/mpb/NEWS,
+	/home/a/stevenj/Repository/mpb/configure.in: bumped version and
+	went to 2-digit minor version numbers
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/hole-slab.ctl,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell.c,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell.h,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c,
+	/home/a/stevenj/Repository/mpb/NEWS,
+	/home/a/stevenj/Repository/mpb/doc/user-ref.html: added run-even
+	and run-odd
+
+1999-12-14  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: defined
+	reciprocal lattice
+
+	* /home/a/stevenj/Repository/mpb/doc/license.html: slight wording
+	change in quotation
+
+	* /home/a/stevenj/Repository/mpb/doc/license.html: better
+	translation
+
+1999-12-13  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/license.html: added
+	St. Augustine quote
+
+1999-12-09  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/acknowledgments.html: slight
+	fix
+
+1999-12-05  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/installation.html: various
+	improvements
+
+1999-12-03  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/hole-slab.ctl:
+	fixed substrate
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/hole-slab.ctl:
+	allow substrate
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/tri-holes.ctl:
+	Added 2d triangular lattice of holes example.
+
+1999-12-02  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/user-tutorial.html: warned of
+	false-positives in band gaps
+
+	* /home/a/stevenj/Repository/mpb/tests/maxwell_test.c,
+	/home/a/stevenj/Repository/mpb/src/util/check.h,
+	/home/a/stevenj/Repository/mpb/tests/eigs_test.c,
+	/home/a/stevenj/Repository/mpb/tests/malloctest.c,
+	/home/a/stevenj/Repository/mpb/src/matrixio/matrixio.c,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/sqmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/matrixio/fieldio.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/epsilon_file.c: Use
+	CHK_MALLOC everywhere.  For one thing, this prevents problems when
+	we allocate 0 bytes on systems where malloc(0) returns NULL.
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: handle num-bands = 0
+
+1999-12-01  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h:
+	enable delay-cg by default
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: print
+	warning in verbose mode for large lambda
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: fixed median
+	bug for odd sizes
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/hole-slab.ctl,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/examples/sq-rods.ctl,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/doc/user-ref.html: added
+	display-eigensolver-stats
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h: added
+	EIGS_DELAY_CG flag...don't enable by default until we do more
+	tuning
+
+1999-11-30  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: don't
+	use cg with analytic multimin (multimin screws up cg) (because of
+	this, multimin is probably not worth it)
+
+	* /home/a/stevenj/Repository/mpb/tests/maxwell_test.c: got rid of
+	gcc warning
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: randomize-fields
+	now randomizes both the real and imaginary parts.  Previously, it
+	just set the imaginary parts to zero (which is fine for structures
+	with inversion symmetry, but in general cases I don't see any
+	justification for it).
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c:
+	verbose mode now prints out trace on every iteration.
+
+1999-11-29  stevenj  <stevenj@gil-galad.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/NEWS,
+	/home/a/stevenj/Repository/mpb/ChangeLog: updated
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/Makefile.in: fixed
+	trailing spaces in sed command; thanks to Ron Chase for the bug
+	report.
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/Makefile.in,
+	/home/a/stevenj/Repository/mpb/tests/Makefile.in,
+	/home/a/stevenj/Repository/mpb/configure.in: incorporate FLIBS
+	into LIBS
+
+	* /home/a/stevenj/Repository/mpb/doc/installation.html: more
+	explicit instructions for LAPACK and BLAS.
+
 1999-11-29  stevenj  <stevenj@gil-galad.mit.edu>
 
 	* /home/a/stevenj/Repository/mpb/mpb-ctl/Makefile.in: fixed
