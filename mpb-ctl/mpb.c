@@ -578,6 +578,7 @@ void solve_kpoint(vector3 kvector)
      real k[3];
      int flags;
      deflation_data deflation;
+     polarization_t prev_pol;
 
      printf("solve_kpoint (%g,%g,%g):\n",
 	    kvector.x, kvector.y, kvector.z);
@@ -607,8 +608,11 @@ void solve_kpoint(vector3 kvector)
 	  printf("\n");
      }
 
+     prev_pol = mdata->polarization;
      vector3_to_arr(k, kvector);
      update_maxwell_data_k(mdata, k, G[0], G[1], G[2]);
+     CHECK(mdata->polarization == prev_pol,
+	   "in-plane k-points are required for TE/TM and even/odd fields");
 
      CHK_MALLOC(eigvals, real, num_bands);
 
