@@ -28,9 +28,11 @@
 
 /* Define if you have the FFTW library: */
 #undef HAVE_LIBFFTW
+#undef HAVE_LIBDFFTW
+#undef HAVE_LIBSFFTW
 
 /* check if we have FFTW: */
-#ifdef HAVE_LIBFFTW
+#if defined(HAVE_LIBFFTW) || defined(HAVE_LIBDFFTW) || defined(HAVE_LIBSFFTW)
 #  define HAVE_FFTW
 #endif
 
