@@ -67,6 +67,7 @@ LDFLAGS = $(MY_LDFLAGS) @LDFLAGS@
 
 INSTALL = @INSTALL@
 prefix = @prefix@
+mandir = @mandir@
 # c.f. AC_ARG_PROGRAM autoconf docs:
 transform=@program_transform_name@
 @SET_MAKE@
@@ -131,8 +132,8 @@ install-mpb: $(PROGRAM_NAME)
 	$(INSTALL) -m 0755 -s .$(PROGRAM_NAME) $(prefix)/bin/`echo $(PROGRAM_NAME)|sed '$(transform)'`
 	$(INSTALL) -d $(prefix)/share/libctl/specs
 	$(INSTALL) -m 0644 $(SPECIFICATION_FILE) $(prefix)/share/libctl/specs
-	$(INSTALL) -d $(prefix)/man/man1
-	$(INSTALL) -m 0644 $(PROGRAM_NAME).1 $(prefix)/man/man1
+	$(INSTALL) -d $(mandir)/man1
+	$(INSTALL) -m 0644 $(PROGRAM_NAME).1 $(mandir)/man1
 
 install-mpb-split:
 	rm -f mpb-split-tmp
