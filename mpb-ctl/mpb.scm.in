@@ -309,6 +309,7 @@
 
 ; stuff to keep statistics on the eigensolver performance, for tuning:
 (define eigensolver-iters '()) ; the iterations used, updated by (run)
+(define total-run-time 0.0) ; the total time used by (run) functions (seconds)
 
 (define (display-eigensolver-stats)
   (let ((num-runs (length eigensolver-iters)))
@@ -328,7 +329,9 @@
 							   1))))))
 		  (print ", median = " median-iters))))
 	  (print "\nmean flops per iteration = "
-		 (/ eigensolver-flops (* num-runs mean-iters)) "\n")))))
+		 (/ eigensolver-flops (* num-runs mean-iters)) "\n")
+	  (print "mean time per iteration = "
+		 (/ total-run-time (* mean-iters num-runs)) " s\n")))))
 
 ; ****************************************************************
 
@@ -366,6 +369,7 @@
 ; every k point.  These are typically used to output the bands.
 
 (define (run-polarization p reset-fields . band-functions)
+ (set! total-run-time (+ total-run-time
   (begin-time "total elapsed time for run: "
    (set! all-freqs '())
    (set! band-range-data '())
@@ -398,9 +402,9 @@
 	       (begin
 		 (output-band-range-data band-range-data)
 		 (set! gap-list (output-gaps band-range-data)))
-	       (set! gap-list '()))))))
-  (set! all-freqs (reverse all-freqs)) ; put them in the right order
-  (print "done.\n"))
+	       (set! gap-list '()))))))))
+ (set! all-freqs (reverse all-freqs)) ; put them in the right order
+ (print "done.\n"))
 
 (define (run . band-functions)
   (apply run-polarization
