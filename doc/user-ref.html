@@ -322,12 +322,10 @@ epsilon =  ( u* b  w )
              v* w* c
 </pre>
 <p>This allows your dielectric to have different dielectric constants
-for fields polarized in different directions.  The epsilon tensor
-<em>must be positive-definite</em> (have all positive eigenvalues); if
-it is not, MPB may not function properly, and it is the user's
-responsibility to ensure that this requirement is satisfied.  (This
-does <em>not</em> imply that all of the entries of the epsilon matrix
-need be positive.)
+for fields polarized in different directions.  The epsilon tensor must
+be positive-definite (have all positive eigenvalues); if it is not,
+MPB exits with an error.  (This does <em>not</em> imply that all of
+the entries of the epsilon matrix need be positive.)
 
 <p>The components of the tensor are specified via three properties:
 <dl>
@@ -653,21 +651,21 @@ defined has having electric and magnetic fields in the xy plane,
 respectively.  Equivalently, the H/E field of TE/TM light has only a z
 component (making it easier to visualize).
 
-<p>For a three-dimensional structure (<code>grid-size</code>) or when
-a k point has a nonzero z component, the eigenstates are no longer
-completely polarized, and these functions behave identically to
-<code>run</code>.  (2d systems oriented in the yz or xz directions
-don't work; you have to orient your coordinates to be in the xy
-plane.)
+<p>For a three-dimensional grid (<code>grid-size</code>) or when a k
+point has a nonzero z component, the eigenstates are no longer
+completely polarized, and MPB will exit with an error if you call
+<code>run-te</code> or <code>run-tm</code>.  (2d systems oriented in
+the yz or xz directions don't work, either; you have to orient your
+coordinates to be in the xy plane.)
 
 <p><a name="tetm-aniso">Note</a> that for the modes to be segregated
-into TE and TM polarizations, the dielectric function <em>must</em>
-have mirror symmetry for reflections through the xy plane.  If you use
-<a href="#dielectric-anisotropic">anisotropic dielectrics</a>, you
-should be aware that they break this symmetry if the z direction is
-not one of the principle axes.  If you use <code>run-te</code> or
-<code>run-tm</code> in such a case of broken symmetry, MPB will not
-detect it and <em>unpredictable results will ensue</em>.
+into TE and TM polarizations, the dielectric function must have mirror
+symmetry for reflections through the xy plane.  If you use <a
+href="#dielectric-anisotropic">anisotropic dielectrics</a>, you should
+be aware that they break this symmetry if the z direction is not one
+of the principle axes.  If you use <code>run-te</code> or
+<code>run-tm</code> in such a case of broken symmetry, MPB will exit
+with an error.
 
 <p><dt><code>(run-even <i>band-func ...</i>), (run-odd <i>band-func ...</i>)</code>
 <dd>These are the same as the <code>run</code> function except that
