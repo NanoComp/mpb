@@ -63,7 +63,7 @@ typedef struct {
      real eps_high, eps_low, eps_high_x;
 } epsilon_data;
 
-#define INVERSION_SYM 0
+#define INVERSION_SYM 1
 
 static void epsilon(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 		    real r[3], void *edata_v)
