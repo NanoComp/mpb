@@ -401,7 +401,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    traceXtAXU = SCALAR_RE(sqmatrix_traceAtB(U, S1));
 
 		    evectmatrix_XtY(S1, X, X); /* S1 = Xt X */
-		    /* S2 = YtAYU Xt X */
+		    /* S2 = YtAYU Xt X: */
 		    sqmatrix_AeBC(S2, YtAYU, 0, S1, 1);
 		    traceUYtAYUXtX = SCALAR_RE(sqmatrix_traceAtB(U, S2));
 
