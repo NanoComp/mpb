@@ -735,11 +735,11 @@ frequency of, say, 0.314159 (a random number).
 
 <p>We could write a loop to search for this epsilon, but instead we'll
 use a root-finding function provided by libctl, <code>(find-root
-<i>tolerance arg-min arg-max</i>)</code>, that will solve the problem
-for us using a quadratically-convergent algorithm (Ridder's method).
-First, we need to define a function that takes an epsilon for the
-center rod and returns the mode frequency minus 0.314159; this is the
-function we'll be finding the root of:
+<i>function tolerance arg-min arg-max</i>)</code>, that will solve the
+problem for us using a quadratically-convergent algorithm (Ridder's
+method).  First, we need to define a function that takes an epsilon
+for the center rod and returns the mode frequency minus 0.314159; this
+is the function we'll be finding the root of:
 
 <pre>
 (define old-geometry geometry) ; save the 5x5 grid with a missing rod
