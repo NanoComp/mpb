@@ -1,9 +1,8 @@
-Add more example files: more 3d crystals, ...
+Add more example files: more 3d crystals, strip waveguide, ...
 
-Export/import DXF, VRML, POV, ...?
+Export/import DXF, VRML, POV, ...?  Import full epsilon tensor from a file.
 
-Add strip waveguide example.  Support resolution (and no-size) instead
-of grid-size.  Make mpb-data pick default -n when -r is used.
+Make mpb-data pick default -n when -r is used.
 
 More eigensolver improvements...adaptive selection of an iteration technique?
 

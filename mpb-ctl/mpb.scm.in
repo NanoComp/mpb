@@ -179,6 +179,13 @@
   'SCM 'integer)
 (define-external-function scale-eigenvector false false no-return-value
   'integer 'cnumber)
+(define-external-function output-eigenvectors false false no-return-value
+  'SCM 'string)
+(define-external-function input-eigenvectors false false 'SCM 'string 'integer)
+(define-external-function save-eigenvectors false false no-return-value
+  'string)
+(define-external-function load-eigenvectors false false no-return-value
+  'string)
 
 (define cur-field 'cur-field)
 (define-external-function cur-field? false false 'boolean 'SCM)
@@ -199,6 +206,10 @@
   'SCM 'vector3)
 (define-external-function cvector-field-get-point false false 'cvector3 
   'SCM 'vector3)
+(define (field-get-point f p)
+  (if (rscalar-field? f)
+      (rscalar-field-get-point f p)
+      (cvector-field-get-point f p)))
 
 ; ****************************************************************
 
@@ -463,7 +474,8 @@
    (set! band-range-data '())
    (set! interactive? false)  ; don't be interactive if we call (run)
    (begin-time "elapsed time for initialization: "
-	       (init-params p reset-fields))
+	       (init-params p reset-fields)
+	       (if (string? reset-fields) (load-eigenvectors reset-fields)))
    (let ((k-split (list-split k-points k-split-num k-split-index)))
      (set-kpoint-index (car k-split))
      (if (zero? (car k-split))
@@ -574,6 +586,42 @@
   (compute-field-energy)
   (output-field))
 
+(define (get-poynting which-band)
+  (get-efield which-band)
+  (let ((e (field-copy cur-field))
+	(exh (cvector-field-make cur-field)))
+    (get-hfield which-band)
+    (field-map! exh
+		(lambda (e h) (vector3-cross (vector3-conj e) h))
+		e cur-field)
+    (field-load exh)))
+(define (output-poynting which-band)
+  (get-poynting which-band)
+(define (output-poynting-x which-band)
+  (get-poynting which-band)
+  (output-field-to-file 0 (string-append filename-prefix "flux.")))
+(define (output-poynting-y which-band)
+  (get-poynting which-band)
+  (output-field-to-file 1 (string-append filename-prefix "flux.")))
+(define (output-poynting-z which-band)
+  (get-poynting which-band)
+  (output-field-to-file 2 (string-append filename-prefix "flux.")))
+
+(define (get-tot-pwr which-band)
+  (get-dfield which-band)
+  (compute-energy-density)
+  (let ((epwr (field-copy cur-field))
+        (tot-pwr (rscalar-field-make cur-field)))
+    (get-hfield which-band)
+    (compute-energy-density)
+    (field-map! tot-pwr
+                (lambda (epwr hpwr) (+ epwr hpwr))
+                epwr cur-field)
+    (field-load tot-pwr)))
+(define (output-tot-pwr which-band)
+  (get-tot-pwr which-band)
+  (output-field-to-file -1 (string-append filename-prefix "tot.")))
+
 ; We need a special function to evaluate band functions, since
 ; band functions can either be a function of the band number or
 ; a thunk (function of no arguments, evaluated once per k-point).
@@ -631,7 +679,7 @@
 ; higher bands to speed the computation for lower bands.
 
 (define (find-k p omega band-min band-max kdir
-		tol kmag-guess kmag-min kmag-max)
+		tol kmag-guess kmag-min kmag-max . band-funcs)
   (let ((num-bands-save num-bands) (k-points-save k-points)
 	(nb (- band-max band-min -1)) 
 	(kdir1 (unit-vector3 kdir))
@@ -672,10 +720,20 @@
 			  (find-root-deriv (rootfun b) tol kmag-min kmag-max
 					   (vector-ref k0s (- b band-min))))
 			(arith-sequence band-max -1 nb)))))
+      (if band-funcs
+	  (map (lambda (b k)
+		 (set! num-bands b)
+		 (set! k-points (list (vector3-scale k kdir1)))
+		 (run-parity p false
+			     (lambda (b')
+			       (if (= b' b)
+				   ((apply combine-band-functions band-funcs)
+				    b)))))
+	       (arith-sequence band-max -1 nb) (reverse ks)))
       (set! num-bands num-bands-save)
       (set! k-points k-points-save)
       (print parity "kvals:, " omega ", " band-min ", " band-max)
-      (vector-map (lambda (k) (print ", " k)) kdir)
+      (vector-map (lambda (k) (print ", " k)) kdir1)
       (map (lambda (k) (print ", " k)) ks) 
       (print "\n")
       ks)))

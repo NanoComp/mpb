@@ -23,6 +23,7 @@
 #include <check.h>
 #include <blasglue.h>
 #include <matrices.h>
+#include <matrixio.h>
 
 #include "matrix-smob.h"
 
@@ -248,6 +249,38 @@ void scale_eigenvector(integer b, cnumber scale)
 #endif     
      ASSIGN_SCALAR(s, cnumber_re(scale), cnumber_im(scale));
      blasglue_scal(H.n, s, H.data + b-1, H.p);
+     curfield_reset();
+}
+
+void output_eigenvectors(SCM mo, char *filename)
+{
+     evectmatrix *m = assert_evectmatrix_smob(mo);
+     evectmatrixio_writeall_raw(filename, *m);
+     curfield_reset();
+}
+
+SCM input_eigenvectors(char *filename, integer num_bands)
+{
+     SCM mo = get_eigenvectors(1, num_bands);
+     {
+	  evectmatrix *m = assert_evectmatrix_smob(mo);
+	  evectmatrixio_readall_raw(filename, *m);
+     }
+     return mo;
+}
+
+void save_eigenvectors(char *filename)
+{
+     CHECK(mdata, "init-params must be called before save-eigenvectors");
+     printf("Saving eigenvectors to \"%s\"...\n", filename);
+     evectmatrixio_writeall_raw(filename, H);
+}
+
+void load_eigenvectors(char *filename)
+{
+     CHECK(mdata, "init-params must be called before load-eigenvectors");
+     printf("Loading eigenvectors from \"%s\"...\n", filename);
+     evectmatrixio_readall_raw(filename, H);
      curfield_reset();
 }
 

@@ -398,6 +398,15 @@ function invoked in turn).
 
 </dl>
 
+<p>Normally, the dielectric constant is required to be positive (or
+positive-definite, for a tensor).  However, MPB does have a somewhat
+experimental feature allowing negative dielectrics (e.g. in a plasma).
+To use it, call the function <code>(allow-negative-epsilon)</code>
+before <code>(run)</code>.  In this case, it will output the (real)
+frequency <em>squared</em> in place of the (possibly imaginary)
+frequencies.  (Convergence will be somewhat slower because the
+eigenoperator is not positive definite.)
+
 <h3><a name="geometric-object">geometric-object</a></h3>
 
 <p>This class, and its descendants, are used to specify the solid
@@ -749,7 +758,10 @@ z/y=0 plane, respectively.
 any previous calculation will be reused as the starting point from
 this calculation, if possible; otherwise, the fields are reset to
 random values.  The ordinary <code>run</code> functions use a default
-<code>reset-fields</code> of<code>true</code>.
+<code>reset-fields</code> of<code>true</code>.  Alternatively,
+<code>reset-fields</code> may be a string, the name of an HDF5 file to
+load the initial fields from (as exported by
+<code>save-eigenvectors</code>, <a href="#eigen-fields">below</a>).
 
 <p><dt><code>(display-eigensolver-stats)</code>
 <dd>Display some statistics on the eigensolver convergence; this function is
@@ -806,13 +818,92 @@ previous calculation.
 
 </dl>
 
+<h3><a name="find-k">The inverse problem: k as a function of frequency</a></h3>
+
+<p>MPB's <code>(run)</code> function(s) and its underlying algorithms
+compute the frequency <code>w</code> as a function of wavevector
+<code>k</code>.  Sometimes, however, it is desirable to solve the
+inverse problem, for <code>k</code> at a given frequency
+<code>w</code>.  This is useful, for example, when studying coupling
+in a waveguide between different bands at the same frequency
+(frequency is conserved even when wavevector is not).  One also uses
+<code>k(w)</code> to construct wavevector diagrams, which aid in
+understanding diffraction (e.g. negative-diffraction materials and
+super-prisms).  To solve such problems, therefore, we provide the
+<code>find-k</code> function described below, which inverts
+<code>w(k)</code> via a few iterations of Newton's method (using the
+<a href="#group-vel">group velocity</a> <code>dw/dk</code>).  Because
+it employs a root-finding method, you need to specify bounds on
+<code>k</code> and a <em>crude</em> initial guess (order of magnitude
+is usually good enough).
+
+<dl>
+
+<dt><code>(find-k <i>p omega band-min band-max kdir
+                tol kmag-guess kmag-min kmag-max [band-func...]</i>)</code>
+
+<dd>Find the wavevectors in the current geometry/structure for the
+bands from <code><i>band-min</i></code> to
+<code><i>band-max</i></code> at the frequency
+<code><i>omega</i></code> along the <code><i>kdir</i></code> direction
+in k-space.  Returns a list of the wavevector magnitudes for each
+band; the actual wavevectors are <code>(vector3-scale <i>magnitude</i>
+(unit-vector3 <i>kdir</i>))</code>.  The arguments of
+<code>find-k</code> are:
+
+<ul>
+
+<li><code><i>p</i></code>: parity (same as first argument to
+<code>run-parity</code>, <a href="#run">above</a>).
+
+<li><code><i>omega</i></code>: the frequency at which to find the bands
+
+<li><code><i>band-min</i></code>, <code><i>band-max</i></code>: the
+range of bands to solve for the wavevectors of (inclusive).
+
+<li><code><i>kdir</i></code>: the direction in k-space in which to
+find the wavevectors.  (The magnitude of <code><i>kdir</i></code> is
+ignored.)
+
+<li><code><i>tol</i></code>: the fractional tolerance with which to
+solve for the wavevector; <code>1e-4</code> is usually sufficient.
+(Like the <code>tolerance</code> input variable, this is only the
+tolerance of the numerical iteration...it does not have anything to do
+with e.g. the error from finite grid <code>resolution</code>.)
+
+<li><code><i>kmag-guess</i></code>: an initial guess for the k
+magnitude (along <code><i>kdir</i></code>) of the wavevector at
+<code><i>omega</i></code>.  Can either be a list (one guess for each
+band from <code><i>band-min</i></code> to
+<code><i>band-max</i></code>) or a single number (same guess for all
+bands, which is usually sufficient).
+
+<li><code><i>kmag-min</i></code>, <code><i>kmag-max</i></code>: a
+range of k magnitudes to search; should be large enough to include the
+correct k values for all bands.
+
+<li><code><i>band-func</i></code>: zero or more <a
+href="#band-funcs">band functions</a>, just as in <code>(run)</code>,
+which are evaluated at the computed k points for each band.
+
+</ul>
+
+<p>The <code>find-k</code> routine also prints a line suitable for grepping:
+
+<pre>
+kvals: <i>omega</i>, <i>band-min</i>, <i>band-max</i>, <i>kdir-x</i>, <i>kdir-y</i>, <i>kdir-z</i>, <i>k magnitudes...</i>
+</pre>
+
+</dl>
+
 <h3><a name="band-funcs">Band/output functions</a></h3>
 
 <p>All of these are functions that, given a band index, output the
 corresponding field or compute some function thereof (in the primitive
 cell of the lattice).  They are designed to be passed as band
 functions to the <code>run</code> routines, although they can also be
-called directly.
+called directly.  See also the section on <a href="#field-norm">field
+normalizations</a>.
 
 <dl>
 
@@ -839,11 +930,12 @@ respectively.
 all or one of the components, respectively.
 
 <p><dt><code>(output-hpwr <i>which-band</i>)</code>
-<dd>Output the time-averaged magnetic-field energy density (hpwr) for
-<code>which-band</code>.
+<dd>Output the time-averaged magnetic-field energy density (hpwr =
+|<b>H</b>|<sup><small>2</small></sup>) for <code>which-band</code>.
 
 <p><dt><code>(output-dpwr <i>which-band</i>)</code>
-<dd>Output the time-averaged electric-field energy density (dpwr) for
+<dd>Output the time-averaged electric-field energy density (dpwr =
+epsilon*|<b>E</b>|<sup><small>2</small></sup>) for
 <code>which-band</code>.
 
 <p><dt><code>(fix-hfield-phase <i>which-band</i>)</code>
@@ -919,21 +1011,145 @@ that calls all of them in sequence, but only at the specified
 
 </dl>
 
-<h3><a name="field">Field manipulation functions</a></h3>
+<h3><a name="misc-funcs">Miscellaneous functions</a></h3>
+
+<dl>
+
+<p><dt><code>(retrieve-gap <i>lower-band</i>)</code>
+<dd>Return the frequency gap from the band
+#<code><i>lower-band</i></code> to the band
+#(<code><i>lower-band</i></code>+1), as a percentage of mid-gap
+frequency.  The "gap" may be negative if the maximum of the lower band
+is higher than the minimum of the upper band.  (The gap is computed
+from the <code>band-range-data</code> of the previous run.)
+
+</dl>
+
+<h4><a name="parity">Parity</a></h4>
+
+<p>Given a set of eigenstates at a k-point, MPB can compute their
+<i>parities</i> with respect to the z=0 or y=0 plane.  The z/y parity
+of a state is defined as the expectation value (under the usual inner
+product) of the mirror-flip operation through z/y=0, respectively.
+For true even and odd eigenstates (see e.g.  <code>run-zeven</code>
+and <code>run-zodd</code>), this will be +1 and -1, respectively; for
+other states it will be something in between.
+
+<p>This is useful e.g. when you have a nearly symmetric structure, such
+as a waveguide with a substrate underneath, and you want to tell which
+bands are even-like (parity &gt; 0) and odd-like (parity &lt; 0).
+Indeed, any state can be decomposed into purely even and odd
+functions, with absolute-value-squared amplitudes of (1+parity)/2 and
+(1-parity)/2, respectively.
+
+<dl>
+
+<p><dt><code>display-zparities</code>, <code>display-yparities</code>
+<dd>These are band functions, designed to be passed to
+<code>(run)</code>, which output all of the z/y parities,
+respectively, at each k-point (in comma-delimited format suitable for
+grepping).
+
+<p><dt><code>(compute-zparities)</code>
+<dd>Returns a list of the parities about the z=0 plane, one number for
+each band computed at the last k-point.
+
+<p><dt><code>(compute-yparities)</code>
+<dd>Returns a list of the parities about the y=0 plane, one number for
+each band computed at the last k-point.
+
+</dl>
+
+<p>(The reader should recall that the magnetic field is only a
+pseudo-vector, and is therefore multiplied by -1 under mirror-flip
+operations.  For this reason, the magnetic field <i>appears</i> to have
+opposite symmetry from the electric field, but is really the same.)
+
+<h4><a name="group-vel">Group velocities</a></h4>
+
+<p>Given a set of eigenstates at a given k-point, MPB can compute
+their group velocities (the derivative of frequency with respect to
+wavevector) using the Hellman-Feynmann theorem.  Three functions are
+provided for this purpose, and we document them here from
+highest-level to lowest-level.
+
+<dl>
+
+<p><dt><code>display-group-velocities</code>
+<dd>This is a band function, designed to be passed to
+<code>(run)</code>, which outputs all of the group velocity vectors
+(in the Cartesian basis, in units of <i>c</i>) at each k-point.
+
+<p><dt><code>(compute-group-velocities)</code>
+<dd>Returns a list of group-velocity vectors (in the Cartesian basis,
+units of <i>c</i>) for the bands at the last-computed k-point.
+
+<p><dt><code>(compute-group-velocity-component <i>direction</i>)</code>
+<dd>Returns a list of the group-velocity components (units of
+<i>c</i>) in the given <i>direction</i>, one for each band at the
+last-computed k-point.  <i>direction</i> is a vector in the
+reciprocal-lattice basis (like the k-points); its length is ignored.
+(This has the advantage of being three times faster than
+<code>compute-group-velocities</code>.)
+
+</dl>
+
+<h2><a name="field">Field manipulation</a></h2>
 
 <p>The Photonic-Bands package provides a number of ways to take the
 field of a band and manipulate, process, or output it.  These methods
 usually work in two stages.  First, one loads a field into memory
 (computing it in position space) by calling one of the
 <code>get</code> functions below.  Then, other functions can be called
-to transform or manipulate the field.  Currently, only one field
-(vector or scalar) can be manipulated at a time.
+to transform or manipulate the field.
 
-<p>The available <code>get</code> functions follow.  They should only
-be called after the eigensolver has run (or after
-<code>init-params</code>, in the case of <code>get-epsilon</code>).
-One normally calls them after <code>run</code>, or in one of the band
-functions passed to <code>run</code>.
+<p>The simplest class of operations involve only the currently-loaded
+field, which we describe in the <a href="#cur-field">second
+subsection</a> below.  To perform more sophisticated operations,
+involving more than one field, one must copy or transform the current
+field into a new field variable, and then call one of the functions
+that operate on multiple field variables (described in the <a
+href="#mult-fields">third subsection</a>).
+
+<h3><a name="field-norm">Field normalization</a></h3>
+
+<p>In order to perform useful operations on the fields, it is
+important to understand how they are normalized.  We normalize the
+fields in the way that is most convenient for perturbation and
+coupled-mode theory [c.f. SGJ et al., <i>PRE</i> <b>65</b>, 066611
+(2002)], so that their energy densities have unit integral.  In
+particular, we normalize the electric (<b>E</b>), displacement
+(<b>D</b> = epsilon*<b>E</b>) and magnetic (<b>H</b> = -i/omega * curl
+<b>E</b>) fields, so that:
+
+<ul>
+
+<li>integral epsilon*|<b>E</b>|<sup><small>2</small></sup> dxdydz = 1
+<li>integral |<b>H</b>|<sup><small>2</small></sup> dxdydz = 1
+
+</ul>
+
+<p>where the integrals are over the computational cell.  Note the
+volume element dxdydz (the volume of a grid pixel/voxel).  If you
+simply sum |<b>H</b>|<sup><small>2</small></sup> over all the grid
+points, therefore, you will get (# grid points) / (volume of cell).
+
+<p>Note that we have dropped the pesky factors of 1/2, pi, etcetera
+from the energy densities, since these do not appear in
+e.g. perturbation theory, and the fields have arbitrary units anyway.
+The functions to compute/output energy densities below similarly use
+epsilon*|<b>E</b>|<sup><small>2</small></sup> and
+|<b>H</b>|<sup><small>2</small></sup> without any prefactors.
+
+<h3><a name="cur-field">Loading and manipulating the current
+field</a></h3>
+
+<p>In order to load a field into memory, call one of the
+<code>get</code> functions follow.  They should only be called after
+the eigensolver has run (or after <code>init-params</code>, in the
+case of <code>get-epsilon</code>).  One normally calls them after
+<code>run</code>, or in one of the band functions passed to
+<code>run</code>.
 
 <dl>
 
@@ -1022,7 +1238,9 @@ r</i>)</code> that returns a number given three parameters:
 and <code><i>r</i></code>, the position vector (in lattice
 coordinates) of the point.  <code>compute-energy-integral</code>
 returns the integral of <code><i>f</i></code> over the unit cell.
-(This can be useful for perturbation-theory calculations.)
+(The integral is computed simply as the sum over the grid points times
+the volume of a grid pixel/voxel.)  This can be useful e.g. for
+perturbation-theory calculations.
 
 <p><dt><code>(compute-field-integral <i>f</i>)</code>
 <dd>Like <code>compute-energy-integral</code>, but
@@ -1093,86 +1311,211 @@ number of datasets are outputted in <code>"epsilon.h5"</code>:
 
 </dl>
 
-<h3><a name="misc-funcs">Miscellaneous functions</a></h3>
+<h3><a name="mult-fields">Storing and combining multiple fields</a></h3>
+
+<p>In order to perform operations involving multiple fields,
+e.g. computing the Poynting vector <b>E</b>x<b>H</b>, they must be
+stored in field variables.  Field variables come in two flavors,
+real-scalar (rscalar) fields, and complex-vector (cvector) fields.
+There is a pre-defined field variable <code>cur-field</code>
+representing the currently-loaded field (see above), and you can
+"clone" it to create more field variables with one of:
+
 
 <dl>
 
-<p><dt><code>(retrieve-gap <i>lower-band</i>)</code>
-<dd>Return the frequency gap from the band
-#<code><i>lower-band</i></code> to the band
-#(<code><i>lower-band</i></code>+1), as a percentage of mid-gap
-frequency.  The "gap" may be negative if the maximum of the lower band
-is higher than the minimum of the upper band.  (The gap is computed
-from the <code>band-range-data</code> of the previous run.)
+<dt><code>(field-make <i>f</i>)</code>
+<dd>Return a new field variable of the same type and size as the field
+variable <code><i>f</i></code>.  Does <em>not</em> copy the field
+contents (see <code>field-copy</code> and <code>field-set!</code>,
+below).
+
+<p><dt><code>(rscalar-field-make <i>f</i>)</code>
+<dt><code>(cvector-field-make <i>f</i>)</code>
+<dd>Like <code>field-make</code>, but return a real-scalar or
+complex-vector field variable, respectively, of the same size as
+<code><i>f</i></code> but ignoring <code><i>f</i></code>'s type.
+
+<p><dt><code>(field-set! <i>fdest fsrc</i>)</code>
+<dd>Set <code><i>fdest</i></code> to store the same field values as
+<code><i>fsrc</i></code>, which must be of the same size and type.
+
+<p><dt><code>(field-copy <i>f</i>)</code>
+<dd>Return a new field variable that is exact copy of
+<code><i>f</i></code>; this is equivalent to calling
+<code>field-make</code> followed by <code>field-set!</code>.
+
+<p><dt><code>(field-load <i>f</i>)</code>
+
+<dd>Loads the field <code><i>f</i></code> as the current field, at
+which point you can use all of the functions in the <a
+href="#cur-field">previous section</a> to operate on it or output it.
 
 </dl>
 
-<h4><a name="parity">Parity</a></h4>
-
-<p>Given a set of eigenstates at a k-point, MPB can compute their
-<i>parities</i> with respect to the z=0 or y=0 plane.  The z/y parity
-of a state is defined as the expectation value (under the usual inner
-product) of the mirror-flip operation through z/y=0, respectively.
-For true even and odd eigenstates (see e.g.  <code>run-zeven</code>
-and <code>run-zodd</code>), this will be +1 and -1, respectively; for
-other states it will be something in between.
-
-<p>This is useful e.g. when you have a nearly symmetric structure, such
-as a waveguide with a substrate underneath, and you want to tell which
-bands are even-like (parity &gt; 0) and odd-like (parity &lt; 0).
-Indeed, any state can be decomposed into purely even and odd
-functions, with absolute-value-squared amplitudes of (1+parity)/2 and
-(1-parity)/2, respectively.
+<p>Once you have stored the fields in variables, you probably want to
+compute something with them.  This can be done in three ways:
+combining fields into new fields with <code>field-map!</code>
+(e.g. combine <b>E</b> and <b>H</b> to <b>E</b>x<b>H</b>), integrating
+some function of the fields with <code>integrate-fields</code>
+(e.g. to compute coupling integrals for perturbation theory), and
+getting the field values at arbitrary points with
+<code>field-get-point</code> (e.g. to do a line or surface integral).
+These three functions are described below:
 
 <dl>
 
-<p><dt><code>display-zparities</code>, <code>display-yparities</code>
-<dd>These are band functions, designed to be passed to
-<code>(run)</code>, which output all of the z/y parities,
-respectively, at each k-point (in comma-delimited format suitable for
-grepping).
+<dt><code>(field-map! <i>fdest func [f1 f2 ...]</i>)</code>
+<dd>Compute the new field <code><i>fdest</i></code> to be
+<code>(<i>func f1-val f2-val ...</i>)</code> at each point in the
+grid, where <code><i>f1-val</i></code> etcetera is the corresponding
+value of <code><i>f1</i></code> etcetera.  All the fields must be of
+the same size, and the argument and return types of
+<code><i>func</i></code> must match those of the
+<code><i>f1...</i></code> and <code><i>fdest</i></code> fields,
+respectively.
 
-<p><dt><code>(compute-zparities)</code>
-<dd>Returns a list of the parities about the z=0 plane, one number for
-each band computed at the last k-point.
+<p><dt><code>(integrate-fields <i>func [f1 f2 ...]</i>)</code>
+<dd>Compute the integral of the function <code>(<i>func r [f1 f2
+...]</i>)</code> over the computational cell, where
+<code><i>r</i></code> is the position (in the usual lattice basis) and
+<code><i>f1</i></code> etc. are fields (which must all be of the same
+size).  (The integral is computed simply as the sum over the grid
+points times the volume of a grid pixel/voxel.)
 
-<p><dt><code>(compute-yparities)</code>
-<dd>Returns a list of the parities about the y=0 plane, one number for
-each band computed at the last k-point.
+<p><dt><code>(field-get-point <i>f r</i>)</code>
+<dt><code>(cvector-field-get-point <i>f r</i>)</code>
+<dt><code>(rscalar-field-get-point <i>f r</i>)</code>
+<dd>Given a position vector <code><i>r</i></code> (in lattice
+coordinates), return the interpolated field cvector/rscalar from
+<code><i>f</i></code> at that point.  <code>field-get-point</code> is
+simply a wrapper that calls either
+<code>cvector-field-get-point</code> or
+<code>rscalar-field-get-point</code> according to the type of
+<code><i>f</i></code>.
 
 </dl>
 
-<p>(The reader should recall that the magnetic field is only a
-pseudo-vector, and is therefore multiplied by -1 under mirror-flip
-operations.  For this reason, the magnetic field <i>appears</i> to have
-opposite symmetry from the electric field, but is really the same.)
+<p>You may be wondering how to get rid of the field variables once you
+are done with them: you don't, since they are <a
+href="http://www.tuxedo.org/~esr/jargon/html/entry/GC.html">garbage
+collected</a> automatically.
 
-<h4><a name="group-vel">Group velocities</a></h4>
-
-<p>Given a set of eigenstates at a given k-point, MPB can compute
-their group velocities (the derivative of frequency with respect to
-wavevector) using the Hellman-Feynmann theorem.  Three functions are
-provided for this purpose, and we document them here from
-highest-level to lowest-level.
+<p>We also provide functions, in analogue to e.g <code>get-efield</code>
+and <code>output-efield</code> above, to "get" various useful
+functions as the <a href="#cur-field">current field</a> and to output
+them to a file:
 
 <dl>
 
-<p><dt><code>display-group-velocities</code>
-<dd>This is a band function, designed to be passed to
-<code>(run)</code>, which outputs all of the group velocity vectors
-(in the Cartesian basis, in units of <i>c</i>) at each k-point.
+<dt>(get-poynting <i>which-band</i>)</code>
+<dd>Loads the Poynting vector
+<b>E</b><sup><small>*</small></sup>x<b>H</b> for the band
+<code>which-band</code>, the flux density of electromagnetic energy
+flow, as the current field.  1/2 of the real part of this vector is the
+time-average flux density (which can be combined with the imaginary
+part to determine the amplitude and phase of the time-dependent flux).
 
-<p><dt><code>(compute-group-velocities)</code>
-<dd>Returns a list of group-velocity vectors (in the Cartesian basis,
-units of <i>c</i>) for the bands at the last-computed k-point.
+<p><dt><code>(output-poynting <i>which-band</i>)</code>
+<dt><code>(output-poynting-x <i>which-band</i>)</code>
+<dt><code>(output-poynting-y <i>which-band</i>)</code>
+<dt><code>(output-poynting-z <i>which-band</i>)</code>
+<dd>Output the Poynting vector field for <code>which-band</code>; either
+all or one of the components, respectively.
 
-<p><dt><code>(compute-group-velocity-component <i>direction</i>)</code>
-<dd>Returns a list of the group-velocity components (units of
-<i>c</i>) in the given <i>direction</i>, one for each band at the
-last-computed k-point.  <i>direction</i> is a vector in the
-reciprocal-lattice basis (like the k-points); its length is ignored.
-(This has the advantage of being three times faster than
-<code>compute-group-velocities</code>.)
+<p><dt>(get-tot-pwr <i>which-band</i>)</code>
+<dd>Load the time-averaged electromgnetic-field energy density
+(|<b>H</b>|<sup><small>2</small></sup> +
+epsilon*|<b>E</b>|<sup><small>2</small></sup>) for
+<code>which-band</code>.  (If you multiply the real part of the
+Poynting vector by a factor of 1/2, above, you should multiply by a
+factor of 1/4 here for consistency.)
+
+<p><dt>(output-tot-pwr <i>which-band</i>)</code>
+<dd>Output the time-averaged electromgnetic-field energy density
+(above) for <code>which-band</code>.
+
+</dl>
+
+<p>As an example, below is the Scheme source code for the
+<code>get-poynting</code> function, illustrating the use of the
+various field functions:
+
+<pre>
+(define (get-poynting which-band)
+  (get-efield which-band) ; E is now in cur-field
+  (let ((e (field-copy cur-field))
+        (exh (cvector-field-make cur-field)))
+    (get-hfield which-band) ; H is now in cur-field
+    (field-map! exh
+                (lambda (e h) (vector3-cross (vector3-conj e) h))
+                e cur-field)
+    (field-load exh)))
+</pre>
+
+<h3><a name="eigen-fields">Manipulating the raw eigenvectors</a></h3>
+
+<p>MPB also includes a few low-level routines to manipulate the raw
+eigenvectors that it computes in a transverse planewave basis.
+
+<p>The most basic operations involve copying, saving, and restoring
+the current set of eigenvectors or some subset thereof:
+
+<dl>
+
+<dt><code>(get-eigenvectors <i>first-band num-bands</i>)</code>
+<dd>Return an eigenvector object that is a copy of
+<code><i>num-bands</i></code> current eigenvectors starting at
+<code><i>first-band</i></code>.  e.g. to get a copy of all of the
+eigenvectors, use <code>(get-eigenvectors 1 num-bands)</code>.
+
+<p><dt><code>(set-eigenvectors <i>ev first-band</i>)</code>
+<dd>Set the current eigenvectors, starting at
+<code><i>first-band</i></code>, to those in the <code><i>ev</i></code>
+eigenvector object (as returned by <code>get-eigenvectors</code>).
+(Does not work if the grid sizes don't match)
+
+<p><dt><code>(load-eigenvectors <i>filename</i>)</code>
+<dt><code>(save-eigenvectors <i>filename</i>)</code>
+<dd>Read/write the current eigenvectors (raw planewave amplitudes)
+to/from an HDF5 file named <code><i>filename</i></code>.  Instead of
+using <code>load-eigenvectors</code> directly, you can pass the
+<code><i>filename</i></code> as the <code><i>reset-fields</i></code>
+parameter of <code>run-parity</code>, <a href="#run">above</a>.
+(Loaded eigenvectors must be of the same size (same grid size and
+#bands) as the current settings.)
+
+</dl>
+
+<p>Currently, there's only one other interesting thing you can do with
+the raw eigenvectors, and that is to compute the dot-product matrix
+between a set of saved eigenvectors and the current eigenvectors.
+This can be used, e.g., to detect band crossings or to set phases
+consistently at different k points.  The dot product is returned as a
+"sqmatrix" object, whose elements can be read with the
+<code>sqmatrix-size</code> and <code>sqmatrix-ref</code> routines.
+
+<dl>
+
+<dt><code>(dot-eigenvectors <i>ev first-band</i>)</code>
+<dd>Returns a sqmatrix object containing the dot product of the saved
+eigenvectors <code><i>ev</i></code> with the current eigenvectors,
+starting at <code><i>first-band</i></code>.  That is, the (i,j)th
+output matrix element contains the dot product of the (i+1)th vector
+of <code><i>ev</i></code> (conjugated) with the
+(<code><i>first-band</i></code>+j)th eigenvector.  Note that the
+eigenvectors, when computed, are orthonormal, so the dot product of
+the eigenvectors with themselves is the identity matrix.
+
+<p><dt><code>(sqmatrix-size <i>sm</i>)</code>
+<dd>Return the size <i>n</i> of an <i>n</i>x<i>n</i> sqmatrix
+<code><i>sm</i></code>.
+
+<p><dt><code>(sqmatrix-ref <i>sm i j</i>)</code>
+<dd>Return the (<code><i>i</i></code>,<code><i>j</i></code>)th element
+of the <i>n</i>x<i>n</i> sqmatrix <code><i>sm</i></code>, where
+{<code><i>i</i></code>,<code><i>j</i></code>} range from
+0..<i>n</i>-1.
 
 </dl>
 

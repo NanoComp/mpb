@@ -1,3 +1,36 @@
+MPB 1.4
+
+  * New find-k routine to find k as a function of frequency, instead of
+    vice-versa.
+
+  * The Great Field Renormalization: all fields are now normalized
+    to have unit *integral* of their energy density (instead of
+    unit sum over the grid points), which is much more useful e.g. for
+    perturbation theory.  (See field normalization section of manual.)
+
+  * You can now save fields in Scheme variables to perform computations
+    combining different fields.  Example routines, e.g. to output the
+    Poynting vector, are included.
+
+  * Functions to export (and import) the raw eigenvectors (planewave
+    amplitudes), as well as to compute dot products of eigenvectors
+    from different k-points (e.g. for detecting band crossings).
+
+  * allow-negative-epsilon function to enable negative-dielectric support.
+
+  * Added examples/dos.scm to compute density of states via simple
+    Gaussian histogram, suggested by Xavier Gonze and Doug Allan.
+
+  * Bug fix: allow real offdiagonal epsilon elements without requiring
+    --with-hermitian-eps.  Thanks to Doug Allan for the bug report.
+
+  * Eliminated floating-point error on Alpha for homogeneous structure.
+    Thanks to F. Lopez-Tejeira for the bug report.
+
+  * Added man page for mpb-split.
+
+  * Minor installation fixes.
+
 MPB 1.3 (3/10/2002)
 
   * You can now specify the grid size via the resolution input variable,
