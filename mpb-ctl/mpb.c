@@ -299,7 +299,7 @@ void init_params(int p, boolean reset_fields)
      printf("     (%g, %g, %g)\n", Rm.c2.x, Rm.c2.y, Rm.c2.z);
   
      Gm = matrix3x3_inverse(matrix3x3_transpose(Rm));
-     printf("Reciprocal lattice vectors:\n");
+     printf("Reciprocal lattice vectors (/ 2 pi):\n");
      printf("     (%g, %g, %g)\n", Gm.c0.x, Gm.c0.y, Gm.c0.z);  
      printf("     (%g, %g, %g)\n", Gm.c1.x, Gm.c1.y, Gm.c1.z);
      printf("     (%g, %g, %g)\n", Gm.c2.x, Gm.c2.y, Gm.c2.z);
