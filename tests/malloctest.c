@@ -23,13 +23,15 @@
 #include <check.h>
 
 #define NUM_POINTERS 1000
-#define MAX_SIZE 1024
-#define NUM_MALLOCS 1000000
+#define MAX_SIZE 65536
+#define NUM_MALLOCS 3000000
 
 int main(void)
 {
      char *pointers[NUM_POINTERS];
      int i, iter;
+     clock_t start_time;
+     double elapsed_time;
 
 #ifdef DEBUG_MALLOC
      printf("Using debug_malloc and debug_free routines.\n");
@@ -46,6 +48,7 @@ int main(void)
 	  pointers[i] = NULL;
 
      printf("Doing %d malloc/free calls...\n", NUM_MALLOCS);
+     start_time = clock();
      for (iter = 0; iter < NUM_MALLOCS; ++iter) {
 	  i = rand() % NUM_POINTERS;
 	  if (pointers[i])
@@ -54,13 +57,19 @@ int main(void)
 	  if ((iter + 1) % (NUM_MALLOCS / 20) == 0)
 	       printf("...completed %d...\n", iter + 1);
      }
+     elapsed_time = (clock() - start_time) * 1.0 / CLOCKS_PER_SEC;
      printf("Done.\n");
+
+     printf("Total time = %g seconds, %g us per iteration\n",
+	    elapsed_time, elapsed_time * 1e6 / NUM_MALLOCS);
 
      for (i = 0; i < NUM_POINTERS; ++i)
 	  if (pointers[i])
 	       free(pointers[i]);
 
+#ifdef DEBUG_MALLOC
      debug_check_memory_leaks();
+#endif
      
      printf("Okay.\n");
 
