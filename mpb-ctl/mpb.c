@@ -413,9 +413,7 @@ void init_params(integer p, boolean reset_fields)
      if (target_freq != 0.0)
 	  mpi_one_printf("Target frequency is %g\n", target_freq);
      
-     nx = grid_size.x;
-     ny = grid_size.y;
-     nz = grid_size.z;
+     get_grid_size_n(&nx, &ny, &nz);
 
      if (eigensolver_block_size != 0 && eigensolver_block_size < num_bands) {
 	  block_size = eigensolver_block_size;
