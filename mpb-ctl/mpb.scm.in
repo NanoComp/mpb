@@ -769,4 +769,6 @@
 
 @ACTIVATE_READLINE@  ; command to activate readline is determined by configure
 
+(set! scm-repl-prompt "mpb> ")
+
 ; ****************************************************************
