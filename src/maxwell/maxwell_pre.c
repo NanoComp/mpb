@@ -490,15 +490,12 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
 	       real eps = 3.0 / (eps_inv.m00 + eps_inv.m11 + eps_inv.m22);
 	       for (b = 0; b < cur_num_bands; ++b) {
 		    int ib = 3 * (i * cur_num_bands + b);
-		    ASSIGN_SCALAR(cdata[ib],
-				  SCALAR_RE(cdata[ib])* eps,
-				  SCALAR_IM(cdata[ib])* eps);
-		    ASSIGN_SCALAR(cdata[ib+1],
-				  SCALAR_RE(cdata[ib+1])* eps,
-				  SCALAR_IM(cdata[ib+1])* eps);
-		    ASSIGN_SCALAR(cdata[ib+2],
-				  SCALAR_RE(cdata[ib+2])* eps,
-				  SCALAR_IM(cdata[ib+2])* eps);
+		    cdata[ib].re *= eps;
+		    cdata[ib].im *= eps;
+		    cdata[ib+1].re *= eps;
+		    cdata[ib+1].im *= eps;
+		    cdata[ib+2].re *= eps;
+		    cdata[ib+2].im *= eps;
 	       }
 	  }
 

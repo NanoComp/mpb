@@ -334,9 +334,9 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
    epsilon is averaged over a rectangular mesh spanning the space between
    grid points; the size of the mesh is given by mesh_size.
 
-   R1, R2, and R2 are the spatial lattice vectors, and are used to convert
-   the discretization grid into spatial coordinates (with the origin at
-   the (0,0,0) grid element.
+   R[0..2] are the spatial lattice vectors, and are used to convert
+   the discretization grid into spatial coordinates (with the origin
+   at the (0,0,0) grid element.
 
    In most places, the dielectric tensor is equal to eps_inv, but at
    dielectric interfaces it varies depending upon the polarization of
@@ -365,14 +365,18 @@ void set_maxwell_dielectric(maxwell_data *md,
      int mesh_prod;
      real mesh_prod_inv;
      int size_moment_mesh = 0;
-     int nx, ny, nz;
+     int n1, n2, n3;
 #ifdef HAVE_MPI
-     int local_ny, local_y_start;
+     int local_n2, local_y_start;
 #endif
+     int n_other, n_last, rank;
 
-     nx = md->nx; ny = md->ny; nz = md->nz;
+     n1 = md->nx; n2 = md->ny; n3 = md->nz;
+     n_other = md->other_dims;
+     n_last = md->last_dim_size / (sizeof(scalar_complex) / sizeof(scalar));
+     rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
 
-     get_mesh(nx, ny, nz, mesh_size, R, G, 
+     get_mesh(n1, n2, n3, mesh_size, R, G, 
 	      mesh_center, &mesh_prod, moment_mesh, moment_mesh_weights,
 	      &size_moment_mesh);
      mesh_prod_inv = 1.0 / mesh_prod;
@@ -385,9 +389,9 @@ void set_maxwell_dielectric(maxwell_data *md,
 		 moment_mesh_weights[i]);
 #endif
 
-     s1 = 1.0 / nx;
-     s2 = 1.0 / ny;
-     s3 = 1.0 / nz;
+     s1 = 1.0 / n1;
+     s2 = 1.0 / n2;
+     s3 = 1.0 / n3;
      m1 = s1 / MAX2(1, mesh_size[0] - 1);
      m2 = s2 / MAX2(1, mesh_size[1] - 1);
      m3 = s3 / MAX2(1, mesh_size[2] - 1);
@@ -403,35 +407,46 @@ void set_maxwell_dielectric(maxwell_data *md,
 
 #  ifndef HAVE_MPI
      
-     for (i = 0; i < nx; ++i)
-	  for (j = 0; j < ny; ++j)
-	       for (k = 0; k < nz; ++k)
+     for (i = 0; i < n1; ++i)
+	  for (j = 0; j < n2; ++j)
+	       for (k = 0; k < n3; ++k)
      {
 #         define i2 i
 #         define j2 j
 #         define k2 k
-	  int eps_index = ((i * ny + j) * nz + k);
+	  int eps_index = ((i * n2 + j) * n3 + k);
 
 #  else /* HAVE_MPI */
 
-     local_ny = md->fft_output_size / (nx * nz);
-     local_y_start = md->fft_output_N_start / (nx * nz);
+     local_n2 = md->fft_output_size / (n1 * n3);
+     local_y_start = md->fft_output_N_start / (n1 * n3);
 
      /* first two dimensions are transposed in MPI output: */
-     for (j = 0; j < local_ny; ++j)
-          for (i = 0; i < nx; ++i)
-	       for (k = 0; k < nz; ++k)
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < n3; ++k)
      {
 #         define i2 i
 	  int j2 = j + local_y_start;
 #         define k2 k
-	  int eps_index = ((j * nx + i) * nz + k);
+	  int eps_index = ((j * n1 + i) * n3 + k);
 
 #  endif
 
 #else /* not SCALAR_COMPLEX */
 
 #  ifndef HAVE_MPI
+
+     for (i = 0; i < n_other; ++i)
+	  for (j = 0; j < n_last; ++j)
+     {
+	  int eps_index = i * n_last + j;
+	  int i2, j2, k2;
+	  switch (rank) {
+	      case 2: i2 = i; j2 = j; k2 = 0; break;
+	      case 3: i2 = i / n2; j2 = i % n2; k2 = j; break;
+	      default: i2 = j; j2 = k2 = 0;  break;
+	  }
 
 #  else /* HAVE_MPI */
 
@@ -441,6 +456,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 
 #endif /* not SCALAR_COMPLEX */
 
+     {
 	  int mi, mj, mk;
 	  symmetric_matrix eps_mean = {0,0,0,0,0,0}, 
 			   eps_inv_mean = {0,0,0,0,0,0}, eps_mean_inv;
@@ -599,7 +615,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 	  eps_inv_total += (md->eps_inv[eps_index].m00 + 
 			    md->eps_inv[eps_index].m11 + 
 			    md->eps_inv[eps_index].m22);
-     }  /* end of loop body */
+     }}  /* end of loop body */
      
      md->eps_inv_mean = eps_inv_total / (3 * md->fft_output_size);
 }

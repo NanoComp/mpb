@@ -24,6 +24,8 @@
 
 #include "maxwell.h"
 
+/**************************************************************************/
+
 /* assign a = v going from transverse to cartesian coordinates.  
    Here, a = (a[0],a[1],a[2]) is in cartesian coordinates.
    (v[0],v[vstride]) is in the transverse basis of k.m and k.n. */
@@ -123,9 +125,9 @@ static void assign_ucross_t2c(scalar *a, const real u[3], const k_data k,
 			     const scalar *v, int vstride)
 {
      scalar v0 = v[0], v1 = v[vstride];
-     real vx_r, vx_i, vy_r;
+     real vx_r, vy_r, vz_r;
 #ifdef SCALAR_COMPLEX
-     real vy_i, vz_r, vz_i;
+     real vx_i, vy_i, vz_i;
 #endif
 
      /* Note that v = (vx,vy,vz) = (v0 m + v1 n). */
@@ -150,6 +152,8 @@ static void assign_ucross_t2c(scalar *a, const real u[3], const k_data k,
 		   u[0] * vy_r - u[1] * vx_r,
 		   u[0] * vy_i - u[1] * vx_i);
 }
+
+/**************************************************************************/
 
 void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array, 
 			 int howmany, int stride, int dist)
@@ -180,13 +184,13 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 
 #    ifndef HAVE_MPI
 
-     if (dir < 0)
-	  rfftwnd_real_to_complex(d->plan,
+     if (dir > 0)
+	  rfftwnd_real_to_complex(d->iplan,
 				  howmany,
 				  (fftw_real *) array, stride, dist,
 				  0, 0, 0);
      else
-	  rfftwnd_complex_to_real(d->iplan,
+	  rfftwnd_complex_to_real(d->plan,
 				  howmany,
 				  (fftw_complex *) array, stride, dist,
 				  0, 0, 0);
@@ -203,6 +207,8 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 #  error only FFTW ffts are supported
 #endif /* not HAVE_FFTW */
 }
+
+/**************************************************************************/
 
 /* assigns newv = matrix * oldv.  matrix is symmetric and so is stored
    in "packed" format. */
@@ -221,7 +227,7 @@ void assign_symmatrix_vector(scalar_complex *newv,
      newv[2].re = matrix.m02 * v0.re + matrix.m12 * v1.re + matrix.m22 * v2.re;
      newv[2].im = matrix.m02 * v0.im + matrix.m12 * v1.im + matrix.m22 * v2.im;
 
-#ifdef DEBUG
+#if defined(DEBUG) && defined(SCALAR_COMPLEX)
      {
 	  real dummy;
 	  dummy = SCALAR_NORMSQR(newv[0]) + SCALAR_NORMSQR(newv[1])
@@ -234,8 +240,9 @@ void assign_symmatrix_vector(scalar_complex *newv,
 /* compute the D field in position space from Hin, which holds the H
    field in Fourier space, for the specified bands; this amounts to
    taking the curl and then Fourier transforming.  The output array,
-   dfield, is localN x cur_num_bands x 3, where localN is the local
-   spatial indices and 3 is the field components. */
+   dfield, is fft_output_size x cur_num_bands x 3, where
+   fft_output_size is the local spatial indices and 3 is the field
+   components. */
 void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin, 
 			      scalar_complex *dfield,
 			      int cur_band_start, int cur_num_bands)
@@ -369,6 +376,149 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 			 cur_num_bands*3, cur_num_bands*3, 1);
 }
 
+/**************************************************************************/
+
+/* The following function takes a complex vector field and expands it
+   so that all (nx,ny,nz) elements are stored.  This is necessary when
+   real-to-complex transforms are used, as they (rfftw) store their
+   complex output in a packed format to eliminate redundancies. */
+void maxwell_vectorfield_makefull(maxwell_data *d, scalar_complex *field)
+{
+#ifndef SCALAR_COMPLEX
+     int i, j;
+     int rank, n_other, n_last, n_last_stored, nx, ny, nz;
+     
+     nx = d->nx; ny = d->ny; nz = d->nz;
+     n_other = d->other_dims;
+     n_last = d->last_dim;
+     n_last_stored = d->last_dim_size / 2;
+     rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
+
+     /** NOTE: In addition to expanding the field to cover the full
+	 primitive cell, we also complex-conjugate it.  The reason
+	 for this is that FFTW's real-to-complex transform uses
+	 an exponent of -1, but the field output routines expect
+	 the opposite sign convention for the Fourier transform.
+	 (The sign is important to get the right sign of k.) 
+
+         If we ever break time reversal symmetry (which equates k and -k),
+         we need a better fix: we should change everything to use the
+         proper sign convention, or k will be backwards. **/
+
+     /* convenience macros to copy vectors, and conjugated vectors: */
+#  define ASSIGN_V(f,k,f2,k2) { f[3*(k)+2] = f2[3*(k2)+2];               \
+                                f[3*(k)+1] = f2[3*(k2)+1];               \
+                                f[3*(k)] = f2[3*(k2)]; }
+#  define ASSIGN_CV(f,k,f2,k2) { f[3*(k)+2].im = -f2[3*(k2)+2].im;       \
+                                 f[3*(k)+2].re = f2[3*(k2)+2].re;        \
+                                 f[3*(k)+1].im = -f2[3*(k2)+1].im;       \
+                                 f[3*(k)+1].re = f2[3*(k2)+1].re;        \
+                                 f[3*(k)].im = -f2[3*(k2)].im;           \
+                                 f[3*(k)].re = f2[3*(k2)].re; }
+
+     /* The field stores n_other x n_last_stored elements, and we want
+	to expand this to n_other x n_last.  So, we loop through it
+	in backwards order, using the following identity to reconstruct
+	the missing half:
+	
+	    A(i,j,k) = A(nx-i,ny-j,nz-k)*
+ 
+        where * is conjugation, and the indices are interpreted modulo
+	the sizes (e.g. nx-0=0). */
+
+     for (i = n_other - 1; i > n_other/2; --i) {
+	  int ic;  /* conjugated index to i */
+	  switch (rank) {  /* is there a cleaner way to get ic? */
+	      case 2: ic = (nx - i) % nx; break;
+	      case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
+	      default: ic = 0; break;
+	  }
+	  for (j = n_last - 1; j >= n_last_stored; --j) {
+	       int jc = (n_last - j) % n_last;
+	       ASSIGN_V(field,i*n_last+j, field,ic*n_last_stored+jc);
+	  }
+	  for (; j >= 0; --j) {
+	       ASSIGN_CV(field,i*n_last+j, field,i*n_last_stored+j);
+	  }
+     }
+     /* in this loop, ic is in the half already copied above: */
+     for (; i >= 0; --i) {
+	  int ic;  /* conjugated index to i */
+	  switch (rank) {
+	      case 2: ic = (nx - i) % nx; break;
+	      case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
+	      default: ic = 0; break;
+	  }
+	  for (j = n_last_stored - 1; j >= 0; --j) {
+	       ASSIGN_CV(field,i*n_last+j, field,i*n_last_stored+j);
+	  }
+	  for (j = n_last - 1; j >= n_last_stored; --j) {
+	       int jc = (n_last - j) % n_last;
+	       ASSIGN_CV(field,i*n_last+j, field,ic*n_last+jc);
+	  }
+     }
+
+#  undef ASSIGN_V
+#  undef ASSIGN_CV
+
+#endif /* ! SCALAR_COMPLEX */
+}
+
+/* Similar to vectorfield_makefull, above, except that it operates on
+   a real scalar field, which is assumed to have come from the real
+   parts, or the absolute values, of a complex field. */
+void maxwell_scalarfield_makefull(maxwell_data *d, real *field)
+{
+#ifndef SCALAR_COMPLEX
+     int i, j;
+     int rank, n_other, n_last, n_last_stored, nx, ny, nz;
+     
+     nx = d->nx; ny = d->ny; nz = d->nz;
+     n_other = d->other_dims;
+     n_last = d->last_dim;
+     n_last_stored = d->last_dim_size / 2;
+     rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
+
+     for (i = n_other - 1; i > n_other/2; --i) {
+	  int ic;  /* conjugated index to i */
+	  switch (rank) {  /* is there a cleaner way to get ic? */
+	      case 2: ic = (nx - i) % nx; break;
+	      case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
+	      default: ic = 0; break;
+	  }
+	  for (j = n_last - 1; j >= n_last_stored; --j) {
+	       int jc = (n_last - j) % n_last;
+	       field[i*n_last+j] = field[ic*n_last_stored+jc];
+	  }
+	  for (; j >= 0; --j) {
+	       field[i*n_last+j] = field[i*n_last_stored+j];
+	  }
+     }
+     /* in this loop, ic is in the half already copied above: */
+     for (; i >= 0; --i) {
+	  int ic;  /* conjugated index to i */
+	  switch (rank) {
+	      case 2: ic = (nx - i) % nx; break;
+	      case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
+	      default: ic = 0; break;
+	  }
+	  for (j = n_last_stored - 1; j >= 0; --j) {
+	       field[i*n_last+j] = field[i*n_last_stored+j];
+	  }
+	  for (j = n_last - 1; j >= n_last_stored; --j) {
+	       int jc = (n_last - j) % n_last;
+	       field[i*n_last+j] = field[ic*n_last+jc];
+	  }
+     }
+
+#  undef ASSIGN_V
+#  undef ASSIGN_CV
+
+#endif /* ! SCALAR_COMPLEX */
+}
+
+
+/**************************************************************************/
 
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
 
@@ -445,7 +595,7 @@ void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
           cur_band_start += d->num_fft_bands) {
           int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
 	  
-	  /* first, compute fft_data = curl(Xin): */
+	  /* first, compute fft_data = u x Xin: */
 	  for (i = 0; i < d->other_dims; ++i)
 	       for (j = 0; j < d->last_dim; ++j) {
 		    int ij = i * d->last_dim + j;

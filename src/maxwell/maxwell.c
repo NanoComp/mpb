@@ -27,6 +27,7 @@
 /* This file is has too many #ifdef's...blech. */
 
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
+#define MAX2(a,b) ((a) > (b) ? (a) : (b))
 
 maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				  int *local_N, int *N_start, int *alloc_N,
@@ -79,25 +80,31 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->fft_output_size = fft_data_size = nx * ny * nz;
      d->plan = fftwnd_create_plan_specific(rank, n, FFTW_FORWARD,
 					   FFTW_ESTIMATE | FFTW_IN_PLACE,
-					   (FFTW_COMPLEX*) d->fft_data,
+					   (fftw_complex*) d->fft_data,
 					   3 * d->num_fft_bands,
-					   (FFTW_COMPLEX*) d->fft_data,
+					   (fftw_complex*) d->fft_data,
 					   3 * d->num_fft_bands);
      d->iplan = fftwnd_create_plan_specific(rank, n, FFTW_BACKWARD,
 					    FFTW_ESTIMATE | FFTW_IN_PLACE,
-					    (FFTW_COMPLEX*) d->fft_data,
+					    (fftw_complex*) d->fft_data,
 					    3 * d->num_fft_bands,
-					    (FFTW_COMPLEX*) d->fft_data,
+					    (fftw_complex*) d->fft_data,
 					    3 * d->num_fft_bands);
 #    else /* not SCALAR_COMPLEX */
      d->last_dim_size = 2 * (d->last_dim / 2 + 1);
-     d->fft_output_size = fft_data_size = d->other_dims * d->last_dim_size;
-     d->plan = rfftwnd_create_plan(rank, n, FFTW_FORWARD,
-				   FFTW_ESTIMATE | FFTW_IN_PLACE,
-				   REAL_TO_COMPLEX);
-     d->plan = rfftwnd_create_plan(rank, n, FFTW_BACKWARD,
-				   FFTW_ESTIMATE | FFTW_IN_PLACE,
-				   COMPLEX_TO_REAL);
+     d->fft_output_size = fft_data_size = d->other_dims * (d->last_dim_size/2);
+     d->plan = rfftwnd_create_plan_specific(rank, n, FFTW_COMPLEX_TO_REAL,
+					    FFTW_ESTIMATE | FFTW_IN_PLACE,
+					    (fftw_real*) d->fft_data,
+					    3 * d->num_fft_bands,
+					    (fftw_real*) d->fft_data,
+					    3 * d->num_fft_bands);
+     d->iplan = rfftwnd_create_plan_specific(rank, n, FFTW_REAL_TO_COMPLEX,
+					     FFTW_ESTIMATE | FFTW_IN_PLACE,
+					     (fftw_real*) d->fft_data,
+					     3 * d->num_fft_bands,
+					     (fftw_real*) d->fft_data,
+					     3 * d->num_fft_bands);
 #    endif /* not SCALAR_COMPLEX */
 #  endif /* HAVE_FFTW */
 
@@ -146,9 +153,14 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
      CHK_MALLOC(d->eps_inv, symmetric_matrix, d->fft_output_size);
 
-     /* a scratch output array is required because the "ordinary" arrays
-	are not in a cartesian basis (or even a constant basis). */
-     CHK_MALLOC(d->fft_data, scalar, 3 * d->num_fft_bands * fft_data_size);
+     /* A scratch output array is required because the "ordinary" arrays
+	are not in a cartesian basis (or even a constant basis).   We also
+        require that this scratch array is big enough to hold local_N
+        complex vectors, so that we can use it to compute fields for output. */
+     fft_data_size *= d->num_fft_bands;
+     fft_data_size = MAX2(*local_N, fft_data_size);
+     CHK_MALLOC(d->fft_data, scalar,
+		3 * fft_data_size * (sizeof(scalar_complex) / sizeof(scalar)));
 
      CHK_MALLOC(d->k_plus_G, k_data, *local_N);
      CHK_MALLOC(d->k_plus_G_normsqr, real, *local_N);

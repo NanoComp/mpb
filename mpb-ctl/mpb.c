@@ -958,7 +958,7 @@ void fix_field_phase(void)
      real sq_sum[2] = {0,0}, maxabs = 0.0;
      int maxabs_index = 0, maxabs_sign = 1;
      double theta;
-     scalar phase;
+     scalar_complex phase;
 
      if (!curfield || !strchr("dhe", curfield_type)) {
           fprintf(stderr, "The D, H, or E field must be loaded first.\n");
@@ -970,10 +970,10 @@ void fix_field_phase(void)
 	the real parts of the components.  Equivalently, maximize
 	the real part of the sum of the squares. */
      for (i = 0; i < N; ++i) {
-	  scalar sq;
-	  ASSIGN_MULT(sq, curfield[i], curfield[i]);
-	  sq_sum[0] += SCALAR_RE(sq);
-	  sq_sum[1] += SCALAR_IM(sq);
+	  real a,b;
+	  a = curfield[i].re; b = curfield[i].im;
+	  sq_sum[0] += a*a - b*b;
+	  sq_sum[1] += 2*a*b;
      }
      MPI_Allreduce(sq_sum, sq_sum, 2, SCALAR_MPI_TYPE,
                    MPI_SUM, MPI_COMM_WORLD);
@@ -981,7 +981,8 @@ void fix_field_phase(void)
 	the sum of the squares.  i.e., maximize:
 	    cos(2*theta)*sq_sum[0] - sin(2*theta)*sq_sum[1] */
      theta = 0.5 * atan2(-sq_sum[1], sq_sum[0]);
-     ASSIGN_SCALAR(phase, cos(theta), sin(theta));
+     phase.re = cos(theta);
+     phase.im = sin(theta);
 
      /* Next, fix the overall sign.  We do this by first computing the
 	maximum |real part| of the jmax component (after multiplying
@@ -993,16 +994,14 @@ void fix_field_phase(void)
          positive, as that would be ambiguous in the common case of an
          oscillating field within the unit cell.) */
      for (i = 0; i < N; ++i) {
-	  real r;
-	  ASSIGN_MULT_RE(r, curfield[i], phase);  r = fabs(r);
+	  real r = fabs(curfield[i].re * phase.re - curfield[i].im * phase.im);
 	  if (r > maxabs)
 	       maxabs = r;
      }
      MPI_Allreduce(&maxabs, &maxabs, 1, SCALAR_MPI_TYPE,
 		   MPI_MAX, MPI_COMM_WORLD);
      for (i = N - 1; i >= 0; --i) {
-	  real r;
-	  ASSIGN_MULT_RE(r, curfield[i], phase);
+	  real r = curfield[i].re * phase.re - curfield[i].im * phase.im;
 	  if (fabs(r) >= 0.5 * maxabs) {
 	       maxabs_index = i;
 	       maxabs_sign = r < 0 ? -1 : 1;
@@ -1019,22 +1018,31 @@ void fix_field_phase(void)
 	  MPI_Allreduce(&x, &x, 1, MPI_2INT, MPI_MAXLOC, MPI_COMM_WORLD);
 	  maxabs_index = x.i; maxabs_sign = x.s;
      }
-     ASSIGN_SCALAR(phase, maxabs_sign*cos(theta), maxabs_sign*sin(theta));
+     phase.re *= maxabs_sign;
+     phase.im *= maxabs_sign;
 
      printf("Fixing %c-field (band %d) phase by %g + %gi; max ampl. = %g\n",
 	    curfield_type, curfield_band,
-	    SCALAR_RE(phase), SCALAR_IM(phase), maxabs);
+	    phase.re, phase.im, maxabs);
 
      /* Now, multiply everything by this phase, *including* the
 	stored "raw" eigenvector in H, so that any future fields
 	that we compute will have a consistent phase: */
      for (i = 0; i < N; ++i) {
-	  ASSIGN_MULT(curfield[i], curfield[i], phase);
+	  real a,b;
+	  a = curfield[i].re; b = curfield[i].im;
+	  curfield[i].re = a*phase.re - b*phase.im;
+	  curfield[i].im = a*phase.im + b*phase.re;
      }
+#ifdef SCALAR_COMPLEX
+     /* We can only rotate the phase of the "raw" eigenvector for
+	complex scalar fields.  What should we do for real-amplitude fields?
+	For now, just punt. */
      for (i = 0; i < H.n; ++i) {
           ASSIGN_MULT(H.data[i*H.p + curfield_band - 1], 
 		      H.data[i*H.p + curfield_band - 1], phase);
      }
+#endif
 }
 
 /**************************************************************************/
@@ -1112,9 +1120,8 @@ void output_field_extended(vector3 copiesv, int which_component)
 	  return;
      }
      
-     /* this will need to be fixed for MPI, where we transpose the data,
-	and also for real-to-complex calculations (sigh): */
-#if defined(HAVE_MPI) || ! defined(SCALAR_COMPLEX)
+     /* this will need to be fixed for MPI, where we transpose the data */
+#if defined(HAVE_MPI)
 #  error broken, please fix
 #endif
      dims[0] = mdata->nx;
@@ -1124,6 +1131,8 @@ void output_field_extended(vector3 copiesv, int which_component)
      local_x_start = mdata->local_x_start;
      
      if (strchr("dhe", curfield_type)) { /* outputting vector field */
+	  maxwell_vectorfield_makefull(mdata, curfield);
+
 	  sprintf(fname, "%c.k%02d.b%02d",
 		  curfield_type, kpoint_index, curfield_band);
 	  if (which_component >= 0) {
@@ -1153,6 +1162,8 @@ void output_field_extended(vector3 copiesv, int which_component)
 	  }
      }
      else if (strchr("DHn", curfield_type)) { /* scalar field */
+	  maxwell_scalarfield_makefull(mdata, (real*) curfield);
+
 	  if (curfield_type == 'n') {
 	       sprintf(fname, "epsilon");
 	       sprintf(description, "dielectric function, epsilon");
@@ -1192,6 +1203,14 @@ void output_field_extended(vector3 copiesv, int which_component)
 
 	  matrixio_close(file_id);
      }
+
+#ifndef SCALAR_COMPLEX
+     /* If we are using real-amplituded fields, then change curfield_type
+	to reflect the fact that we have destroyed curfield.  (Or changed
+	its format, anyway, with maxwell_*_makefull above.)  If people
+	complain about this, we can always convert curfield back. */
+     curfield_type = '-';
+#endif
 }
 
 /**************************************************************************/
@@ -1202,7 +1221,7 @@ void output_field_extended(vector3 copiesv, int which_component)
    geometry list. */
 number compute_energy_in_object_list(geometric_object_list objects)
 {
-     int i, j, k, n1, n2, n3;
+     int i, j, k, n1, n2, n3, n_other, n_last, rank;
      real s1, s2, s3, c1, c2, c3;
      real *energy = (real *) curfield;
      real energy_sum = 0;
@@ -1212,14 +1231,11 @@ number compute_energy_in_object_list(geometric_object_list objects)
           return 0.0;
      }
 
-     /* this will need to be fixed for MPI, where we transpose the data,
-	and also for real-to-complex calculations: */
-#if defined(HAVE_MPI) || ! defined(SCALAR_COMPLEX)
-#  error broken, please fix
-#endif
-     n1 = mdata->nx;
-     n2 = mdata->ny;
-     n3 = mdata->nz;
+     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
+     n_other = mdata->other_dims;
+     n_last = mdata->last_dim_size / (sizeof(scalar_complex) / sizeof(scalar));
+     rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
+
      s1 = geometry_lattice.size.x / n1;
      s2 = geometry_lattice.size.y / n2;
      s3 = geometry_lattice.size.z / n3;
@@ -1227,19 +1243,64 @@ number compute_energy_in_object_list(geometric_object_list objects)
      c2 = geometry_lattice.size.y * 0.5;
      c3 = geometry_lattice.size.z * 0.5;
 
+     /* Here we have different loops over the coordinates, depending
+	upon whether we are using complex or real and serial or
+        parallel transforms.  Each loop must define, in its body,
+        variables (i2,j2,k2) describing the coordinate of the current
+        point, and "index" describing the corresponding index in 
+	the curfield array.
+
+        This was all stolen from maxwell_eps.c...it would be better
+        if we didn't have to cut and paste, sigh. */
+
+#ifdef SCALAR_COMPLEX
+
+#  ifndef HAVE_MPI
+     
      for (i = 0; i < n1; ++i)
 	  for (j = 0; j < n2; ++j)
-	       for (k = 0; k < n3; ++k) {
-		    vector3 p;
-		    int n;
-		    p.x = i * s1 - c1; p.y = j * s2 - c2; p.z = k * s3 - c3;
-		    for (n = objects.num_items - 1; n >= 0; --n)
-			 if (point_in_periodic_fixed_objectp(p,
-							objects.items[n])) {
-			      energy_sum += energy[(i*n2 + j)*n3 + k];
-			      break;
-			 }
-	       }
+	       for (k = 0; k < n3; ++k)
+     {
+	  int i2 = i, j2 = j, k2 = k;
+	  int index = ((i * n2 + j) * n3 + k);
+
+#  else /* HAVE_MPI */
+#    error not yet implemented!
+#  endif
+
+#else /* not SCALAR_COMPLEX */
+
+#  ifndef HAVE_MPI
+
+     for (i = 0; i < n_other; ++i)
+	  for (j = 0; j < n_last; ++j)
+     {
+	  int index = i * n_last + j;
+	  int i2, j2, k2;
+	  switch (rank) {
+	      case 2: i2 = i; j2 = j; k2 = 0; break;
+	      case 3: i2 = i / n2; j2 = i % n2; k2 = j; break;
+	      default: i2 = j; j2 = k2 = 0;  break;
+	  }
+
+#  else /* HAVE_MPI */
+#    error not yet implemented!
+#  endif
+
+#endif /* not SCALAR_COMPLEX */
+
+	  {
+	       vector3 p;
+	       int n;
+	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
+	       for (n = objects.num_items - 1; n >= 0; --n)
+		    if (point_in_periodic_fixed_objectp(p, objects.items[n])) {
+			 energy_sum += energy[index];
+			 break;
+		    }
+	  }
+     }
+
      MPI_Allreduce(&energy_sum, &energy_sum, 1, SCALAR_MPI_TYPE,
                    MPI_SUM, MPI_COMM_WORLD);
      return energy_sum;

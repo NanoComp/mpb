@@ -325,11 +325,16 @@ are:
 <dd>Use single precision (C <code>float</code>) instead of the default
 double precision (C <code>double</code>) for computations.
 
-<p><dt><code>--disable-complex</code>
-<dd>Assume <i>inversion symmetry</i> in the dielectric function,
-allowing us to use real fields (in Fourier space) instead of complex
-fields.  This gives a factor of 2 benefit in speed and memory.
-<i>Not supported yet.</i>
+<p><dt><code>--with-inv-symmetry</code>
+<dd>Assume <a href="user-ref.html#inv-symmetry">inversion symmetry</a>
+in the dielectric function, allowing us to use real fields (in Fourier
+space) instead of complex fields.  This gives a factor of 2 benefit in
+speed and memory.  In this case, the MPB program will be installed as
+<code>mpbi</code> instead of <code>mpb</code>, so that you can have
+versions both with and without inversion symmetry installed at the
+same time.  (If you compile and install the code twice, with and
+without inversion symmetry, you should run <code>make distclean</code>
+in between.)
 
 <p><dt><code>--without-fastblas</code>
 <dt><code>--with-fastblas=<i>lib</i></code>
