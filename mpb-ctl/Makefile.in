@@ -135,10 +135,11 @@ install-mpb: $(PROGRAM_NAME)
 	$(INSTALL) -m 0644 $(PROGRAM_NAME).1 $(prefix)/man/man1
 
 install-mpb-split:
-	mpb_name=`echo mpb | sed '$(transform)'`
 	rm -f mpb-split-tmp
-	sed "s%\./mpb%$$mpb_name%g" mpb-split > mpb-split-tmp
-	$(INSTALL) -m 0755 -s mpb-split-tmp $(prefix)/bin/$${mpb_name}-split
+	mpb_name=`echo mpb | sed '$(transform)'`; \
+	sed "s%\./mpb%$$mpb_name%g" mpb-split > mpb-split-tmp; \
+	$(INSTALL) -m 0755 mpb-split-tmp $(prefix)/bin/$${mpb_name}-split
+	rm -f mpb-split-tmp
 
 clean:
 	rm -f $(ALL_OBJECTS) ctl-io.c ctl-io.h main.c geom.c \
