@@ -1074,8 +1074,7 @@ void get_epsilon(void)
 
      N = mdata->fft_output_size;
      last_dim = mdata->last_dim;
-     last_dim_stored =
-	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     last_dim_stored = mdata->last_dim_size / 2;
      for (i = 0; i < N; ++i) {
           epsilon[i] = 3.0 / (mdata->eps_inv[i].m00 +
                               mdata->eps_inv[i].m11 +
@@ -1145,8 +1144,7 @@ number_list compute_field_energy(void)
 
      N = mdata->fft_output_size;
      last_dim = mdata->last_dim;
-     last_dim_stored =
-	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     last_dim_stored = mdata->last_dim_size / 2;
      for (i = 0; i < N; ++i) {
 	  scalar_complex field[3];
 	  real
@@ -1375,8 +1373,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 
      N = mdata->fft_output_size;
      last_dim = mdata->last_dim;
-     last_dim_stored =
-	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     last_dim_stored = mdata->last_dim_size / 2;
      for (i = 0; i < N; ++i) {
 	  epsilon = 3.0 / (mdata->eps_inv[i].m00 +
 			   mdata->eps_inv[i].m11 +
@@ -1678,7 +1675,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
 
      n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
      n_other = mdata->other_dims;
-     n_last = mdata->last_dim_size / (sizeof(scalar_complex) / sizeof(scalar));
+     n_last = mdata->last_dim_size / 2;
      last_dim = mdata->last_dim;
      rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
 
@@ -1742,14 +1739,14 @@ number compute_energy_in_object_list(geometric_object_list objects)
 
 #  else /* HAVE_MPI */
 
-     local_n2 = md->local_ny;
-     local_y_start = md->local_y_start;
+     local_n2 = mdata->local_ny;
+     local_y_start = mdata->local_y_start;
 
      /* For a real->complex transform, the last dimension is cut in
 	half.  For a 2d transform, this is taken into account in local_ny
 	already, but for a 3d transform we must compute the new n3: */
      if (n3 > 1)
-	  local_n3 = md->last_dim_size / (sizeof(scalar_complex) / sizeof(scalar));
+	  local_n3 = mdata->last_dim_size / 2;
      else
 	  local_n3 = 1;
      
