@@ -152,14 +152,13 @@ if test "$save_LIBS" = "$LIBS"; then
 fi
 
 if test "$save_LIBS" = "$LIBS"; then
-	# Optimized BLAS for Pentium Pro (from ASCII Red project):
-	# (see http://www.cs.utk.edu/~ghenry/distrib/)
-	AC_CHECK_LIB(blasppro1.1o,main)
-fi
-
-if test "$save_LIBS" = "$LIBS"; then
 	# Checks for ATLAS BLAS library:
-	AC_CHECK_LIB(atlas, main)
+	AC_CHECK_LIB(atlas, ATL_xerbla)
+	if test "$save_LIBS" != "$LIBS"; then
+		# check for other atlas libs:
+		AC_CHECK_LIB(cblas, cblas_dgemm)
+		AC_CHECK_LIB(f77blas, main)
+	fi
 fi
 
 if test "$save_LIBS" = "$LIBS"; then
@@ -168,9 +167,20 @@ if test "$save_LIBS" = "$LIBS"; then
 	AC_CHECK_LIB(sgemm, main)
 fi
 
+if test "$save_LIBS" = "$LIBS"; then
+	# Optimized BLAS for Pentium Pro (from ASCII Red project):
+	# (see http://www.cs.utk.edu/~ghenry/distrib/)
+	AC_CHECK_LIB(blasppro1.1o,main)
+fi
+
 # ----------------------------------------------------------------------
 # Checks for LAPACK library
 AC_CHECK_LIB(lapack, main)
+
+# check for ATLAS LAPACK replacements functions:
+if test -n "`echo $LIBS | grep atlas`"; then
+	AC_CHECK_LIB(atlaslapack, main)
+fi
 
 # ----------------------------------------------------------------------
 # Check for HDF5 library
