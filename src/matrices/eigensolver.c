@@ -164,7 +164,7 @@ static real linmin(real *improvement,
 		   real tolerance,
 		   real (*func) (real *df, real x, void *data), void *data)
 {
-     real x_prev, x, dx, f, df, f_x0, df_x0, f_xmax, df_xmax, s, f_xstart;
+     real x_prev, x, dx, f, df, f_x0, df_x0, f_xmax, df_xmax, s, f_xstart=0;
      int eval_count = 0, is_xstart;
 
      CHECK(df_xmin * (x0 - xmin) < 0.0, "linmin: bad initial guess!");
@@ -190,22 +190,18 @@ static real linmin(real *improvement,
 	  }
 	  if (x*s <= xmax*s) {
 	       xmin = xmin2; f_xmin = f_xmin2; df_xmin = df_xmin2;
-	       xmax = x; f_xmax = f; df_xmax = df;
 	       break;
 	  }
 	  x0 = 0.5 * (x0 + xmin);
      } while (fabs(x0 - xmin) > tolerance * (fabs(x0) + tolerance));
+     xmax = x; f_xmax = f; df_xmax = df;
      CHECK(fabs(x0 - xmin) > tolerance * (fabs(x0) + tolerance),
 	   "linmin: failed to bracket minimum!");
 
      if (x0*s <= xmin*s || x0*s >= xmax*s)
 	  x0 = 0.5 * (xmin + xmax);
 
-     /* Now, find the root of the derivative by Ridder's Method.
-
-	Replace this with a more robust algorithm at some point so
-	that we don't accidentally converge to a maximum?  (If there
-	is one between xmin and xmax.)  */
+     /* Now, find the root of the derivative by Ridder's Method: */
 
      if (xmin > xmax) {
 	  x = xmin; f = f_xmin; df = df_xmin;
@@ -308,7 +304,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      real theta, prev_theta = 0.5;
      int i, iteration = 0;
      mpiglue_clock_t prev_feedback_time;
-     double time_AZ, time_KZ, time_ZtZ, time_ZtW, time_ZS, time_linmin;
+     real time_AZ, time_KZ=0, time_ZtZ, time_ZtW, time_ZS, time_linmin=0;
      real linmin_improvement;
      sqmatrix YtAYU, DtAD, symYtAD, YtY, U, DtD, symYtD, S1, S2, S3;
      trace_func_data tfd;
@@ -593,7 +589,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  /* Finally, we use the times for the various operations to
 	     help us pick an algorithm for the next iteration: */
 	  {
-	       double t_exact, t_approx;
+	       real t_exact, t_approx;
 	       t_exact = EXACT_LINMIN_TIME(time_AZ, time_KZ, time_ZtW,
 					   time_ZS, time_ZtZ, time_linmin);
 	       t_approx = APPROX_LINMIN_TIME(time_AZ, time_KZ, time_ZtW,
@@ -602,6 +598,14 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    t_exact += time_ZtW + time_ZS;
 		    t_approx += time_ZtW + time_ZS;
 	       }
+
+	       /* Sum the times over the processors so that all the
+		  processors compare the same, average times. */
+	       MPI_Allreduce(&t_exact, &t_exact, 1, SCALAR_MPI_TYPE,
+			     MPI_SUM, MPI_COMM_WORLD);
+	       MPI_Allreduce(&t_approx, &t_approx, 1, SCALAR_MPI_TYPE,
+			     MPI_SUM, MPI_COMM_WORLD);
+
 	       if (!(flags & EIGS_FORCE_EXACT_LINMIN) &&
 		   linmin_improvement > 0 &&
 		   linmin_improvement <= APPROX_LINMIN_IMPROVEMENT_THRESHOLD &&
