@@ -867,20 +867,6 @@ that calls all of them in sequence, but only at the specified
 
 </dl>
 
-<h4>Outputting multiple periods</h4>
-
-<p>By default, all of these functions output the fields in only a
-single unit cell.  However, you can change this by setting the
-variable <code>output-copies</code> to <code>(list <i>nx ny
-nz</i>)</code> indicating the number of periods to output along each
-lattice direction (just as for <code>output-field</code>, below).
-All of the above output functions will output the number of periods
-indicated by <code>output-copies</code>, and that also includes the
-dielectric function that is output automatically by <code>run</code>.
-
-<p>This, of course, doesn't affect any band functions that you write
-"manually" using the <code>output-field</code> function below.
-
 <h3><a name="field">Field manipulation functions</a></h3>
 
 <p>The Photonic-Bands package provides a number of ways to take the
