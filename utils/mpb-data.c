@@ -30,9 +30,15 @@
 
 int verbose = 0;
 
-/* a macro to set x = fractional part of x input, xi = integer part,
-   with 0 <= x < 1.0. */
-#define MODF_POSITIVE(x, xi) { x=modf(x, &xi); if (x<0){ x +=1.0; xi -=1.0; } }
+/* A macro to set x = fractional part of x input, xi = integer part,
+   with 0 <= x < 1.0.   Note that we need the second test (if x >= 1.0)
+   below, because x may start out as -0 or -1e-23 or something so that
+   it is < 0 but x + 1.0 == 1.0, thanks to the wonders of floating point.
+   (This has actually happened, on an Alpha.) */
+#define MODF_POSITIVE(x, xi) { \
+     x=modf(x, &xi); \
+     if (x < 0) { x += 1.0; if (x >= 1.0) x = 0; else xi -= 1.0; } \
+}
 
 #define ADJ_POINT(i1, i2, nx, dx, xi, xi2) { \
      if (dx >= 0.0) { \
