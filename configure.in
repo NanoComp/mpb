@@ -77,6 +77,7 @@ if test -z "`echo $LIBS | grep fftw`"; then
 fi
 
 dnl Checks for BLAS & LAPACK libraries:
+AC_CHECK_LIB(blasppro1,main)
 AC_CHECK_LIB(blas, main)
 AC_CHECK_LIB(lapack, main)
 
