@@ -1,0 +1,28 @@
+In this directory are datatypes and subroutines to handle matrix types
+and operations common to iterative block eigensolver algorithms.
+
+Such algorithms solve for the first p eigenstates of an n x n (sparse)
+matrix A.  This corresponds to minimizing Yt*A*Y under the constraint
+Yt*Y==1, where Y is an n x p matrix whose rows are the eigenvectors
+and Yt is its adjoint.  The components of Y are, in general, complex
+vectors of length c.
+
+We define two datatypes:
+
+evectmatrix -- An (N x c) x p matrix (row-major) whose columns are
+               the eigenvects.  n = localN*c rows are stored local
+               to the current process.
+
+sqmatrix -- a p x p matrix.  These are typically used to hold things
+            like Yt*Y.
+
+The main reason for having two separate datatypes is that, on a
+parallel machine, evectmatrix's are distributed while sqmatrix's
+are not.  (In particular, evectmatrix's are distributed across
+their rows.)
+
+Various operations are defined on these matrices (multiplication, a X
++ Y, etcetera, typically using BLAS routines internally).  The
+sqmatrix type also has operations like (dense) inversion and
+diagonalization (based on LAPACK).  Together, these operations can be
+used to easily implement most eigensolver algorithms.
