@@ -171,7 +171,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 
 #    else /* HAVE_MPI */
 
-     CHECK(dist == howmany && stride == 1,
+     CHECK(stride == howmany && dist == 1,
 	   "weird strides and dists don't work with fftwnd_mpi");
 
      fftwnd_mpi(dir < 0 ? d->plan : d->iplan,
