@@ -418,7 +418,139 @@ distinguish small differences in radius.
 
 <p>As another example, one which does not require so much Scheme
 knowledge, let's consider the problem of finding a point-defect state
-in our square lattice of rods.
+in our square lattice of rods.  This is a state that is localized in a
+small region by creating a point defect in the crystal--e.g., by
+removing a single rod.  The resulting mode will have a frequency
+within, and be confined by, the gap.
+
+<p>To compute this, we need a supercell of bulk crystal, within which
+to put the defect--we will use a 5x5 cell of rods.  To do this, we
+must first increase the size of the lattice by five, and then add all
+of the rods.  We create the lattice by:
+
+<pre>
+(set! geometry-lattice (make lattice (size 5 5 1)))
+</pre>
+
+<p>Here, we have used the default orthogonal basis, but have changed
+the size of the cell.  To populate the cell, we could specify all 25
+rods manually, but that would be tedious--and any time you find
+yourself doing something tedious in a programming language, you're
+making a mistake.  A better approach would be to write a loop, but in
+fact this has already been done for you.  Photonic-Bands provides a
+function, <code>geometric-objects-lattice-duplicates</code>, that
+duplicates a list of objects over the lattice:
+
+<pre>
+(set! geometry (geometric-objects-lattice-duplicates geometry))
+</pre>
+
+<p>There, now the <code>geometry</code> list contains 25 rods--the
+originaly <code>geometry</code> list (which contained one rod,
+remember) duplicated over the 5x5 lattice.
+
+<p>To remove a rod, we'll just add another rod in the center of the
+cell with a dielectric constant of 1.  When objects overlap, the later
+object in the list takes precedence, so we have to put the new rod at
+the end of <code>geometry</code>:
+
+<pre>
+(set! geometry (append geometry 
+		       (list (make cylinder (center 0 0 0) 
+				   (radius 0.2) (height infinity)
+				   (material air)))))
+</pre>
+
+<p>Here, we've used the Scheme <code>append</code> function to combine
+two lists, and have also snuck in the predefined material type
+<code>air</code> (which has an epsilon of 1).
+
+<p>To accomodate the larger lattice, the grid size must be increased,
+although we'll be frugal and only use 16 points per cell instead of 32
+as before:
+
+<pre>
+(set! grid-size (vector3 (* 16 5) (* 16 5) 1))
+</pre>
+
+<p>Only a single k point is needed for a point-calculation (which, for
+an infinite supercell, would be independent of k):
+
+<pre>
+(set! k-points (list (vector3 0.5 0.5 0)))
+</pre>
+
+<p>Unfortunately, for a supercell the original bands are folded many
+times over (in this case, 25 times), so we need to compute many more
+bands to reach the same frequencies:
+
+<pre>
+(set! num-bands 50)
+</pre>
+
+<p>At this point, we can call <code>(run-tm)</code> to solve for the
+TM bands.  It will take several minutes to compute, so be patient.
+Recall that the gap for this structure was for the frequency range
+0.2812 to 0.4174.  The bands of the solution include exactly one state
+in this frequency range: band 25, with a frequency of
+0.377912021774767.  This is exactly what we should expect--the lowest
+band was folded 25 times into the supercell Brillouin zone, but one of
+these states was pushed up into the gap by the defect.
+
+<p>We haven't yet output any of the fields, but we don't have to
+repeat the run to do so.  The fields from the last k-point computation
+remain in memory and can continue to be accessed and analyzed.  For
+example, to output the electric field of band 25, we just do:
+
+<pre>
+(output-efield 25)
+</pre>
+
+<p>That's right, the output functions that we passed to
+<code>(run)</code> in the first example are just functions of the band
+index that are called on each band.  We can do other computations too,
+like compute the fraction of the electric field energy near the defect
+cylinder (within a radius 1.0 of the origin):
+
+<pre>
+(get-dfield 25)  ; compute the D field for band 25
+(compute-field-energy)  ; compute the energy density from D
+(compute-energy-in-objects (make cylinder (center 0 0 0)
+				 (radius 1.0) (height infinity)
+				 (material air)))
+</pre>
+
+<p>The result is <code>0.624649427879962</code>, or over 62% of the
+field energy in this localized region; the field decays exponentially
+into the bulk crystal.  The full range of available functions is
+described in the <a href="user-ref.html">reference section</a>, but
+the typical sequence is to first load a field with a <code>get-</code>
+function and then to call other functions to perform computations and
+transformations on it.
+
+<p>Instead of computing all those bands, we can instead take advantage
+of a special feature of the Photonic-Bands software that allows you to
+compute the bands closest to a "target" frequency, rather than the
+bands with the lowest frequencies.  One uses this feature by setting
+the <code>target-freq</code> variable to something other than zero
+(e.g. the mid-gap frequency).  In order to get accurate results, it's
+currently also necessary to decrease the <code>tolerance</code>
+variable, which controls when convergence is judged to have occurred,
+from its default value of <code>1e-4</code>:
+
+<pre>
+(set! num-bands 1)  ; only need to compute a single band, now!
+(set! target-freq (/ (+ 0.2812 0.4174) 2))
+(set! tolerance 1e-8)
+</pre>
+
+<p>Now, we just call <code>(run-tm)</code> as before.  Convergence
+requires more iterations this time, both because we've decreased the
+tolerance and because of the nature of the eigenproblem that is now
+being solved, but only by about 3-4 times in this case.  Since we now
+have to compute only a single band, however, we arrive at an answer
+much more quickly than before.  The result, of course, is the defect
+band, with a frequency of 0.377912.
 
 <h2>emacs and ctl</h2>
 
@@ -434,6 +566,9 @@ with "<code>.ctl</code>" as well, add the following lines to your
     nil
   (nconc auto-mode-alist '(("\\.ctl" . scheme-mode))))
 </pre>
+
+<p>(Incidentally, <code>emacs</code> scripts are written in "elisp," a
+language closely related to Scheme.)
 
 <hr>
 Go to the <a href="user-ref.html">next</a>, <a
