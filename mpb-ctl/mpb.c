@@ -1604,9 +1604,9 @@ matrix3x3 get_epsilon_inverse_tensor_im_point(vector3 p)
 	  CASSIGN_CONJ(eps_inv.m02, eps_inv.m02);
 	  CASSIGN_CONJ(eps_inv.m12, eps_inv.m12);
      }
-     eps_inv3x3.c0.y = eps_inv3x3.c1.x = CSCALAR_IM(eps_inv.m01);
-     eps_inv3x3.c0.z = eps_inv3x3.c2.x = CSCALAR_IM(eps_inv.m02);
-     eps_inv3x3.c1.z = eps_inv3x3.c2.y = CSCALAR_IM(eps_inv.m12);
+     eps_inv3x3.c0.y = -(eps_inv3x3.c1.x = CSCALAR_IM(eps_inv.m01));
+     eps_inv3x3.c0.z = -(eps_inv3x3.c2.x = CSCALAR_IM(eps_inv.m02));
+     eps_inv3x3.c1.z = -(eps_inv3x3.c2.y = CSCALAR_IM(eps_inv.m12));
 #endif
      return eps_inv3x3;
 }
