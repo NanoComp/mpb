@@ -36,13 +36,13 @@ static void assign_t2c(scalar *a, const k_data k,
 
      ASSIGN_SCALAR(a[0],
 		   SCALAR_RE(v0)*k.mx + SCALAR_RE(v1)*k.nx,
-		   SCALAR_IM(v0)*k.mx - SCALAR_IM(v1)*k.nx);
+		   SCALAR_IM(v0)*k.mx + SCALAR_IM(v1)*k.nx);
      ASSIGN_SCALAR(a[1],
 		   SCALAR_RE(v0)*k.my + SCALAR_RE(v1)*k.ny,
-		   SCALAR_IM(v0)*k.my - SCALAR_IM(v1)*k.ny);
+		   SCALAR_IM(v0)*k.my + SCALAR_IM(v1)*k.ny);
      ASSIGN_SCALAR(a[2],
 		   SCALAR_RE(v0)*k.mz + SCALAR_RE(v1)*k.nz,
-		   SCALAR_IM(v0)*k.mz - SCALAR_IM(v1)*k.nz);
+		   SCALAR_IM(v0)*k.mz + SCALAR_IM(v1)*k.nz);
 }
 
 /* assign a = k x v (cross product), going from transverse to
