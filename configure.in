@@ -22,6 +22,7 @@ AC_MSG_CHECKING([for vendor's cc to be used instead of gcc])
 AC_MSG_RESULT()
 AC_CHECK_PROGS(CC, cc xlc) # prefer vendor cc, to stay in sync with Fortran
 AC_PROG_CC
+ifdef([AC_PROG_CC_STDC],AC_PROG_CC_STDC)
 
 # Checks for programs.
 AC_PROG_RANLIB
