@@ -493,15 +493,23 @@ void solve_kpoint(vector3 kvector)
      if (verbose)
 	  flags |= EIGS_VERBOSE;
 
-     /* FIXME: constant-u (zero frequency) bands at k=0 could be handled
+     /* constant-u (zero frequency) bands at k=0 are handled
         specially, so we should remove them from the solutions for the
         eigensolver: */
-     ib0 = 0; /* solve for all bands */
+     if (edata->zero_k) {
+          int in, ip;
+          ib0 = elastic_zero_k_num_const_bands(V, edata);
+	  elastic_zero_k_set_const_bands(V, edata);
+	  for (ib = 0; ib < ib0; ++ib)
+               eigvals[ib] = 0;
+     }
+     else
+	  ib0 = 0; /* solve for all bands */
 
      /* Set up deflation data: */
      if (V.data != Vblock.data) {
 	  deflation.Y = V;
-	  deflation.p = 0;
+	  deflation.p = ib0;
 	  CHK_MALLOC(deflation.S, scalar, V.p * Vblock.p);
 	  CHK_MALLOC(deflation.S2, scalar, V.p * Vblock.p);
      }
@@ -532,8 +540,8 @@ void solve_kpoint(vector3 kvector)
 	       for (in = 0; in < Vblock.n; ++in)
 		    for (ip = 0; ip < Vblock.p; ++ip)
 			 Vblock.data[in * Vblock.p + ip] =
-			      V.data[in * V.p + ip + (ib-ib0)];
-	       deflation.p = ib-ib0;
+			      V.data[in * V.p + ip + ib];
+	       deflation.p = ib;
 	       if (deflation.p > 0)
 		    constraints = evect_add_constraint(constraints,
 						       deflation_constraint,
@@ -560,7 +568,7 @@ void solve_kpoint(vector3 kvector)
 	       int in, ip;
 	       for (in = 0; in < Vblock.n; ++in)
 		    for (ip = 0; ip < Vblock.p; ++ip)
-			 V.data[in * V.p + ip + (ib-ib0)] =
+			 V.data[in * V.p + ip + ib] =
 			      Vblock.data[in * Vblock.p + ip];
 	  }
 

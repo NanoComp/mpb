@@ -62,6 +62,7 @@ elastic_data *create_elastic_data(int nx, int ny, int nz,
      elastic_set_num_bands(d, num_bands);
 
      d->current_k[0] = d->current_k[1] = d->current_k[2] = 0.0;
+     d->zero_k = 1;
      d->parity = NO_PARITY;
 
      d->last_dim_size = d->last_dim = n[rank - 1];
@@ -263,6 +264,8 @@ void update_elastic_data_k(elastic_data *d, real k[3],
      d->current_k[0] = kx;
      d->current_k[1] = ky;
      d->current_k[2] = kz;
+
+     d->zero_k = kx == 0.0 && ky == 0.0 && kz == 0.0;
 
      /* make sure current parity is still valid: */
      set_elastic_data_parity(d, d->parity);

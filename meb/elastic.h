@@ -92,6 +92,7 @@ typedef struct {
 
      real G[3][3]; /* G vectors (in cartesian) */
      real current_k[3];  /* (in cartesian basis) */
+     int zero_k;
      int parity;
 
 #ifdef HAVE_FFTW
@@ -158,6 +159,9 @@ extern void elastic_scalarfield_otherhalf(elastic_data *d, real *field);
 void assign_symmatrix_vector(scalar_complex *newv,
                              const symmetric_matrix matrix,
                              const scalar_complex *oldv);
+
+extern void elastic_compute_fft(int dir, elastic_data *d, scalar *array,
+				int howmany, int stride, int dist);
 
 extern void elastic_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 			     int is_current_eigenvector, evectmatrix Work);
