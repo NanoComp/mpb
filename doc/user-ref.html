@@ -647,15 +647,16 @@ is called exactly once per k-point.
 they constrain their solutions to have even and odd symmetry with
 respect to the z=0 plane.  You should use these functions
 <em>only</em> for structures that are symmetric through the z=0 mirror
-plane, where the third basis vector is in the z direction (0,0,1), and
-when the k vectors are in the xy plane.  Under these conditions, the
-eigenmodes always have either even or odd symmetry.  In two
-dimensions, even/odd parities are equivalent to TE/TM polarizations,
-respectively (and are often strongly analogous even in 3d).  It is
-useful in 2d and in 3d for structures such as waveguides and
-photonic-crystal slabs.  (For example, see the paper by S. G. Johnson
-<i>et al.</i>, "Guided modes in photonic crystal slabs," <i>PRB</i>
-<b>60</b>, 5751, August 1999.)
+plane, where the third basis vector is in the z direction (0,0,1) and
+is orthogonal to the other two basis vectors, and when the k vectors
+are in the xy plane.  Under these conditions, the eigenmodes always
+have either even or odd symmetry.  In two dimensions, even/odd
+parities are equivalent to TE/TM polarizations, respectively (and are
+often strongly analogous even in 3d).  Such a symmetry classification
+is useful for structures such as waveguides and photonic-crystal slabs.
+(For example, see the paper by S. G. Johnson <i>et al.</i>, "Guided
+modes in photonic crystal slabs," <i>PRB</i> <b>60</b>, 5751, August
+1999.)
 
 <p><dt><code>(run-te <i>band-func ...</i>), (run-tm <i>band-func ...</i>)</code>
 <dd>These are the same as the <code>run</code> function except that
@@ -683,7 +684,8 @@ with an error.
 have even and odd symmetry with respect to the y=0 plane.  You should
 use these functions <em>only</em> for structures that are symmetric
 through the y=0 mirror plane, where the second basis vector is in the
-y direction (0,1,0), and when the k vectors are in the xz plane.
+y direction (0,1,0) and is orthogonal to the other two basis vectors,
+and when the k vectors are in the xz plane.
 
 <p><dt><code>run-yeven-zeven</code>, <code>run-yeven-zodd</code>, <code>run-yodd-zeven</code>, <code>run-yodd-zodd</code>, <code>run-te-yeven</code>, <code>run-te-yodd</code>, <code>run-tm-yeven</code>, <code>run-tm-yodd</code>
 <dd>These <code>run</code>-like functions combine the
