@@ -89,8 +89,8 @@ main.o: main.c ctl-io.h
 mpb.o: mpb.c ctl-io.h mpb.h
 epsilon.o: epsilon.c ctl-io.h mpb.h
 fields.o: fields.c ctl-io.h mpb.h
-matrix-smob.o: matrix-smob.c matrix-smob.h smob.h ctl-io.h mpb.h
-field-smob.o: field-smob.c field-smob.h smob.h ctl-io.h mpb.h
+matrix-smob.o: matrix-smob.c matrix-smob.h my-smob.h ctl-io.h mpb.h
+field-smob.o: field-smob.c field-smob.h my-smob.h ctl-io.h mpb.h
 
 ctl-io.c ctl-io.h: $(SPECIFICATION_FILE)
 	$(GEN_CTL_IO) $(SPECIFICATION_FILE) $(LIBCTL_DIR)

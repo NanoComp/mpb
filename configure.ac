@@ -260,6 +260,8 @@ else
 	fi
 fi
 
+AC_CHECK_FUNCS(scm_make_smob_type)
+
 # Check how to activate Guile readline support:
 
 ACTIVATE_READLINE=""

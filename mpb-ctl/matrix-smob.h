@@ -19,7 +19,7 @@
 #define MATRIX_SMOB_H
 
 #include "ctl-io.h"
-#include "smob.h"
+#include "my-smob.h"
 
 #include <matrices.h>
 

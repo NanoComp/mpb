@@ -28,9 +28,6 @@
 
 #include "mpb.h"
 
-/* null mark function, for smobs containing no SCM objects */
-static SCM mark_null(SCM obj) { (void) obj; return SCM_BOOL_F; }
-
 /*************************************************************************/
 
 long scm_tc16_smob_field_smob = 0;
@@ -76,8 +73,6 @@ static int print_field_smob(SCM obj, SCM port, scm_print_state *pstate)
      return 1;
 }
 
-#define mark_field_smob mark_null
-
 static size_t free_field_smob(SCM obj)
 {
      field_smob *pf = FIELD(obj);
@@ -95,11 +90,17 @@ SCM field2scm(field_smob *pf)
 
 /*************************************************************************/
 
-MAKE_SMOBFUNS(field_smob);
-
 void register_field_smobs(void)
 {
+#ifdef HAVE_SCM_MAKE_SMOB_TYPE
+     scm_tc16_smob_field_smob = scm_make_smob_type("field", 0);
+     scm_set_smob_free(scm_tc16_smob_field_smob, free_field_smob);
+     scm_set_smob_print(scm_tc16_smob_field_smob, print_field_smob);
+#else /* old way to register smobs */
+     MAKE_SMOBFUNS(field_smob);
      REGISTER_SMOBFUNS(field_smob);
+#endif
+
      gh_new_procedure("field?", field_p, 1, 0, 0);
      gh_new_procedure("rscalar-field?", rscalar_field_p, 1, 0, 0);
      gh_new_procedure("cvector-field?", cvector_field_p, 1, 0, 0);
@@ -284,7 +285,7 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 	  list arg_list = SCM_EOL;
 	  SCM result;
 	  for (j = src.num_items - 1; j >= 0; --j) {
-	       SCM item;
+	       SCM item = SCM_EOL;
 	       switch (ps[j]->type) {
 		   case RSCALAR_FIELD_SMOB:
 			item = gh_double2scm(ps[j]->f.rs[i]);
@@ -476,7 +477,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
 
 	       for (ifield = fields.num_items - 1; ifield >= 0; --ifield) {
-		    SCM item;
+		    SCM item = SCM_EOL;
 		    switch (pf[ifield]->type) {
 			case RSCALAR_FIELD_SMOB:
 			     item = gh_double2scm(pf[ifield]->f.rs[index]);

@@ -29,9 +29,6 @@
 
 #include "mpb.h"
 
-/* null mark function, for smobs containing no SCM objects */
-static SCM mark_null(SCM obj) { (void) obj; return SCM_BOOL_F; }
-
 /*************************************************************************/
 
 long scm_tc16_smob_evectmatrix = 0;
@@ -62,8 +59,6 @@ static int print_evectmatrix(SCM obj, SCM port, scm_print_state *pstate)
      scm_putc('>', port);
      return 1;
 }
-
-#define mark_evectmatrix mark_null
 
 static size_t free_evectmatrix(SCM obj)
 {
@@ -103,8 +98,6 @@ static int print_sqmatrix(SCM obj, SCM port, scm_print_state *pstate)
      scm_putc('>', port);
      return 1;
 }
-
-#define mark_sqmatrix mark_null
 
 static size_t free_sqmatrix(SCM obj)
 {
@@ -155,13 +148,23 @@ SCM sqmatrix2scm(sqmatrix m)
 
 /*************************************************************************/
 
-MAKE_SMOBFUNS(evectmatrix);
-MAKE_SMOBFUNS(sqmatrix);
-
 void register_matrix_smobs(void)
 {
+#ifdef HAVE_SCM_MAKE_SMOB_TYPE
+     scm_tc16_smob_evectmatrix = scm_make_smob_type("evectmatrix", 0);
+     scm_set_smob_free(scm_tc16_smob_evectmatrix, free_evectmatrix);
+     scm_set_smob_print(scm_tc16_smob_evectmatrix, print_evectmatrix);
+
+     scm_tc16_smob_sqmatrix = scm_make_smob_type("sqmatrix", 0);
+     scm_set_smob_free(scm_tc16_smob_sqmatrix, free_sqmatrix);
+     scm_set_smob_print(scm_tc16_smob_sqmatrix, print_sqmatrix);
+#else /* old way to register smobs */
+     MAKE_SMOBFUNS(evectmatrix);
+     MAKE_SMOBFUNS(sqmatrix);
      REGISTER_SMOBFUNS(evectmatrix);
      REGISTER_SMOBFUNS(sqmatrix);
+#endif     
+
      gh_new_procedure("evectmatrix?", evectmatrix_p, 1, 0, 0);
      gh_new_procedure("sqmatrix?", sqmatrix_p, 1, 0, 0);
 }

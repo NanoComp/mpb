@@ -18,8 +18,26 @@
 #ifndef SMOB_H
 #define SMOB_H 1
 
+#ifdef HAVE_SCM_MAKE_SMOB_TYPE
+
+/* use new smob functions from Guile 1.4+ */
+#  include <libguile/smob.h>
+
+#define NEWCELL_SMOB(ANSWER,T,PSMOB) \
+     SCM_NEWSMOB(ANSWER, scm_tc16_smob_ ## T, PSMOB)
+
+/* T_SMOB_P(T, X) is true iff X is an instance of the T SMOB type */
+#define T_SMOB_P(T, X) SCM_SMOB_PREDICATE(scm_tc16_smob_ ## T, X)
+
+/* T_SMOB(T, X) returns the T * with the guts of the X instance; it
+   assumes X is a T SMOB instance, and could crash if it is not */
+#define T_SMOB(T, X)  ((T *) SCM_SMOB_DATA(gh_cdr(X)))
+
+#else
+
 /* Thanks to Greg Badros for posting a Guile smob tutorial; see
-   http://sources.redhat.com/ml/guile/1999-04/msg00107.html */
+   http://sources.redhat.com/ml/guile/1999-04/msg00107.html
+   However, this way of creating smobs no longer works as of Guile 1.4. */
 
 #define REGISTER_SMOBFUNS(T) \
   do { scm_tc16_smob_ ## T = scm_newsmob(& T ## _smobfuns); } while (0)
@@ -46,8 +64,10 @@ static scm_smobfuns T ## _smobfuns = { \
    assumes X is a T SMOB instance, and could crash if it is not */
 #define T_SMOB(T, X)  ((T *)SCM2PTR(gh_cdr(X)))
 
+#endif /* ! HAVE_SCM_MAKE_SMOB_TYPE */
+
 /* Since T_SMOB(X) can be dangerous if X is not a T
    object, we also have a SAFE_T_SMOB macro: */
-#define SAFE_T_SMOB(T, X) (T_SMOB_P(T,X)?T_SMOB(T,X):NULL)
+#define SAFE_T_SMOB(T, X) (T_SMOB_P(T,X) ? T_SMOB(T,X) : NULL)
 
 #endif /* SMOB_H */
