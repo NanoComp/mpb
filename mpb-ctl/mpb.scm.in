@@ -159,21 +159,35 @@
 ; Functions to compute and output gaps, given the lists of frequencies
 ; computed at each k point.
 
-; The band-range-data is a list if (min . max) pairs, with each pair
-; describing the frequency range of a band.  Here, we update this data
-; with a new list of band frequencies, and return the new data.  If
-; band-range-data is null or too short, the needed entries will be
-; created.
-(define (update-band-range-data band-range-data freqs)
+; The band-range-data is a list if ((min . k-point) . (max . k-point))
+; pairs, with each pair describing the frequency range of a band and
+; the k-points where it achieves its maximum/minimum.  Here, we update
+; this data with a new list of band frequencies, and return the new
+; data.  If band-range-data is null or too short, the needed entries
+; will be created.
+(define (update-band-range-data band-range-data freqs k-point)
   (if (null? freqs)
       '()
       (let ((br (if (null? band-range-data)
-		    (cons infinity (- infinity))
+		    (cons (cons infinity -1) (cons (- infinity) -1))
 		    (car band-range-data)))
 	    (br-rest (if (null? band-range-data) '() (cdr band-range-data))))
-	(cons (cons (min (car freqs) (car br))
-		    (max (car freqs) (cdr br)))
-	      (update-band-range-data br-rest (cdr freqs))))))
+	(let ((newmin (if (< (car freqs) (caar br))
+			  (cons (car freqs) k-point) (car br)))
+	      (newmax (if (> (car freqs) (cadr br))
+			  (cons (car freqs) k-point) (cdr br))))
+	  (cons (cons newmin newmax)
+		(update-band-range-data br-rest (cdr freqs) k-point))))))
+
+; Output the band range data in a nice format:
+(define (output-band-range-data br-data)
+  (define (obr br i)
+    (if (not (null? br))
+	(begin
+	  (display-many "Band " i " range: " (caaar br) " at " (cdaar br)
+			" to "  (cadar br) " at " (cddar br) "\n")
+	  (obr (cdr br) (+ i 1)))))
+  (obr br-data 1))
 
 ; Output any gaps in the given band ranges, and return a list
 ; of the gaps as a list of (percent freq-min freq-max) lists.
@@ -181,21 +195,22 @@
   (define (ogaps br-cur br-rest i)
     (if (null? br-rest)
 	'()
-	(if (>= (cdr br-cur) (caar br-rest))
+	(if (>= (cadr br-cur) (caaar br-rest))
 	    (ogaps (car br-rest) (cdr br-rest) (+ i 1))
-	    (let ((gap-size (/ (* 200 (- (caar br-rest) (cdr br-cur)))
-			       (+ (caar br-rest) (cdr br-cur)))))
-	      (display-many "Gap from band " i " (" (cdr br-cur)
-			    ") to band " (+ i 1) " (" (caar br-rest) "), "
+	    (let ((gap-size (/ (* 200 (- (caaar br-rest) (cadr br-cur)))
+			       (+ (caaar br-rest) (cadr br-cur)))))
+	      (display-many "Gap from band " i " (" (cadr br-cur)
+			    ") to band " (+ i 1) " (" (caaar br-rest) "), "
 			    gap-size "%\n")
-	      (cons (list gap-size (cdr br-cur) (caar br-rest))
+	      (cons (list gap-size (cadr br-cur) (caaar br-rest))
 		    (ogaps (car br-rest) (cdr br-rest) (+ i 1)))))))
   (if (null? band-range-data)
       '()
       (ogaps (car band-range-data) (cdr band-range-data) 1)))
 
-; variable holding the current list of gaps, in the format returned
-; by output-gaps, above
+; variables holding the band range data and current list of gaps, in
+; the format returned by update-band-range-data and output-gaps, above:
+(define band-range-data '())
 (define gap-list '())
 
 ; ****************************************************************
@@ -229,7 +244,7 @@
 
 (define (run-polarization p reset-fields . band-functions)
   (begin-time "total elapsed time for run: "
-   (define band-range-data '())
+   (set! band-range-data '())
    (set! interactive? false)  ; don't be interactive if we call (run)
    (begin-time "elapsed time for initialization: "
 	       (init-params p reset-fields))
@@ -240,7 +255,7 @@
 		(set! current-k k)
 		(begin-time "elapsed time for k point: " (solve-kpoint k))
 		(set! band-range-data 
-		      (update-band-range-data band-range-data freqs))
+		      (update-band-range-data band-range-data freqs k))
 		(set! eigensolver-iters
 		      (append eigensolver-iters (list iterations)))
 		(map (lambda (f)
@@ -249,7 +264,9 @@
 		     band-functions))
 	      k-points)
 	 (if (> (length k-points) 1)
-	     (set! gap-list (output-gaps band-range-data))
+	     (begin
+	       (output-band-range-data band-range-data)
+	       (set! gap-list (output-gaps band-range-data)))
 	     (set! gap-list '())))))
   (display "done.\n"))
 
