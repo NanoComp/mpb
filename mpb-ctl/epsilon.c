@@ -184,20 +184,20 @@ void init_epsilon(void)
 #endif
      number no_size; 
 
-     no_size = 1.0 / ctl_get_number("infinity");
+     no_size = 2.0 / ctl_get_number("infinity");
 
      mpi_one_printf("Mesh size is %d.\n", mesh_size);
      mesh[0] = mesh_size;
      mesh[1] = (dimensions > 1) ? mesh_size : 1;
      mesh[2] = (dimensions > 2) ? mesh_size : 1;
 
-     Rm.c0 = vector3_scale(geometry_lattice.size.x == no_size ? 
+     Rm.c0 = vector3_scale(geometry_lattice.size.x <= no_size ? 
 			   1 : geometry_lattice.size.x, 
 			   geometry_lattice.basis.c0);
-     Rm.c1 = vector3_scale(geometry_lattice.size.y == no_size ? 
+     Rm.c1 = vector3_scale(geometry_lattice.size.y <= no_size ? 
 			   1 : geometry_lattice.size.y, 
 			   geometry_lattice.basis.c1);
-     Rm.c2 = vector3_scale(geometry_lattice.size.z == no_size ? 
+     Rm.c2 = vector3_scale(geometry_lattice.size.z <= no_size ? 
 			   1 : geometry_lattice.size.z, 
 			   geometry_lattice.basis.c2);
      mpi_one_printf("Lattice vectors:\n");
