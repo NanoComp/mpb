@@ -1,13 +1,15 @@
 MPB 1.1.1 (7/4/2001)
 
-  * Bug fix in H-field output that caused subtly incorrect H-field
+  * Fixed bug in H-field output that caused subtly incorrect H-field
     files (only) for 3d problems when NOT using mpbi.
 
   * Fixed bug that caused mpbi to output incorrect results for 1d
     problems (e.g. outputted dielectric functions with zeros).
 
-  * Added retrieve-gap function to return the gap between two specified
-    bands.
+  * Changed default eigensolver tolerance from 1e-4 to 1e-7.
+
+  * Added retrieve-gap convenience function to return the gap between
+    two specified bands.
 
 MPB 1.1 (5/6/2001)
 
