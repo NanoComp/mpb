@@ -31,18 +31,18 @@
 (define-class material-type no-parent)
 
 (define-class dielectric material-type
-  (define-property epsilon 'number no-default))
+  (define-property epsilon no-default 'number))
 
 (define (index n) (epsilon (* n n))) ; convenient substitute for epsilon
 
 (define-class dielectric-anisotropic material-type
-  (define-property epsilon-diag 'vector3 no-default)
-  (define-property epsilon-offdiag 'vector3 (make-default (vector3 0 0 0)))
+  (define-property epsilon-diag no-default 'vector3)
+  (define-property epsilon-offdiag (vector3 0 0 0) 'vector3)
   (define-property
-    epsilon-offdiag-imag 'vector3 (make-default (vector3 0 0 0))))
+    epsilon-offdiag-imag (vector3 0 0 0) 'vector3))
 
 (define-class material-function material-type
-  (define-property material-func 'function no-default
+  (define-property material-func no-default 'function
     (lambda (p) (= 1 (procedure-num-args p)))))
 
 ; use the solid geometry classes, variables, etcetera in libgeom:
