@@ -181,11 +181,6 @@ point.  Guaranteed to be sorted in increasing order.  The frequency of
 band <code>b</code> can be retrieved via <code>(list-ref freqs (- b
 1))</code>.
 
-<p><dt><code>gap-list</code> [list of <code>(<i>percent freq-min freq-max</i>)</code> lists]
-<dd>This is a list of the gaps found by the eigensolver, and is set by
-the <code>run</code> functions when two or more k-points are solved.
-(It is the empty list if no gaps are found.)
-
 <p><dt><code>iterations</code> [<code>integer</code>]
 <dd>The number of iterations required for convergence of the last k point.
 
@@ -201,6 +196,24 @@ waveguide with a substrate underneath, and you want to tell which
 bands are even-like (z-parity &gt; 0) and odd-like (z-parity &lt; 0).
 The value of this variable is included in the output as a
 comma-delimited line prefixed with "<code>zparity:</code>".
+
+</dl>
+
+<p>Yet more global variables are set by the <code>run</code> function
+(and its variants), for use after <code>run</code> completes or by a
+band function (which is called for each band during the execution of
+<code>run</code>.
+
+<dl>
+
+<dt><code>current-k</code> [<code>vector3</code>]
+<dd>The k point (from the <code>k-points</code> list) most recently
+ solved.
+
+<p><dt><code>gap-list</code> [list of <code>(<i>percent freq-min freq-max</i>)</code> lists]
+<dd>This is a list of the gaps found by the eigensolver, and is set by
+the <code>run</code> functions when two or more k-points are solved.
+(It is the empty list if no gaps are found.)
 
 </dl>
 
