@@ -99,7 +99,6 @@ AC_CHECK_LIB(m, sqrt)
 if test x != x"$F77"; then
 	AC_F77_LIBRARY_LDFLAGS
 	AC_F77_WRAPPERS
-	LIBS="$LIBS $FLIBS"
 fi
 
 ##############################################################################
@@ -139,107 +138,16 @@ if test x"$inv_sym" = xyes; then
 fi
 
 ##############################################################################
-# Checks for BLAS libraries:
+# Checks for BLAS and LAPACK libraries:
 
-# remember current libs, so we can check if any libs were found below.
-save_LIBS="$LIBS"
+sinclude(acx_blas.m4)
+sinclude(acx_lapack.m4)
 
-AC_F77_FUNC(sgemm)
-AC_F77_FUNC(dgemm)
+ACX_BLAS([], [AC_MSG_ERROR([BLAS was not found!])])
+ACX_LAPACK([], [AC_MSG_ERROR([LAPACK was not found!])])
 
-# BLAS linked to by default?
-AC_CHECK_FUNC($dgemm, [LIBS=" $LIBS"])
+LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
 
-AC_ARG_WITH(fastblas, [  --without-fastblas      do not use accelerated BLAS], ok=$withval, ok=yes)
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	if test "$ok" = "no"; then
-		# Generic BLAS:
-		AC_CHECK_LIB(blas, $dgemm)
-	elif test "$ok" != "yes"; then
-		# user specified a BLAS library to try on the command line
-		AC_CHECK_LIB($ok, $dgemm)
-	fi
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	# BLAS in Alpha CXML library?
-	AC_CHECK_LIB(cxml, $dgemm)
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	# BLAS in Alpha DXML library? (now called CXML, see above)
-	AC_CHECK_LIB(dxml, $dgemm)
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	if test "x$GCC" != xyes; then
-		# Check for BLAS in Sun Performance library:
-		# AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
-		AC_CHECK_LIB(sunmath, acosp,
-			AC_CHECK_LIB(sunperf, $dgemm,
-        			[LIBS="-xlic_lib=sunperf -lsunmath $LIBS"],[],
-				[-lsunmath]))
-	fi
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	# Check for BLAS in SCSL and SGIMATH libraries (prefer SCSL):
-	AC_CHECK_LIB(scs, $dgemm,
-	             LIBS="-lscs $LIBS", 
-		     AC_CHECK_LIB(complib.sgimath, $dgemm))
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	# Generic BLAS lib is required:
-	AC_CHECK_LIB(blas, $dgemm)
-	# Checks for BLAS in IBM ESSL library
-	AC_CHECK_LIB(essl, $dgemm, [LIBS="-lessl $LIBS"], [LIBS=$save_LIBS])
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	# Checks for ATLAS BLAS library:
-	AC_CHECK_LIB(atlas, ATL_xerbla)
-	if test x"$save_LIBS" != x"$LIBS"; then
-		# check for other atlas libs:
-		AC_CHECK_LIB(cblas, cblas_dgemm)
-		AC_CHECK_LIB(f77blas, $dgemm)
-	fi
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	# Generic BLAS lib is required:
-	AC_CHECK_LIB(blas, $dgemm)
-	# Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
-	AC_CHECK_LIB(sgemm, $sgemm)
-	AC_CHECK_LIB(dgemm, $dgemm, [LIBS="-ldgemm $LIBS"],[LIBS=$save_LIBS])
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	# Generic BLAS lib is required:
-	AC_CHECK_LIB(blas, $dgemm)
-	# Optimized BLAS for Pentium Pro (from ASCII Red project):
-	# (see http://www.cs.utk.edu/~ghenry/distrib/)
-	blas=blasppro1.1o
-	AC_CHECK_LIB($blas,$dgemm, [LIBS="-l$blas $LIBS"],[LIBS=$save_LIBS])
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	# Generic BLAS:
-	AC_CHECK_LIB(blas, $dgemm)
-fi
-
-if test x"$save_LIBS" = x"$LIBS"; then
-	AC_MSG_ERROR([BLAS was not found!])
-fi
-
-##############################################################################
-AC_F77_FUNC(cheev)
-
-# Checks for LAPACK library
-AC_CHECK_FUNC($cheev,[],
-	[AC_CHECK_LIB(lapack, $cheev, [LIBS="-llapack $LIBS"],
-		      [AC_MSG_ERROR([LAPACK was not found!])])])
 ##############################################################################
 # Check for MPI library
 
