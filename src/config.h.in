@@ -36,7 +36,7 @@
 
 /* check if we have FFTW: */
 #if defined(HAVE_LIBFFTW) || defined(HAVE_LIBDFFTW) || defined(HAVE_LIBSFFTW)
-#  define HAVE_FFTW
+#  define HAVE_FFTW 1
 #endif
 
 /* Define if you have the HDF5 library and headers: */
