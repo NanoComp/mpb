@@ -18,6 +18,7 @@ PROGRAM_NAME = photon
 LIBCTL_DIR = ../../libctl
 
 MYLIBS = ../src/maxwell/maxwell.a \
+         ../src/matrixio/matrixio.a \
          ../src/matrices/matrices.a \
          ../src/util/util.a
 

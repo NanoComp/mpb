@@ -63,6 +63,11 @@ AC_CHECK_LIB(m, sqrt)
 AC_F77_LIBRARY_LDFLAGS
 
 dnl ----------------------------------------------------------------------
+dnl In principle, we should abort if some of the following libraries are
+dnl missing, or perhaps only compile some of the subdirectories.  For now,
+dnl though, we do nothing (and wait for the compilation errors).
+
+dnl ----------------------------------------------------------------------
 dnl Check for FFTW libraries
 if test "$enable_single" = "yes"; then
 	AC_CHECK_LIB(sfftw, fftw)
@@ -114,6 +119,12 @@ dnl Checks for LAPACK library
 AC_CHECK_LIB(lapack, main)
 
 dnl ----------------------------------------------------------------------
+dnl Check for HDF5 library
+AC_CHECK_LIB(z, deflate)
+AC_CHECK_LIB(hdf5, H5Pcreate)
+AC_CHECK_HEADERS(hdf5.h)
+
+dnl ----------------------------------------------------------------------
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h getopt.h)
@@ -125,4 +136,4 @@ AC_C_INLINE
 dnl Checks for library functions.
 AC_CHECK_FUNCS(getopt)
 
-AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/maxwell/Makefile photon-ctl/Makefile)
+AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile photon-ctl/Makefile)

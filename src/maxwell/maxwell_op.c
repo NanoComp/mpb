@@ -172,9 +172,9 @@ static void compute_fft(int dir, maxwell_data *d, scalar *array,
 
 /* assigns newv = matrix * oldv.  matrix is symmetric and so is stored
    in "packed" format. */
-static void assign_matrix_vector(scalar_complex *newv,
-				 const symmetric_matrix matrix,
-				 const scalar_complex *oldv)
+void assign_symmatrix_vector(scalar_complex *newv,
+			     const symmetric_matrix matrix,
+			     const scalar_complex *oldv)
 {
      scalar_complex v0 = oldv[0], v1 = oldv[1], v2 = oldv[2];
 
@@ -251,7 +251,7 @@ void maxwell_compute_e_from_d(maxwell_data *d,
 	  symmetric_matrix eps_inv = d->eps_inv[i];
 	  for (b = 0; b < cur_num_bands; ++b) {
 	       int ib = 3 * (i * cur_num_bands + b);
-	       assign_matrix_vector(&dfield[ib], eps_inv, &dfield[ib]);
+	       assign_symmatrix_vector(&dfield[ib], eps_inv, &dfield[ib]);
 	  }
      }	  
 }

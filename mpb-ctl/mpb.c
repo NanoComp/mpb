@@ -127,6 +127,10 @@ static maxwell_data *mdata = NULL;
 static maxwell_target_data *mtdata = NULL;
 static evectmatrix H, W[NWORK];
 
+static scalar_complex *curfield = NULL;
+static int curfield_band;
+static char curfield_type;
+
 /* R[i]/G[i] are lattice/reciprocal-lattice vectors */
 static real R[3][3], G[3][3];
 static matrix3x3 Rm, Gm; /* same thing, but matrix3x3 */
@@ -274,6 +278,7 @@ void init_params(void)
 	       destroy_evectmatrix(W[i]);
 	  destroy_maxwell_target_data(mtdata); mtdata = NULL;
 	  destroy_maxwell_data(mdata); mdata = NULL;
+	  curfield = NULL;
      }
      else
 	  srand(time(NULL)); /* init random seed for field initialization */
@@ -388,9 +393,272 @@ void solve_kpoint(vector3 kvector)
      printf("\n");
 
      free(eigvals);
+     curfield = NULL;
 
      printf("@@@@@\n");
 }
 
 /**************************************************************************/
 
+/* The following routines take the eigenvectors computed by solve-kpoint
+   and compute the field (D, H, or E) in position space for one of the bands.
+   This field is stored in the global curfield (actually an alias for
+   mdata->fft_data, since the latter is unused and big enough).  This
+   field can then be manipulated with subsequent "*-field-*" functions
+   below.  You can also get the scalar field, epsilon.
+
+   All of these functions are designed to be called by the user
+   via Guile. */
+
+void get_dfield(int which_band)
+{
+     if (!mdata) {
+	  fprintf(stderr, "init-params must be called before get-dfield!\n");
+	  return;
+     }
+     if (!kpoint_index) {
+	  fprintf(stderr, "solve-kpoint must be called before get-dfield!\n");
+	  return;
+     }
+     if (which_band >= mdata->num_bands) {
+	  fprintf(stderr, "band index must be < num_bands (%d)\n",
+		  mdata->num_bands);
+     }
+
+     curfield = (scalar_complex *) mdata->fft_data;
+     curfield_band = which_band;
+     curfield_type = 'd';
+     maxwell_compute_dfield(mdata, H, curfield, which_band, 1);
+}
+
+void get_hfield(int which_band)
+{
+     if (!mdata) {
+	  fprintf(stderr, "init-params must be called before get-hfield!\n");
+	  return;
+     }
+     if (!kpoint_index) {
+	  fprintf(stderr, "solve-kpoint must be called before get-hfield!\n");
+	  return;
+     }
+     if (which_band >= mdata->num_bands) {
+	  fprintf(stderr, "band index must be < num_bands (%d)\n",
+		  mdata->num_bands);
+     }
+
+     curfield = (scalar_complex *) mdata->fft_data;
+     curfield_band = which_band;
+     curfield_type = 'h';
+     maxwell_compute_hfield(mdata, H, curfield, which_band, 1);
+}
+
+void get_efield_from_dfield(void)
+{
+     if (!curfield || curfield_type != 'd') {
+	  fprintf(stderr, "get-dfield must be called before "
+		  "get-efield-from-dfield!\n");
+	  return;
+     }
+     CHECK(mdata, "unexpected NULL mdata");
+     maxwell_compute_e_from_d(mdata, curfield, 1);
+     curfield_type = 'e';
+}
+
+void get_efield(int which_band)
+{
+     get_dfield(which_band);
+     get_efield_from_dfield();
+}
+
+/* get the dielectric function, and compute some statistics */
+void get_epsilon(void)
+{
+     int i, N;
+     real *epsilon;
+     real eps_mean = 0, eps_inv_mean = 0, eps_high = -1e20, eps_low = 1e20;
+     int fill_count = 0;
+
+     if (!mdata) {
+	  fprintf(stderr, "init-params must be called before get-epsilon!\n");
+	  return;
+     }
+
+     curfield = (scalar_complex *) mdata->fft_data;
+     epsilon = (real *) curfield;
+     curfield_band = -1;
+     curfield_type = 'n';
+
+     /* get epsilon.  Recall that we actually have an inverse
+	dielectric tensor at each point; define an average index by
+	the inverse of the average eigenvalue of the 1/eps tensor.
+	i.e. 3/(trace 1/eps). */
+
+     N = mdata->fft_output_size;
+     for (i = 0; i < N; ++i) {
+	  epsilon[i] = 3.0 / (mdata->eps_inv[i].m00 +
+			      mdata->eps_inv[i].m11 +
+			      mdata->eps_inv[i].m22);
+	  if (epsilon[i] < eps_low)
+	       eps_low = epsilon[i];
+	  if (epsilon[i] > eps_high)
+	       eps_high = epsilon[i];
+	  eps_mean += epsilon[i];
+	  eps_inv_mean += 1/epsilon[i];
+	  if (epsilon[i] > 1.0001)
+	       ++fill_count;
+     }
+     printf("eps goes from %g-%g, mean %g, harmonic mean %g, "
+	    "%g%% fill\n", eps_low, eps_high, eps_mean/N, N/eps_inv_mean,
+	    (100.0 * fill_count) / N);
+}
+
+/**************************************************************************/
+
+/* Replace curfield (either d or h) with the scalar energy density function,
+   normalized to one.  While we're at it, compute some statistics about
+   the relative strength of different field components. */
+void compute_field_energy(void)
+{
+     int i, N;
+     real comp_sum[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+     real energy_sum = 0.0, normalization;
+     real *energy_density = (real *) curfield;
+
+     if (!curfield || !strchr("dh", curfield_type)) {
+	  fprintf(stderr, "The D or H field must be loaded first.\n");
+	  return;
+     }
+
+     N = mdata->fft_output_size;
+     for (i = 0; i < N; ++i) {
+	  scalar_complex field[3];
+	  real
+	       comp_sqr0,comp_sqr1,comp_sqr2,comp_sqr3,comp_sqr4,comp_sqr5;
+
+	  /* energy is either |curfield|^2 or |curfield|^2 / epsilon,
+	     depending upon whether it is H or D. */
+	  if (curfield_type == 'h') {
+	       field[0] =   curfield[3*i];
+	       field[1] = curfield[3*i+1];
+	       field[2] = curfield[3*i+2];
+	  }
+	  else
+	       assign_symmatrix_vector(field, mdata->eps_inv[i], curfield+3*i);
+
+	  comp_sum[0] += comp_sqr0 = field[0].re *   curfield[3*i].re;
+	  comp_sum[1] += comp_sqr1 = field[0].im *   curfield[3*i].im;
+	  comp_sum[2] += comp_sqr2 = field[1].re * curfield[3*i+1].re;
+	  comp_sum[3] += comp_sqr3 = field[1].im * curfield[3*i+1].im;
+	  comp_sum[4] += comp_sqr4 = field[2].re * curfield[3*i+2].re;
+	  comp_sum[5] += comp_sqr5 = field[2].im * curfield[3*i+2].im;
+
+	  /* Note: here, we write to energy_density[i]; this is
+	     safe, even though energy_density is aliased to curfield,
+	     since energy_density[i] is guaranteed to come at or before
+	     curfield[i] (which we are now done with). */
+
+	  energy_sum += energy_density[i] = 
+	       comp_sqr0+comp_sqr1+comp_sqr2+comp_sqr3+comp_sqr4+comp_sqr5;
+     }
+
+     normalization = 1.0 / energy_sum;
+     for (i = 0; i < N; ++i)
+	  energy_density[i] *= normalization;
+
+     printf("%c-energy-components:, %d, %d",
+	    curfield_type, kpoint_index, curfield_band);
+     for (i = 0; i < 6; ++i) {
+	  comp_sum[i] *= normalization;
+	  if (i % 2 == 1)
+	       printf(", %g", comp_sum[i] + comp_sum[i-1]);
+     }
+     printf("\n");
+
+     /* remember that we now have energy density; denoted by capital D/H */
+     curfield_type = toupper(curfield_type);
+}
+
+/**************************************************************************/
+
+/* compute the fraction of the field energy that is located in the
+   given range of dielectric constants: */
+number compute_energy_in_dielectric(number eps_low, number eps_high)
+{
+     int N, i;
+     real *energy = (real *) curfield;
+     real epsilon, energy_sum = 0.0;
+
+     if (!curfield || !strchr("DH", curfield_type)) {
+          fprintf(stderr, "The D or H energy density must be loaded first.\n");
+          return;
+     }
+
+     N = mdata->fft_output_size;
+     for (i = 0; i < N; ++i) {
+	  epsilon = 3.0 / (mdata->eps_inv[i].m00 +
+			   mdata->eps_inv[i].m11 +
+			   mdata->eps_inv[i].m22);
+	  if (epsilon >= eps_low && epsilon <= eps_high)
+	       energy_sum += energy[i];
+     }
+     return energy_sum;
+}
+
+/**************************************************************************/
+
+/* given the field in curfield, store it to HDF (or whatever) using
+   the matrixio (fieldio) routines.  Allow the user to specify that
+   the fields be periodically extended, so that several lattice cells
+   are stored. */
+void output_field_extended(vector3 copiesv)
+{
+     char fname[100], description[100];
+     int dims[3], local_nx, local_x_start;
+     int copies[3] = { copiesv.x, copiesv.y, copiesv.z };
+
+     if (!curfield) {
+	  fprintf(stderr, 
+		  "fields, energy dens., or epsilon must be loaded first.\n");
+	  return;
+     }
+     
+     /* this will need to be fixed for MPI, which transposes the data: */
+     dims[0] = mdata->nx;
+     dims[1] = mdata->ny;
+     dims[2] = mdata->nz;
+     local_nx = mdata->local_nx;
+     local_x_start = mdata->local_x_start;
+     
+     if (strchr("dhe", curfield_type)) { /* outputting vector field */
+	  sprintf(fname, "%c.%02d.%02d",
+		  curfield_type, kpoint_index, curfield_band);
+	  sprintf(description, "%c field, kpoint %d, band %d, freq=%g",
+		  curfield_type, kpoint_index, curfield_band, 
+		  freqs.items[curfield_band]);
+	  printf("Outputting fields to %s...\n", fname);
+	  fieldio_write_complex_field(curfield, 3, dims,
+				      local_nx, local_x_start,
+				      copies, mdata->current_k, R,
+				      fname, description);
+     }
+     else if (strchr("DHn", curfield_type)) { /* scalar field */
+	  if (curfield_type == 'n') {
+	       sprintf(fname, "epsilon");
+	       sprintf(description, "dielectric function, epsilon");
+	  }
+	  else {
+	       sprintf(fname, "%cpwr.%02d.%02d",
+		       tolower(curfield_type), kpoint_index, curfield_band);
+	       sprintf(description,
+		       "%c field energy density, kpoint %d, band %d, freq=%g",
+		       curfield_type, kpoint_index, curfield_band, 
+		       freqs.items[curfield_band]);
+	  }
+	   printf("Outputting %s...\n", fname);
+	   fieldio_write_real_vals((real *) curfield, 3, dims,
+				   local_nx, local_x_start, copies,
+				   fname, description);
+     }
+     else
+	  fprintf(stderr, "unknown field type!\n");
+}

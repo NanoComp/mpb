@@ -63,6 +63,16 @@
 ; input variables, but does write the output vars.
 (define-external-function solve-kpoint false true no-return-value 'vector3)
 
+(define-external-function get-dfield false false no-return-value 'integer)
+(define-external-function get-hfield false false no-return-value 'integer)
+(define-external-function get-efield-from-dfield false false no-return-value)
+(define-external-function get-epsilon false false no-return-value)
+(define-external-function compute-field-energy false false no-return-value)
+(define-external-function compute-energy-in-dielectric false false
+  'number 'number 'number)
+(define-external-function output_field_extended false false
+  no-return-value 'vector3)  
+
 ; it would be nice to have this routine later:
 ; (define-external-function energy-in-object false false
 ;   'number 'geometric-object)
@@ -96,3 +106,13 @@
       (map solve-kpoint k-points))   ; solve without specifying polarization
   )
 
+(define (get-efield which-band)
+  (get-dfield which-band)
+  (get-efield-from-dfield))
+
+(define (output-field . copies)
+  (output_field_extended (apply vector3 copies)))
+
+(define (output-epsilon . copies)
+  (get-epsilon)
+  (apply output-field copies))

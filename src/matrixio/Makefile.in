@@ -1,0 +1,28 @@
+# Variables substituted by the autoconf configure script:
+
+CC = @CC@
+CFLAGS = @CFLAGS@ -I../util -I../matrices -I.
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+RANLIB = @RANLIB@
+@SET_MAKE@
+
+AR = ar
+
+all: libs
+
+OBJECTS = fieldio.o evectmatrixio.o matrixio.o
+LIBNAME = matrixio.a
+
+libs: $(LIBNAME)
+
+matrixio.a: $(OBJECTS)
+	rm -f $@
+	$(AR) r $@ $(OBJECTS)
+	$(RANLIB) $@
+
+.c.o:
+	$(CC) -c $(CFLAGS) $< -o $@
+
+clean: 
+	rm -f $(OBJECTS) core $(LIBNAME)

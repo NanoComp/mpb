@@ -127,6 +127,13 @@ extern void maxwell_compute_dfield(maxwell_data *d, evectmatrix Xin,
 extern void maxwell_compute_hfield(maxwell_data *d, evectmatrix Hin,
 				   scalar_complex *hfield,
 				   int cur_band_start, int cur_num_bands);
+extern void maxwell_compute_e_from_d(maxwell_data *d,
+				     scalar_complex *dfield,
+				     int cur_num_bands);
+
+void assign_symmatrix_vector(scalar_complex *newv,
+                             const symmetric_matrix matrix,
+                             const scalar_complex *oldv);
 
 extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 			     int is_current_eigenvector);
