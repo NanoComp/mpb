@@ -247,6 +247,7 @@ void get_epsilon(void)
 		    "%g%% > 1, %g%% \"fill\"\n",
 		    eps_low, eps_high, eps_mean, eps_inv_mean,
 		    (100.0 * fill_count) / N, 
+		    eps_high == eps_low ? 100.0 :
 		    100.0 * (eps_mean-eps_low) / (eps_high-eps_low));
 }
 
