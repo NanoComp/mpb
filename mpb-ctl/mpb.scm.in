@@ -115,6 +115,22 @@
 
 ; ****************************************************************
 
+; Computing group velocities:
+
+(define-external-function compute-group-velocity-component false false
+  (make-list-type 'number) 'vector3)
+
+(define (compute-group-velocities)
+  (let ((vx (compute-group-velocity-component
+	     (cartesian->reciprocal (vector3 1 0 0))))
+	(vy (compute-group-velocity-component
+	     (cartesian->reciprocal (vector3 0 1 0))))
+	(vz (compute-group-velocity-component
+	     (cartesian->reciprocal (vector3 0 0 1)))))
+    (map (lambda (x y z) (vector3 x y z)) vx vy vz)))
+
+; ****************************************************************
+
 ; Add some predefined variables, for convenience:
 
 (define vacuum (make dielectric (epsilon 1.0)))

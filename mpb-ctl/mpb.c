@@ -581,6 +581,54 @@ void solve_kpoint(vector3 kvector)
 
 /**************************************************************************/
 
+/* Compute the group velocity dw/dk in the given direction d (where
+   the length of d is ignored).  d is in the reciprocal lattice basis.
+   Should only be called after solve_kpoint.  Returns a list of the
+   group velocities, one for each band, in units of c. */
+number_list compute_group_velocity_component(vector3 d)
+{
+     number_list group_v;
+     real u[3];
+     int i;
+
+     group_v.num_items = 0;  group_v.items = (number *) NULL;
+
+     if (!mdata) {
+	  fprintf(stderr, "init-params must be called first!\n");
+	  return group_v;
+     }
+     if (!kpoint_index) {
+	  fprintf(stderr, "solve-kpoint must be called first!\n");
+	  return group_v;
+     }
+
+     /* convert d to unit vector in Cartesian coords: */
+     d = unit_vector3(matrix3x3_vector3_mult(Gm, d));
+     u[0] = d.x; u[1] = d.y; u[2] = d.z;
+
+     group_v.num_items = num_bands;
+     CHK_MALLOC(group_v.items, number, group_v.num_items);
+     
+     /* now, compute group_v.items = diag Re <H| curl 1/eps i u x |H>: */
+     maxwell_ucross_op(H, W[0], mdata, u);
+     evectmatrix_XtY_diag_real(H, W[0], group_v.items);
+
+     /* The group velocity is given by:
+
+	grad_k(omega)*d = grad_k(omega^2)*d / 2*omega
+	   = grad_k(<H|maxwell_op|H>)*d / 2*omega
+	   = Re <H| curl 1/eps i u x |H> / omega
+        
+        Note that our k is in units of 2*Pi/a, and omega is in
+        units of 2*Pi*c/a, so the result will be in units of c. */
+     for (i = 0; i < num_bands; ++i)
+	  group_v.items[i] = group_v.items[i] / freqs.items[i];
+     
+     return group_v;
+}
+
+/**************************************************************************/
+
 /* The following routines take the eigenvectors computed by solve-kpoint
    and compute the field (D, H, or E) in position space for one of the bands.
    This field is stored in the global curfield (actually an alias for
@@ -610,7 +658,7 @@ void get_dfield(int which_band)
      curfield = (scalar_complex *) mdata->fft_data;
      curfield_band = which_band;
      curfield_type = 'd';
-     maxwell_compute_dfield(mdata, H, curfield, which_band - 1, 1);
+     maxwell_compute_d_from_H(mdata, H, curfield, which_band - 1, 1);
 }
 
 void get_hfield(int which_band)
@@ -632,7 +680,7 @@ void get_hfield(int which_band)
      curfield = (scalar_complex *) mdata->fft_data;
      curfield_band = which_band;
      curfield_type = 'h';
-     maxwell_compute_hfield(mdata, H, curfield, which_band - 1, 1);
+     maxwell_compute_h_from_H(mdata, H, curfield, which_band - 1, 1);
 }
 
 void get_efield_from_dfield(void)
