@@ -399,6 +399,18 @@
       (if (vector3= current-k kpoint)
 	  (band-func which-band)))))
 
+; Band functions to pick a canonical phase for the eigenstate of the
+; given band based upon the spatial representation of the given field:
+(define (fix-hfield-phase which-band)
+  (get-hfield which-band)
+  (fix-field-phase))
+(define (fix-dfield-phase which-band)
+  (get-dfield which-band)
+  (fix-field-phase))
+(define (fix-efield-phase which-band)
+  (get-efield which-band)
+  (fix-field-phase))
+
 ; ****************************************************************
 
 ; Load GNU Readline support, for easier command-line editing support.
