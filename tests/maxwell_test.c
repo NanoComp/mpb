@@ -27,8 +27,8 @@
 
 #define KX 0.5
 #define EPS_LOW 1.00
-#define EPS_HIGH 4.00
-#define EPS_HIGH_X 0.30
+#define EPS_HIGH 9.00
+#define EPS_HIGH_X 0.25
 
 #ifdef ENABLE_PROF
 #  define PROF_ITERS 10
