@@ -207,19 +207,14 @@ real *maxwell_zparity(evectmatrix X, maxwell_data *d)
 		    v = X.data[(ij * 2 + 1) * X.p + b];
 		    u2 = X.data[(ij2 * 2) * X.p + b];
 		    v2 = X.data[(ij2 * 2 + 1) * X.p + b];
-		    zparity[b] +=
-			 SCALAR_RE(u) * SCALAR_RE(u2) +
-			 SCALAR_IM(u) * SCALAR_IM(u2) -			 
-			 SCALAR_RE(v) * SCALAR_RE(v2) -
-			 SCALAR_IM(v) * SCALAR_IM(v2);
+		    zparity[b] += (ij == ij2 ? 1.0 : 2.0) *
+			 (SCALAR_RE(u) * SCALAR_RE(u2) +
+			  SCALAR_IM(u) * SCALAR_IM(u2) -
+			  SCALAR_RE(v) * SCALAR_RE(v2) -
+			  SCALAR_IM(v) * SCALAR_IM(v2));
 	       }
 	  }
      
-     /* correct for the fact that we only summed over (approximately)
-	half of the array: */
-     for (b = 0; b < X.p; ++b)
-	  zparity[b] = d->last_dim * zparity[b] / ((d->last_dim + 1) / 2);
-
      return zparity;
 }
 
