@@ -56,6 +56,9 @@ extern void matrixio_write_string_attr(matrixio_id id, const char *name,
 extern void matrixio_write_data_attr(matrixio_id id, const char *name,
 				     const real *val, int rank, 
 				     const int *dims);
+extern char *matrixio_read_string_attr(matrixio_id id, const char *name);
+extern real *matrixio_read_data_attr(matrixio_id id, const char *name,
+				     int *rank, int max_rank, int *dims);
 
 extern void evectmatrixio_writeall_raw(const char *filename, evectmatrix a);
 extern void evectmatrixio_readall_raw(const char *filename, evectmatrix a);

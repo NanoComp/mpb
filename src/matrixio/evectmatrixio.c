@@ -57,8 +57,9 @@ void evectmatrixio_readall_raw(const char *filename, evectmatrix a)
 
      file_id = matrixio_open(filename);     
      
-     matrixio_read_real_data(file_id, "rawdata", &rank, dims, 
-			     a.localN, a.Nstart, 1, (real *) a.data);
+     CHECK(matrixio_read_real_data(file_id, "rawdata", &rank, dims, 
+				   a.localN, a.Nstart, 1, (real *) a.data),
+	   "error reading data set in file");
 
      matrixio_close(file_id);
 }

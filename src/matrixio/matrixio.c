@@ -33,16 +33,22 @@
 
 #include "matrixio.h"
 
-/* Wrapper to write out an attribute attached to id.  HDF5 attributes
-   can *not* be attached to files, in which case we'll write it out
+/*****************************************************************************/
+
+/* Wrappers to write/read an attribute attached to id.  HDF5 attributes
+   can *not* be attached to files, in which case we'll write/read it
    as an ordinary dataset.  Ugh. */
+
 static void write_attr(matrixio_id id, hid_t type_id, hid_t space_id,
 		       const char *name, void *val)
 {
 #if defined(HAVE_HDF5)
      hid_t attr_id;
 
-     if (H5I_FILE==H5I_get_type(id)) {
+     if (!mpi_is_master())
+	  return; /* only one process should add attributes */
+     
+     if (H5I_FILE == H5Iget_type(id)) {
           attr_id = H5Dcreate(id, name, type_id, space_id, H5P_DEFAULT);
           CHECK(id >= 0, "error creating HDF attr");
           H5Dwrite(attr_id, type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, val);
@@ -57,6 +63,68 @@ static void write_attr(matrixio_id id, hid_t type_id, hid_t space_id,
 #endif
 }
 
+static hid_t open_attr(matrixio_id id, hid_t *type_id, hid_t *space_id,
+		       const char *name)
+{
+#if defined(HAVE_HDF5)
+     hid_t attr_id;
+     H5E_auto_t err_func;
+     void *err_func_data;
+
+     /* we need to turn off error reporting, so that HDF5 doesn't
+	print a message if we don't find the attribute. */
+     H5Eget_auto(&err_func, &err_func_data);
+     H5Eset_auto(NULL, NULL);
+
+     if (H5I_FILE == H5Iget_type(id)) {
+          attr_id = H5Dopen(id, name);
+	  if (attr_id >= 0) {
+	       *type_id = H5Dget_type(attr_id);
+	       *space_id = H5Dget_space(attr_id);
+	  }
+     }
+     else {
+          attr_id = H5Aopen_name(id, name);
+	  if (attr_id >= 0) {
+	       *type_id = H5Aget_type(attr_id);
+	       *space_id = H5Aget_space(attr_id);
+	  }
+     }
+
+     H5Eset_auto(err_func, err_func_data);
+
+     return attr_id;
+#else
+     return -1;
+#endif
+}
+
+static void read_attr(matrixio_id id, hid_t attr_id,
+		      hid_t mem_type_id, void *val)
+{
+#if defined(HAVE_HDF5)
+     if (H5I_FILE == H5Iget_type(id)) {
+	  H5Dread(attr_id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, val);
+     }
+     else {
+	  H5Aread(attr_id, mem_type_id, val);
+     }
+#endif
+}
+
+static void close_attr(matrixio_id id, hid_t attr_id)
+{
+#if defined(HAVE_HDF5)
+     if (H5I_FILE == H5Iget_type(id)) {
+          H5Dclose(attr_id);
+     }
+     else {
+          H5Aclose(attr_id);
+     }
+#endif
+}
+
+/*****************************************************************************/
 
 void matrixio_write_string_attr(matrixio_id id, const char *name,
 				const char *val)
@@ -65,9 +133,6 @@ void matrixio_write_string_attr(matrixio_id id, const char *name,
      hid_t type_id;
      hid_t space_id;
 
-     if (!mpi_is_master())
-	  return; /* only one process should add attributes */
-     
      if (!val || !name || !name[0] || !val[0])
 	  return; /* don't try to create empty attributes */
      
@@ -89,9 +154,6 @@ void matrixio_write_data_attr(matrixio_id id, const char *name,
      hsize_t *space_dims;
      int i;
 
-     if (!mpi_is_master())
-	  return; /* only one process should add attributes */
-     
      if (!val || !name || !name[0] || rank < 0 || !dims)
 	  return; /* don't try to create empty attributes */
      
@@ -117,6 +179,92 @@ void matrixio_write_data_attr(matrixio_id id, const char *name,
 #endif
 }
 
+char *matrixio_read_string_attr(matrixio_id id, const char *name)
+{
+#if defined(HAVE_HDF5)
+     hid_t attr_id;
+     hid_t type_id;
+     hid_t space_id;
+     int len;
+     char *s = NULL;
+
+     if (!name || !name[0])
+	  return NULL; /* don't try to read empty-named attributes */
+     
+     attr_id = open_attr(id, &type_id, &space_id, name);
+     if (attr_id < 0)
+	  return NULL;
+
+     if (H5Sget_simple_extent_npoints(space_id) == 1) {
+	  len = H5Tget_size(type_id);
+	  H5Tclose(type_id);
+	  
+	  type_id = H5Tcopy(H5T_C_S1);
+	  H5Tset_size(type_id, len);
+	  
+	  CHK_MALLOC(s, char, len);
+	  read_attr(id, attr_id, type_id, (void*) s);
+     }
+
+     H5Tclose(type_id);
+     H5Sclose(space_id);
+     close_attr(id, attr_id);
+
+     return s;
+#else
+     return NULL;
+#endif
+}
+
+real *matrixio_read_data_attr(matrixio_id id, const char *name,
+			      int *rank, int max_rank, int *dims)
+{
+#if defined(HAVE_HDF5)
+     hid_t attr_id, type_id, mem_type_id, space_id;
+     real *d = NULL;
+
+     if (!name || !name[0] || max_rank < 0 || !dims)
+	  return NULL; /* don't try to create empty attributes */
+     
+#ifdef SCALAR_SINGLE_PREC
+     mem_type_id = H5T_NATIVE_FLOAT;
+#else
+     mem_type_id = H5T_NATIVE_DOUBLE;
+#endif
+
+     attr_id = open_attr(id, &type_id, &space_id, name);
+     if (attr_id < 0)
+          return NULL;
+
+     *rank = H5Sget_simple_extent_ndims(space_id);
+     if (*rank <= max_rank) {
+	  if (*rank > 0) {
+	       int i;
+	       hsize_t *space_dims, *maxdims;
+	       CHK_MALLOC(space_dims, hsize_t, *rank);
+	       CHK_MALLOC(maxdims, hsize_t, *rank);
+	       H5Sget_simple_extent_dims(space_id, space_dims, maxdims);
+	       for (i = 0; i < *rank; ++i)
+		    dims[i] = space_dims[i];
+	       free(maxdims);
+	       free(space_dims);
+	  }
+	  CHK_MALLOC(d, real, H5Sget_simple_extent_npoints(space_id));
+          read_attr(id, attr_id, mem_type_id, (void*) d);
+     }
+
+     H5Tclose(type_id);
+     H5Sclose(space_id);
+     close_attr(id, attr_id);
+
+     return d;
+#else
+     return NULL;
+#endif
+}
+
+/*****************************************************************************/
+
 #define FNAME_SUFFIX ".h5"  /* standard HDF5 filename suffix */
 
 static char *add_fname_suffix(const char *fname)
@@ -137,6 +285,8 @@ static char *add_fname_suffix(const char *fname)
 
      return new_fname;
 }
+
+/*****************************************************************************/
 
 matrixio_id matrixio_create(const char *fname)
 {
@@ -204,6 +354,8 @@ void matrixio_close(matrixio_id id)
 #endif
 }
 
+/*****************************************************************************/
+
 matrixio_id matrixio_create_sub(matrixio_id id, 
 				const char *name, const char *description)
 {
@@ -241,6 +393,8 @@ void matrixio_close_sub(matrixio_id id)
      H5Gclose(id);
 #endif
 }
+
+/*****************************************************************************/
 
 matrixio_id matrixio_create_dataset(matrixio_id id,
 				    const char *name, const char *description,
@@ -285,6 +439,8 @@ void matrixio_close_dataset(matrixio_id data_id)
      H5Dclose(data_id);
 #endif
 }
+
+/*****************************************************************************/
 
 void matrixio_write_real_data(matrixio_id data_id,
 			      const int *local_dims, const int *local_start,
@@ -415,6 +571,8 @@ static herr_t find_dataset(hid_t group_id, const char *name, void *d)
 }
 #endif
 
+/*****************************************************************************/
+
 /* Read real data from the file/group 'id', from the dataset 'name'.
 
    If name is NULL, reads from the first dataset in 'id'.
@@ -428,7 +586,9 @@ static herr_t find_dataset(hid_t group_id, const char *name, void *d)
    of the array, and a pointer to the (malloc'ed) data is returned.
    On input, *rank should point to the maximum allowed rank (e.g. the
    length of the dims array)!  The local_dim* and stride parameters
-   are ignored here. */
+   are ignored here.
+
+   Returns NULL if the dataset could not be found in id. */
 real *matrixio_read_real_data(matrixio_id id,
 			      const char *name,
 			      int *rank, int *dims,
@@ -452,12 +612,13 @@ real *matrixio_read_real_data(matrixio_id id,
 	  strcpy(dname, name);
      }
      else {
-	  CHECK(H5Giterate(id, "/", NULL, find_dataset, &dname) > 0,
-		"couldn't find dataset in HDF5 file");
+	  if (H5Giterate(id, "/", NULL, find_dataset, &dname) < 0)
+	       return NULL;
      }
-     CHECK((data_id = H5Dopen(id, dname)) >= 0, 
-	   "error opening dataset in HDF5 file");
+     data_id = H5Dopen(id, dname);
      free(dname);
+     if (data_id < 0)
+	  return NULL;
 
      CHECK((space_id = H5Dget_space(data_id)) >= 0,
 	   "error in H5Dget_space");
