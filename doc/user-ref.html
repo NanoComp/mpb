@@ -992,13 +992,14 @@ with epsilon in the range <code>min-eps</code> to
 objects.
 
 <p><dt><code>(compute-energy-integral <i>f</i>)</code>
-<dd><code><i>f</i></code> is a function <code>(<i>f u eps</i>)</code>
-that takes two parameters: <code><i>u</i></code>, the energy density
-at a point; and <code><i>eps</i></code>, the dielectric constant at
-the same point, and returns a number.
-<code>compute-energy-integral</code> returns the integral of
-<code><i>f</i></code> over the unit cell.  (This can be useful for
-perturbation-theory calculations.)
+<dd><code><i>f</i></code> is a function <code>(<i>f u eps
+r</i>)</code> that returns a number given three parameters:
+<code><i>u</i></code>, the energy density at a point;
+<code><i>eps</i></code>, the dielectric constant at the same point;
+and <code><i>r</i></code>, the position vector (in lattice
+coordinates) of the point.  <code>compute-energy-integral</code>
+returns the integral of <code><i>f</i></code> over the unit cell.
+(This can be useful for perturbation-theory calculations.)
 
 </dl>
 

@@ -1432,62 +1432,6 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 
 /**************************************************************************/
 
-/* Compute the integral of f(energy, epsilon) over the cell. */
-number compute_energy_integral(function f)
-{
-     int N, i, last_dim, last_dim_stored, nx, nz, local_y_start;
-     real *energy = (real *) curfield;
-     real energy_integral = 0.0;
-
-     if (!curfield || !strchr("DH", curfield_type)) {
-          mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
-          return 0.0;
-     }
-
-     N = mdata->fft_output_size;
-     last_dim = mdata->last_dim;
-     last_dim_stored =
-	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
-     nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
-
-     for (i = 0; i < N; ++i) {
-	  real epsilon, integrand;
-
-	  epsilon = 3.0 / (mdata->eps_inv[i].m00 +
-			   mdata->eps_inv[i].m11 +
-			   mdata->eps_inv[i].m22);
-
-	  integrand =
-	       ctl_convert_number_to_c(
-		    gh_call2(f,
-			     ctl_convert_number_to_scm(energy[i]),
-			     ctl_convert_number_to_scm(epsilon)));
-	  energy_integral += integrand;
-	  
-#ifndef SCALAR_COMPLEX
-	  /* most points are counted twice, by rfftw output symmetry: */
-	  {
-	       int last_index;
-#  ifdef HAVE_MPI
-	       if (nz == 1) /* 2d: 1st dim. is truncated one */
-		    last_index = i / nx + local_y_start;
-	       else
-		    last_index = i % last_dim_stored;
-#  else
-	       last_index = i % last_dim_stored;
-#  endif
-	       if (last_index != 0 && 2*last_index != last_dim)
-		    energy_integral += integrand;
-	  }
-#endif
-     }
-     mpi_allreduce_1(&energy_integral, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
-     return energy_integral;
-}
-
-/**************************************************************************/
-
 /* Prepend the prefix to the fname, and append a polarization
    specifier (if any) (e.g. ".te"), returning a new string, which
    should be deallocated with free().   fname or prefix may be NULL,
@@ -1774,9 +1718,9 @@ number compute_energy_in_object_list(geometric_object_list objects)
      s1 = geometry_lattice.size.x / n1;
      s2 = geometry_lattice.size.y / n2;
      s3 = geometry_lattice.size.z / n3;
-     c1 = geometry_lattice.size.x * 0.5;
-     c2 = geometry_lattice.size.y * 0.5;
-     c3 = geometry_lattice.size.z * 0.5;
+     c1 = n1 <= 1 ? 0 : geometry_lattice.size.x * 0.5;
+     c2 = n2 <= 1 ? 0 : geometry_lattice.size.y * 0.5;
+     c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
 
      /* Here we have different loops over the coordinates, depending
 	upon whether we are using complex or real and serial or
@@ -1867,8 +1811,19 @@ number compute_energy_in_object_list(geometric_object_list objects)
 			      break; /* treat as a "nothing" object */
 			 energy_sum += energy[index];
 #ifndef SCALAR_COMPLEX
-			 if (j != 0 && 2*j != last_dim)
-			      energy_sum += energy[index];
+			 {
+			      int last_index;
+#  ifdef HAVE_MPI
+			      if (nz == 1)
+				   last_index = j + local_y_start;
+			      else
+				   last_index = k;
+#  else
+			      last_index = j;
+#  endif
+			      if (last_index != 0 && 2*last_index != last_dim)
+				   energy_sum += energy[index];
+			 }
 #endif
 			 break;
 		    }
@@ -1878,6 +1833,168 @@ number compute_energy_in_object_list(geometric_object_list objects)
      mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
 		     MPI_SUM, MPI_COMM_WORLD);
      return energy_sum;
+}
+
+/**************************************************************************/
+
+/* Compute the integral of f(energy, epsilon, r) over the cell. */
+number compute_energy_integral(function f)
+{
+     int i, j, k, n1, n2, n3, n_other, n_last, rank, last_dim;
+#ifdef HAVE_MPI
+     int local_n2, local_y_start, local_n3;
+#endif
+     real s1, s2, s3, c1, c2, c3;
+     real *energy = (real *) curfield;
+     real energy_integral = 0;
+
+     if (!curfield || !strchr("DH", curfield_type)) {
+          mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
+          return 0.0;
+     }
+
+     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
+     n_other = mdata->other_dims;
+     n_last = mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     last_dim = mdata->last_dim;
+     rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
+
+     s1 = geometry_lattice.size.x / n1;
+     s2 = geometry_lattice.size.y / n2;
+     s3 = geometry_lattice.size.z / n3;
+     c1 = n1 <= 1 ? 0 : geometry_lattice.size.x * 0.5;
+     c2 = n2 <= 1 ? 0 : geometry_lattice.size.y * 0.5;
+     c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
+
+     /* Here we have different loops over the coordinates, depending
+	upon whether we are using complex or real and serial or
+        parallel transforms.  Each loop must define, in its body,
+        variables (i2,j2,k2) describing the coordinate of the current
+        point, and "index" describing the corresponding index in 
+	the curfield array.
+
+        This was all stolen from maxwell_eps.c...it would be better
+        if we didn't have to cut and paste, sigh. */
+
+#ifdef SCALAR_COMPLEX
+
+#  ifndef HAVE_MPI
+     
+     for (i = 0; i < n1; ++i)
+	  for (j = 0; j < n2; ++j)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int i2 = i, j2 = j, k2 = k;
+	  int index = ((i * n2 + j) * n3 + k);
+
+#  else /* HAVE_MPI */
+
+     local_n2 = mdata->local_ny;
+     local_y_start = mdata->local_y_start;
+
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int i2 = i, j2 = j + local_y_start, k2 = k;
+	  int index = ((j * n1 + i) * n3 + k);
+
+#  endif /* HAVE_MPI */
+
+#else /* not SCALAR_COMPLEX */
+
+#  ifndef HAVE_MPI
+
+     for (i = 0; i < n_other; ++i)
+	  for (j = 0; j < n_last; ++j)
+     {
+	  int index = i * n_last + j;
+	  int i2, j2, k2;
+	  switch (rank) {
+	      case 2: i2 = i; j2 = j; k2 = 0; break;
+	      case 3: i2 = i / n2; j2 = i % n2; k2 = j; break;
+	      default: i2 = j; j2 = k2 = 0;  break;
+	  }
+
+#  else /* HAVE_MPI */
+
+     local_n2 = mdata->local_ny;
+     local_y_start = mdata->local_y_start;
+
+     /* For a real->complex transform, the last dimension is cut in
+	half.  For a 2d transform, this is taken into account in local_ny
+	already, but for a 3d transform we must compute the new n3: */
+     if (n3 > 1)
+	  local_n3 = mdata->last_dim_size / 2;
+     else
+	  local_n3 = 1;
+     
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < local_n3; ++k)
+     {
+#         define i2 i
+	  int j2 = j + local_y_start;
+#         define k2 k
+	  int index = ((j * n1 + i) * local_n3 + k);
+
+#  endif /* HAVE_MPI */
+
+#endif /* not SCALAR_COMPLEX */
+
+	  {
+	       real epsilon;
+	       vector3 p;
+
+	       epsilon = 3.0 / (mdata->eps_inv[index].m00 +
+				mdata->eps_inv[index].m11 +
+				mdata->eps_inv[index].m22);
+	       
+	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
+	       energy_integral += 
+		    ctl_convert_number_to_c(
+			 gh_call3(f,
+				  ctl_convert_number_to_scm(energy[index]),
+				  ctl_convert_number_to_scm(epsilon),
+				  ctl_convert_vector3_to_scm(p)));	  
+
+#ifndef SCALAR_COMPLEX
+	       {
+		    int last_index;
+#  ifdef HAVE_MPI
+		    if (nz == 1)
+			 last_index = j + local_y_start;
+		    else
+			 last_index = k;
+#  else
+		    last_index = j;
+#  endif
+		    
+		    if (last_index != 0 && 2*last_index != last_dim) {
+			 int i2c, j2c, k2c;
+			 i2c = i2 ? (n1 - i2) : 0;
+			 j2c = j2 ? (n2 - j2) : 0;
+			 k2c = k2 ? (n3 - k2) : 0;
+			 p.x = i2c * s1 - c1; 
+			 p.y = j2c * s2 - c2; 
+			 p.z = k2c * s3 - c3;
+			 energy_integral += 
+			      ctl_convert_number_to_c(
+				   gh_call3(f,
+				      ctl_convert_number_to_scm(energy[index]),
+				      ctl_convert_number_to_scm(epsilon),
+				      ctl_convert_vector3_to_scm(p)));
+		    }
+	       }
+#endif
+	  }
+     }
+
+     mpi_allreduce_1(&energy_integral, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
+     return energy_integral;
 }
 
 /**************************************************************************/
