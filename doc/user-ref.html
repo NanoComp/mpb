@@ -503,13 +503,26 @@ the lattice).  They are designed to be passed as band functions to the
 <dl>
 
 <dt><code>(output-hfield <i>which-band</i>)</code>
-<dd>Output the magnetic (H) field for <code>which-band</code>.
+<dt><code>(output-hfieldx <i>which-band</i>)</code>
+<dt><code>(output-hfieldy <i>which-band</i>)</code>
+<dt><code>(output-hfieldz <i>which-band</i>)</code>
+<dd>Output the magnetic (H) field for <code>which-band</code>; either
+all or one of the components, respectively.
 
 <p><dt><code>(output-dfield <i>which-band</i>)</code>
-<dd>Output the electric displacement (D) field for <code>which-band</code>.
+<p><dt><code>(output-dfieldx <i>which-band</i>)</code>
+<p><dt><code>(output-dfieldy <i>which-band</i>)</code>
+<p><dt><code>(output-dfieldz <i>which-band</i>)</code>
+<dd>Output the electric displacement (D) field for
+<code>which-band</code>; either all or one of the components,
+respectively.
 
 <p><dt><code>(output-efield <i>which-band</i>)</code>
-<dd>Output the electric (E) field for <code>which-band</code>.
+<p><dt><code>(output-efieldx <i>which-band</i>)</code>
+<p><dt><code>(output-efieldy <i>which-band</i>)</code>
+<p><dt><code>(output-efieldz <i>which-band</i>)</code>
+<dd>Output the electric (E) field for <code>which-band</code>; either
+all or one of the components, respectively.
 
 <p><dt><code>(output-hpwr <i>which-band</i>)</code>
 <dd>Output the magnetic-field energy density (hpwr) for
@@ -565,13 +578,13 @@ returns a band function that does nothing.)
 single unit cell.  However, you can change this by setting the
 variable <code>output-copies</code> to <code>(list <i>nx ny
 nz</i>)</code> indicating the number of periods to output along each
-lattice direction (just as for <code>output-fields</code>, below).
+lattice direction (just as for <code>output-field</code>, below).
 All of the above output functions will output the number of periods
 indicated by <code>output-copies</code>, and that also includes the
 dielectric function that is output automatically by <code>run</code>.
 
 <p>This, of course, doesn't affect any band functions that you write
-"manually" using the <code>output-fields</code> function below.
+"manually" using the <code>output-field</code> function below.
 
 <h3>Field manipulation functions</h3>
 
@@ -654,11 +667,15 @@ option of outputting several periods of the lattice.
 <dl>
 
 <dt><code>(output-field <i>[ nx [ ny [ nz ] ] ]</i>)</code>
+<dt><code>(output-fieldx <i>[ nx [ ny [ nz ] ] ]</i>)</code>
+<dt><code>(output-fieldy <i>[ nx [ ny [ nz ] ] ]</i>)</code>
+<dt><code>(output-fieldz <i>[ nx [ ny [ nz ] ] ]</i>)</code>
 <dd>Output the currently-loaded field.  The optional (as indicated by
 the brackets) parameters <code>nx</code>, <code>ny</code>, and
 <code>nz</code> indicate the number of periods to be outputted along
 each of the three lattice directions.  Omitted parameters are assumed
-to be 1.
+to be 1.  For vector fields, <code>output-field</code> outputs all of
+the components, while the other variants output only one component.
 
 <p><dt><code>(output-epsilon <i>[ nx [ ny [ nz ] ] ]</i>)</code>
 <dd>A shortcut for calling <code>get-epsilon</code> followed by
