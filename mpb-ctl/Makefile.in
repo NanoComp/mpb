@@ -26,7 +26,7 @@ PROGRAM_NAME = mpb
 VERSION_STRING = "MIT Photonic Bands @MPB_VERSION@, Copyright (C) 1999-2001 by MIT."
 
 # objects for program sources:
-OBJECTS = mpb.o epsilon.o fields.o epsilon_file.o matrix-smob.o \
+OBJECTS = mpb.o epsilon.o fields.o epsilon_file.o matrix-smob.o field-smob.o \
 	  geom.o     # since we use the geom.scm utilities
 
 HEADERS =            # any extra header files you are dependent on
@@ -90,6 +90,7 @@ mpb.o: mpb.c ctl-io.h mpb.h
 epsilon.o: epsilon.c ctl-io.h mpb.h
 fields.o: fields.c ctl-io.h mpb.h
 matrix-smob.o: matrix-smob.c matrix-smob.h smob.h ctl-io.h mpb.h
+field-smob.o: field-smob.c field-smob.h smob.h ctl-io.h mpb.h
 
 ctl-io.c ctl-io.h: $(SPECIFICATION_FILE)
 	$(GEN_CTL_IO) $(SPECIFICATION_FILE) $(LIBCTL_DIR)

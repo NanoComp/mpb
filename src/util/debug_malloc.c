@@ -32,6 +32,8 @@
 #include "mpi_utils.h"
 #include "check.h"
 
+extern void* (*my_malloc_hook) (size_t) = 0;
+
 /**********************************************************
  *   DEBUGGING CODE
  **********************************************************/

@@ -73,6 +73,8 @@ extern void vector3_to_arr(real arr[3], vector3 v);
 extern void matrix3x3_to_arr(real arr[3][3], matrix3x3 m);
 extern scalar_complex cnumber2cscalar(cnumber c);
 extern cnumber cscalar2cnumber(scalar_complex cs);
+extern cvector3 cscalar32cvector3(const scalar_complex *cs);
+extern void cvector32cscalar3(scalar_complex *cs, cvector3 v);
 
 /**************************************************************************/
 

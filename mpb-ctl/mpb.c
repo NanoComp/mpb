@@ -58,12 +58,20 @@
 
 /**************************************************************************/
 
+/* use Guile malloc function instead of plain malloc, to force use
+   of the garbage collector when we run low */
+static void *malloc_hook(size_t n)
+{
+     return (void*) scm_must_malloc(n, "stuff for MPB");
+}
+
 /* The following are hook functions called from main() when
    starting the program and just before exiting.   We use
    them to initialize MPI. */
 
 void ctl_start_hook(int *argc, char ***argv)
 {
+     my_malloc_hook = malloc_hook;
      MPI_Init(argc, argv);
 }
 
@@ -77,6 +85,7 @@ void ctl_stop_hook(void)
 void ctl_export_hook(void)
 {
      register_matrix_smobs();
+     register_field_smobs();
 }
 
 /**************************************************************************/
@@ -168,6 +177,22 @@ scalar_complex cnumber2cscalar(cnumber c)
 cnumber cscalar2cnumber(scalar_complex cs)
 {
      return make_cnumber(CSCALAR_RE(cs), CSCALAR_IM(cs));
+}
+
+cvector3 cscalar32cvector3(const scalar_complex *cs)
+{
+     cvector3 v;
+     v.x = cscalar2cnumber(cs[0]);
+     v.y = cscalar2cnumber(cs[1]);
+     v.z = cscalar2cnumber(cs[2]);
+     return v;
+}
+
+void cvector32cscalar3(scalar_complex *cs, cvector3 v)
+{
+     cs[0] = cnumber2cscalar(v.x);
+     cs[1] = cnumber2cscalar(v.y);
+     cs[2] = cnumber2cscalar(v.z);
 }
 
 /**************************************************************************/
