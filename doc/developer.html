@@ -14,8 +14,204 @@ section.
 
 <h1>Developer Information</h1>
 
-<p>Read the code.  Isn't it beautiful?  Isn't it self-explanatory?
-Isn't this a lame excuse for a missing section?
+<p>Here, we begin with a brief overview of what the program is
+computing, and then describe how the program and computation are
+broken up into different portions of the code.
+
+<p>Forgive the primitive math typography below; this will be rectified
+when <a href="http://www.w3.org/Math/">MathML</a> is supported in a <a
+href="http://www.mozilla.org/projects/mathml/">decent browser</a>.
+
+<h2>The Mathematics of Photonic-Bands</h2>
+
+<p>This section provides a whirlwind tour of the mathematics of
+photonic band structure calculations and the algorithms that we
+employ.  For more information, see also:
+
+<ul>
+
+<li><i>Photonic Crystals: Molding the Flow of Light</i>, by
+J. D. Joannopoulos, R. D. Meade, and J. N. Winn (Princeton, 1995).
+
+<li>R. D. Meade, A. M. Rappe, K. D. Brommer, and J. D. Joannopoulos,
+"Accurate theoretical analysis of photonic band-gap materials,"
+<i>Phys.  Rev. B</i> <b>48</b>, no. 11, pp. 8434-8437 (Sep 1993).
+Erratum by S. G. Johnson, <i>PRB</i> <b>55</b>, no. 23, pp. 15942
+(June 1997).
+
+</ul>
+
+<p>The MIT Photonic-Bands Package takes a periodic dielectric
+structure and computes the <emph>eigenmodes</emph> of that structure,
+which are the electromagnetic waves that can propagate through the
+structure with a definite frequency.  This corresponds to solving an
+eigenvalue problem <code>M h = (w/c)^2 h</code>, where <code>h</code>
+is the magnetic field, <code>w</code> is the frequency, and M is the
+Maxwell operator <code>curl 1/epsilon curl</code>.  We also have an
+additional constraint, that <code>div h</code> be zero (the magnetic
+field must be "transverse").
+
+<p>Since the structure is periodic, we can also invoke Bloch's theorem
+to write the states in the form <code>exp(i k*x)</code> times a
+periodic function, where <code>k</code> is the Bloch wavevector.  So,
+at each k-point (Bloch wavevector), we need to solve for a discrete
+set of eigenstates, the photonic bands of the structure.
+
+<p>To solve for the eigenstates on a computer, we must expand the
+magnetic field in some basis, where we truncate the basis to some
+finite number of points to discretize the problem.  For example, we
+could use a traditional finite-element basis in which the field is
+taken on a finite number of mesh points and linearly interpolated in
+between.  However, it is expensive to enforce the transversality
+constraint in this basis.  Instead, we use a Fourier (spectral) basis,
+expanding the periodic part of the field in terms of <code>exp(i
+G*x)</code> planewaves.  In this basis, the transversality constraint
+is easy to maintain, as it merely implies that the planewave
+amplitudes must be orthogonal to <code>k + G</code>.
+
+<p>In order to find the eigenfunctions, we could compute the elements
+of <code>M</code> explicitly in our basis, and then call LAPACK or
+some similar code to find the eigenvectors and eigenvalues.  For a
+three-dimensional calculation, this could mean finding the
+eigenvectors of a matrix with hundreds of thousands of elements on a
+side--daunting merely to store, much less compute.  Fortunately, we
+only want to know a few eigenvectors, not hundreds of thousands, so we
+can use much less expensive <emph>iterative</code> methods that don't
+require us to store <code>M</code> explicitely.
+
+<p>Iterative eigensolvers require only that one supply a routine to
+operate <code>M</code> on a vector (function).  Starting with an
+initial guess for the eigenvector, they then converge quickly to the
+actual eigenvector, stopping when the desired tolerance is achieved.
+There are many iterative eigensolver methods; we use a preconditioned
+block minimization of the Rayleigh quotient which is further described
+in the file <code>src/matrices/eigensolver.c</code>.  In the Fourier
+basis, applying <code>M</code> to a function is relatively easy: the
+curls become cross products with <code>i (k + G)</code>; the
+multiplication by <code>1/epsilon</code> is performed by using an FFT
+to transform to the spatial domain, multiplying, and then transforming
+back with an inverse FFT.
+
+<p>We also support a "targeted" eigensolver.  A typical iterative
+eigensolver finds the <code>p</code> lowest eigenvalues and
+eigenvectors.  Instead, we can find the <code>p</code> eigenvalues
+closest to a given frequency <code>w0</code> by solving for the
+eigenvalues of <code>(M - (w0/c)^2)^2</code> instead of
+<code>M</code>.  This new operator has the same eigenvectors as
+<code>M</code>, but its eigenvalues have been shifted to make those
+closest to <code>w0</code> the smallest.
+
+<p>The eigensolver we use is preconditioned, which that convergence
+can be greatly improved by suppling a good preconditioner matrix.
+Finding a good preconditioner involves making an approximate inverse
+of <code>M</code>, and is something of a black art with lots of trial
+and error.
+
+<p>There are some other tricks that one employs to get good
+convergence.  For example, the dielectric function is smoothed
+(averaged) at the resolution of the grid.  Since different
+polarizations of the field prefer different averaging methods, one has
+to construct an effective dielectric tensor at the boundaries between
+dielectrics, as described by Meade <i>et al.</i> in the paper
+referenced above.
+
+<h2>Code Organization</h2>
+
+<p>The code is organized to keep the core computation independent of
+the user interface, and to keep the eigensolver routines independent
+of the operator they are computing the eigenvector of.  The
+computational code is located in the <code>src/<code> directory, with
+a few major subdirectories, described below.  The Guile-based user interface is completely contained within the <code>photon-ctl/<code> directory.
+
+<h3>src/matrices/</h3>
+
+<p>This directory contains the eigensolver, in
+<code>eigensolver.c</code>, to which you pass an operator and it
+returns the eigenvectors.  Eigenvectors are stored using the
+<code>evectmatrix</code> data structure, which holds <code>p</code>
+eigenvectors of length <code>n<code>, potentially distributed over
+<code>n</code> in MPI.  See <code>src/matrices/README<code> for more
+information about the data structures.  In particular, you should use
+the supplied functions (<code>create_evectmatrix</code>, etcetera) to
+create and manipulate the data structures, where possible.
+
+<p>The type of the eigenvector elements is determined by
+<code>scalar.h</code>, which sets whether they are real or complex and
+single or double precision.  This is, in turn, controlled by the
+<code>--disable-complex</code> and <code>--enable-single</code>
+parameters to the <code>configure</code> script at install-time.
+<code>scalar.h</code> contains macros to make it easier to support
+both real and complex numbers elsewhere in the code.
+
+<p>Also in this directory is <code>blasglue.c</code>, a set of wrapper
+routines to make it convienient to call BLAS and LAPACK routines from
+C instead of Fortran.
+
+<h3>src/util/</h3>
+
+<p>As its name implies, this is simply a number of utility routines
+for use elsewhere in the code.  Of particular note is
+<code>check.h</code>, which defines a <code>CHECK(<i>condition</i>,
+<i>error-message</i>)</code> macro that is used extensively in the
+code to improve robustness.  There are also debugging versions of
+malloc/free (which perform lots of paranoia tests, enabled by
+<code>--enable-debug-malloc</code> in <code>configure</code>), and MPI
+glue routines that allow the program to operate without the MPI
+libraries.
+
+<h3>src/matrixio</h3>
+
+<p>This section contains code to abstract I/O for eigenvectors and
+similar matrices, providing a simpler layer on top of the HDF5
+interface.  This could be modified to support HDF4 or other I/O
+formats.
+
+<h3>src/maxwell/</h3>
+
+<p>The <code>maxwell/</code> directory contains all knowledge of
+Maxwell's equations used by the program.  It implements functions to
+apply the Maxwell operator to a vector (in <code>maxwell_op.c</code>)
+and compute a good preconditioner (in <code>maxwell_pre.c</code>).
+These functions operate upon a representation of the fields in a
+transverse Fourier basis.
+
+<p>In order to use these functions, one must first initialize a
+<code>maxwell_data</code> structure with
+<code>create_maxwell_data</code> (defined in <code>maxwell.c</code>)
+and specify a k point with <code>update_maxwell_data_k</code>.  One
+must also initialize the dielectric function using
+<code>set_maxwell_dielectric</code> by supplying a function that
+returns the dielectric constant for any given coordinate.  You can
+also restrict yourself to TE or TM polarizations in two dimensions by
+calling <code>set_maxwell_data_polarization</code>.
+
+<p>This directory also contains functions
+<code>maxwell_compute_dfield</code>, etcetera, to compute the
+position-space fields from the Fourier-transform representation
+returned by the eigensolver.
+
+<h3>photon-ctl/</h3>
+
+<p>Here is the Guile-based user interface code for the eigensolver.
+Instead of using Guile directly, this code is built on top of the
+<code>libctl</code> library as described in previous sections.  This
+means that the user-interface code (in <code>photon.c</code>) is
+fairly short, consisting of a number of small functions that are
+callable by the user from Guile.
+
+<p>The core of the user interface is the file <code>photon.scm</code>,
+the <i>specifications file</i> for libctl as described in the <a
+href="http://ab-initio.mit.edu/libctl/doc/">libctl manual</a>.
+Actually, <code>photon.scm</code> is generated by
+<code>configure</code> from <code>photon.scm.in</code> (in order to
+substitute in parameters like the location of the libctl library); you
+should only edit <code>photon.scm.in</code> directly.
+
+<p>The specifications file defines the data structures and subroutines
+that are visible to the Guile user.  It also defines a number of
+Scheme subroutines for the user to call directly, like
+<code>(run)</code>.  It is often simpler and more flexible to define
+functions like this in Scheme rather than in C.
 
 <hr>
 Go to the <a href="acknowledgments.html">next</a>, <a
