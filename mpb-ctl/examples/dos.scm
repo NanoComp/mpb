@@ -35,7 +35,6 @@
 
 ; Like broaden-df, above, but use a default df given by (median-diff freqs).
 (define (broaden freqs)
-  (print "median-diff = " (median-diff freqs) "\n")
   (broaden-df freqs (median-diff freqs)))
 
 ; return the broaden (dos) function applied to all-freqs, the list of
