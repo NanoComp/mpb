@@ -524,16 +524,94 @@ returns a band function that does nothing.)
 
 <h3>Field manipulation functions</h3>
 
+<p>The Photonic-Bands package provides a number of ways to take the
+field of a band and manipulate, process, or output it.  These methods
+usually work in two stages.  First, one loads a field into memory
+(computing it in position space) by calling one of the
+<code>get</code> functions below.  Then, other functions can be called
+to transform or manipulate the field.  Currently, only one field
+(vector or scalar) can be manipulated at a time.
+
+<p>The available <code>get</code> functions follow.  They should only
+be called after the eigensolver has run (or after
+<code>init-params</code>, in the case of <code>get-epsilon</code>).
+One normally calls them after <code>run</code>, or in one of the band
+functions passed to <code>run</code>.
+
 <dl>
 
-<dt><code>( <i></i>)</code>
-<dd>
+<dt><code>(get-hfield <i>which-band</i>)</code>
+<dd>Loads the magnetic (H) field for the band <code>which-band</code>.
 
-<p><dt><code>( <i></i>)</code>
-<dd>
+<p><dt><code>(get-dfield <i>which-band</i>)</code>
+<dd>Loads the electric displacement (D) field for the band
+<code>which-band</code>.
 
-<p><dt><code>( <i></i>)</code>
-<dd>
+<p><dt><code>(get-efield <i>which-band</i>)</code>
+<dd>Loads the electric (E) field for the band <code>which-band</code>.
+(This function actually calls <code>get-dfield</code> followed by
+<code>get-efield-from-dfield</code>, below.)
+
+<p><dt><code>(get-epsilon)</code>
+<dd>Loads the dielectric function.
+
+</dl>
+
+<p>Once loaded, the field can be transformed into another field or a
+scalar field:
+
+<dl>
+
+<dt><code>(get-efield-from-dfield)</code>
+<dd>Multiplies by the inverse dielectric tensor to compute the
+electric field from the displacement field.  Only works if a D field
+has been loaded.
+
+<p><dt><code>(compute-field-energy)</code>
+<dd>Given the H or D fields, computes the corresponding energy density
+function.  Also prints the fraction of the field in each of its
+cartesian components in the following form (suitable for grepping):
+
+<pre>
+<i>f</i>-energy-components:, <i>k-index</i>, <i>band-index</i>, <i>x-fraction</i>, <i>y-fraction</i>, <i>z-fraction</i>
+</pre>
+
+<p>where <code><i>f</i></code> is either <code>h</code> or <code>d</code>.
+
+</dl>
+
+<p>Given an energy-density function, loaded by
+<code>compute-field-energy</code>, various functions can be computed:
+
+<dl>
+
+<dt><code>(compute-energy-in-dielectric <i>min-eps max-eps</i>)</code>
+<dd>Returns the fraction of the energy that resides in dielectrics
+with epsilon in the range <code>min-eps</code> to
+<code>max-eps</code>.
+
+<p><dt><code>(compute-energy-in-objects <i>objects...</i>)</code>
+<dd>Returns the fraction of the energy inside zero or more geometric
+objects.
+
+</dl>
+
+<p>Finally, we have the following functions to output fields (either
+the vector fields, the scalar energy density, or epsilon), with the
+option of outputting several periods of the lattice.
+
+<dl>
+
+<dt><code>(output-field <i>[ nx [ ny [ nz ] ] ]</i>)</code>
+<dd>Output the currently-loaded field.  The optional (as indicated by
+the brackets) parameters <code>nx</code>, <code>ny</code>, and
+<code>nz</code> indicate the number of periods to be outputted along
+each of the three lattice directions.  Omitted parameters are assumed
+to be 1.
+
+<p><dt><code>(output-epsilon <i>[ nx [ ny [ nz ] ] ]</i>)</code>
+<dd>A shortcut for calling <code>get-epsilon</code> followed by
+<code>output-field</code>.
 
 </dl>
 
