@@ -1,3 +1,44 @@
+Fri Nov 12 20:46:38 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* photon-ctl/photon.scm.in: Removed begin-time macro (moved it to
+	libctl).
+
+	* src/matrixio/matrixio.c, src/matrixio/matrixio.h,
+	src/config.h.in, src/matrixio/evectmatrixio.c,
+	src/matrixio/fieldio.c, TODO, configure.in: Added --without-hdf5
+	option (automatic when hdf5 libraries are not found).
+
+	* TODO: added some items
+
+	* TODO, configure.in: Fixed linking to ESSL on AIX.
+
+	* src/util/fortranize.h: don't need to define NO_FORTRAN_FUNCTIONS
+	here on AIX, since it's detected by configure.
+
+Thu Nov 11 03:01:28 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* configure.in, doc/installation.html: Added --with-fastblas=<lib>
+	to try linking with -l<lib>.
+
+	* doc/developer.html, doc/introduction.html,
+	doc/acknowledgments.html: Several updates.
+
+	* tests/maxwell_test.c, src/maxwell/maxwell_op.c,
+	src/maxwell/maxwell_pre.c, tests/eigs_test.c,
+	src/matrices/eigensolver.c, src/matrices/eigensolver.h,
+	src/maxwell/maxwell.h, photon-ctl/photon.c,
+	photon-ctl/photon.scm.in, TODO, doc/user-ref.html: Implemented
+	fancy preconditioner.  Also made different eigensolver iteration
+	schemes into runtime flags (instead of preprocessor #ifdefs).
+
+Wed Nov  3 23:14:56 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* photon-ctl/photon.scm.in: added elapsed time output
+
+Mon Nov  1 22:52:13 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* TODO: updated to reflect recent improvements
+
 Tue Oct 26 00:54:42 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* doc/developer.html: Fixed missing </code> tags.
