@@ -332,8 +332,8 @@
     (compute-field-energy)
     (let ((energy (compute-energy-in-object-list objects)))
         ; output the computed energy for grepping:
-	(display-many "dpwr:, " which-band ", " (list-ref freqs which-band)
-		      ", " energy "\n")
+	(display-many "dpwr:, " which-band ", "
+		      (list-ref freqs (- which-band 1)) ", " energy "\n")
 	(if (>= energy min-energy)
 	    (output-func which-band)))))
 
