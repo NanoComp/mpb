@@ -36,6 +36,7 @@ extern scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y);
 
 /* sqmatrix operations, defined in sqmatrix.c: */
 
+extern void sqmatrix_copy(sqmatrix A, sqmatrix B);
 extern scalar sqmatrix_trace(sqmatrix U);
 extern scalar sqmatrix_traceAtB(sqmatrix A, sqmatrix B);
 extern void sqmatrix_AeBC(sqmatrix A, sqmatrix B, short bdagger,

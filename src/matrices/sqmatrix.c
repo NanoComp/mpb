@@ -10,6 +10,14 @@
 /* Simple operations on sqmatrices.  Also, some not-so-simple operations,
    like inversion and eigenvalue decomposition. */
 
+/* A = B */
+void sqmatrix_copy(sqmatrix A, sqmatrix B)
+{
+     CHECK(A.p == B.p, "arrays not conformant");
+
+     blasglue_copy(A.p * A.p, B.data, 1, A.data, 1);
+}
+
 /* trace(U) */
 scalar sqmatrix_trace(sqmatrix U)
 {
