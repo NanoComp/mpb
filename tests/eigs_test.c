@@ -98,7 +98,7 @@ int main(int argc, char **argv)
      sqmatrix_copy(U, A);
 
      sqmatrix_copy(Ainv, A);
-     sqmatrix_invert(Ainv);
+     sqmatrix_invert(Ainv, 1, X);
      
      if (n <= 10) {
 	  printf("Solving for eigenvalues of %d x %d matrix: \nA = ", n, n);
