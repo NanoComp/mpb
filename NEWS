@@ -23,6 +23,10 @@ MPB 1.2 (11/15/00)
     effective dielectric tensor.  (This feature is not yet supported if
     you configure --with-inv-symmetry --with-hermitian-epsilon.)
 
+  * run-polarization is replaced by run-parity, and run-even/run-odd are
+    deprecated in favor of run-zeven/run-zodd.  run-te/run-tm are now
+    equivalent to run-zeven/run-zodd when invoked for 3d systems.
+
   * Noted new basis-size property of geometry-lattice, from libctl 1.5.
     This makes it easier to use conventional units in the fcc lattice.
 
