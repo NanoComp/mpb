@@ -230,22 +230,22 @@ doing as it runs.  Most of this is self-explanatory, but we should
 point out one output in particular.  Among the output, you should see
 lines like:
 
-<p><code>sumte:, 13, 0.3, 0.3, 0, 0.424264, 0.37257, 0.541992, 0.643548, 0.815214, 0.828954, 0.893648, 1.01423, 1.11392</code>
+<p><code>tefreqs:, 13, 0.3, 0.3, 0, 0.424264, 0.37257, 0.541992, 0.643548, 0.815214, 0.828954, 0.893648, 1.01423, 1.11392</code>
 
 <p>These lines are designed to allow you to easily extract the
 band-structure information and import it into a spreadsheet for
 graphing.  They comprise the k point index, the k components and
 magnitude, and the frequencies of the bands, in comma-delimited
-format.  Each line is prefixed by "sumte" for TE bands, "sumtm" for TM
-bands, and "sumfrq" for ordinary bands (produced by
+format.  Each line is prefixed by "tefreqs" for TE bands, "tmfreqs"
+for TM bands, and "freqs" for ordinary bands (produced by
 <code>(run)</code>), and using this prefix you can extract the data
 you want from the output by passing it through a program like
 <code>grep</code>.  For example, if you had redirected the output to a
 file <code>foo.out</code> (as described earlier), you could extract
-the TM bands by running <code>grep sumtm foo.out</code> at the Unix
+the TM bands by running <code>grep tmfreqs foo.out</code> at the Unix
 prompt.  Note that the output includes a header line, like:
 
-<p><code>sumte:, k index, kx, ky, kz, kmag/2pi, band 1, band 2, band 3, band 4, band 5, band 6, band 7, band 8</code>
+<p><code>tefreqs:, k index, kx, ky, kz, kmag/2pi, band 1, band 2, band 3, band 4, band 5, band 6, band 7, band 8</code>
 
 <p>explaining each column of data.  Another output of the
 <code>run</code> is the list of band gaps detected in the computed

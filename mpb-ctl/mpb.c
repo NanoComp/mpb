@@ -369,8 +369,8 @@ void solve_kpoint(vector3 kvector)
 	for the frequency grep data: */
      if (!kpoint_index) {
 	  printf("%s:, k index, kx, ky, kz, kmag/2pi",
-		 mdata->polarization == NO_POLARIZATION ? "sumfrq" :
-		 (mdata->polarization == TM_POLARIZATION ? "sumtm" : "sumte"));
+		 mdata->polarization == NO_POLARIZATION ? "freqs" :
+	      (mdata->polarization == TM_POLARIZATION? "tmfreqs" : "tefreqs"));
 	  for (i = 0; i < num_bands; ++i)
 	       printf(", %sband %d",
 		      mdata->polarization == NO_POLARIZATION ? "" :
@@ -445,8 +445,8 @@ void solve_kpoint(vector3 kvector)
      CHECK(freqs.items, "out of memory");
      
      printf("%s:, %d, %g, %g, %g, %g",
-	    mdata->polarization == NO_POLARIZATION ? "sumfrq" :
-	    (mdata->polarization == TE_POLARIZATION ? "sumte" : "sumtm"),
+	    mdata->polarization == NO_POLARIZATION ? "freqs" :
+	    (mdata->polarization == TE_POLARIZATION ? "tefreqs" : "tmfreqs"),
 	    ++kpoint_index, k[0], k[1], k[2],
 	    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
      for (i = 0; i < num_bands; ++i) {
