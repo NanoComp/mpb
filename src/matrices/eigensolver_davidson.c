@@ -46,7 +46,7 @@ extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
 
 /**************************************************************************/
 
-#define EIGENSOLVER_MAX_ITERATIONS 10000
+#define EIGENSOLVER_MAX_ITERATIONS 100000
 #define FEEDBACK_TIME 4.0 /* elapsed time before we print progress feedback */
 
 /**************************************************************************/

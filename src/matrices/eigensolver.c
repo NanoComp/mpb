@@ -54,7 +54,7 @@ extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
 
 /**************************************************************************/
 
-#define EIGENSOLVER_MAX_ITERATIONS 10000
+#define EIGENSOLVER_MAX_ITERATIONS 100000
 #define FEEDBACK_TIME 4.0 /* elapsed time before we print progress feedback */
 
 /* Number of iterations after which to reset conjugate gradient
@@ -220,6 +220,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
      if (flags & EIGS_ORTHONORMALIZE_FIRST_STEP) {
 	  evectmatrix_XtX(U, Y, S2);
+	  sqmatrix_assert_hermitian(U);
 	  sqmatrix_invert(U, 1, S2);
 	  sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
 	  evectmatrix_XeYS(G, Y, S1, 1); /* G = orthonormalize Y */
@@ -242,6 +243,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       use_linmin = 0;
 
 	  TIME_OP(time_ZtZ, evectmatrix_XtX(YtY, Y, S2));
+	  sqmatrix_assert_hermitian(YtY);
 
 	  y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtY)) / Y.p);
 	  blasglue_rscal(Y.p * Y.n, 1/y_norm, Y.data, 1);
@@ -277,6 +279,11 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  }
 
 	  TIME_OP(time_AZ, A(Y, X, Adata, 1, G)); /* X = AY; G is scratch */
+
+#ifdef DEBUG
+	  evectmatrix_XtY(S1, Y, X, S2);
+	  sqmatrix_assert_hermitian(S1);
+#endif
 
 	  /* G = AYU; note that U is Hermitian: */
 	  TIME_OP(time_ZS, evectmatrix_XeYS(G, X, U, 1));
@@ -509,6 +516,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       A(D, G, Adata, 0, X); /* G = A D; X is scratch */
 	       evectmatrix_XtX(DtD, D, S2);
 	       evectmatrix_XtY(DtAD, D, G, S2);
+	       sqmatrix_assert_hermitian(DtD);
+	       sqmatrix_assert_hermitian(DtAD);
 	       
 	       evectmatrix_XtY(S1, Y, D, S2);
 	       sqmatrix_symmetrize(symYtD, S1);
@@ -551,6 +560,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       /* Set S1 to YtAYU * YtY = YtAY for use in linmin.
 		  (tfd.YtAY == S1). */
 	       sqmatrix_AeBC(S1, YtAYU, 0, YtY, 1);
+	       sqmatrix_assert_hermitian(S1);
 
 	       mpi_assert_equal(theta);
 	       {
