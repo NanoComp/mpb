@@ -288,6 +288,9 @@ void init_params(int p, boolean reset_fields)
 	doing and what we've read in. */
      
      printf("init-params: initializing eigensolver data\n");
+#ifndef SCALAR_COMPLEX
+     printf("  -- assuming INVERSION SYMMETRY in the geometry.\n");
+#endif
      
      printf("Computing %d bands with %e tolerance.\n", num_bands, tolerance);
      if (target_freq != 0.0)
