@@ -22,7 +22,7 @@ MPB 1.3 (3/10/2002)
     reporting floating-point exceptions on Alphas.
 
   * Fixed compilation failure for Fortran compilers that use all upper case;
-    thanks to Steve Lantz of Corning.
+    thanks to Steve Lantz of Cornell.
 
   * Added "Fun with Fortran" section to installation manual describing
     common Fortran pitfalls; thanks to Steve Lantz for the suggestion.
