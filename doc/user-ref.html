@@ -50,10 +50,10 @@ they were shifted by all possible lattice vectors; i.e. they are made
 periodic in the lattice.
 
 <p><dt><code>geometry-lattice</code> [<code>lattice</code> class]
-<dd>Specifies the lattice vectors of the periodic structure.  The unit
-lattice vectors form the basis for all other 3-vectors in the
-geometry, and their lengths determine the size of the primitive cell.
-Defaults to the orthogonal x-y-z vectors of unit length (i.e. a
+<dd>Specifies the basis vectors and lattice size of the periodic
+structure.  These vectors form the basis for all other 3-vectors in
+the geometry, and the lattice size determines the size of the primitive
+cell.  Defaults to the orthogonal x-y-z vectors of unit length (i.e. a
 square/cubic lattice).
 
 <p><dt><code>grid-size</code> [<code>vector3</code>]
@@ -88,15 +88,14 @@ discussed above.  Defaults to 3.
 <p><dt><code><a name="k-points">k-points</a></code> [list of
 <code>vector3</code>]
 <dd>List of Bloch wavevectors to compute the bands at, expressed in
-the basis of the reciprocal lattice vectors (<em>not</em> the
-unit-normalized reciprocal lattice vectors).  The reciprocal lattice
+the basis of the reciprocal lattice vectors.  The reciprocal lattice
 vectors are defined as follows: Given the lattice vectors
-<code>R<sub>i</sub></code>, the reciprocal lattice vector
-<code>G<sub>j</sub></code> satisfies <code>R<sub>i</sub> *
-G<sub>j</sub> = 2*Pi*delta<sub>i,j</sub></code>, where
-<code>delta<sub>i,j</sub></code> is the Kronecker delta (1 for <code>i
-= j</code> and 0 otherwise). Normally, the wavevectors should be in
-the first Brillouin zone (<a href="#first-brillouin-zone">see
+<code>R<sub>i</sub></code> (<em>not</em> the basis vectors), the
+reciprocal lattice vector <code>G<sub>j</sub></code> satisfies
+<code>R<sub>i</sub> * G<sub>j</sub> = 2*Pi*delta<sub>i,j</sub></code>,
+where <code>delta<sub>i,j</sub></code> is the Kronecker delta (1 for
+<code>i = j</code> and 0 otherwise). Normally, the wavevectors should
+be in the first Brillouin zone (<a href="#first-brillouin-zone">see
 below</a>).  <code>k-points</code> defaults to none (empty list).
 
 <p><dt><code>num-bands</code> [<code>integer</code>]
@@ -272,15 +271,24 @@ lattice vectors.
 <dt><code>basis1</code>, <code>basis2</code>, <code>basis3</code> [<code>vector3</code>]
 <dd>The three lattice directions of the crystal, specified in the
 cartesian basis.  The lengths of these vectors are ignored--only their
-directions matter.  The corresponding unit vectors are used as the
-basis for all other 3-vectors in the ctl file.  They default to the x,
-y, and z directions, respectively.
+directions matter.  The lengths are determined by the
+<code>basis-size</code> property, below.  These vectors are then used
+as a basis for all other 3-vectors in the ctl file.  They default to
+the x, y, and z directions, respectively.
+
+<dt><code>basis-size</code> [<code>vector3</code>]
+<dd>The components of <code>basis-size</code> are the lengths of the
+three basis vectors, respectively.  They default ot unit lengths.
+
 <dt><code>size</code> [<code>vector3</code>]
-<dd>The size of the lattice (i.e. the length of the lattice vectors,
-in which the crystal is periodic) along the three basis directions.
-(Alternatively, you can think of this as the vector between opposite
-corners of the primitive cell, specified in the lattice basis.)
-Defaults to unit lengths.
+<dd>The size of the lattice (i.e. the length of the lattice vectors
+<code>R<sub>i</sub></code>, in which the crystal is periodic) in units
+of the basis vectors.  Thus, the actual lengths of the lattice vectors
+are given by the components of <code>size</code> multiplied by the
+components of <code>basis-size</code>.  (Alternatively, you can think
+of <code>size</code> as the vector between opposite corners of the
+primitive cell, specified in the lattice basis.)  Defaults to unit
+lengths.
 </dl>
 
 </dl>
@@ -392,10 +400,11 @@ the <code>material</code> and <code>center</code> properties (which
 must be specified, since they have no default values).
 
 <p>Recall that all 3-vectors, including the center of an object, its
-axes, and so on, are specified in the basis of the unit-normalized
-lattice vectors.  Note also that 3-vector properties can be specified
-by either <code>(<i>property</i> (vector3 <i>x y z</i>))</code> or,
-equivalently, <code>(<i>property</i> <i>x y z</i>)</code>.
+axes, and so on, are specified in the basis of the normalized lattice
+vectors normalized to <code>basis-size</code>.  Note also that
+3-vector properties can be specified by either <code>(<i>property</i>
+(vector3 <i>x y z</i>))</code> or, equivalently,
+<code>(<i>property</i> <i>x y z</i>)</code>.
 
 <p>In a two-dimensional calculation, only the intersections of the
 objects with the x-y plane are considered.
@@ -552,8 +561,8 @@ between the lattice, cartesian, and reciprocal bases.  (See also the
 
 <dt><code>(lattice->cartesian <i>x</i>)</code>, <code>(cartesian->lattice <i>x</i>)</code>
 <dd>Convert <code><i>x</i></code> between the lattice basis (the basis
-of the unit vectors in the lattice directions) and the ordinary
-cartesian basis, where <code><i>x</i></code> is either a
+of the lattice vectors normalized to <code>basis-size</code>) and the
+ordinary cartesian basis, where <code><i>x</i></code> is either a
 <code>vector3</code> or a <code>matrix3x3</code>, returning the
 transformed vector/matrix.  In the case of a matrix argument, the
 matrix is treated as an operator on vectors in the given basis, and is

@@ -165,8 +165,9 @@ in the new list:
 #(0.1 0.1 0.0) #(0 0 0))</code>
 
 <p>As is <a href="#units">described below</a>, all spatial vectors in
-the program are specified in the basis of the unit-normalized lattice
-directions, while the k points are specified in the basis of the
+the program are specified in the basis of the lattice directions
+normalized to <code>basis-size</code> lengths (default is
+unit-normalized), while the k points are specified in the basis of the
 (unnormalized) reciprocal lattice vectors.  In this case, we don't
 have to specify the lattice directions, because we are happy with the
 defaults--the lattice vectors default to the cartesian unit axes
@@ -358,16 +359,18 @@ examples, and this is the default behavior of Photonic-Bands: the
 lattice constant is one, and all coordinates are scaled accordingly.
 
 <p>As has been mentioned already, (nearly) all 3-vectors in the
-program are specified in the <em>basis</em> of the unit vectors in the
-lattice directions, i.e. the <em>unit-normalized</em> lattice vectors.
-That is, each component is multiplied by the corresponding basis
-vector and summed to compute the corresponding cartesian vector.  It
-is worth noting that a basis is not meaningful for scalar distances
-(such as the cylinder radius), however: these are just the ordinary
-cartesian distances in your chosen units of <i>a</i>.  (Note also that
-the <a href="user-ref.html#k-points">k-points</a>, as mentioned above,
-are an exception: they are in the basis of the reciprocal lattice
-vectors.)  We provide <a href="user-ref.html#coordconvert">conversion
+program are specified in the <em>basis</em> of the lattice vectors
+<em>normalized</em> to lengths given by <code>basis-size</code> (a
+property of <code>geometry-lattice</code>), defaulting to the
+<em>unit-normalized</em> lattice vectors.  That is, each component is
+multiplied by the corresponding basis vector and summed to compute the
+corresponding cartesian vector.  It is worth noting that a basis is
+not meaningful for scalar distances (such as the cylinder radius),
+however: these are just the ordinary cartesian distances in your
+chosen units of <i>a</i>.  (Note also that the <a
+href="user-ref.html#k-points">k-points</a>, as mentioned above, are an
+exception: they are in the basis of the reciprocal lattice vectors.)
+We provide <a href="user-ref.html#coordconvert">conversion
 functions</a> to transform vectors between the various bases.
 
 <p>The frequency eigenvalues returned by the program are in units of
