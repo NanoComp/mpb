@@ -825,7 +825,10 @@ number compute_field_energy(void)
      /* remember that we now have energy density; denoted by capital D/H */
      curfield_type = toupper(curfield_type);
 
-     return energy_sum;
+     /* Return the total energy.  Divide by N to account for the
+	scaling of the Fourier transform, so that the integral is
+	consistent with the integral in frequency-domain. */
+     return (energy_sum/N);
 }
 
 /**************************************************************************/
