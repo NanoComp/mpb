@@ -27,6 +27,7 @@
 #include <blasglue.h>
 
 #include "eigensolver.h"
+#include "linmin.h"
 
 extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
                                           evectoperator A, void *Adata,
@@ -61,6 +62,9 @@ extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
    size?) */
 #define CG_RESET_ITERS 70
 
+/* Threshold for trace(1/YtY) = trace(U) before we reorthogonalize: */
+#define EIGS_TRACE_U_THRESHOLD 1e8
+
 /**************************************************************************/
 
 /* estimated times/iteration for different iteration schemes, based
@@ -90,18 +94,16 @@ extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
 /**************************************************************************/
 
 typedef struct {
-     real d_norm;
      sqmatrix YtAY, DtAD, symYtAD, YtY, DtD, symYtD, S1, S2, S3;
 } trace_func_data;
 
-static real trace_func(real *trace_deriv,
-		       real theta, void *data)
+static double trace_func(double theta, double *trace_deriv, void *data)
 {
-     real trace;
+     double trace;
      trace_func_data *d = (trace_func_data *) data;
 
      {
-	  real c = cos(theta), s = sin(theta) / d->d_norm;
+	  double c = cos(theta), s = sin(theta);
 	  sqmatrix_copy(d->S1, d->YtY);
 	  sqmatrix_aApbB(c*c, d->S1, s*s, d->DtD);
 	  sqmatrix_ApaB(d->S1, 2*s*c, d->symYtD);
@@ -115,11 +117,11 @@ static real trace_func(real *trace_deriv,
      }
 
      if (trace_deriv) {
-	  real c2 = cos(2*theta), s2 = sin(2*theta);
+	  double c2 = cos(2*theta), s2 = sin(2*theta);
 	  
 	  sqmatrix_copy(d->S3, d->YtAY);
-	  sqmatrix_ApaB(d->S3, -1.0/(d->d_norm*d->d_norm), d->DtAD);
-	  sqmatrix_aApbB(-0.5 * s2, d->S3, c2/d->d_norm, d->symYtAD);
+	  sqmatrix_ApaB(d->S3, -1.0, d->DtAD);
+	  sqmatrix_aApbB(-0.5 * s2, d->S3, c2, d->symYtAD);
 	  
 	  *trace_deriv = SCALAR_RE(sqmatrix_traceAtB(d->S1, d->S3));
 	  
@@ -127,8 +129,8 @@ static real trace_func(real *trace_deriv,
 	  sqmatrix_AeBC(d->S2, d->S3, 0, d->S1, 1);
 	  
 	  sqmatrix_copy(d->S3, d->YtY);
-	  sqmatrix_ApaB(d->S3, -1.0/(d->d_norm*d->d_norm), d->DtD);
-	  sqmatrix_aApbB(-0.5 * s2, d->S3, c2/d->d_norm, d->symYtD);
+	  sqmatrix_ApaB(d->S3, -1.0, d->DtD);
+	  sqmatrix_aApbB(-0.5 * s2, d->S3, c2, d->symYtD);
 	  
 	  *trace_deriv -= SCALAR_RE(sqmatrix_traceAtB(d->S2, d->S3));
 	  *trace_deriv *= 2;
@@ -139,154 +141,7 @@ static real trace_func(real *trace_deriv,
 
 /**************************************************************************/
 
-/* Minimize the function func(x) to within a fractional tolerance (in
-   x) of "tolerance".  The df parameter of func should return the
-   derivative d(func)/dx at x; if df is NULL the derivative should not
-   be computed/returned.  The data parameter to linmin is passed
-   unchanged to func.
-
-   Looks for the minimum between xmin and xmax, with x0 an initial guess
-   for the minimum.  f_xmin and df_xmin should be the values of func
-   and its derivative at xmin.
-
-   x0 *must* be in the "downhill" direction from xmin.  Thus, if
-   df_xmin is negative, then we should have x0 > xmin, and the
-   opposite if df_xmin > 0.  xmax must be "downhill" from x0.  Thus,
-   if df_xmin > 0, we must have xmax < x0 < xmin, the opposite of what
-   you might expect.
-
-   Return value is the x that minimizes func between xmin and xmax.
-   Also, upon return, improvement is the fractional decrease that was
-   made in the function value relative to the initial guess x0. */
-
-static real linmin(real *improvement,
-		   real xmin, real f_xmin, real df_xmin, real xmax, real x0,
-		   real tolerance,
-		   real (*func) (real *df, real x, void *data), void *data)
-{
-     real x_prev, x, dx, f, df, f_x0, df_x0, f_xmax, df_xmax, s, f_xstart=0;
-     int eval_count = 0, is_xstart;
-
-     CHECK(df_xmin * (x0 - xmin) < 0.0, "linmin: bad initial guess!");
-
-     s = xmax > xmin ? 1.0 : -1.0;
-     CHECK(x0*s < xmax*s && x0*s > xmin*s,
-	   "linmin: initial guess out of range");
-
-     /* first, bracket the minimum: 
-        (the following works, but is not very smart...fix it!) */
-
-     do {
-	  real xmin2 = xmin, f_xmin2 = f_xmin, df_xmin2 = df_xmin;
-	  dx = (x0 - xmin) * 2.0;
-	  for (x = xmin + dx; x*s <= xmax*s; x += dx) {
-	       f = func(&df, x, data);
-	       ++eval_count;
-	       if (df * (x - xmin) > 0.0)
-		    break;
-	       else {
-		    xmin2 = x; f_xmin2 = f; df_xmin2 = df;
-	       }
-	  }
-	  if (x*s <= xmax*s) {
-	       xmin = xmin2; f_xmin = f_xmin2; df_xmin = df_xmin2;
-	       break;
-	  }
-	  x0 = 0.5 * (x0 + xmin);
-     } while (fabs(x0 - xmin) > tolerance * (fabs(x0) + tolerance));
-     xmax = x; f_xmax = f; df_xmax = df;
-     CHECK(fabs(x0 - xmin) > tolerance * (fabs(x0) + tolerance),
-	   "linmin: failed to bracket minimum!");
-
-     if (x0*s <= xmin*s || x0*s >= xmax*s)
-	  x0 = 0.5 * (xmin + xmax);
-
-     /* Now, find the root of the derivative by Ridder's Method: */
-
-     if (xmin > xmax) {
-	  x = xmin; f = f_xmin; df = df_xmin;
-	  xmin = xmax; f_xmin = f_xmax; df_xmin = df_xmax;
-	  xmax = x; f_xmax = f; df_xmax = df;
-     }
-     
-     is_xstart = 1;
-     x_prev = x0;
-     while (1) {
-	  f_x0 = func(&df_x0, x0, data);
-	  ++eval_count;
-	  if (is_xstart) {
-	       f_xstart = f_x0;
-	       is_xstart = 0;
-	  }
-
-	  if (df_x0 == 0)
-	       break;
-	  if (df_xmin == 0) {
-	       x0 = xmin;
-	       break;
-	  }
-	  if (df_xmax == 0) {
-	       x0 = xmax;
-	       break;
-	  }
-
-	  x = x0 + (x0 - xmin) * (df_xmin > df_xmax ? 1 : -1) *
-	       df_x0 / sqrt(df_x0*df_x0 - df_xmin*df_xmax);
-
-	  if (MAX2(fabs(x - x_prev), MIN2(fabs(x - xmin), fabs(x - xmax))) <
-	      tolerance * (fabs(x) + tolerance)) {
-	       x0 = x;
-	       break;
-	  }
-
-	  f = func(&df, x, data);
-	  ++eval_count;
-
-	  if (df * df_x0 > 0 || (df - df_x0) * (x - x0) < 0) {
-	       if (x < x0) {
-		    if (df_xmin*df > 0 || (df_xmin - df)*(xmin - x) < 0) {
-			 xmin = x0; f_xmin = f_x0; df_xmin = df_x0;
-		    }
-		    else {
-			 xmax = x; f_xmax = f; df_xmax = df;
-		    }
-	       }
-	       else if (df_xmin*df_x0 > 0 || (df_xmin - df_x0)*(xmin-x0) < 0) {
-		    xmin = x; f_xmin = f; df_xmin = df;
-	       }
-	       else {
-		    xmax = x0; f_xmax = f_x0; df_xmax = df_x0;
-	       }
-	  }
-	  else {
-	       if (x < x0) {
-		    xmin = x; f_xmin = f; df_xmin = df;
-		    xmax = x0; f_xmax = f_x0; df_xmax = df_x0;
-	       }
-	       else {
-		    xmin = x0; f_xmin = f_x0; df_xmin = df_x0;
-		    xmax = x; f_xmax = f; df_xmax = df;
-	       }
-	  }
-
-	  x0 = 0.5 * (xmin + xmax);
-	  x_prev = x;
-     }
-
-     f_x0 = func(NULL, x0, data);
-     ++eval_count;
-     *improvement = (f_xstart - f_x0) * 2.0 /
-	  (fabs(f_xstart) + fabs(f_x0) + tolerance);
-
-#if 0
-     printf("linmin: from %g to %g (%g%% improvement) in %d evaluations.\n",
-	    f_xstart, f_x0, *improvement * 100, eval_count);
-#endif
-
-     return x0;
-}
-
-/**************************************************************************/
+#define EIG_HISTORY_SIZE 5
 
 void eigensolver(evectmatrix Y, real *eigenvals,
                  evectoperator A, void *Adata,
@@ -296,10 +151,12 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                  real tolerance, int *num_iterations,
                  int flags)
 {
+     real convergence_history[EIG_HISTORY_SIZE];
      evectmatrix G, D, X, prev_G;
      short usingConjugateGradient = 0, use_polak_ribiere = 0,
 	   use_linmin = 1;
      real E, prev_E = 0.0;
+     real d_scale = 1.0;
      real traceGtX, prev_traceGtX = 0.0;
      real theta, prev_theta = 0.5;
      int i, iteration = 0;
@@ -357,14 +214,25 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      tfd.YtY = YtY; tfd.DtD = DtD; tfd.symYtD = symYtD;
      tfd.S1 = YtAYU; tfd.S2 = S2; tfd.S3 = S3;
 
+     if (flags & EIGS_ORTHONORMALIZE_FIRST_STEP) {
+	  evectmatrix_XtX(U, Y);
+	  sqmatrix_invert(U);
+	  sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
+	  evectmatrix_XeYS(G, Y, S1, 1); /* G = orthonormalize Y */
+	  evectmatrix_copy(Y, G);
+     }
+
      for (i = 0; i < Y.p; ++i)
           eigenvals[i] = 0.0;
+
+     for (i = 0; i < EIG_HISTORY_SIZE; ++i)
+	  convergence_history[i] = 10000.0;
 
      if (constraint)
 	  constraint(Y, constraint_data);
 
      do {
-	  real y_norm, d_norm;
+	  real y_norm;
 
 	  if (flags & EIGS_FORCE_APPROX_LINMIN)
 	       use_linmin = 0;
@@ -376,8 +244,32 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  blasglue_scal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
 
 	  sqmatrix_copy(U, YtY);
-
 	  sqmatrix_invert(U);
+
+	  /* If trace(1/YtY) gets big, it means that the columns
+	     of Y are becoming nearly parallel.  This sometimes happens,
+	     especially in the targeted eigensolver, because the
+	     preconditioner pushes all the columns towards the ground
+	     state.  If it gets too big, it seems to be a good idea
+	     to re-orthogonalize, resetting conjugate-gradient, as
+	     otherwise we start to encounter numerical problems. */
+	  if (flags & EIGS_REORTHOGONALIZE) {
+	       real traceU = SCALAR_RE(sqmatrix_trace(U));
+	       if (traceU > EIGS_TRACE_U_THRESHOLD * U.p) {
+		    printf("    re-orthonormalizing Y\n");
+		    sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
+		    evectmatrix_XeYS(G, Y, S1, 1); /* G = orthonormalize Y */
+		    evectmatrix_copy(Y, G);
+		    prev_traceGtX = 0.0;
+
+		    evectmatrix_XtX(YtY, Y);
+		    y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtY)) / Y.p);
+		    blasglue_scal(Y.p * Y.n, 1/y_norm, Y.data, 1);
+		    blasglue_scal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
+		    sqmatrix_copy(U, YtY);
+		    sqmatrix_invert(U);
+	       }
+	  }
 
 	  TIME_OP(time_AZ, A(Y, X, Adata, 1, G)); /* X = AY; G is scratch */
 
@@ -392,12 +284,15 @@ void eigensolver(evectmatrix Y, real *eigenvals,
               fabs(E - prev_E) < tolerance * 0.5 * (E + prev_E + 1e-7))
                break; /* convergence!  hooray! */
 	  
+	  convergence_history[iteration % EIG_HISTORY_SIZE] =
+	       200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E));
+	  
 	  if ((flags & EIGS_VERBOSE) ||
               MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
               > FEEDBACK_TIME) {
                printf("    iteration %4d: "
                       "trace = %g (%g%% change)\n", iteration + 1, E,
-                      200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
+		      convergence_history[iteration % EIG_HISTORY_SIZE]);
                fflush(stdout); /* make sure output appears */
                prev_feedback_time = MPIGLUE_CLOCK; /* reset feedback clock */
           }
@@ -449,6 +344,17 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                else
                     gamma = gamma_numerator / prev_traceGtX;
 
+	       if ((flags & EIGS_DYNAMIC_RESET_CG) &&
+		   2.0 * convergence_history[iteration % EIG_HISTORY_SIZE] >=
+		   convergence_history[(iteration+1) % EIG_HISTORY_SIZE]) {
+		    gamma = 0.0;
+                    if (flags & EIGS_VERBOSE)
+                         printf("    dynamically resetting CG direction...\n");
+		    for (i = 1; i < EIG_HISTORY_SIZE; ++i)
+			 convergence_history[(iteration+i) % EIG_HISTORY_SIZE]
+			      = 10000.0;
+	       }
+
 	       if ((flags & EIGS_RESET_CG) &&
                    (iteration + 1) % CG_RESET_ITERS == 0) {
 		    /* periodically forget previous search directions,
@@ -458,13 +364,15 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                          printf("    resetting CG direction...\n");
                }
 
-               evectmatrix_aXpbY(gamma, D, 1.0, X);
+               evectmatrix_aXpbY(gamma * d_scale, D, 1.0, X);
           }
+
+	  d_scale = 1.0;
 
 	  /* Minimize the trace along Y + lamba*D: */
 
 	  if (!use_linmin) {
-	       real dE, E2, d2E, t;
+	       real dE, E2, d2E, t, d_norm;
 
 	       /* Here, we do an approximate line minimization along D
 		  by evaluating dE (the derivative) at the current point,
@@ -505,11 +413,20 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		  line minimization.  Hopefully, we won't have to
 		  abort like this very often, as it wastes operations. */
 	       if (d2E < 0 || -0.5*dE*theta > 20.0 * fabs(E-prev_E)) {
-		    if (flags & EIGS_VERBOSE)
-			 printf("    switching back to exact "
-				"line minimization\n");
-		    use_linmin = 1;
-		    evectmatrix_aXpbY(1.0, Y, -t / d_norm, D);
+		    if (flags & EIGS_FORCE_APPROX_LINMIN) {
+			 if (flags & EIGS_VERBOSE)
+			      printf("    using previous stepsize\n");
+		    }
+		    else {
+			 if (flags & EIGS_VERBOSE)
+			      printf("    switching back to exact "
+				     "line minimization\n");
+			 use_linmin = 1;
+			 evectmatrix_aXpbY(1.0, Y, -t / d_norm, D);
+			 prev_theta = atan(prev_theta); /* convert to angle */
+			 /* don't do this again: */
+			 flags |= EIGS_FORCE_EXACT_LINMIN;
+		    }
 	       }
 	       else {
 		    /* Shift Y by theta, hopefully minimizing the trace: */
@@ -518,12 +435,12 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  }
 	  if (use_linmin) {
 	       real dE, d2E;
-	       real d_norm2;
+
+	       d_scale = sqrt(SCALAR_RE(evectmatrix_traceXtY(D, D)) / Y.p);
+	       blasglue_scal(Y.p * Y.n, 1/d_scale, D.data, 1);
 
 	       A(D, G, Adata, 0, X); /* G = A D; X is scratch */
 	       evectmatrix_XtX(DtD, D);
-	       d_norm = sqrt(d_norm2 = SCALAR_RE(sqmatrix_trace(DtD)) / Y.p);
-	       tfd.d_norm = d_norm;
 	       evectmatrix_XtY(DtAD, D, G);
 	       
 	       evectmatrix_XtY(S1, Y, D);
@@ -534,7 +451,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	       sqmatrix_AeBC(S1, U, 0, symYtD, 1);
 	       dE = 2.0 * (SCALAR_RE(sqmatrix_traceAtB(U, symYtAD)) -
-			   SCALAR_RE(sqmatrix_traceAtB(YtAYU, S1))) / d_norm;
+			   SCALAR_RE(sqmatrix_traceAtB(YtAYU, S1)));
 
 	       sqmatrix_copy(S2, DtD);
 	       sqmatrix_ApaBC(S2, -4.0, symYtD, 0, S1, 0);
@@ -542,8 +459,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       sqmatrix_AeBC(S1, U, 0, S2, 1);
 	       d2E = 2.0 * (SCALAR_RE(sqmatrix_traceAtB(U, DtAD)) -
 			    SCALAR_RE(sqmatrix_traceAtB(YtAYU, S1)) -
-			    4.0 * SCALAR_RE(sqmatrix_traceAtB(U, S3))) 
-		    / d_norm2;
+			    4.0 * SCALAR_RE(sqmatrix_traceAtB(U, S3)));
 	       
 	       /* this is just Newton-Raphson to find a root of
 		  the first derivative: */
@@ -569,13 +485,21 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		  (tfd.YtAY == S1). */
 	       sqmatrix_AeBC(S1, YtAYU, 0, YtY, 1);
 
-	       TIME_OP(time_linmin,
-		       theta = linmin(&linmin_improvement,
-				      0, E, dE, dE > 0 ? -K_PI : K_PI, theta,
-				      tolerance, trace_func, &tfd));
+	       {
+		    double new_E, new_dE;
+		    TIME_OP(time_linmin,
+			    theta = linmin(&new_E, &new_dE, theta, E, dE,
+					   0.1, 1e-6, 1e-14,
+					   0, dE > 0 ? -K_PI : K_PI,
+					   trace_func, &tfd,
+					   flags & EIGS_VERBOSE));
+		    linmin_improvement = fabs(E - new_E) * 2.0/fabs(E + new_E);
+	       }
+
+	       CHECK(fabs(theta) <= K_PI, "converged out of bounds!");
 
 	       /* Shift Y to new location minimizing the trace along D: */
-	       evectmatrix_aXpbY(cos(theta), Y, sin(theta) / d_norm, D);
+	       evectmatrix_aXpbY(cos(theta), Y, sin(theta), D);
 	  }
 
 	  if (constraint)
@@ -615,11 +539,12 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 				(t_exact - t_approx) * 100.0 / t_exact);
 		    use_linmin = 0;
 	       }
-	       else {
+	       else if (!(flags & EIGS_FORCE_APPROX_LINMIN)) {
 		    if ((flags & EIGS_VERBOSE) && !use_linmin)
 			 printf("    switching back to exact "
 				"line minimization\n");
 		    use_linmin = 1;
+		    prev_theta = atan(prev_theta); /* convert to angle */
 	       }
 	  }
      } while (++iteration < EIGENSOLVER_MAX_ITERATIONS);

@@ -247,19 +247,24 @@
 (define eigensolver-iters '()) ; the iterations used, updated by (run)
 
 (define (display-eigensolver-stats)
-  (let ((num-runs (length eigensolver-iters))
-	(sorted-iters (sort eigensolver-iters <)))
-    (if (> num-runs 0)
-	(let ((min-iters (list-ref sorted-iters 0))
-	      (max-iters (list-ref sorted-iters (- num-runs 1)))
-	      (mean-iters (/ (fold-right + 0 sorted-iters) num-runs))
-	      (median-iters (/ (+ (list-ref sorted-iters (quotient num-runs 2))
-				  (list-ref sorted-iters
-				    (- (quotient (+ num-runs 1) 2) 1))) 
-			       2.0)))
-	  (display-many "eigensolver iterations for " num-runs " k-points: "
-	    min-iters "-" max-iters
-	    ", mean = "  mean-iters ", median = " median-iters "\n")))))
+  (if @HAVE_GUILE_SORT@
+      (let ((num-runs (length eigensolver-iters))
+	    (sorted-iters (sort eigensolver-iters <)))
+	(if (> num-runs 0)
+	    (let ((min-iters (list-ref sorted-iters 0))
+		  (max-iters (list-ref sorted-iters (- num-runs 1)))
+		  (mean-iters (/ (fold-right + 0 sorted-iters) num-runs))
+		  (median-iters (/ (+ (list-ref sorted-iters
+						(quotient num-runs 2))
+				      (list-ref sorted-iters
+						(- (quotient (+ num-runs 1) 2)
+						   1))) 
+				   2.0)))
+	      (display-many "eigensolver iterations for " num-runs 
+			    " k-points: " min-iters "-" max-iters
+			    ", mean = "  mean-iters ", median = " 
+			    median-iters "\n"))))
+      (display "display-eigensolver-stats requires Guile 1.3.4 or later.\n")))
 
 ; ****************************************************************
 

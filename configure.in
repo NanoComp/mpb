@@ -231,6 +231,16 @@ else
 fi
 AC_SUBST(ACTIVATE_READLINE)
 
+HAVE_GUILE_SORT="#f"
+AC_MSG_CHECKING(for sort function in Guile)
+if guile -c "sort" > /dev/null 2>&1; then
+	HAVE_GUILE_SORT="#t"
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+AC_SUBST(HAVE_GUILE_SORT)
+
 # ----------------------------------------------------------------------
 # Check for libctl library and files
 
@@ -274,7 +284,7 @@ AC_C_CONST
 AC_C_INLINE
 
 # Checks for library functions.
-AC_CHECK_FUNCS(getopt)
+AC_CHECK_FUNCS(getopt strncmp)
 
 # ----------------------------------------------------------------------
 # Check to see if calling Fortran functions (in particular, the BLAS

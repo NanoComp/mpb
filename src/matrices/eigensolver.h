@@ -50,9 +50,12 @@ extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 #define EIGS_RESET_CG (1<<2)
 #define EIGS_FORCE_EXACT_LINMIN (1<<3)
 #define EIGS_FORCE_APPROX_LINMIN (1<<4)
+#define EIGS_ORTHONORMALIZE_FIRST_STEP (1<<5)
+#define EIGS_REORTHOGONALIZE (1<<6)
+#define EIGS_DYNAMIC_RESET_CG (1<<7)
 
 /* default flags: what we think works best most of the time: */
-#define EIGS_DEFAULT_FLAGS (EIGS_RESET_CG)
+#define EIGS_DEFAULT_FLAGS (EIGS_RESET_CG | EIGS_REORTHOGONALIZE)
 
 typedef struct evectconstraint_chain_struct {
      evectconstraint C;

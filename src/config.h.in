@@ -39,6 +39,9 @@
 /* Define if you have the HDF5 library and headers: */
 #undef HAVE_HDF5
 
+/* Define if you have the strncmp() function: */
+#undef HAVE_STRNCMP
+
 /* define to disable CHECK macros */
 #undef CHECK_DISABLE
 
