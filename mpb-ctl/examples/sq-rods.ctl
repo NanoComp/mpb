@@ -13,8 +13,7 @@
       (list
        (make cylinder 
 	 (material Si) 
-	 (center (vector3 0))
-	 (radius r) (height infinity))))
+	 (center 0 0) (radius r) (height infinity))))
       
 (define Gamma (vector3 0 0 0))
 (define X (vector3 0.5 0 0))
