@@ -225,7 +225,7 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 			   real G1[3], real G2[3], real G3[3])
 {
      int nx = d->nx, ny = d->ny, nz = d->nz;
-     int cx = d->nx/2, cy = d->ny/2, cz = d->nz/2;
+     int cx = MAX2(1,d->nx/2), cy = MAX2(1,d->ny/2), cz = MAX2(1,d->nz/2);
      k_data *kpG = d->k_plus_G;
      real *kpGn2 = d->k_plus_G_normsqr;
      int x, y, z;
@@ -245,11 +245,11 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
      set_maxwell_data_polarization(d, d->polarization);
 
      for (x = d->local_x_start; x < d->local_x_start + d->local_nx; ++x) {
-	  int kxi = (x > cx) ? (x - nx) : x;
+	  int kxi = (x >= cx) ? (x - nx) : x;
 	  for (y = 0; y < ny; ++y) {
-	       int kyi = (y > cy) ? (y - ny) : y;
+	       int kyi = (y >= cy) ? (y - ny) : y;
 	       for (z = 0; z < nz; ++z, kpG++, kpGn2++) {
-		    int kzi = (z > cz) ? (z - nz) : z;
+		    int kzi = (z >= cz) ? (z - nz) : z;
 		    real kpGx, kpGy, kpGz, a, b, c, leninv;
 
 		    /* Compute k+G (noting that G is negative because
