@@ -117,6 +117,40 @@ static void assign_cross_c2t(scalar *v, int vstride,
 #endif
 }
 
+/* compute a = u x v, where a and u are in cartesian coordinates and
+   v is in transverse coordinates. */
+static void assign_ucross_t2c(scalar *a, const real u[3], const k_data k,
+			     const scalar *v, int vstride)
+{
+     scalar v0 = v[0], v1 = v[vstride];
+     real vx_r, vx_i, vy_r;
+#ifdef SCALAR_COMPLEX
+     real vy_i, vz_r, vz_i;
+#endif
+
+     /* Note that v = (vx,vy,vz) = (v0 m + v1 n). */
+
+     vx_r = SCALAR_RE(v0)*k.mx + SCALAR_RE(v1)*k.nx;
+     vy_r = SCALAR_RE(v0)*k.my + SCALAR_RE(v1)*k.ny;
+     vz_r = SCALAR_RE(v0)*k.mz + SCALAR_RE(v1)*k.nz;
+
+#ifdef SCALAR_COMPLEX
+     vx_i = SCALAR_IM(v0)*k.mx + SCALAR_IM(v1)*k.nx;
+     vy_i = SCALAR_IM(v0)*k.my + SCALAR_IM(v1)*k.ny;
+     vz_i = SCALAR_IM(v0)*k.mz + SCALAR_IM(v1)*k.nz;
+#endif
+
+     ASSIGN_SCALAR(a[0],
+		   u[1] * vz_r - u[2] * vy_r,
+		   u[1] * vz_i - u[2] * vy_i);
+     ASSIGN_SCALAR(a[1],
+		   u[2] * vx_r - u[0] * vz_r,
+		   u[2] * vx_i - u[0] * vz_i);
+     ASSIGN_SCALAR(a[2],
+		   u[0] * vy_r - u[1] * vx_r,
+		   u[0] * vy_i - u[1] * vx_i);
+}
+
 void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array, 
 			 int howmany, int stride, int dist)
 {
@@ -385,4 +419,54 @@ void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,
      maxwell_operator(Work, Xout, d->d, 0, Work);
 
      evectmatrix_aXpbY(1.0, Xout, -omega_sqr, Work);
+}
+
+/* Compute the operation Xout = curl 1/epsilon * i u x Xin, which 
+   is useful operation in computing the group velocity (derivative
+   of the maxwell operator).  u is a vector in cartesian coordinates. */
+void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
+		       maxwell_data *d, const real u[3])
+{
+     scalar *fft_data;
+     scalar_complex *cdata;
+     real scale;
+     int cur_band_start;
+     int i, j, b;
+
+     CHECK(d, "null maxwell data pointer!");
+     CHECK(Xin.c == 2, "fields don't have 2 components!");
+
+     cdata = (scalar_complex *) (fft_data = d->fft_data);
+     scale = -1.0 / Xout.N;  /* scale factor to normalize FFT;
+                                negative sign comes from 2 i's from curls */
+
+     /* compute the operator, num_fft_bands at a time: */
+     for (cur_band_start = 0; cur_band_start < Xin.p;
+          cur_band_start += d->num_fft_bands) {
+          int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
+	  
+	  /* first, compute fft_data = curl(Xin): */
+	  for (i = 0; i < d->other_dims; ++i)
+	       for (j = 0; j < d->last_dim; ++j) {
+		    int ij = i * d->last_dim + j;
+		    int ij2 = i * d->last_dim_size + j;
+		    k_data cur_k = d->k_plus_G[ij];
+		    
+		    for (b = 0; b < cur_num_bands; ++b)
+			 assign_ucross_t2c(&fft_data[3 * (ij2*cur_num_bands
+							  + b)], 
+					   u, cur_k, 
+					   &Xin.data[ij * 2 * Xin.p + 
+						    b + cur_band_start],
+					   Xin.p);
+	       }
+	  
+	  /* now, convert to position space via FFT: */
+	  maxwell_compute_fft(+1, d, fft_data,
+			      cur_num_bands*3, cur_num_bands*3, 1);
+	  
+          maxwell_compute_e_from_d(d, cdata, cur_num_bands);
+          maxwell_compute_H_from_e(d, Xout, cdata,
+                                   cur_band_start, cur_num_bands, scale);
+     }
 }

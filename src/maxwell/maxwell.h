@@ -157,6 +157,9 @@ extern void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout,
 				    evectmatrix Y, real *eigenvals,
 				    sqmatrix YtY);
 
+extern void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
+			      maxwell_data *d, const real u[3]);
+
 extern void maxwell_constraint(evectmatrix X, void *data);
 extern void maxwell_zparity_constraint(evectmatrix X, void *data);
 extern void maxwell_zero_k_constraint(evectmatrix X, void *data);
