@@ -198,12 +198,13 @@ void assign_symmatrix_vector(scalar_complex *newv,
 }
 
 /* compute the D field in position space from Hin, which holds the H
-   field in Fourier space, for the specified bands.  The output array,
+   field in Fourier space, for the specified bands; this amounts to
+   taking the curl and then Fourier transforming.  The output array,
    dfield, is localN x cur_num_bands x 3, where localN is the local
    spatial indices and 3 is the field components. */
-void maxwell_compute_dfield(maxwell_data *d, evectmatrix Hin, 
-			    scalar_complex *dfield,
-			    int cur_band_start, int cur_num_bands)
+void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin, 
+			      scalar_complex *dfield,
+			      int cur_band_start, int cur_num_bands)
 {
      scalar *fft_data = (scalar *) dfield;
      int i, j, b;
@@ -235,9 +236,10 @@ void maxwell_compute_dfield(maxwell_data *d, evectmatrix Hin,
 			 cur_num_bands*3, cur_num_bands*3, 1);
 }
 
-/* Compute E (output in dfield) from D (input in dfield).  dfield
-   is in position space and corresponds to the output from
-   maxwell_compute_dfield, above. */
+/* Compute E (output in dfield) from D (input in dfield); this amounts
+   to just dividing by the dielectric tensor.  dfield is in position
+   space and corresponds to the output from maxwell_compute_d_from_H,
+   above. */
 void maxwell_compute_e_from_d(maxwell_data *d,
 			      scalar_complex *dfield,
 			      int cur_num_bands)
@@ -256,11 +258,51 @@ void maxwell_compute_e_from_d(maxwell_data *d,
      }	  
 }
 
+/* Compute the magnetic (H) field in Fourier space from the electric
+   field (e) in position space; this amouns to Fourier transforming and
+   then taking the curl.  Also, multiply by scale.  Other
+   parameters are as in compute_d_from_H. */
+void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout, 
+			      scalar_complex *efield,
+			      int cur_band_start, int cur_num_bands,
+			      real scale)
+{
+     scalar *fft_data = (scalar *) efield;
+     int i, j, b;
+
+     CHECK(Hout.c == 2, "fields don't have 2 components!");
+     CHECK(d, "null maxwell data pointer!");
+     CHECK(efield, "null field output data!");
+     CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Hout.p,
+	   "invalid range of bands for computing fields");
+
+     /* convert back to Fourier space */
+     maxwell_compute_fft(-1, d, fft_data,
+			 cur_num_bands*3, cur_num_bands*3, 1);
+     
+     /* then, compute Hout = curl(fft_data) (* scale factor): */
+     
+     for (i = 0; i < d->other_dims; ++i)
+	  for (j = 0; j < d->last_dim; ++j) {
+	       int ij = i * d->last_dim + j;
+	       int ij2 = i * d->last_dim_size + j;
+	       k_data cur_k = d->k_plus_G[ij];
+	       
+	       for (b = 0; b < cur_num_bands; ++b)
+		    assign_cross_c2t(&Hout.data[ij * 2 * Hout.p + 
+					       b + cur_band_start],
+				     Hout.p, cur_k, 
+				     &fft_data[3 * (ij2*cur_num_bands + b)],
+				     scale);
+	  }
+}
+
+
 /* Compute H field in position space from Hin.  Parameters and output
-   formats are the same as for compute_dfield, above. */
-void maxwell_compute_hfield(maxwell_data *d, evectmatrix Hin, 
-			    scalar_complex *hfield,
-			    int cur_band_start, int cur_num_bands)
+   formats are the same as for compute_d_from_H, above. */
+void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin, 
+			      scalar_complex *hfield,
+			      int cur_band_start, int cur_num_bands)
 {
      scalar *fft_data = (scalar *) hfield;
      int i, j, b;
@@ -302,57 +344,27 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 {
      maxwell_data *d = (maxwell_data *) data;
      int cur_band_start;
-     scalar *fft_data;
      scalar_complex *cdata;
      real scale;
-     int i, j, b;
      
      CHECK(d, "null maxwell data pointer!");
      CHECK(Xin.c == 2, "fields don't have 2 components!");
 
-     fft_data = d->fft_data;
-     cdata = (scalar_complex *) fft_data;
-
+     cdata = (scalar_complex *) d->fft_data;
      scale = -1.0 / Xout.N;  /* scale factor to normalize FFT; 
 				negative sign comes from 2 i's from curls */
 
+     /* compute the operator, num_fft_bands at a time: */
      for (cur_band_start = 0; cur_band_start < Xin.p; 
 	  cur_band_start += d->num_fft_bands) {
 	  int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
 
-	  /********************************************/
-	  /* compute E = 1/epsilon * curl(H), in position space. */
-
-	  maxwell_compute_dfield(d, Xin, cdata, cur_band_start, cur_num_bands);
+	  maxwell_compute_d_from_H(d, Xin, cdata,
+				   cur_band_start, cur_num_bands);
 	  maxwell_compute_e_from_d(d, cdata, cur_num_bands);
-
-	  /********************************************/
-	  /* convert back to Fourier space */
-	  maxwell_compute_fft(-1, d, fft_data,
-			      cur_num_bands*3, cur_num_bands*3, 1);
-	  
-	  /********************************************/
-	  /* finally, compute Xout = curl(fft_data) (* scale factor): */
-
-	  for (i = 0; i < d->other_dims; ++i)
-	       for (j = 0; j < d->last_dim; ++j) {
-		    int ij = i * d->last_dim + j;
-		    int ij2 = i * d->last_dim_size + j;
-		    k_data cur_k = d->k_plus_G[ij];
-
-		    for (b = 0; b < cur_num_bands; ++b)
-			 assign_cross_c2t(&Xout.data[ij * 2 * Xout.p + 
-						     b + cur_band_start],
-					  Xout.p,
-					  cur_k, 
-					  &fft_data[3 * (ij2*cur_num_bands
-							 + b)],
-					  scale);
-	       }
-	  
-	  /********************************************/
-
-     } /* end of cur_band_start loop */
+	  maxwell_compute_H_from_e(d, Xout, cdata,
+				   cur_band_start, cur_num_bands, scale);
+     }
 }
 
 void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,

@@ -130,12 +130,12 @@ extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
 
 extern void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 				int howmany, int stride, int dist);
-extern void maxwell_compute_dfield(maxwell_data *d, evectmatrix Xin,
-				   scalar_complex *dfield,
-				   int cur_band_start, int cur_num_bands);
-extern void maxwell_compute_hfield(maxwell_data *d, evectmatrix Hin,
-				   scalar_complex *hfield,
-				   int cur_band_start, int cur_num_bands);
+extern void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Xin,
+				     scalar_complex *dfield,
+				     int cur_band_start, int cur_num_bands);
+extern void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
+				     scalar_complex *hfield,
+				     int cur_band_start, int cur_num_bands);
 extern void maxwell_compute_e_from_d(maxwell_data *d,
 				     scalar_complex *dfield,
 				     int cur_num_bands);
