@@ -1,0 +1,489 @@
+; Copyright (C) 1999, 2000, 2001, 2002, Massachusetts Institute of Technology.
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version.
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+; ****************************************************************
+
+; Get the number of arguments to a function p.  However, some
+; older versions of Guile (e.g. 1.2) do not support the 'arity
+; property, and procedure-property just returns false.  In
+; this case, we assume that the procedure returns 1 argument,
+; as this is the most useful default for our purposes.  Sigh.
+
+(define (procedure-num-args p) 
+  (let ((arity (procedure-property p 'arity)))
+    (if arity (car arity) 1)))
+
+; ****************************************************************
+
+(define-class material-type no-parent)
+
+(define-class solid material-type
+  (define-property rho no-default 'number)
+  (define-property ct no-default 'number)
+  (define-property cl no-default 'number)
+  )
+
+(define-class material-function material-type
+  (define-property material-func no-default 'function
+    (lambda (p) (= 1 (procedure-num-args p)))))
+
+; use the solid geometry classes, variables, etcetera in libgeom:
+; (one specifications file can include another specifications file)
+(include "@LIBCTL_DIR@/utils/geom.scm")
+
+; ****************************************************************
+
+; eigensolver flags (grabbed from eigensolver.h by configure)
+
+; first, we must define a function (pow2 n) to return 2^n:
+(define (pow2 n) (if (<= n 0) 1 (* 2 (pow2 (- n 1)))))
+
+@EIGS_FLAGS_SCM@ ; substituted by configure script
+
+; ****************************************************************
+
+; More input/output variables (besides those defined by libgeom, above).
+
+(define-input-var k-points '() (make-list-type 'vector3))
+
+(define-input-var num-bands 1 'integer)
+(define-input-var tolerance 1.0e-7 'number positive?)
+
+(define-input-var mesh-size 3 'integer positive?)
+
+(define-input-var deterministic? false 'boolean)
+
+; Eigensolver minutiae:
+(define-input-var simple-preconditioner? false 'boolean)
+(define-input-var eigensolver-flags EIGS_DEFAULT_FLAGS 'integer)
+(define-input-var eigensolver-block-size 1 'integer)
+(define-input-var eigensolver-nwork 4 'integer positive?)
+(define-input-var eigensolver-davidson? false 'boolean)
+(define-input-output-var eigensolver-flops 0 'number)
+
+(define-output-var freqs (make-list-type 'number))
+(define-output-var iterations 'integer)
+
+(define-output-var parity 'string)
+
+; ****************************************************************
+
+; Definitions of external (C) functions:
+
+; (init-params p true) initializes the geometry, etcetera, and does
+; everything else that's needed to get ready for an eigenvalue
+; calculation with parity p (see below).  This should be called
+; after the input variables are changed.  If false is passed instead
+; of true, fields from a previous run are retained, if possible, as a
+; starting point for the eigensolver.
+(define-external-function init-params true false
+  no-return-value 'integer 'boolean)
+
+; (set-parity p) changes the parity that is solved for by
+; solve-kpoint, below.  p should be one of the following constants
+; init-params should already have been called.  Be sure to call
+; (randomize-fields) if you change the parity without calling
+; init-params.
+(define NO-PARITY 0)
+(define PREV-PARITY -1)
+(define-external-function set-parity false false
+  no-return-value 'integer)
+
+; (randomize-fields) initializes the fields to random values; should
+; only be called after init-params.
+(define-external-function randomize-fields false false no-return-value)
+
+; (solve-kpoint kpoint) solves for the specified bands at the given k point.
+; Requires that (init-params) has been called, and does not re-read the
+; input variables, but does write the output vars.
+(define-external-function solve-kpoint false true no-return-value 'vector3)
+
+(define-external-function get-ufield false false no-return-value 'integer)
+(define-external-function get-vfield false false no-return-value 'integer)
+(define-external-function get-rho false false no-return-value)
+(define-external-function get-ct false false no-return-value)
+(define-external-function get-cl false false no-return-value)
+(define-external-function fix-field-phase false false no-return-value)
+(define-external-function compute-field-energy false false
+  (make-list-type 'number))
+
+(define-external-function output-field-to-file false false
+  no-return-value 'integer 'string)  
+
+(define-external-function mpi-is-master? false false 'boolean)
+(define-external-function using-mpi? false false 'boolean)
+(define-external-function mpi-num-procs false false 'integer)
+(define-external-function mpi-proc-index false false 'integer)
+
+(define-external-function get-kpoint-index false false 'integer)
+(define-external-function set-kpoint-index false false
+  no-return-value 'integer)
+
+; ****************************************************************
+
+; Set print-ok? to whether or not we are the MPI master process.
+; However, don't try this if we are running within gen-ctl-io,
+; as it won't work.
+(if (not (defined? 'output-source)) ; (a function defined by gen-ctl-io)
+    (set! print-ok? (mpi-is-master?)))
+
+(if (and (not (defined? 'output-source)) (using-mpi?))
+    (set! interactive? false)) ; MPI doesn't support interactive mode
+
+; ****************************************************************
+
+; Utility function to display a comma-delimited list of data for the
+; current k point, prefixed by data-name and the current parity.
+
+(define (display-kpoint-data data-name data)
+  (print parity data-name ":, " (get-kpoint-index))
+  (map (lambda (d) (print ", " d)) data)
+  (print "\n"))
+
+; ****************************************************************
+
+; Add some predefined variables, for convenience:
+
+(define nothing (make material-type)) ; punches a "hole" through objects
+				      ; to the default/background material
+
+(define infinity 1.0e20) ; big number for infinite dimensions of objects
+
+; (set! default-material air) ? what is a good default, if any?
+
+; ****************************************************************
+
+; The remainder of this file consists of Scheme convenience functions.
+
+; ****************************************************************
+
+(define-param filename-prefix "")
+
+(define (output-field)
+  (output-field-to-file -1 filename-prefix))
+
+(define (output-field-x)
+  (output-field-to-file 0 filename-prefix))
+
+(define (output-field-y)
+  (output-field-to-file 1 filename-prefix))
+
+(define (output-field-z)
+  (output-field-to-file 2 filename-prefix))
+
+(define (output-rho)
+  (get-rho)
+  (output-field-to-file -1 filename-prefix))
+
+(define (output-ct)
+  (get-ct)
+  (output-field-to-file -1 filename-prefix))
+
+(define (output-cl)
+  (get-cl)
+  (output-field-to-file -1 filename-prefix))
+
+(define (compute-energy-in-objects . objects)
+  (compute-energy-in-object-list objects))
+
+; ****************************************************************
+; Functions to compute and output gaps, given the lists of frequencies
+; computed at each k point.
+
+; The band-range-data is a list if ((min . k-point) . (max . k-point))
+; pairs, with each pair describing the frequency range of a band and
+; the k-points where it achieves its maximum/minimum.  Here, we update
+; this data with a new list of band frequencies, and return the new
+; data.  If band-range-data is null or too short, the needed entries
+; will be created.
+(define (update-band-range-data band-range-data freqs k-point)
+  (define (ubrd band-range-data freqs br-start)
+    (if (null? freqs)
+	(append (reverse br-start) band-range-data)
+	(let ((br (if (null? band-range-data)
+		      (cons (cons infinity -1) (cons (- infinity) -1))
+		      (car band-range-data)))
+	      (br-rest (if (null? band-range-data) '() (cdr band-range-data))))
+	  (let ((newmin (if (< (car freqs) (caar br))
+			    (cons (car freqs) k-point) (car br)))
+		(newmax (if (> (car freqs) (cadr br))
+			    (cons (car freqs) k-point) (cdr br))))
+	    (ubrd br-rest (cdr freqs) 
+		  (cons (cons newmin newmax) br-start))))))
+  (ubrd band-range-data freqs '()))
+
+; Output the band range data in a nice format:
+(define (output-band-range-data br-data)
+  (define (obr br i)
+    (if (not (null? br))
+	(begin
+	  (print "Band " i " range: " (caaar br) " at " (cdaar br)
+		 " to "  (cadar br) " at " (cddar br) "\n")
+	  (obr (cdr br) (+ i 1)))))
+  (obr br-data 1))
+
+; Output any gaps in the given band ranges, and return a list
+; of the gaps as a list of (percent freq-min freq-max) lists.
+(define (output-gaps band-range-data)
+  (define (ogaps br-cur br-rest i gaps)
+    (if (null? br-rest)
+	(reverse gaps)
+	(if (>= (cadr br-cur) (caaar br-rest))
+	    (ogaps (car br-rest) (cdr br-rest) (+ i 1) gaps)
+	    (let ((gap-size (/ (* 200 (- (caaar br-rest) (cadr br-cur)))
+			       (+ (caaar br-rest) (cadr br-cur)))))
+	      (print "Gap from band " i " (" (cadr br-cur) ") to band "
+		     (+ i 1) " (" (caaar br-rest) "), " gap-size "%\n")
+	      (ogaps (car br-rest) (cdr br-rest) (+ i 1)
+		     (cons (list gap-size (cadr br-cur) (caaar br-rest)) gaps))
+	      ))))
+  (if (null? band-range-data)
+      '()
+      (ogaps (car band-range-data) (cdr band-range-data) 1 '())))
+
+; variables holding the band range data and current list of gaps, in
+; the format returned by update-band-range-data and output-gaps, above:
+(define band-range-data '())
+(define gap-list '())
+
+; Return the frequency gap from the band #lower-band to the band
+; #(lower-band+1), as a percentage of mid-gap frequency.  The "gap"
+; may be negative if the maximum of the lower band is higher than the
+; minimum of the upper band.  (The gap is computed from the
+; band-range-data of the previous run.)
+(define (retrieve-gap lower-band)
+  (if (> (+ lower-band 1) (length band-range-data))
+      (error "retrieve-gap called for higher band than was calculated")
+      (let ((f1 (cadr (list-ref band-range-data (- lower-band 1))))
+	    (f2 (caar (list-ref band-range-data lower-band))))
+	(/ (- f2 f1) (* 0.005 (+ f1 f2))))))
+
+; ****************************************************************
+
+; stuff to keep statistics on the eigensolver performance, for tuning:
+(define eigensolver-iters '()) ; the iterations used, updated by (run)
+(define total-run-time 0.0) ; the total time used by (run) functions (seconds)
+
+(define (display-eigensolver-stats)
+  (let ((num-runs (length eigensolver-iters)))
+    (if (> num-runs 0)
+	(let ((min-iters (apply min eigensolver-iters))
+	      (max-iters (apply max eigensolver-iters))
+	      (mean-iters (/ (fold-right + 0 eigensolver-iters) num-runs)))
+	  (print "eigensolver iterations for " num-runs " k-points: "
+		 min-iters "-" max-iters ", mean = "  mean-iters)
+	  (if (defined? 'sort)  ; sort was added in Guile 1.3.x
+	      (let ((sorted-iters (sort eigensolver-iters <)))
+		(let ((median-iters (* 0.5 (+ (list-ref sorted-iters
+							(quotient num-runs 2))
+					      (list-ref sorted-iters
+							(- (quotient 
+							    (+ num-runs 1) 2)
+							   1))))))
+		  (print ", median = " median-iters))))
+	  (print "\nmean flops per iteration = "
+		 (/ eigensolver-flops (* num-runs mean-iters)) "\n")
+	  (print "mean time per iteration = "
+		 (/ total-run-time (* mean-iters num-runs)) " s\n")))))
+
+; ****************************************************************
+
+; Define an easy way for the user to split the k-points list over multiple
+; processes.  k-split-num is the number of chunks to split the k-points into,
+; and k-split-index is the index of the current chunk (0 to k-split-num - 1).
+(define-param k-split-num 1)
+(define-param k-split-index 0)
+
+; Split a list L into num more-or-less equal pieces, returning the piece
+; given by index (in 0..num-1), along with the index in L of the first
+; element of the piece, as a car pair: (first-index . piece-of-L).
+(define (list-split L num index)
+  (define (list-sub L start len index rest)
+    (if (null? L)
+	(reverse rest)
+	(if (and (>= index start) (< index (+ start len)))
+	    (list-sub (cdr L) start len (+ index 1) (cons (car L) rest))
+	    (list-sub (cdr L) start len (+ index 1) rest))))
+  (if (or (>= index num) (negative? index))
+      (cons (length L) '())
+      (let ((block-size (quotient (+ (length L) num -1) num)))
+	(let ((start (* index block-size))
+	      (len (min block-size (- (length L) (* index block-size)))))
+	  (cons start (list-sub L start len 0 '()))))))
+
+; ****************************************************************
+
+(define current-k (vector3 0)) ; current k point in the run function
+(define all-freqs '()) ; list of all freqs computed in a run
+
+; (run) functions, to do vanilla calculations.  They all take zero or
+; more "band functions."  Each function should take a single
+; parameter, the band index, and is called for each band index at
+; every k point.  These are typically used to output the bands.
+
+(define (run-parity p reset-fields . band-functions)
+ (set! total-run-time (+ total-run-time
+  (begin-time "total elapsed time for run: "
+   (set! all-freqs '())
+   (set! band-range-data '())
+   (set! interactive? false)  ; don't be interactive if we call (run)
+   (begin-time "elapsed time for initialization: "
+	       (init-params p (if reset-fields true false))
+	       (if (string? reset-fields) (load-eigenvectors reset-fields)))
+   (let ((k-split (list-split k-points k-split-num k-split-index)))
+     (set-kpoint-index (car k-split))
+     (if (zero? (car k-split))
+	 (begin
+	   (output-rho)
+	   (output-ct)
+	   (output-cl)
+	   )) ; output materials immediately for 1st k block
+     (if (> num-bands 0)
+	 (begin
+	   (map (lambda (k)
+		  (set! current-k k)
+		  (begin-time "elapsed time for k point: " (solve-kpoint k))
+		  (set! all-freqs (cons freqs all-freqs))
+		  (set! band-range-data 
+			(update-band-range-data band-range-data freqs k))
+		  (set! eigensolver-iters
+			(append eigensolver-iters
+				(list (/ iterations num-bands))))
+		  (map (lambda (f)
+			 (if (zero? (procedure-num-args f))
+			     (f) ; f is a thunk: evaluate once per k-point
+			     (do ((band 1 (+ band 1))) ((> band num-bands))
+			       (f band))))
+		       band-functions))
+		(cdr k-split))
+	   (if (> (length (cdr k-split)) 1)
+	       (begin
+		 (output-band-range-data band-range-data)
+		 (set! gap-list (output-gaps band-range-data)))
+	       (set! gap-list '()))))))))
+ (set! all-freqs (reverse all-freqs)) ; put them in the right order
+ (print "done.\n"))
+
+(define run-polarization run-parity) ; backwards compatibility
+
+; a macro to create a run function with a given name and parity
+(defmacro-public define-run (name parity)
+  `(define (,name . band-functions)
+     (apply run-parity (append (list ,parity true) band-functions))))
+
+(define-run run NO-PARITY)
+
+; ****************************************************************
+
+; Some predefined output functions (functions of the band index),
+; for passing to (run).
+
+(define (output-ufield which-band)
+  (get-ufield which-band)
+  (output-field))
+(define (output-ufield-x which-band)
+  (get-ufield which-band)
+  (output-field-x))
+(define (output-ufield-y which-band)
+  (get-ufield which-band)
+  (output-field-y))
+(define (output-ufield-z which-band)
+  (get-ufield which-band)
+  (output-field-z))
+
+(define (output-upwr which-band)
+  (get-ufield which-band)
+  (compute-field-energy)
+  (output-field))
+
+(define (output-vfield which-band)
+  (get-vfield which-band)
+  (output-field))
+(define (output-vfield-x which-band)
+  (get-vfield which-band)
+  (output-field-x))
+(define (output-vfield-y which-band)
+  (get-vfield which-band)
+  (output-field-y))
+(define (output-vfield-z which-band)
+  (get-vfield which-band)
+  (output-field-z))
+
+(define (output-vpwr which-band)
+  (get-vfield which-band)
+  (compute-field-energy)
+  (output-field))
+
+; We need a special function to evaluate band functions, since
+; band functions can either be a function of the band number or
+; a thunk (function of no arguments, evaluated once per k-point).
+(define (apply-band-func-thunk band-func which-band eval-thunk?)
+  (if (zero? (procedure-num-args band-func))
+      (if eval-thunk? (band-func)) ; evaluate thunks once per k-point
+      (band-func which-band)))
+(define (apply-band-func band-func which-band)
+  (apply-band-func-thunk band-func which-band (= which-band 1)))
+
+; The following function returns an output function that calls
+; output-func for bands with D energy in objects > min-energy.
+; For example, (output-upwr-in-objects output-dfield 0.20 some-object)
+; would return an output function that would spit out the D field
+; for bands with at least %20 of their D energy in some-object.
+(define (output-upwr-in-objects output-func min-energy . objects)
+  (lambda (which-band)
+    (get-dfield which-band)
+    (compute-field-energy)
+    (let ((energy (compute-energy-in-object-list objects)))
+        ; output the computed energy for grepping:
+	(print "upwr:, " which-band ", "
+	       (list-ref freqs (- which-band 1)) ", " energy "\n")
+	(if (>= energy min-energy)
+	    (apply-band-func output-func which-band)))))
+
+; Combines zero or more band functions into one:
+(define (combine-band-functions . band-funcs)
+  (lambda (which-band)
+    (map (lambda (f) (apply-band-func f which-band)) band-funcs)))
+
+; Only invoke the given band functions for the specified k-point:
+(define (output-at-kpoint kpoint . band-funcs)
+  (let ((band-func (apply combine-band-functions band-funcs)))
+    (lambda (which-band)
+      (if (vector3= current-k kpoint)
+	  (band-func which-band)))))
+
+; Band functions to pick a canonical phase for the eigenstate of the
+; given band based upon the spatial representation of the given field:
+(define (fix-ufield-phase which-band)
+  (get-ufield which-band)
+  (fix-field-phase))
+(define (fix-vfield-phase which-band)
+  (get-vfield which-band)
+  (fix-field-phase))
+
+; ****************************************************************
+
+; Load GNU Readline support, for easier command-line editing support.
+; This is not loaded in by default in Guile 1.3.2+ because readline
+; is licensed under the GPL, which would have caused Guile to effectively
+; be under the GPL itself.  However, since the MIT Photonic Bands package
+; is under the GPL too, we can load Readline by default with no problems.
+
+@ACTIVATE_READLINE@  ; command to activate readline is determined by configure
+
+(set! scm-repl-prompt "mpb> ")
+
+; ****************************************************************

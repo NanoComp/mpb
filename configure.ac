@@ -407,5 +407,5 @@ fi
 
 ##############################################################################
 
-AC_CONFIG_FILES([Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm mpb-ctl/mpb-split utils/Makefile])
+AC_CONFIG_FILES([Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm mpb-ctl/mpb-split utils/Makefile meb/Makefile meb/meb.scm meb/meb-split])
 AC_OUTPUT

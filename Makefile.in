@@ -17,8 +17,8 @@ distdir = $(package)-@MPB_VERSION@
 # Subdirectories to make in:
 
 LIBSUBDIRS = src/util src/matrices src/maxwell src/matrixio
-INSTALLSUBDIRS = mpb-ctl utils
-CHECKSUBDIRS = tests mpb-ctl
+INSTALLSUBDIRS = mpb-ctl utils meb
+CHECKSUBDIRS = tests mpb-ctl meb
 SUBDIRS = $(LIBSUBDIRS) tests $(INSTALLSUBDIRS)
 
 all: all-recursive
@@ -61,7 +61,7 @@ distclean: clean
 	@list='$(SUBDIRS)'; for subdir in $$list; do \
 	  echo "rm -f $$subdir/Makefile"; rm -f $$subdir/Makefile; done
 	rm -f config.cache Makefile src/config.h config.log config.status \
-              mpb-ctl/mpb.scm
+              mpb-ctl/mpb.scm meb-ctl/meb.scm
 
 maintainer-clean: distclean
 	rm -f configure
