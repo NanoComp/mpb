@@ -138,8 +138,11 @@ scalar blasglue_dotc(int n, scalar *x, int incx, scalar *y, int incy)
      scalar sum = SCALAR_INIT_ZERO;
      for (i = 0; i < n; ++i) {
 #  ifdef SCALAR_COMPLEX
-          sum.re += x[i*incx].re * y[i*incy].re + x[i*incx].im * y[i*incy].im;
-          sum.im += x[i*incx].re * y[i*incy].im - x[i*incx].im * y[i*incy].re;
+	  real x_re = x[i*incx].re, x_im = x[i*incx].im;
+	  real y_re = y[i*incy].re, y_im = y[i*incy].im;
+	  /* the dot product is conj(x) * y: */
+          sum.re += x_re * y_re + x_im * y_im;
+          sum.im += x_re * y_im - x_im * y_re;
 #  else
 	  sum += x[i*incx] * y[i*incy];
 #  endif

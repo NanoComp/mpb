@@ -45,4 +45,7 @@
 /* define when profiling */
 #undef ENABLE_PROF
 
+/* define if calling Fortran functions does not work: */
+#undef NO_FORTRAN_FUNCTIONS
+
 #endif /* CONFIG_H */
