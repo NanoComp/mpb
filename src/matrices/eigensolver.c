@@ -599,6 +599,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
            STRINGIZE(EIGENSOLVER_MAX_ITERATIONS)
            " iterations");
 
+     evectmatrix_XtX(U, Y);
+     sqmatrix_invert(U);
      eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata,
 				   X, G, U, S1, S2);
 
