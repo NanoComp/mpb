@@ -779,16 +779,21 @@ void compute_field_energy(void)
 /**************************************************************************/
 
 /* Fix the phase of the current field (e/h/d) to a canonical value.
+   Also changes the phase of the corresponding eigenvector by the
+   same amount, so that future calculations will have a consistent
+   phase.
 
    The following procedure is used, derived from a suggestion by Doug
-   Allan of Corning: Given the field component with the largest
-   square-amplitude, choose the phase to maximize the sum of the
-   squares of the real parts.  This doesn't fix the overall sign, though;
-   that is done using a method described below. */
+   Allan of Corning: First, choose the phase to maximize the sum of
+   the squares of the real parts of the components.  This doesn't fix
+   the overall sign, though.  That is done (after incorporating the
+   above phase) by: (1) find the largest absolute value of the real
+   part, (2) find the point with the greatest spatial array index that
+   has |real part| at least half of the largest value, and (3) make
+   that point positive. */
 void fix_field_phase(void)
 {
-     int i, N, j, jmax;
-     real sq_amp[3] = {0,0,0};
+     int i, N;
      real sq_sum[2] = {0,0}, maxabs = 0.0;
      int maxabs_index = 0, maxabs_sign = 1;
      double theta;
@@ -798,26 +803,14 @@ void fix_field_phase(void)
           fprintf(stderr, "The D, H, or E field must be loaded first.\n");
           return;
      }
+     N = mdata->fft_output_size * 3;
 
-     N = mdata->fft_output_size;
-
-     /* first, find component jmax with largest square amplitude: */
-     for (i = 0; i < N; ++i) {
-	  for (j = 0; j < 3; ++j) {
-	       sq_amp[j] += SCALAR_NORMSQR(curfield[3*i+j]);
-	  }
-     }
-     MPI_Allreduce(sq_amp, sq_amp, 3, SCALAR_MPI_TYPE,
-		   MPI_SUM, MPI_COMM_WORLD);
-     jmax = sq_amp[0] > sq_amp[1] ? (sq_amp[0] > sq_amp[2] ? 0 : 2) :
-	  (sq_amp[1] > sq_amp[2] ? 1 : 2);
- 
      /* Compute the phase that maximizes the sum of the squares of
-	the real parts of the jmax component.  Equivalently, maximize
+	the real parts of the components.  Equivalently, maximize
 	the real part of the sum of the squares. */
      for (i = 0; i < N; ++i) {
 	  scalar sq;
-	  ASSIGN_MULT(sq, curfield[3*i+jmax], curfield[3*i+jmax]);
+	  ASSIGN_MULT(sq, curfield[i], curfield[i]);
 	  sq_sum[0] += SCALAR_RE(sq);
 	  sq_sum[1] += SCALAR_IM(sq);
      }
@@ -840,7 +833,7 @@ void fix_field_phase(void)
          oscillating field within the unit cell.) */
      for (i = 0; i < N; ++i) {
 	  real r;
-	  ASSIGN_MULT_RE(r, curfield[3*i+jmax], phase);  r = fabs(r);
+	  ASSIGN_MULT_RE(r, curfield[i], phase);  r = fabs(r);
 	  if (r > maxabs)
 	       maxabs = r;
      }
@@ -848,7 +841,7 @@ void fix_field_phase(void)
 		   MPI_MAX, MPI_COMM_WORLD);
      for (i = N - 1; i >= 0; --i) {
 	  real r;
-	  ASSIGN_MULT_RE(r, curfield[3*i+jmax], phase);
+	  ASSIGN_MULT_RE(r, curfield[i], phase);
 	  if (fabs(r) >= 0.5 * maxabs) {
 	       maxabs_index = i;
 	       maxabs_sign = r < 0 ? -1 : 1;
@@ -874,7 +867,7 @@ void fix_field_phase(void)
      /* Now, multiply everything by this phase, *including* the
 	stored "raw" eigenvector in H, so that any future fields
 	that we compute will have a consistent phase: */
-     for (i = 0; i < N*3; ++i) {
+     for (i = 0; i < N; ++i) {
 	  ASSIGN_MULT(curfield[i], curfield[i], phase);
      }
      for (i = 0; i < H.n; ++i) {
