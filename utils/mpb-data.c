@@ -623,6 +623,8 @@ int main(int argc, char **argv)
                    break;
               case 'n':
                    resolution = atoi(optarg);
+		   CHECK(resolution > 0,
+			 "invalid resolution for -n (must be positive)");
                    break;
               case 'p':
                    pick_nearest = 1;
