@@ -33,8 +33,8 @@
 
 #include "matrixio.h"
 
-static void add_string_attr(matrixio_id id,
-			    const char *name, const char *val)
+void matrixio_write_string_attr(matrixio_id id, const char *name,
+				const char *val)
 {
 #if defined(HAVE_HDF5)
      hid_t type_id;
@@ -60,6 +60,49 @@ static void add_string_attr(matrixio_id id,
      H5Aclose(attr_id);
      H5Sclose(space_id);
      H5Tclose(type_id);
+#endif
+}
+
+void matrixio_write_data_attr(matrixio_id id, const char *name,
+			      const real *val, int rank, const int *dims)
+{
+#if defined(HAVE_HDF5)
+     hid_t type_id;
+     hid_t space_id;
+     hid_t attr_id;
+     hsize_t *space_dims;
+     int i;
+
+     if (!mpi_is_master())
+	  return; /* only one process should add attributes */
+     
+     if (!val || !name || !name[0] || rank < 0 || !dims)
+	  return; /* don't try to create empty attributes */
+     
+#ifdef SCALAR_SINGLE_PREC
+     type_id = H5T_NATIVE_FLOAT;
+#else
+     type_id = H5T_NATIVE_DOUBLE;
+#endif
+
+     if (rank > 0) {
+	  CHK_MALLOC(space_dims, hsize_t, rank);
+	  for (i = 0; i < rank; ++i)
+	       space_dims[i] = dims[i];
+	  space_id = H5Screate_simple(rank, space_dims, NULL);
+	  free(space_dims);
+     }
+     else {
+	  space_id = H5Screate(H5S_SCALAR);
+     }
+
+     attr_id = H5Acreate(id, name, type_id, space_id, H5P_DEFAULT);
+     CHECK(id >= 0, "error creating HDF attr");
+
+     H5Awrite(attr_id, type_id, (void*) val);
+
+     H5Aclose(attr_id);
+     H5Sclose(space_id);
 #endif
 }
 
@@ -163,7 +206,7 @@ matrixio_id matrixio_create_sub(matrixio_id id,
 
      if (mpi_is_master()) {
 	  sub_id = H5Gcreate(id, name, 0 /* ==> default size */ );
-	  add_string_attr(sub_id, "description", description);
+	  matrixio_write_string_attr(sub_id, "description", description);
 	  
 	  H5Fflush(sub_id, H5F_SCOPE_GLOBAL);
 
@@ -217,7 +260,7 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
 
      H5Sclose(space_id);  /* the dataset should have its own copy now */
      
-     add_string_attr(data_id, "description", description);
+     matrixio_write_string_attr(data_id, "description", description);
 
      return data_id;
 #else

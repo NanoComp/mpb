@@ -50,11 +50,14 @@ void fieldio_write_complex_field(scalar_complex *field,
      matrixio_id file_ids[3][2], data_ids[3][2];
      scalar_complex *phasex, *phasey, *phasez;
      real lastphase = 0.0;
+     int attr_dims[2] = {3, 3};
+     real rcopies[3];
 
      for (i = 0; i < 3; ++i) {
 	  cpies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
 	  total_dims[i] = dims[i] * cpies[i];
 	  local_dims[i] = dims[i];
+	  rcopies[i] = cpies[i];
      }
      rank = total_dims[2] == 1 ? (total_dims[1] == 1 ? 1 : 2) : 3;
      local_dims[0] = local_nx;
@@ -86,6 +89,15 @@ void fieldio_write_complex_field(scalar_complex *field,
 			 matrixio_create_dataset(file_ids[component][ri_part],
 						 name, description,
 						 rank, total_dims);
+		    matrixio_write_data_attr(data_ids[component][ri_part],
+					     "Bloch wavevector",
+					     kvector, 1, attr_dims);
+		    matrixio_write_data_attr(data_ids[component][ri_part],
+					     "lattice vectors",
+					     &R[0][0], 2, attr_dims);
+		    matrixio_write_data_attr(data_ids[component][ri_part],
+					     "lattice size",
+					     rcopies, 1, attr_dims);
 	       }
      free(fname2);
 
@@ -213,17 +225,21 @@ void fieldio_write_real_vals(real *vals,
 			     const int dims[3],
 			     int local_nx, int local_x_start,
 			     const int copies[3],
+			     real R[3][3],
 			     const char *fname,
 			     const char *description)
 {
      int i, j, k;
      int cpies[3], total_dims[3], local_dims[3], start[3] = {0,0,0};
      matrixio_id file_id, data_id;
+     int attr_dims[2] = {3, 3};
+     real rcopies[3];
 
      for (i = 0; i < 3; ++i) {
 	  cpies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
 	  total_dims[i] = dims[i] * cpies[i];
 	  local_dims[i] = dims[i];
+	  rcopies[i] = cpies[i];
      }
      rank = total_dims[2] == 1 ? (total_dims[1] == 1 ? 1 : 2) : 3;
      local_dims[0] = local_nx;
@@ -232,6 +248,10 @@ void fieldio_write_real_vals(real *vals,
      file_id = matrixio_create(fname);
      data_id = matrixio_create_dataset(file_id, description, NULL,
 				       rank, total_dims);
+     matrixio_write_data_attr(data_id, "lattice vectors",
+			      &R[0][0], 2, attr_dims);
+     matrixio_write_data_attr(data_id, "lattice size",
+			      rcopies, 1, attr_dims);
 
      /* loop over copies, writing out hyperslabs: */
      for (i = 0; i < cpies[0]; ++i)

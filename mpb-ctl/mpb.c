@@ -841,7 +841,7 @@ void output_field_extended(vector3 copiesv, int which_component)
 			     mdata->polarization);
 	  printf("Outputting %s...\n", fname2);
 	  fieldio_write_real_vals((real *) curfield, 3, dims,
-				  local_nx, local_x_start, copies,
+				  local_nx, local_x_start, copies, R,
 				  fname2, description);
 	  free(fname2);
      }

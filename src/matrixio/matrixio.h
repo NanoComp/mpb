@@ -51,6 +51,12 @@ extern real *matrixio_read_real_data(matrixio_id id,
 				     int stride,
 				     real *data);
 
+extern void matrixio_write_string_attr(matrixio_id id, const char *name,
+				       const char *val);
+extern void matrixio_write_data_attr(matrixio_id id, const char *name,
+				     const real *val, int rank, 
+				     const int *dims);
+
 extern void evectmatrixio_writeall_raw(const char *filename, evectmatrix a);
 extern void evectmatrixio_readall_raw(const char *filename, evectmatrix a);
 
@@ -69,6 +75,7 @@ void fieldio_write_real_vals(real *vals,
                              const int dims[3],
                              int local_nx, int local_x_start,
                              const int copies[3],
+                             real R[3][3],
                              const char *fname,
                              const char *description);
 
