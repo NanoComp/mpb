@@ -85,11 +85,12 @@ value is less than 3, the sizes of the extra dimensions in
 is easier to set the dimensions through <code>grid-size</code>, as
 discussed above.  Defaults to 3.
 
-<p><dt><code>k-points</code> [list of <code>vector3</code>]
+<p><dt><code><a name="k-points">k-points</a></code> [list of
+<code>vector3</code>]
 <dd>List of Bloch wavevectors to compute the bands at, expressed in
 the basis of the reciprocal lattice vectors (<em>not</em> the
 unit-normalized reciprocal lattice vectors).  The reciprocal lattice
-vectors are defined as follows:  Given the lattice vectors
+vectors are defined as follows: Given the lattice vectors
 <code>R<sub>i</sub></code>, the reciprocal lattice vector
 <code>G<sub>j</sub></code> satisfies <code>R<sub>i</sub> *
 G<sub>j</sub> = 2*Pi*delta<sub>i,j</sub></code>, where
