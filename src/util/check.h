@@ -43,7 +43,7 @@ extern void check_breakpoint(void);
 
 #endif /* not CHECK_DISABLE */
 
-#ifdef DEBUG
+#ifdef DEBUG_MALLOC
 extern void *debug_malloc(size_t n);
 extern void debug_free(void *p);
 #define malloc debug_malloc

@@ -43,6 +43,10 @@ void check_breakpoint(void)
 	in a debugger when a CHECK macro fails... */
 }
 
+#endif
+
+#ifdef DEBUG_MALLOC
+
 /*
  * debugging malloc/free.  Initialize every malloced and freed area to
  * random values, just to make sure we are not using uninitialized
@@ -145,7 +149,7 @@ void debug_free(void *p)
 /* check for memory leaks when debugging */
 void debug_check_memory_leaks(void)
 {
-#ifdef DEBUG
+#ifdef DEBUG_MALLOC
      if (debug_malloc_cnt || debug_malloc_total)
 	  mpi_die("MEMORY LEAK!!!\n"
 		  "number of unbalanced malloc calls = %d\n"

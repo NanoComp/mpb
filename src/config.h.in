@@ -42,6 +42,9 @@
 /* define to enable expensive debugging checks, etcetera */
 #undef DEBUG
 
+/* define to enable expensive debugging malloc/free routines */
+#undef DEBUG_MALLOC
+
 /* define when profiling */
 #undef ENABLE_PROF
 
