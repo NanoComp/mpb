@@ -50,5 +50,6 @@ typedef struct {
 
 extern field_smob *update_curfield_smob(void);
 extern void register_field_smobs(void);
+extern field_smob *assert_field_smob(SCM fo);
 
 #endif /* FIELD_SMOB_H */

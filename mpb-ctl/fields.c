@@ -559,13 +559,12 @@ void fix_field_phase(void)
    point, linearly interpolating if necessary. */
 
 static real get_val(int ix, int iy, int iz,
+		    int nx, int ny, int nz, int last_dim_size,
 		    real *data, int stride, int conjugate)
 {
-     int nx = mdata->nx, ny = mdata->ny, nz = mdata->nz;
-     
 #ifndef SCALAR_COMPLEX
      {
-	  int nlast = mdata->last_dim_size / 2;
+	  int nlast = last_dim_size / 2;
 	  if ((nz > 1 ? iz : (ny > 1 ? iy : ix)) >= nlast) {
 	       ix = ix ? nx - ix : ix;
 	       iy = iy ? ny - iy : iy;
@@ -581,7 +580,7 @@ static real get_val(int ix, int iy, int iz,
 #endif
 
 #ifdef HAVE_MPI
-     CHECK(0, "not yet implemented!");
+     CHECK(0, "get-*-point not yet implemented for MPI!");
 #else
      if (conjugate)
 	  return -data[(((ix * ny) + iy) * nz + iz) * stride];
@@ -590,12 +589,12 @@ static real get_val(int ix, int iy, int iz,
 #endif
 }
 
-static real interp_val(vector3 p, real *data, int stride, int conjugate)
+static real interp_val(vector3 p, int nx, int ny, int nz, int last_dim_size,
+		       real *data, int stride, int conjugate)
 {
      double ipart;
      real rx, ry, rz, dx, dy, dz;
      int x, y, z, x2, y2, z2;
-     int nx = mdata->nx, ny = mdata->ny, nz = mdata->nz;
 
      rx = modf(p.x/geometry_lattice.size.x + 0.5, &ipart); if (rx < 0) rx += 1;
      ry = modf(p.y/geometry_lattice.size.y + 0.5, &ipart); if (ry < 0) ry += 1;
@@ -621,7 +620,7 @@ static real interp_val(vector3 p, real *data, int stride, int conjugate)
      dy = fabs(dy);
      dz = fabs(dz);
 
-#define D(x,y,z) (get_val(x,y,z, data, stride, conjugate))
+#define D(x,y,z) (get_val(x,y,z,nx,ny,nz,last_dim_size, data,stride,conjugate))
 
      return(((D(x,y,z)*(1.0-dx) + D(x2,y,z)*dx) * (1.0-dy) +
              (D(x,y2,z)*(1.0-dx) + D(x2,y2,z)*dx) * dy) * (1.0-dz) +
@@ -631,30 +630,35 @@ static real interp_val(vector3 p, real *data, int stride, int conjugate)
 #undef D
 }
 
-static scalar_complex interp_cval(vector3 p, real *data, int stride)
+static scalar_complex interp_cval(vector3 p, 
+				  int nx, int ny, int nz, int last_dim_size,
+				  real *data, int stride)
 {
      scalar_complex cval;
-     cval.re = interp_val(p, data, stride, 0);
-     cval.im = interp_val(p, data + 1, stride, 1);
+     cval.re = interp_val(p, nx,ny,nz,last_dim_size, data, stride, 0);
+     cval.im = interp_val(p, nx,ny,nz,last_dim_size,data + 1, stride, 1);
      return cval;
 }
+
+#define f_interp_val(p,f,data,stride,conj) interp_val(p,f->nx,f->ny,f->nz,f->last_dim_size,data,stride,conj)
+#define f_interp_cval(p,f,data,stride) interp_cval(p,f->nx,f->ny,f->nz,f->last_dim_size,data,stride)
 
 static symmetric_matrix interp_eps_inv(vector3 p)
 {
      int stride = sizeof(symmetric_matrix) / sizeof(real);
      symmetric_matrix eps_inv;
 
-     eps_inv.m00 = interp_val(p, &mdata->eps_inv->m00, stride, 0);
-     eps_inv.m11 = interp_val(p, &mdata->eps_inv->m11, stride, 0);
-     eps_inv.m22 = interp_val(p, &mdata->eps_inv->m22, stride, 0);
+     eps_inv.m00 = f_interp_val(p, mdata, &mdata->eps_inv->m00, stride, 0);
+     eps_inv.m11 = f_interp_val(p, mdata, &mdata->eps_inv->m11, stride, 0);
+     eps_inv.m22 = f_interp_val(p, mdata, &mdata->eps_inv->m22, stride, 0);
 #ifdef WITH_HERMITIAN_EPSILON
-     eps_inv.m01 = interp_cval(p, &mdata->eps_inv->m01.re, stride);
-     eps_inv.m02 = interp_cval(p, &mdata->eps_inv->m02.re, stride);
-     eps_inv.m12 = interp_cval(p, &mdata->eps_inv->m12.re, stride);
+     eps_inv.m01 = f_interp_cval(p, mdata, &mdata->eps_inv->m01.re, stride);
+     eps_inv.m02 = f_interp_cval(p, mdata, &mdata->eps_inv->m02.re, stride);
+     eps_inv.m12 = f_interp_cval(p, mdata, &mdata->eps_inv->m12.re, stride);
 #else
-     eps_inv.m01 = interp_val(p, &mdata->eps_inv->m01, stride, 0);
-     eps_inv.m02 = interp_val(p, &mdata->eps_inv->m02, stride, 0);
-     eps_inv.m12 = interp_val(p, &mdata->eps_inv->m12, stride, 0);
+     eps_inv.m01 = f_interp_val(p, mdata, &mdata->eps_inv->m01, stride, 0);
+     eps_inv.m02 = f_interp_val(p, mdata, &mdata->eps_inv->m02, stride, 0);
+     eps_inv.m12 = f_interp_val(p, mdata, &mdata->eps_inv->m12, stride, 0);
 #endif
      return eps_inv;
 }
@@ -688,7 +692,7 @@ number get_energy_point(vector3 p)
 {
      CHECK(curfield && strchr("DHR", curfield_type),
 	   "compute-field-energy must be called before get-energy-point");
-     return interp_val(p, (real *) curfield, 1, 0);
+     return f_interp_val(p, mdata, (real *) curfield, 1, 0);
 }
 
 cvector3 get_bloch_field_point(vector3 p)
@@ -698,36 +702,9 @@ cvector3 get_bloch_field_point(vector3 p)
 
      CHECK(curfield && strchr("dhec", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
-     field[0] = interp_cval(p, &curfield[0].re, 6);
-     field[1] = interp_cval(p, &curfield[1].re, 6);
-     field[2] = interp_cval(p, &curfield[2].re, 6);
-     F.x = cscalar2cnumber(field[0]);
-     F.y = cscalar2cnumber(field[1]);
-     F.z = cscalar2cnumber(field[2]);
-     return F;
-}
-
-/* FIXME: the following two functions only work if the smob
-   is the the same size as the current field */
-
-number rscalar_field_get_point(SCM fo, vector3 p)
-{
-     field_smob *f = SAFE_FIELD(fo);
-     CHECK(f && f->type == RSCALAR_FIELD_SMOB, 
-	   "invalid argument to rscalar-field-get-point");
-     return interp_val(p, f->f.rs, 1, 0);
-}
-
-cvector3 cvector_field_get_point(SCM fo, vector3 p)
-{
-     scalar_complex field[3];
-     cvector3 F;
-     field_smob *f = SAFE_FIELD(fo);
-     CHECK(f && f->type == CVECTOR_FIELD_SMOB, 
-	   "invalid argument to cvector-field-get-point");
-     field[0] = interp_cval(p, &f->f.cv[0].re, 6);
-     field[1] = interp_cval(p, &f->f.cv[1].re, 6);
-     field[2] = interp_cval(p, &f->f.cv[2].re, 6);
+     field[0] = f_interp_cval(p, mdata, &curfield[0].re, 6);
+     field[1] = f_interp_cval(p, mdata, &curfield[1].re, 6);
+     field[2] = f_interp_cval(p, mdata, &curfield[2].re, 6);
      F.x = cscalar2cnumber(field[0]);
      F.y = cscalar2cnumber(field[1]);
      F.z = cscalar2cnumber(field[2]);
@@ -742,9 +719,9 @@ cvector3 get_field_point(vector3 p)
 
      CHECK(curfield && strchr("dhec", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
-     field[0] = interp_cval(p, &curfield[0].re, 6);
-     field[1] = interp_cval(p, &curfield[1].re, 6);
-     field[2] = interp_cval(p, &curfield[2].re, 6);
+     field[0] = f_interp_cval(p, mdata, &curfield[0].re, 6);
+     field[1] = f_interp_cval(p, mdata, &curfield[1].re, 6);
+     field[2] = f_interp_cval(p, mdata, &curfield[2].re, 6);
 
      phase_phi = TWOPI * (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
 			  cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
@@ -754,6 +731,30 @@ cvector3 get_field_point(vector3 p)
      CASSIGN_MULT(field[1], field[1], phase);
      CASSIGN_MULT(field[2], field[2], phase);
 
+     F.x = cscalar2cnumber(field[0]);
+     F.y = cscalar2cnumber(field[1]);
+     F.z = cscalar2cnumber(field[2]);
+     return F;
+}
+
+number rscalar_field_get_point(SCM fo, vector3 p)
+{
+     field_smob *f = assert_field_smob(fo);
+     CHECK(f->type == RSCALAR_FIELD_SMOB, 
+	   "invalid argument to rscalar-field-get-point");
+     return f_interp_val(p, f, f->f.rs, 1, 0);
+}
+
+cvector3 cvector_field_get_point(SCM fo, vector3 p)
+{
+     scalar_complex field[3];
+     cvector3 F;
+     field_smob *f = assert_field_smob(fo);
+     CHECK(f->type == CVECTOR_FIELD_SMOB, 
+	   "invalid argument to cvector-field-get-point");
+     field[0] = f_interp_cval(p, f, &f->f.cv[0].re, 6);
+     field[1] = f_interp_cval(p, f, &f->f.cv[1].re, 6);
+     field[2] = f_interp_cval(p, f, &f->f.cv[2].re, 6);
      F.x = cscalar2cnumber(field[0]);
      F.y = cscalar2cnumber(field[1]);
      F.z = cscalar2cnumber(field[2]);

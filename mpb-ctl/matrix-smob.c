@@ -167,16 +167,31 @@ void register_matrix_smobs(void)
 
 /*************************************************************************/
 
-integer sqmatrix_size(SCM mo)
+sqmatrix *assert_sqmatrix_smob(SCM mo)
 {
      sqmatrix *m = SAFE_SQMATRIX(mo);
-     CHECK(m, "invalid argument to sqmatrix-size");
+     CHECK(m, "wrong type argument: expecting sqmatrix");
+     return m;
+}
+
+evectmatrix *assert_evectmatrix_smob(SCM mo)
+{
+     evectmatrix *m = SAFE_EVECTMATRIX(mo);
+     CHECK(m, "wrong type argument: expecting evectmatrix");
+     return m;
+}
+
+/*************************************************************************/
+
+integer sqmatrix_size(SCM mo)
+{
+     sqmatrix *m = assert_sqmatrix_smob(mo);
      return m->p;
 }
 
 cnumber sqmatrix_ref(SCM mo, integer i, integer j)
 {
-     sqmatrix *m = SAFE_SQMATRIX(mo);
+     sqmatrix *m = assert_sqmatrix_smob(mo);
      cnumber c;
      CHECK(m && i >= 0 && j >= 0 && i < m->p && j < m->p,
 	   "invalid arguments to sqmatrix-ref");
@@ -196,8 +211,7 @@ SCM get_eigenvectors(integer b_start, integer num_bands)
 
 void set_eigenvectors(SCM mo, integer b_start)
 {
-     evectmatrix *m = SAFE_EVECTMATRIX(mo);
-     CHECK(m, "invalid argument to set-eigenvectors");
+     evectmatrix *m = assert_evectmatrix_smob(mo);
      CHECK(mdata, "init-params must be called before set-eigenvectors");
 
      evectmatrix_copy_slice(H, *m, b_start - 1, 0, m->p);
@@ -206,11 +220,10 @@ void set_eigenvectors(SCM mo, integer b_start)
 
 SCM dot_eigenvectors(SCM mo, integer b_start)
 {
-     evectmatrix *m = SAFE_EVECTMATRIX(mo);
+     evectmatrix *m = assert_evectmatrix_smob(mo);
      sqmatrix U, S;
      SCM obj;
 
-     CHECK(m, "invalid argument to dot-eigenvectors");
      CHECK(mdata, "init-params must be called before dot-eigenvectors");
 
      U = create_sqmatrix(m->p);

@@ -42,5 +42,7 @@ extern integer sqmatrix_size(object mo);
 extern cnumber sqmatrix_ref(object mo, integer i, integer j);
 
 extern void register_matrix_smobs(void);
+extern sqmatrix *assert_sqmatrix_smob(SCM mo);
+extern evectmatrix *assert_evectmatrix_smob(SCM mo);
 
 #endif /* MATRIX_SMOB_H */

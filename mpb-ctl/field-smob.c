@@ -131,8 +131,8 @@ field_smob *update_curfield_smob(void)
 	  curfield_smob.f.rs = (real *) curfield;
      }
      else {
-	  curfield_smob.type = RSCALAR_FIELD_SMOB;
-	  curfield_smob.f.rs = 0;
+	  curfield_smob.type = RSCALAR_FIELD_SMOB; /* arbitrary */
+	  curfield_smob.f.rs = (real *) curfield;
 	  return 0;
      }	  
      return &curfield_smob;
@@ -157,12 +157,20 @@ boolean cur_fieldp(SCM obj)
 
 /*************************************************************************/
 
+field_smob *assert_field_smob(SCM fo)
+{
+     field_smob *f = SAFE_FIELD(fo);
+     CHECK(f, "wrong type argument: expecting field");
+     return f;
+}
+
+/*************************************************************************/
+
 SCM rscalar_field_make(SCM f0)
 {
      int i;
      field_smob *pf;
-     field_smob *pf0 = SAFE_FIELD(f0);
-     CHECK(pf0, "invalid argument to rscalar-field-make");
+     field_smob *pf0 = assert_field_smob(f0);
      CHK_MALLOC(pf, field_smob, 1);
      *pf = *pf0;
      pf->type = RSCALAR_FIELD_SMOB;
@@ -177,8 +185,7 @@ SCM cvector_field_make(SCM f0)
 {
      int i;
      field_smob *pf;
-     field_smob *pf0 = SAFE_FIELD(f0);
-     CHECK(pf0, "invalid argument to cvector-field-make");
+     field_smob *pf0 = assert_field_smob(f0);
      CHECK(mdata, "init-params must be called before rscalar-field-make");
      CHK_MALLOC(pf, field_smob, 1);
      *pf = *pf0;
@@ -192,8 +199,7 @@ SCM cvector_field_make(SCM f0)
 
 SCM field_make(SCM f0)
 {
-     field_smob *pf0 = SAFE_FIELD(f0);
-     CHECK(pf0, "invalid argument to field-make");
+     field_smob *pf0 = assert_field_smob(f0);
      switch (pf0->type) {
 	 case RSCALAR_FIELD_SMOB:
 	      return rscalar_field_make(f0);
@@ -214,9 +220,8 @@ static boolean fields_conform(field_smob *f1, field_smob *f2)
 
 boolean fields_conformp(SCM f1o, SCM f2o)
 {
-     field_smob *f1 = SAFE_FIELD(f1o);
-     field_smob *f2 = SAFE_FIELD(f2o);
-     CHECK(f1 && f2, "invalid arguments to fields-conform?");
+     field_smob *f1 = assert_field_smob(f1o);
+     field_smob *f2 = assert_field_smob(f2o);
      return fields_conform(f1, f2);
 }
 
@@ -242,16 +247,16 @@ static void field_set(field_smob *fd, field_smob *fs)
 
 void field_setB(SCM dest, SCM src)
 {
-     field_smob *fd = SAFE_FIELD(dest);
-     field_smob *fs = SAFE_FIELD(src);
-     CHECK(fd && fs, "invalid arguments to field-set!");
+     field_smob *fd = assert_field_smob(dest);
+     field_smob *fs = assert_field_smob(src);
      field_set(fd, fs);
 }
 
 void field_load(SCM src)
 {
-     field_smob *fs = SAFE_FIELD(src);
-     CHECK(fs && update_curfield_smob(), "invalid argument to field-load");
+     field_smob *fs = assert_field_smob(src);
+     CHECK(mdata, "init-params must be called before field-load");
+     update_curfield_smob();
      CHECK(fields_conform(fs, &curfield_smob),
 	   "argument for field-load must conform to current size");
      curfield_smob.type = fs->type;
@@ -260,14 +265,12 @@ void field_load(SCM src)
 
 void field_mapLB(SCM dest, function f, SCM_list src)
 {
-     field_smob *pd = SAFE_FIELD(dest);
+     field_smob *pd = assert_field_smob(dest);
      field_smob **ps;
      int i, j;
-     CHECK(pd, "invalid arguments for field-map!");
      CHK_MALLOC(ps, field_smob *, src.num_items);
      for (j = 0; j < src.num_items; ++j) {
-	  CHECK(ps[j] = SAFE_FIELD(src.items[j]), 
-		"invalid argument to field-map!");
+	  ps[j] = assert_field_smob(src.items[j]);
 	  CHECK(fields_conform(pd, ps[j]),
 		"fields for field-map! must conform");
      }
@@ -337,8 +340,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 
      CHK_MALLOC(pf, field_smob *, fields.num_items);
      for (ifield = 0; ifield < fields.num_items; ++ifield) {
-          CHECK(pf[ifield] = SAFE_FIELD(fields.items[ifield]),
-                "invalid argument to integrate-fields");
+          pf[ifield] = assert_field_smob(fields.items[ifield]);
           CHECK(fields_conform(pf[0], pf[ifield]),
                 "fields for integrate-fields must conform");
      }
