@@ -53,7 +53,7 @@ void evectmatrix_copy_slice(evectmatrix X, evectmatrix Y,
 	  blasglue_copy(X.n, Y.data + iy, Y.p, X.data + ix, X.p);
      else {
 	  int i;
-	  for (i == 0; i < X.n; ++i)
+	  for (i = 0; i < X.n; ++i)
 	       blasglue_copy(p, Y.data + iy + i * Y.p, 1,
 			     X.data + ix + i * X.p, 1);
      }
