@@ -1,10 +1,13 @@
-; Dielectric spheres in a diamond (fcc) lattice:
+; Dielectric spheres in a diamond (fcc) lattice.  This file is used in
+; the "Data Analysis Tutorial" section of the MPB manual.
 
 (set! geometry-lattice (make lattice
 			 (basis1 0 1 1)
 			 (basis2 1 0 1)
 			 (basis3 1 1 0)))
 
+; Corners of the irreducible Brillouin zone for the fcc lattice,
+; in a canonical order:
 (set! k-points (interpolate 4 (list
 			       (vector3 0 0.5 0.5)            ; X
 			       (vector3 0 0.625 0.375)        ; U
@@ -21,17 +24,15 @@
 (define diel (make dielectric (epsilon eps)))
 
 ; A diamond lattice has two "atoms" per unit cell:
-
 (set! geometry (list (make sphere (center 0.125 0.125 0.125) (radius r) 
 			   (material diel))
 		     (make sphere (center -0.125 -0.125 -0.125) (radius r) 
 			   (material diel))))
 
-; (An fcc lattice would have only one sphere/object at the origin.)
+; (A simple fcc lattice would have only one sphere/object at the origin.)
 
 (set! grid-size (vector3 16 16 16))
 (set! mesh-size 5)
-
 (set! num-bands 5)
 
 ; run calculation, outputting electric-field energy density at the U point:
