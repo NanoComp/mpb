@@ -17,7 +17,7 @@ MPB 1.2 (11/15/00)
 
   * epsilon.h5 file now includes extra datasets for all components of the
     effective dielectric tensor.  (This feature is not yet supported if
-    you configure --with-inv-symmetry and --with-hermitian-epsilon.)
+    you configure --with-inv-symmetry --with-hermitian-epsilon.)
 
   * Noted new basis-size property of geometry-lattice, from libctl 1.5.
     This makes it easier to use conventional units in the fcc lattice.
