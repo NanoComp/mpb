@@ -54,8 +54,8 @@
    can *not* be attached to files, in which case we'll write/read it
    as an ordinary dataset.  Ugh. */
 
-static void write_attr(matrixio_id id, hid_t type_id, hid_t space_id,
-		       const char *name, void *val)
+static void write_attr(matrixio_id id, matrixio_id type_id,
+		       matrixio_id space_id, const char *name, void *val)
 {
 #if defined(HAVE_HDF5)
      hid_t attr_id;
@@ -78,8 +78,8 @@ static void write_attr(matrixio_id id, hid_t type_id, hid_t space_id,
 #endif
 }
 
-static hid_t open_attr(matrixio_id id, hid_t *type_id, hid_t *space_id,
-		       const char *name)
+static matrixio_id open_attr(matrixio_id id, matrixio_id *type_id,
+			     matrixio_id *space_id, const char *name)
 {
 #if defined(HAVE_HDF5)
      hid_t attr_id;
@@ -105,8 +105,8 @@ static hid_t open_attr(matrixio_id id, hid_t *type_id, hid_t *space_id,
 #endif
 }
 
-static void read_attr(matrixio_id id, hid_t attr_id,
-		      hid_t mem_type_id, void *val)
+static void read_attr(matrixio_id id, matrixio_id attr_id,
+		      matrixio_id mem_type_id, void *val)
 {
 #if defined(HAVE_HDF5)
      if (H5I_FILE == H5Iget_type(id)) {
@@ -118,7 +118,7 @@ static void read_attr(matrixio_id id, hid_t attr_id,
 #endif
 }
 
-static void close_attr(matrixio_id id, hid_t attr_id)
+static void close_attr(matrixio_id id, matrixio_id attr_id)
 {
 #if defined(HAVE_HDF5)
      if (H5I_FILE == H5Iget_type(id)) {

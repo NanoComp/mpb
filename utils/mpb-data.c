@@ -228,7 +228,7 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      real *d_in_re = NULL, *d_in_im = NULL, *d_out_re = NULL, *d_out_im = NULL;
      int in_dims[3] = {1,1,1}, out_dims[3] = {1,1,1}, rank = 3, i, N;
      int start[3] = {0,0,0};
-     hid_t data_id;
+     matrixio_id data_id;
      char out_name[1000];
 
      d_in_re = matrixio_read_real_data(in_file, name_re, &rank, in_dims,
