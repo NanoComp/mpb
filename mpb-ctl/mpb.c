@@ -965,10 +965,14 @@ number_list compute_group_velocity_component(vector3 d)
         
         Note that our k is in units of 2*Pi/a, and omega is in
         units of 2*Pi*c/a, so the result will be in units of c. */
-     for (i = 0; i < num_bands; ++i)
-	  group_v.items[i] /= 
-	       negative_epsilon_okp ? sqrt(fabs(freqs.items[i]))
-	       : freqs.items[i];
+     for (i = 0; i < num_bands; ++i) {
+	  if (freqs.items[i] == 0)  /* v is undefined in this case */
+	       group_v.items[i] = 0.0;  /* just set to zero */
+	  else
+	       group_v.items[i] /= 
+		    negative_epsilon_okp ? sqrt(fabs(freqs.items[i]))
+		    : freqs.items[i];
+     }
      
      return group_v;
 }
