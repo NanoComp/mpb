@@ -72,10 +72,10 @@ int mpi_is_master(void)
 void mpi_assert_equal(double x)
 {
 #ifdef DEBUG
-     double xmin = x, xmax = x;
+     double xmin, xmax;
 
-     MPI_Allreduce(&xmin, &xmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-     MPI_Allreduce(&xmax, &xmax, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+     mpi_allreduce(&x, &xmin, 1, double, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+     mpi_allreduce(&x, &xmax, 1, double, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
      CHECK(xmin == x && xmax == x, "mpi_assert_equal failure");
 #endif
 }

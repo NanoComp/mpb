@@ -231,14 +231,15 @@ void maxwell_zparity_constraint(evectmatrix X, void *data)
 real *maxwell_zparity(evectmatrix X, maxwell_data *d)
 {
      int i, j, b, nxy, nz;
-     real *zparity;
+     real *zparity, *zp_scratch;
 
      CHECK(d, "null maxwell data pointer!");
      CHECK(X.c == 2, "fields don't have 2 components!");
 
      CHK_MALLOC(zparity, real, X.p);
+     CHK_MALLOC(zp_scratch, real, X.p);
      for (b = 0; b < X.p; ++b)
-	  zparity[b] = 0.0;
+	  zp_scratch[b] = 0.0;
 
      if (d->nz > 1) {
 	  nxy = d->other_dims;
@@ -259,7 +260,7 @@ real *maxwell_zparity(evectmatrix X, maxwell_data *d)
 		    v = X.data[(ij * 2 + 1) * X.p + b];
 		    u2 = X.data[(ij2 * 2) * X.p + b];
 		    v2 = X.data[(ij2 * 2 + 1) * X.p + b];
-		    zparity[b] += (ij == ij2 ? 1.0 : 2.0) *
+		    zp_scratch[b] += (ij == ij2 ? 1.0 : 2.0) *
 			 (SCALAR_RE(u) * SCALAR_RE(u2) +
 			  SCALAR_IM(u) * SCALAR_IM(u2) -
 			  SCALAR_RE(v) * SCALAR_RE(v2) -
@@ -267,8 +268,9 @@ real *maxwell_zparity(evectmatrix X, maxwell_data *d)
 	       }
 	  }
 
-     MPI_Allreduce(zparity, zparity, X.p,
-		   SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(zp_scratch, zparity, X.p,
+		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+     free(zp_scratch);
      
      return zparity;
 }

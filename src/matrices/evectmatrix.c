@@ -116,105 +116,115 @@ void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y,
      evectmatrix_aXpbYS_sub(1.0, X, a, Y, S, 0, sdagger);
 }
 
-/* compute U = adjoint(X) * X */
-void evectmatrix_XtX(sqmatrix U, evectmatrix X)
+/* compute U = adjoint(X) * X, with S a scratch matrix. */
+void evectmatrix_XtX(sqmatrix U, evectmatrix X, sqmatrix S)
 {
-     CHECK(X.p == U.p, "matrices not conformant");
+     CHECK(X.p == U.p && U.p <= S.alloc_p, "matrices not conformant");
      
 /*
      blasglue_gemm('C', 'N', X.p, X.p, X.n,
-		   1.0, X.data, X.p, X.data, X.p, 0.0, U.data, U.p);
+		   1.0, X.data, X.p, X.data, X.p, 0.0, S.data, U.p);
 */
 
      /* take advantage of the fact that U is Hermitian and only write
 	out the upper triangle of the matrix */
-     blasglue_herk('U', 'C', X.p, X.n, 1.0, X.data, X.p, 0.0, U.data, U.p);
+     blasglue_herk('U', 'C', X.p, X.n, 1.0, X.data, X.p, 0.0, S.data, U.p);
      evectmatrix_flops += X.N * X.c * X.p * (X.p - 1);
 
-     /* Now, copy the conjugate of the upper half onto the lower half of U */
+     /* Now, copy the conjugate of the upper half onto the lower half of S */
      {
 	  int i, j;
 
 	  for (i = 0; i < U.p; ++i)
 	       for (j = i + 1; j < U.p; ++j) {
-		    ASSIGN_CONJ(U.data[j * U.p + i], U.data[i * U.p + j]);
+		    ASSIGN_CONJ(S.data[j * U.p + i], S.data[i * U.p + j]);
 	       }
      }
 
-     MPI_Allreduce(U.data, U.data, U.p * U.p * SCALAR_NUMVALS,
-		   SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(S.data, U.data, U.p * U.p * SCALAR_NUMVALS,
+		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 }
 
-/* compute U = adjoint(X) * Y */
-void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y)
+/* compute U = adjoint(X) * Y, with S a scratch matrix. */
+void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y, sqmatrix S)
 {
-     CHECK(X.p == Y.p && X.n == Y.n && X.p == U.p, "matrices not conformant");
+     CHECK(X.p == Y.p && X.n == Y.n && X.p == U.p && U.p <= S.alloc_p,
+	   "matrices not conformant");
      
      blasglue_gemm('C', 'N', X.p, X.p, X.n,
-		   1.0, X.data, X.p, Y.data, Y.p, 0.0, U.data, U.p);
+		   1.0, X.data, X.p, Y.data, Y.p, 0.0, S.data, U.p);
      evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
 
-     MPI_Allreduce(U.data, U.data, U.p * U.p * SCALAR_NUMVALS,
-		   SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(S.data, U.data, U.p * U.p * SCALAR_NUMVALS,
+		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 }
 
-/* Compute adjoint(X) * Y, storing the result in U at an offset Uoffset
-   with the matrix (i.e. as a submatrix within U). */
-void evectmatrixXtY_sub(sqmatrix U, int Uoffset, evectmatrix X, evectmatrix Y)
+/* Compute adjoint(X) * Y, storing the result in U at an offset
+   Uoffset with the matrix (i.e. as a submatrix within U).  S is a
+   scratch matrix (at least Y.p by Y.p). */
+void evectmatrixXtY_sub(sqmatrix U, int Uoffset, evectmatrix X, evectmatrix Y,
+			sqmatrix S)
 {
      int i;
 
      CHECK(X.p == Y.p && X.n == Y.n && U.p >= Y.p, "matrices not conformant");
      CHECK(Uoffset + (Y.p-1)*U.p + Y.p <= U.p*U.p,
 	   "submatrix exceeds matrix bounds");
-
+     CHECK(Y.p <= S.alloc_p, "scratch matrix too small");
+     
      blasglue_gemm('C', 'N', X.p, X.p, X.n,
-                   1.0, X.data, X.p, Y.data, Y.p, 0.0, U.data + Uoffset, U.p);
+		   1.0, X.data, X.p, Y.data, Y.p, 0.0, S.data, Y.p);
      evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
 
      for (i = 0; i < Y.p; ++i) {
-	  MPI_Allreduce(U.data + Uoffset + i*U.p, U.data + Uoffset + i*U.p,
+	  mpi_allreduce(S.data + i*Y.p, U.data + Uoffset + i*U.p, 
 			Y.p * SCALAR_NUMVALS,
-			SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+			real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
      }
 }
 
-/* compute only the diagonal elements of XtY */
-void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag)
+/* Compute only the diagonal elements of XtY, storing in diag
+   (with scratch_diag a scratch array of the same size as diag). */
+void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag,
+			  scalar *scratch_diag)
 {
-     matrix_XtY_diag(X.data, Y.data, X.n, X.p, diag);
+     matrix_XtY_diag(X.data, Y.data, X.n, X.p, scratch_diag);
      evectmatrix_flops += X.N * X.c * X.p * 2;
-     MPI_Allreduce(diag, diag, X.p, SCALAR_MPI_TYPE * SCALAR_NUMVALS,
-		   MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(scratch_diag, diag, X.p * SCALAR_NUMVALS, 
+		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 }
 
-void evectmatrix_XtY_diag_real(evectmatrix X, evectmatrix Y, real *diag)
+/* As above, but only compute real parts of diagonal. */
+void evectmatrix_XtY_diag_real(evectmatrix X, evectmatrix Y, real *diag,
+			       real *scratch_diag)
 {
-     matrix_XtY_diag_real(X.data, Y.data, X.n, X.p, diag);
+     matrix_XtY_diag_real(X.data, Y.data, X.n, X.p, scratch_diag);
      evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
-     MPI_Allreduce(diag, diag, X.p, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(scratch_diag, diag, X.p,
+		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 }
 
-/* compute only the diagonal elements of XtX */
-void evectmatrix_XtX_diag_real(evectmatrix X, real *diag)
+/* As above, but compute only the diagonal elements of XtX. */
+void evectmatrix_XtX_diag_real(evectmatrix X, real *diag, real *scratch_diag)
 {
-     matrix_XtX_diag_real(X.data, X.n, X.p, diag);
+     matrix_XtX_diag_real(X.data, X.n, X.p, scratch_diag);
      evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
-     MPI_Allreduce(diag, diag, X.p, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(scratch_diag, diag, X.p,
+		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 }
 
 /* compute trace(adjoint(X) * Y) */
 scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y)
 {
-     scalar trace;
+     scalar trace, trace_scratch;
 
      CHECK(X.p == Y.p && X.n == Y.n, "matrices not conformant");
      
-     trace = blasglue_dotc(X.n * X.p, X.data, 1, Y.data, 1);
+     trace_scratch = blasglue_dotc(X.n * X.p, X.data, 1, Y.data, 1);
      evectmatrix_flops += X.N * X.c * X.p * (2*X.p) + X.p;
 
-     MPI_Allreduce(&trace, &trace, SCALAR_NUMVALS, SCALAR_MPI_TYPE,
-		   MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(&trace_scratch, &trace, SCALAR_NUMVALS,
+		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 
      return trace;
 }

@@ -219,7 +219,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      tfd.S1 = YtAYU; tfd.S2 = S2; tfd.S3 = S3;
 
      if (flags & EIGS_ORTHONORMALIZE_FIRST_STEP) {
-	  evectmatrix_XtX(U, Y);
+	  evectmatrix_XtX(U, Y, S2);
 	  sqmatrix_invert(U, 1, S2);
 	  sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
 	  evectmatrix_XeYS(G, Y, S1, 1); /* G = orthonormalize Y */
@@ -241,7 +241,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  if (flags & EIGS_FORCE_APPROX_LINMIN)
 	       use_linmin = 0;
 
-	  TIME_OP(time_ZtZ, evectmatrix_XtX(YtY, Y));
+	  TIME_OP(time_ZtZ, evectmatrix_XtX(YtY, Y, S2));
 
 	  y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtY)) / Y.p);
 	  blasglue_scal(Y.p * Y.n, 1/y_norm, Y.data, 1);
@@ -267,7 +267,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    evectmatrix_copy(Y, G);
 		    prev_traceGtX = 0.0;
 
-		    evectmatrix_XtX(YtY, Y);
+		    evectmatrix_XtX(YtY, Y, S2);
 		    y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtY)) / Y.p);
 		    blasglue_scal(Y.p * Y.n, 1/y_norm, Y.data, 1);
 		    blasglue_scal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
@@ -281,7 +281,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  /* G = AYU; note that U is Hermitian: */
 	  TIME_OP(time_ZS, evectmatrix_XeYS(G, X, U, 1));
 
-	  TIME_OP(time_ZtW, evectmatrix_XtY(YtAYU, Y, G));
+	  TIME_OP(time_ZtW, evectmatrix_XtY(YtAYU, Y, G, S2));
 	  E = SCALAR_RE(sqmatrix_trace(YtAYU));
 	  CHECK(!BADNUM(E), "crazy number detected in trace!!\n");
 	  mpi_assert_equal(E);
@@ -324,7 +324,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  if (flags & EIGS_PROJECT_PRECONDITIONING) {
                /* Operate projection P = (1 - Y U Yt) on X: */
-               evectmatrix_XtY(symYtD, Y, X);  /* symYtD = Yt X */
+               evectmatrix_XtY(symYtD, Y, X, S2);  /* symYtD = Yt X */
 	       sqmatrix_AeBC(S1, U, 0, symYtD, 0);
 	       evectmatrix_XpaYS(X, -1.0, Y, S1, 0);
           }
@@ -375,9 +375,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       /* let X = KG - KY S3t, where S3 is chosen so that YtX = 0:
 		  S3 = (YtKG)t / (YtKY).  Recall that, at this point,
 		  X holds KG and G holds KY.  K is assumed Hermitian. */
-	       evectmatrix_XtY(S1, Y, G);
+	       evectmatrix_XtY(S1, Y, G, S2);
 	       sqmatrix_invert(S1, 0, S2);  /* S1 = 1 / (YtKY) */
-	       evectmatrix_XtY(S2, X, Y);  /* S2 = GtKY = (YtKG)t */
+	       evectmatrix_XtY(S2, X, Y, S3);  /* S2 = GtKY = (YtKG)t */
 	       sqmatrix_AeBC(S3, S2, 0 , S1, 1);
 	       evectmatrix_XpaYS(X, -1.0, G, S3, 1);
 
@@ -455,10 +455,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       t = dE < 0 ? -fabs(prev_theta) : fabs(prev_theta);
 	       evectmatrix_aXpbY(1.0, Y, t / d_norm, D);
 
-	       evectmatrix_XtX(U, Y);
+	       evectmatrix_XtX(U, Y, S2);
 	       sqmatrix_invert(U, 1, S2);  /* U = 1 / (Yt Y) */
 	       A(Y, G, Adata, 1, X); /* G = AY; X is scratch */
-	       evectmatrix_XtY(S1, Y, G);  /* S1 = Yt A Y */
+	       evectmatrix_XtY(S1, Y, G, S2);  /* S1 = Yt A Y */
 	       
 	       E2 = SCALAR_RE(sqmatrix_traceAtB(S1, U));
 	       mpi_assert_equal(E2);
@@ -505,13 +505,13 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       blasglue_scal(Y.p * Y.n, 1/d_scale, D.data, 1);
 
 	       A(D, G, Adata, 0, X); /* G = A D; X is scratch */
-	       evectmatrix_XtX(DtD, D);
-	       evectmatrix_XtY(DtAD, D, G);
+	       evectmatrix_XtX(DtD, D, S2);
+	       evectmatrix_XtY(DtAD, D, G, S2);
 	       
-	       evectmatrix_XtY(S1, Y, D);
+	       evectmatrix_XtY(S1, Y, D, S2);
 	       sqmatrix_symmetrize(symYtD, S1);
 
-	       evectmatrix_XtY(S1, Y, G);
+	       evectmatrix_XtY(S1, Y, G, S2);
 	       sqmatrix_symmetrize(symYtAD, S1);
 
 	       sqmatrix_AeBC(S1, U, 0, symYtD, 1);
@@ -594,10 +594,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	       /* Sum the times over the processors so that all the
 		  processors compare the same, average times. */
-	       MPI_Allreduce(&t_exact, &t_exact, 1, SCALAR_MPI_TYPE,
-			     MPI_SUM, MPI_COMM_WORLD);
-	       MPI_Allreduce(&t_approx, &t_approx, 1, SCALAR_MPI_TYPE,
-			     MPI_SUM, MPI_COMM_WORLD);
+	       mpi_allreduce_1(&t_exact,
+			       real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+	       mpi_allreduce_1(&t_approx, 
+			       real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 
 	       if (!(flags & EIGS_FORCE_EXACT_LINMIN) &&
 		   linmin_improvement > 0 &&
@@ -624,7 +624,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
            STRINGIZE(EIGENSOLVER_MAX_ITERATIONS)
            " iterations");
 
-     evectmatrix_XtX(U, Y);
+     evectmatrix_XtX(U, Y, S2);
      sqmatrix_invert(U, 1, S2);
      eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata,
 				   X, G, U, S1, S2);

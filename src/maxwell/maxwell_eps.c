@@ -21,6 +21,7 @@
 
 #include "../config.h"
 #include <check.h>
+#include <mpiglue.h>
 #include <mpi_utils.h>
 
 #include "maxwell.h"
@@ -810,9 +811,9 @@ void set_maxwell_dielectric(maxwell_data *md,
 			    md->eps_inv[eps_index].m22);
      }}  /* end of loop body */
 
-     MPI_Allreduce(&eps_inv_total, &eps_inv_total, 1, SCALAR_MPI_TYPE,
-		   MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce_1(&eps_inv_total, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
      n1 = md->fft_output_size;
-     MPI_Allreduce(&n1, &n1, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce_1(&n1, int, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
      md->eps_inv_mean = eps_inv_total / (3 * n1);
 }

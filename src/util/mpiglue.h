@@ -30,16 +30,30 @@ typedef double mpiglue_clock_t;
 #define MPIGLUE_CLOCK MPI_Wtime()
 #define MPIGLUE_CLOCK_DIFF(t2, t1) ((t2) - (t1))
 
+#define mpi_allreduce(sb, rb, n, ctype, t, op, comm) \
+     MPI_Allreduce(sb,rb,n,t,op,comm)
+
 #else /* don't have MPI */
 
+#include <string.h>
 #include <time.h>
 #include <check.h>
 
 #define MPI_Init(argc,argv) 0
 #define MPI_Finalize() 0
 
-#define MPI_Allreduce(sb, rb, n, t, op, comm) \
-CHECK((sb) == (rb), "MPI_Allreduce stub doesn't work for sendbuf != recvbuf")
+/* Stub for the MPI_Allreduce function, differing only by the addition
+   of a "ctype" parameter that is the C type for the buffers.  This
+   routine just loops over the buffers and assigns sb to rb, since
+   all of the MPI reduce operations become simple assignments on a
+   single processor.   (Our original implementation required rb == sb,
+   but it seems that MPI implementations do not allow this.  The MPI 2.0
+   specification supports an MPI_IN_PLACE constant that you can pass
+   for sb in order to be in-place, but I don't want to require that. */
+#define mpi_allreduce(sb, rb, n, ctype, t, op, comm) { \
+     CHECK((sb) != (rb), "MPI_Allreduce doesn't work for sendbuf == recvbuf");\
+     memcpy((rb), (sb), (n) * sizeof(ctype)); \
+}
 
 #define MPI_Bcast(b, n, t, root, comm) 0
 

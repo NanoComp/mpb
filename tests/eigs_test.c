@@ -174,7 +174,7 @@ int main(int argc, char **argv)
 
      printf("Eigenvectors are (by column): \n");
      printmat(Y.data, n, p, p);
-     evectmatrix_XtX(YtY, Y);
+     evectmatrix_XtX(YtY, Y, U);
      printf("adjoint(Y) * Y:\n");
      printmat(YtY.data, p, p, p);
 

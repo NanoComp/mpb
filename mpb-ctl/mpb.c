@@ -571,6 +571,7 @@ typedef struct {
      int p;  /* the number of columns of Y to orthogonalize against */
      scalar *S;  /* a matrix for storing the dot products; should have
 		    at least p * X.p elements (see below for X) */
+     scalar *S2; /* a scratch matrix the same size as S */
 } deflation_data;
 
 static void deflation_constraint(evectmatrix X, void *data)
@@ -585,9 +586,9 @@ static void deflation_constraint(evectmatrix X, void *data)
 
      /* compute S = Xt Y (i.e. all the dot products): */
      blasglue_gemm('C', 'N', X.p, d->p, X.n,
-		   1.0, X.data, X.p, d->Y.data, d->Y.p, 0.0, d->S, d->p);
-     MPI_Allreduce(d->S, d->S, d->p * X.p * SCALAR_NUMVALS,
-		   SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+		   1.0, X.data, X.p, d->Y.data, d->Y.p, 0.0, d->S2, d->p);
+     mpi_allreduce(d->S2, d->S, d->p * X.p * SCALAR_NUMVALS,
+		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 
      /* compute X = X - Y*St = (1 - Y Yt) X */
      blasglue_gemm('N', 'C', X.n, X.p, d->p,
@@ -667,6 +668,7 @@ void solve_kpoint(vector3 kvector)
 	  deflation.Y = H;
 	  deflation.p = 0;
 	  CHK_MALLOC(deflation.S, scalar, H.p * Hblock.p);
+	  CHK_MALLOC(deflation.S2, scalar, H.p * Hblock.p);
      }
 
      for (ib = ib0; ib < num_bands; ib += Hblock.alloc_p) {
@@ -801,6 +803,7 @@ void solve_kpoint(vector3 kvector)
 
      /* Destroy deflation data: */
      if (H.data != Hblock.data) {
+	  free(deflation.S2);
 	  free(deflation.S);
      }
 
@@ -849,6 +852,7 @@ void solve_kpoint(vector3 kvector)
 number_list compute_group_velocity_component(vector3 d)
 {
      number_list group_v;
+     number *gv_scratch;
      real u[3];
      int i, ib;
 
@@ -869,6 +873,7 @@ number_list compute_group_velocity_component(vector3 d)
 
      group_v.num_items = num_bands;
      CHK_MALLOC(group_v.items, number, group_v.num_items);
+     CHK_MALLOC(gv_scratch, number, group_v.num_items);
      
      /* now, compute group_v.items = diag Re <H| curl 1/eps i u x |H>: */
 
@@ -890,8 +895,11 @@ number_list compute_group_velocity_component(vector3 d)
 	  }
 
 	  maxwell_ucross_op(Hblock, W[0], mdata, u);
-	  evectmatrix_XtY_diag_real(Hblock, W[0], group_v.items + ib);
+	  evectmatrix_XtY_diag_real(Hblock, W[0],
+				    group_v.items + ib, gv_scratch);
      }
+
+     free(gv_scratch);
 
      /* Reset scratch matrix sizes: */
      evectmatrix_resize(&Hblock, Hblock.alloc_p, 0);
@@ -1044,15 +1052,15 @@ void get_epsilon(void)
 #endif
      }
 
-     MPI_Allreduce(&eps_mean, &eps_mean, 1, SCALAR_MPI_TYPE,
-                   MPI_SUM, MPI_COMM_WORLD);
-     MPI_Allreduce(&eps_inv_mean, &eps_inv_mean, 1, SCALAR_MPI_TYPE,
-                   MPI_SUM, MPI_COMM_WORLD);
-     MPI_Allreduce(&eps_low, &eps_low, 1, SCALAR_MPI_TYPE,
-                   MPI_MIN, MPI_COMM_WORLD);
-     MPI_Allreduce(&eps_high, &eps_high, 1, SCALAR_MPI_TYPE,
-                   MPI_MAX, MPI_COMM_WORLD);
-     MPI_Allreduce(&fill_count, &fill_count, 1, MPI_INT,
+     mpi_allreduce_1(&eps_mean, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce_1(&eps_inv_mean, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce_1(&eps_low, real, SCALAR_MPI_TYPE,
+		     MPI_MIN, MPI_COMM_WORLD);
+     mpi_allreduce_1(&eps_high, real, SCALAR_MPI_TYPE,
+		     MPI_MAX, MPI_COMM_WORLD);
+     mpi_allreduce_1(&fill_count, int, MPI_INT,
                    MPI_SUM, MPI_COMM_WORLD);
      N = mdata->nx * mdata->ny * mdata->nz;
      eps_mean /= N;
@@ -1075,7 +1083,7 @@ void get_epsilon(void)
 number_list compute_field_energy(void)
 {
      int i, N, last_dim, last_dim_stored;
-     real comp_sum[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+     real comp_sum2[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, comp_sum[6];
      real energy_sum = 0.0, normalization;
      real *energy_density = (real *) curfield;
      number_list retval = { 0, 0 };
@@ -1104,12 +1112,12 @@ number_list compute_field_energy(void)
 	  else
 	       assign_symmatrix_vector(field, mdata->eps_inv[i], curfield+3*i);
 
-	  comp_sum[0] += comp_sqr0 = field[0].re *   curfield[3*i].re;
-	  comp_sum[1] += comp_sqr1 = field[0].im *   curfield[3*i].im;
-	  comp_sum[2] += comp_sqr2 = field[1].re * curfield[3*i+1].re;
-	  comp_sum[3] += comp_sqr3 = field[1].im * curfield[3*i+1].im;
-	  comp_sum[4] += comp_sqr4 = field[2].re * curfield[3*i+2].re;
-	  comp_sum[5] += comp_sqr5 = field[2].im * curfield[3*i+2].im;
+	  comp_sum2[0] += comp_sqr0 = field[0].re *   curfield[3*i].re;
+	  comp_sum2[1] += comp_sqr1 = field[0].im *   curfield[3*i].im;
+	  comp_sum2[2] += comp_sqr2 = field[1].re * curfield[3*i+1].re;
+	  comp_sum2[3] += comp_sqr3 = field[1].im * curfield[3*i+1].im;
+	  comp_sum2[4] += comp_sqr4 = field[2].re * curfield[3*i+2].re;
+	  comp_sum2[5] += comp_sqr5 = field[2].im * curfield[3*i+2].im;
 
 	  /* Note: here, we write to energy_density[i]; this is
 	     safe, even though energy_density is aliased to curfield,
@@ -1124,20 +1132,20 @@ number_list compute_field_energy(void)
 	       int last_index = i % last_dim_stored;
 	       if (last_index != 0 && 2*last_index != last_dim) {
 		    energy_sum += energy_density[i];
-		    comp_sum[0] += comp_sqr0;
-		    comp_sum[1] += comp_sqr1;
-		    comp_sum[2] += comp_sqr2;
-		    comp_sum[3] += comp_sqr3;
-		    comp_sum[4] += comp_sqr4;
-		    comp_sum[5] += comp_sqr5;
+		    comp_sum2[0] += comp_sqr0;
+		    comp_sum2[1] += comp_sqr1;
+		    comp_sum2[2] += comp_sqr2;
+		    comp_sum2[3] += comp_sqr3;
+		    comp_sum2[4] += comp_sqr4;
+		    comp_sum2[5] += comp_sqr5;
 	       }
 	  }
 #endif
      }
 
-     MPI_Allreduce(&energy_sum, &energy_sum, 1, SCALAR_MPI_TYPE,
-                   MPI_SUM, MPI_COMM_WORLD);
-     MPI_Allreduce(comp_sum, comp_sum, 6, SCALAR_MPI_TYPE,
+     mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(comp_sum2, comp_sum, 6, real, SCALAR_MPI_TYPE,
                    MPI_SUM, MPI_COMM_WORLD);
 
      normalization = 1.0 / (energy_sum == 0 ? 1 : energy_sum);
@@ -1197,7 +1205,7 @@ number_list compute_field_energy(void)
 void fix_field_phase(void)
 {
      int i, N;
-     real sq_sum[2] = {0,0}, maxabs = 0.0;
+     real sq_sum2[2] = {0,0}, sq_sum[2], maxabs = 0.0;
      int maxabs_index = 0, maxabs_sign = 1;
      double theta;
      scalar phase;
@@ -1215,10 +1223,10 @@ void fix_field_phase(void)
      for (i = 0; i < N; ++i) {
 	  real a,b;
 	  a = curfield[i].re; b = curfield[i].im;
-	  sq_sum[0] += a*a - b*b;
-	  sq_sum[1] += 2*a*b;
+	  sq_sum2[0] += a*a - b*b;
+	  sq_sum2[1] += 2*a*b;
      }
-     MPI_Allreduce(sq_sum, sq_sum, 2, SCALAR_MPI_TYPE,
+     mpi_allreduce(sq_sum2, sq_sum, 2, real, SCALAR_MPI_TYPE,
                    MPI_SUM, MPI_COMM_WORLD);
      /* compute the phase = exp(i*theta) maximizing the real part of
 	the sum of the squares.  i.e., maximize:
@@ -1253,8 +1261,8 @@ void fix_field_phase(void)
 	  if (r > maxabs)
 	       maxabs = r;
      }
-     MPI_Allreduce(&maxabs, &maxabs, 1, SCALAR_MPI_TYPE,
-		   MPI_MAX, MPI_COMM_WORLD);
+     mpi_allreduce_1(&maxabs, real, SCALAR_MPI_TYPE,
+		     MPI_MAX, MPI_COMM_WORLD);
      for (i = N - 1; i >= 0; --i) {
 #ifdef SCALAR_COMPLEX
 	  real r = curfield[i].re * phase.re - curfield[i].im * phase.im;
@@ -1272,9 +1280,10 @@ void fix_field_phase(void)
      {
 	  /* compute maximum index and corresponding sign over all the 
 	     processors, using the MPI_MAXLOC reduction operation: */
-	  struct {int i; int s;} x;
+	  struct twoint_struct {int i; int s;} x;
 	  x.i = maxabs_index; x.s = maxabs_sign;
-	  MPI_Allreduce(&x, &x, 1, MPI_2INT, MPI_MAXLOC, MPI_COMM_WORLD);
+	  mpi_allreduce_1(&x, struct twoint_struct, MPI_2INT,
+			  MPI_MAXLOC, MPI_COMM_WORLD);
 	  maxabs_index = x.i; maxabs_sign = x.s;
      }
      ASSIGN_SCALAR(phase,
@@ -1333,8 +1342,8 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 #endif
 	  }
      }
-     MPI_Allreduce(&energy_sum, &energy_sum, 1, SCALAR_MPI_TYPE,
-                   MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
      return energy_sum;
 }
 
@@ -1613,8 +1622,8 @@ number compute_energy_in_object_list(geometric_object_list objects)
 	  }
      }
 
-     MPI_Allreduce(&energy_sum, &energy_sum, 1, SCALAR_MPI_TYPE,
-                   MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
      return energy_sum;
 }
 

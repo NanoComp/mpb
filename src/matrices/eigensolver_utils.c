@@ -39,7 +39,7 @@ void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
      evectmatrix_XeYS(Work1, Y, Usqrt, 1);  /* Work1 = orthornormalize(Y) */
 
      A(Work1, Work2, Adata, 1, Y); /* Work2 = A Work1; Y is scratch */
-     evectmatrix_XtY(U, Work1, Work2);  /* U = Work1 * A * Work1 */
+     evectmatrix_XtY(U, Work1, Work2, Uwork);  /* U = Work1 * A * Work1 */
 
      sqmatrix_eigensolve(U, eigenvals, Uwork);
      evectmatrix_XeYS(Y, Work1, U, 1);
@@ -55,7 +55,7 @@ void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
      Usqrt = create_sqmatrix(Y.p);
      Uwork = create_sqmatrix(Y.p);
 
-     evectmatrix_XtX(U, Y);
+     evectmatrix_XtX(U, Y, Uwork);
      sqmatrix_invert(U, 1, Uwork);
 
      eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata, Work1, Work2,

@@ -72,14 +72,17 @@ extern void evectmatrix_XeYS(evectmatrix X, evectmatrix Y,
 			     sqmatrix S, short sherm);
 extern void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y,
 			      sqmatrix S, short sdagger);
-extern void evectmatrix_XtX(sqmatrix U, evectmatrix X);
-extern void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y);
+extern void evectmatrix_XtX(sqmatrix U, evectmatrix X, sqmatrix S);
+extern void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y,
+			    sqmatrix S);
 extern void evectmatrixXtY_sub(sqmatrix U, int Uoffset,
-			       evectmatrix X, evectmatrix Y);
-extern void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag);
+			       evectmatrix X, evectmatrix Y, sqmatrix S);
+extern void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag,
+				 scalar *scratch_diag);
 extern void evectmatrix_XtY_diag_real(evectmatrix X, evectmatrix Y,
-				      real *diag);
-extern void evectmatrix_XtX_diag_real(evectmatrix X, real *diag);
+				      real *diag, real *scratch_diag);
+extern void evectmatrix_XtX_diag_real(evectmatrix X, real *diag,
+				      real *scratch_diag);
 extern scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y);
 
 /* sqmatrix operations, defined in sqmatrix.c: */

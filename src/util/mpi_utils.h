@@ -45,4 +45,10 @@ extern void mpi_assert_equal(double x);
 extern void mpi_begin_critical_section(int tag);
 extern void mpi_end_critical_section(int tag);
 
+/* "in-place" Allreduce wrapper for reducing a single value */
+#define mpi_allreduce_1(b, ctype, t, op, comm) { \
+     ctype bbbb = *(b); \
+     mpi_allreduce(&bbbb, (b), 1, ctype, t, op, comm); \
+}
+
 #endif /* MPI_UTILS_H */
