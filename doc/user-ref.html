@@ -14,6 +14,169 @@ section.
 
 <h1>User Reference</h1>
 
+<p>Here, we document the features exposed to the user by the
+Photonic-Bands package.  We do not document the Scheme language or the
+functions provided by libctl (see also the <a
+href="http://ab-initio.mit.edu/libctl/doc/user-ref.html">user
+reference</a> section of the libctl manual).
+
+<h2>Input Variables</h2>
+
+<p>These are global variables that you can set to control various
+parameters of the Photonic-Bands computation.  They are also listed
+(along with their current values) by the <code>(help)</code> command.
+In brackets after each variable is the type of value that it should
+hold.  (The classes, complex datatypes like geometric-object, are
+described in the next subsection.  The basic datatypes, like integer,
+boolean, and vector3, are defined by libctl.)
+
+<dl>
+
+<dt><code>geometry</code> [list of geometric-object class]
+<dd>Specifies the geometric objects making up the structure being
+simulated.  When objects overlap, later objects in the list take
+precedence.  Defaults to no objects (empty list).
+
+<p><dt><code>default-material</code> [material-type class]
+<dd>Holds the default material that is used for points not in any
+object of the geometry list.  Defaults to air (epsilon of 1).
+
+<p><dt><code>ensure-periodicity</code> [boolean]
+<dd>If true (the default), then geometric objects are treated as if
+they were shifted by all possible lattice vectors; i.e. they are made
+periodic in the lattice.
+
+<p><dt><code>geometry-lattice</code> [lattice class]
+<dd>Specifies the lattice vectors of the periodic structure.  The unit
+lattice vectors form the basis for all other 3-vectors in the
+geometry, and their lengths determine the size of the primitive cell.
+Defaults to the orthogonal x-y-z vectors of unit length (i.e. a
+square/cubic lattice).
+
+<p><dt><code>grid-size</code> [vector3]
+<dd>Determines the size of the discrete computational grid along each
+of the lattice directions.  Defaults to 16x16x16.  If the third grid
+dimension is 1, the computation is two-dimensional.  Note that the
+computational grid is centered on the origin of the coordinate system.
+
+<p><dt><code>mesh-size</code> [integer]
+
+<dd>At each grid point, the dielectric constant is averaged over a
+"mesh" of points to find an effective dielectric tensor.  This mesh is
+a grid with <code>mesh-size</code> points on a side.  Defaults to 7.
+
+<p><dt><code>dimensions</code> [integer]
+<dd>Explicitly specifies the dimensionality of the simulation; if the
+value is less than 3, the sizes of the extra dimensions in
+<code>grid-size</code> are ignored (assumed to be one).  Usually, it
+is easier to set the dimensions through <code>grid-size</code>, as
+discussed above.  Defaults to 3.
+
+<p><dt><code>k-points</code> [list of vector3]
+<dd>List of Bloch wavevectors to compute the bands at, expressed in
+the basis of the reciprocal lattice vectors (<em>not</em> the
+unit-normalized reciprocal lattice vectors).  Defaults to none (empty
+list).
+
+<p><dt><code>num-bands</code> [integer]
+<dd>Number of bands (eigenvectors) to compute at each k
+point. Defaults to 1.
+
+<p><dt><code>target-freq</code> [number]
+
+<dd>If zero, the lowest-frequency <code>num-bands</code> states are
+solved for at each k point (ordinary eigenproblem).  If non-zero,
+solve for the <code>num-bands</code> states whose frequencies are have
+the smallest absolute difference with <code>target-freq</code>
+(special, "targeted" eigenproblem).  Beware that the targeted solver
+converges more slowly than the ordinary eigensolver and may require a
+lower <code>tolerance</code> to get reliable results.  Defaults to 0.
+
+<p><dt><code>tolerance</code> [number]
+<dd>Specifies when convergence of the eigensolver is judged to have
+been reached (when the eigenvalues have a fractional change less than
+<code>tolerance</code> between iterations).  Defaults to 1.0e-4.
+
+<p><dt><code>filename-prefix</code> [string]
+<dd>A string prepended to all output filenames.  Defaults to "" (no
+prefix).
+
+</dl>
+
+<h2>Predefined Variables</h2>
+
+<p>Variables predefined for your convenience and amusement.
+
+<dl>
+
+<p><dt><code>air</code>, <code>vacuum<code> [material-type class]
+<dd>Two aliases for a predefined material type with a dielectric
+constant of 1.
+
+<p><dt><code>infinity</code> [number]
+<dd>A big number (1.0e20) to use for "infinite" dimensions of objects.
+
+</dl>
+
+<h2>Output Variables</h2>
+
+<p>Global variables whose values are set upon completion of the
+eigensolver.
+
+<dl>
+
+<p><dt><code>freqs</code> [list of number]
+<dd>A list of the frequencies of each band computed for the last k
+point.  Guaranteed to be sorted in increasing order.  The frequency of
+band <code>b</code> can be retrieved via <code>(list-ref freqs (- b
+1))</code>.
+
+</dl>
+
+<h2>Classes</h2>
+
+<p>Classes are complex datatypes with various "properties" which may
+have default values.  Classes can be "subclasses" of other classes;
+subclasses inherit all the properties of their superclass, and can be
+used any place the superclass is expected.  An object of a class is
+constructed with:
+
+<pre>(make <i>class</i> (<i>prop1 val1</i>) (<i>prop2 val2</i>) ...)
+
+<p>See also the <a href="http://ab-initio.mit.edu/libctl/doc/">libctl
+manual</a>.
+
+<p>Photonic-Bands defines several types of classes, the most numerous
+of which are the various geometric object classes.  You can also get a
+list of the available classes, along with their property types and
+default values, at runtime with the <code>(help)</code> command.
+
+<h3>geometric-object</h3>
+
+<h3>lattice</h3>
+
+<h3>material-type</h3>
+
+<h2>Functions</h2>
+
+<p>Here, we describe the functions that are defined by the
+Photonic-Bands package.  There are many types of functions defined,
+ranging from utility functions for duplicating geometric objects to
+run functions that start the computation.
+
+<p>See also the <a
+href="http://ab-initio.mit.edu/libctl/doc/user-ref.html">refrence
+section</a> of the libctl manual, which describes a number of useful
+functions defined by libctl.
+
+<h3>Geometry utilities</h3>
+
+<h3>Run functions</h3>
+
+<h3>Band output functions</h3>
+
+<h3>Field manipulation functions</h3>
+
 <hr>
 Go to the <a href="developer.html">next</a>, <a
 href="user-tutorial.html">previous</a>, or <a href="index.html">main</a>
