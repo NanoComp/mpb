@@ -140,20 +140,20 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 				      S, itarget * q + Y.p * i, 1);
 	  }
 	  
-	  if (iteration > 0 &&
-              fabs(E - prev_E) < tolerance * 0.5 * (E + prev_E + 1e-7))
-               break; /* convergence!  hooray! */
-	  
-	  if ((flags & EIGS_VERBOSE) ||
+	  if (iteration > 0 && (flags & EIGS_VERBOSE) ||
               MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
               > FEEDBACK_TIME) {
                printf("    iteration %4d: "
-                      "trace = %g (%g%% change)\n", iteration + 1, E,
+                      "trace = %0.16g (%g%% change)\n", iteration, E,
 		      200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
                fflush(stdout); /* make sure output appears */
                prev_feedback_time = MPIGLUE_CLOCK; /* reset feedback clock */
           }
 
+	  if (iteration > 0 &&
+              fabs(E - prev_E) < tolerance * 0.5 * (E + prev_E + 1e-7))
+               break; /* convergence!  hooray! */
+	  
 	  /* compute new directions from residual & update basis: */
 	  {
 	       int ibasis2 = (ibasis + 1) % nbasis;
