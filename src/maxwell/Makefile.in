@@ -2,7 +2,7 @@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
-INCLUDES = @INCLUDES@  -I../util -I../matrices
+CPPFLAGS = @CPPFLAGS@  -I../util -I../matrices
 DEFS = @DEFS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -24,7 +24,7 @@ maxwell.a: $(OBJECTS)
 	$(RANLIB) $@
 
 .c.o:
-	$(CC) $(DEFS) $(INCLUDES) -c $(CFLAGS) $< -o $@
+	$(CC) $(DEFS) $(CPPFLAGS) -c $(CFLAGS) $< -o $@
 
 clean: 
 	rm -f $(OBJECTS) core $(LIBNAME)

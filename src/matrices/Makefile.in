@@ -2,7 +2,7 @@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
-INCLUDES = @INCLUDES@ -I../util -I.
+CPPFLAGS = @CPPFLAGS@ -I../util -I.
 DEFS = @DEFS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -24,7 +24,7 @@ matrices.a: $(OBJECTS)
 	$(RANLIB) $@
 
 .c.o:
-	$(CC) $(DEFS) $(INCLUDES) -c $(CFLAGS) $< -o $@
+	$(CC) $(DEFS) $(CPPFLAGS) -c $(CFLAGS) $< -o $@
 
 clean: 
 	rm -f $(OBJECTS) core $(LIBNAME)

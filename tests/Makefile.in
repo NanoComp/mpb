@@ -2,7 +2,7 @@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
-INCLUDES = @INCLUDES@ -I../src/util -I../src/matrices -I../src/maxwell
+CPPFLAGS = @CPPFLAGS@ -I../src/util -I../src/matrices -I../src/maxwell
 DEFS = @DEFS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -30,7 +30,7 @@ maxwell_test: maxwell_test.o $(MYLIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) maxwell_test.o $(MYLIBS) $(LIBS) -o $@
 
 .c.o:
-	$(CC) $(DEFS) $(INCLUDES) -c $(CFLAGS) $< -o $@
+	$(CC) $(DEFS) $(CPPFLAGS) -c $(CFLAGS) $< -o $@
 
 clean: 
 	rm -f blastest eigs_test maxwell_test blastest.o \

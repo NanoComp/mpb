@@ -2,7 +2,7 @@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
-INCLUDES = @INCLUDES@ -I.
+CPPFLAGS = @CPPFLAGS@ -I.
 DEFS = @DEFS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
@@ -24,7 +24,7 @@ util.a: $(OBJECTS)
 	$(RANLIB) $@
 
 .c.o:
-	$(CC) $(DEFS) $(INCLUDES) -c $(CFLAGS) $< -o $@
+	$(CC) $(DEFS) $(CPPFLAGS) -c $(CFLAGS) $< -o $@
 
 clean: 
 	rm -f $(OBJECTS) core $(LIBNAME)

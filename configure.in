@@ -20,9 +20,6 @@ if test -z "$CFLAGS"; then
 	CFLAGS="-O3"
 fi
 
-INCLUDES="$INCLUDES"  # no default, beyond user-specified include flags
-AC_SUBST(INCLUDES)
-
 # Use native f77 if present
 AC_MSG_CHECKING([for vendor's f77 to be used instead of g77])
 AC_MSG_RESULT()
@@ -180,12 +177,9 @@ AC_CHECK_LIB(lapack, main)
 AC_ARG_WITH(hdf5, [  --without-hdf5          don't use HDF5 output], ok=$withval, ok=yes)
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(z, deflate)
-	save_CFLAGS="$CFLAGS"
-        CFLAGS="$CFLAGS $INCLUDES"
 	AC_CHECK_LIB(hdf5, H5Pcreate, [
 		AC_CHECK_HEADERS(hdf5.h, [LIBS="-lhdf5 $LIBS"
 			                  AC_DEFINE(HAVE_HDF5)])])
-        CFLAGS="$save_CFLAGS"
 fi
 
 # ----------------------------------------------------------------------
@@ -193,16 +187,13 @@ fi
 
 AC_CHECK_PROG(HAVE_GUILE_CONFIG, guile-config, yes, no)
 if test "$HAVE_GUILE_CONFIG" = "yes"; then
-        INCLUDES="$INCLUDES `guile-config compile`"
+        CPPFLAGS="$CPPFLAGS `guile-config compile`"
         LIBS="`guile-config link` $LIBS"
-	save_CFLAGS="$CFLAGS"
-	CFLAGS="$CFLAGS $INCLUDES"
 	AC_MSG_CHECKING([if linking to guile works])
 	AC_TRY_LINK_FUNC(gh_enter, AC_MSG_RESULT(yes), [
 	AC_MSG_RESULT(no)
 	AC_MSG_ERROR(guile-config is broken)
 	])
-	CFLAGS="$save_CFLAGS"
 else
         AC_CHECK_LIB(readline, readline)
         AC_CHECK_LIB(dl, dlopen)

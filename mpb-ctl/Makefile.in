@@ -35,7 +35,7 @@ MY_LIBS = ../src/maxwell/maxwell.a \
           ../src/util/util.a
 
 MY_LDFLAGS =         # extra -L flags go here
-MY_INCLUDES = -I. -I../src/util -I../src/matrices -I../src/matrixio \
+MY_CPPFLAGS = -I. -I../src/util -I../src/matrices -I../src/matrixio \
               -I../src/maxwell
 MY_DEFS =            # extra -D define flags go here
 
@@ -53,7 +53,7 @@ GEN_CTL_IO = @GEN_CTL_IO@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
-INCLUDES = @INCLUDES@ -I. $(MY_INCLUDES)
+CPPFLAGS = @CPPFLAGS@ -I. $(MY_CPPFLAGS)
 DEFS = @DEFS@ $(CTL_DEFS) $(MY_DEFS)
 
 ##############################################################################
@@ -112,7 +112,7 @@ geom.c: $(LIBCTL_DIR)/utils/geom.c
 	cp -f $(LIBCTL_DIR)/utils/geom.c $@
 
 .c.o: $(HEADERS) ctl-io.h
-	$(CC) -c $(DEFS) $(INCLUDES) $(CFLAGS) $< -o $@
+	$(CC) -c $(DEFS) $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 # 'make install' target.  This is supplied here so that you can easily
 # copy this Makefile into your own program, but it should not be
