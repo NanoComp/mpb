@@ -301,6 +301,20 @@ void randomize_fields(void)
 
 /**************************************************************************/
 
+/* Guile-callable functions for getting/setting the kpoint index. */
+
+integer get_kpoint_index(void)
+{
+     return kpoint_index;
+}
+
+void set_kpoint_index(integer i)
+{
+     kpoint_index = i;
+}
+
+/**************************************************************************/
+
 /* Set the current polarization to solve for. (init-params should have
    already been called.  (Guile-callable; see mpb.scm.) 
 
@@ -360,7 +374,7 @@ void set_polarization(integer p)
      }
 
      last_p = p;
-     kpoint_index = 0;  /* reset index */
+     set_kpoint_index(0);  /* reset index */
 }
 
 static char polarization_strings[5][10] = {

@@ -143,6 +143,10 @@
 (define-external-function mpi-num-procs false false 'integer)
 (define-external-function mpi-proc-index false false 'integer)
 
+(define-external-function get-kpoint-index false false 'integer)
+(define-external-function set-kpoint-index false false
+  no-return-value 'integer)
+
 ; ****************************************************************
 
 ; Set print-ok? to whether or not we are the MPI master process.
