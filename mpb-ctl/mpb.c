@@ -77,6 +77,13 @@ void ctl_stop_hook(void)
 
 /**************************************************************************/
 
+boolean mpi_is_masterp(void)
+{
+     return mpi_is_master();
+}
+
+/**************************************************************************/
+
 /* a couple of utilities to convert libctl data types to the data
    types of the eigensolver & maxwell routines: */
 

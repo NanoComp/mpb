@@ -131,6 +131,16 @@
 (define-external-function compute-energy-in-object-list false false
   'number (make-list-type 'geometric-object))
 
+(define-external-function mpi-is-master? false false 'boolean)
+
+; ****************************************************************
+
+; Set print-ok? to whether or not we are the MPI master process.
+; However, don't try this if we are running within gen-ctl-io,
+; as it won't work.
+(if (not (defined? 'output-source)) ; (a function defined by gen-ctl-io)
+    (set! print-ok? (mpi-is-master?)))
+
 ; ****************************************************************
 
 ; Computing group velocities:
