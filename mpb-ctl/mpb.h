@@ -79,5 +79,6 @@ extern void cvector32cscalar3(scalar_complex *cs, cvector3 v);
 /**************************************************************************/
 
 extern void init_epsilon(void);
+extern const char *parity_string(maxwell_data *d);
 
 #endif /* MPB_H */

@@ -523,7 +523,8 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 
      free(pf);
 
-     integral *= matrix3x3_determinant(Rm) / (n1 * n2 * n3);
+     integral.re *= matrix3x3_determinant(Rm) / (n1 * n2 * n3);
+     integral.im *= matrix3x3_determinant(Rm) / (n1 * n2 * n3);
      {
 	  cnumber integral_sum;
 	  mpi_allreduce(&integral, &integral_sum, 2, number, 

@@ -195,6 +195,10 @@
 (define-external-function integrate-fieldL false false 'cnumber
   'function (make-list-type 'SCM))
 (define (integrate-fields f . src) (apply integrate-fieldL (list f src)))
+(define-external-function rscalar-field-get-point false false 'number 
+  'SCM 'vector3)
+(define-external-function cvector-field-get-point false false 'cvector3 
+  'SCM 'vector3)
 
 ; ****************************************************************
 

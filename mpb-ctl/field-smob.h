@@ -48,6 +48,7 @@ typedef struct {
 #define RSCALAR_FIELD_P(X) (FIELD_P(X) && ((FIELD(X))->type == RSCALAR_FIELD_SMOB))
 #define CVECTOR_FIELD_P(X) (FIELD_P(X) && ((FIELD(X))->type == CVECTOR_FIELD_SMOB))
 
+extern field_smob *update_curfield_smob(void);
 extern void register_field_smobs(void);
 
 #endif /* FIELD_SMOB_H */

@@ -32,6 +32,7 @@
 #include <ctlgeom.h>
 
 #include "mpb.h"
+#include "field-smob.h"
 
 /**************************************************************************/
 
@@ -324,7 +325,7 @@ number_list compute_field_energy(void)
 {
      int i, N, last_dim, last_dim_stored, nx, nz, local_y_start;
      real comp_sum2[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, comp_sum[6];
-     real energy_sum = 0.0, dV;
+     real energy_sum = 0.0;
      real *energy_density = (real *) curfield;
      number_list retval = { 0, 0 };
 
@@ -700,6 +701,33 @@ cvector3 get_bloch_field_point(vector3 p)
      field[0] = interp_cval(p, &curfield[0].re, 6);
      field[1] = interp_cval(p, &curfield[1].re, 6);
      field[2] = interp_cval(p, &curfield[2].re, 6);
+     F.x = cscalar2cnumber(field[0]);
+     F.y = cscalar2cnumber(field[1]);
+     F.z = cscalar2cnumber(field[2]);
+     return F;
+}
+
+/* FIXME: the following two functions only work if the smob
+   is the the same size as the current field */
+
+number rscalar_field_get_point(SCM fo, vector3 p)
+{
+     field_smob *f = SAFE_FIELD(fo);
+     CHECK(f && f->type == RSCALAR_FIELD_SMOB, 
+	   "invalid argument to rscalar-field-get-point");
+     return interp_val(p, f->f.rs, 1, 0);
+}
+
+cvector3 cvector_field_get_point(SCM fo, vector3 p)
+{
+     scalar_complex field[3];
+     cvector3 F;
+     field_smob *f = SAFE_FIELD(fo);
+     CHECK(f && f->type == CVECTOR_FIELD_SMOB, 
+	   "invalid argument to cvector-field-get-point");
+     field[0] = interp_cval(p, &f->f.cv[0].re, 6);
+     field[1] = interp_cval(p, &f->f.cv[1].re, 6);
+     field[2] = interp_cval(p, &f->f.cv[2].re, 6);
      F.x = cscalar2cnumber(field[0]);
      F.y = cscalar2cnumber(field[1]);
      F.z = cscalar2cnumber(field[2]);
@@ -1483,7 +1511,8 @@ cnumber compute_field_integral(function f)
 	  }
      }
 
-     integral *= matrix3x3_determinant(Rm) / H.N;
+     integral.re *= matrix3x3_determinant(Rm) / H.N;
+     integral.im *= matrix3x3_determinant(Rm) / H.N;
      {
 	  cnumber integral_sum;
 	  mpi_allreduce(&integral, &integral_sum, 2, number, 
