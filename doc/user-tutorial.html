@@ -204,23 +204,31 @@ with the default value of pointing in the z direction.
 since we're doing a two-dimensional simulation the only thing that
 matters is their intersection with the xy plane (z=0).  Speaking of
 which, let us set the dimensionality of the system.  Normally, we do
-this when we set the discretization grid of the system (the primitive
-cell is divided into a discrete grid for computation).  The grid is
-controlled by the 3-vector variable <code>grid-size</code>, which
-defaults to a 16x16x16 three-dimensional grid. Instead, let's set it
-to a 32x32 two-dimensional grid:
+this when we define the size of the computational cell, controlled by
+the <code>geometry-lattice</code> variable, an object of the
+<code>lattice</code> class: we can set some of the dimensions to have
+a size <code>no-size</code>, which reduces the dimensionality of the
+system.
 
 <pre>
-(set! grid-size (vector3 32 32 1))
+(set! geometry-lattice (make lattice (size 1 1 no-size)))
 </pre>
 
-<p>Setting the z grid to 1 makes this a two-dimensional calculation
-(or, strictly speaking, it makes the dielectric function
-two-dimensional).  For efficient calculation, it is best to make the
-grid sizes a power of two, or factorizable into powers of small primes
-(such as 2, 3, 5 and 7).  As a rule of thumb, you should use at least
-8 grid points per unit cell (or per wavelength) in order to obtain
-reasonable accuracy.
+<p>Here, we define a 1x1 two-dimensional cell (defaulting to square).
+This cell is <i>discretized</i> according to the
+<code>resolution</code> variable, which defaults to <code>10</code>
+(pixels/lattice-unit).  That's on the small side, and this is only a
+2d calculation, so let's increase the resolution:
+
+<pre>
+(set! resolution 32)
+</pre>
+
+<p>This results in a 32x32 computational grid.  For efficient
+calculation, it is best to make the grid sizes a power of two, or
+factorizable into powers of small primes (such as 2, 3, 5 and 7).  As
+a rule of thumb, you should use a resolution of at least
+<code>8</code> in order to obtain reasonable accuracy.
 
 <p>Now, we're done setting the parameters--there are other parameters,
 but we're happy with their default values for now.  At this point,
@@ -235,7 +243,7 @@ doing as it runs.  Most of this is self-explanatory, but we should
 point out one output in particular.  Among the output, you should see
 lines like:
 
-<p><code>tefreqs:, 13, 0.3, 0.3, 0, 0.424264, 0.37257, 0.541992, 0.643548, 0.815214, 0.828954, 0.893648, 1.01423, 1.11392</code>
+<p><code>tefreqs:, 13, 0.3, 0.3, 0, 0.424264, 0.372604, 0.540287, 0.644083, 0.81406, 0.828135, 0.890673, 1.01328, 1.1124</code>
 
 <p>These lines are designed to allow you to easily extract the
 band-structure information and import it into a spreadsheet for
@@ -258,8 +266,8 @@ bands.  For example the <code>(run-tm)</code> output includes the
 following gap output:
 
 <pre>
-Gap from band 1 (0.282624250282557) to band 2 (0.419338171139314), 38.951920126959%
-Gap from band 4 (0.715678780635625) to band 5 (0.743689685572616), 3.83877075400569%
+Gap from band 1 (0.282623311147724) to band 2 (0.419334798706834), 38.9514660888911%
+Gap from band 4 (0.715673834754345) to band 5 (0.743682920649084), 3.8385522650349%
 </pre>
 
 <p>This data is also stored in the variable <code>gap-list</code>,
@@ -319,7 +327,8 @@ k point (<code>.k12</code>).  Each HDF5 file can contain multiple
 datasets; in this case, it will contain the real and imaginary parts
 of the field (in datasets "z.r" and "z.i"), and in general it may
 include other data too (e.g. <code>output-efield</code> outputs all
-the components in one file).
+the components in one file).  See also the <a
+href="analysis-tutorial.html">Data Analysis</a> tutorial.
 
 <p>There are several other output functions you can pass, described in
 the <a href="user-ref.html">user reference section</a>, like
@@ -339,8 +348,8 @@ in the reference section.
 <p>In principle, you can use any units you want with the
 Photonic-Bands package.  You can input all of your distances and
 coordinates in furlongs, for example, as long as you set the size of
-the lattice cell accordingly (the <code>size</code> property of
-<code>geometry-lattice</code>; see below).  We do not recommend this
+the lattice basis accordingly (the <code>basis-size</code> property of
+<code>geometry-lattice</code>).  We do not recommend this
 practice, however.
 
 <p>Maxwell's equations possess an important property--they are
@@ -358,17 +367,21 @@ lattice constant is one, and all coordinates are scaled accordingly.
 
 <p>As has been mentioned already, (nearly) all 3-vectors in the
 program are specified in the <em>basis</em> of the lattice vectors
-<em>normalized</em> to lengths given by <code>basis-size</code> (a
-property of <code>geometry-lattice</code>), defaulting to the
-<em>unit-normalized</em> lattice vectors.  That is, each component is
-multiplied by the corresponding basis vector and summed to compute the
-corresponding cartesian vector.  It is worth noting that a basis is
-not meaningful for scalar distances (such as the cylinder radius),
-however: these are just the ordinary cartesian distances in your
-chosen units of <i>a</i>.  (Note also that the <a
-href="user-ref.html#k-points">k-points</a>, as mentioned above, are an
-exception: they are in the basis of the reciprocal lattice vectors.)
-We provide <a href="user-ref.html#coordconvert">conversion
+<em>normalized</em> to lengths given by <code>basis-size</code>,
+defaulting to the <em>unit-normalized</em> lattice vectors.  That is,
+each component is multiplied by the corresponding basis vector and
+summed to compute the corresponding cartesian vector.  It is worth
+noting that a basis is not meaningful for scalar distances (such as
+the cylinder radius), however: these are just the ordinary cartesian
+distances in your chosen units of <i>a</i>.
+
+<p>Note also that the <a href="user-ref.html#k-points">k-points</a>,
+as mentioned above, are an exception: they are in the basis of the
+reciprocal lattice vectors.  If a given dimension has size
+<code>no-size</code>, its reciprocal lattice vector is taken to be
+2*pi/<i>a</i>.
+
+<p>We provide <a href="user-ref.html#coordconvert">conversion
 functions</a> to transform vectors between the various bases.
 
 <p>The frequency eigenvalues returned by the program are in units of
@@ -381,14 +394,13 @@ unit of distance.  (Thus, the corresponding vacuum wavelength is
 <p>As a second example, we'll compute the TM band structure of a
 <em>triangular</em> lattice of dielectric rods in air.  To do this, we
 only need to change the lattice, controlled by the variable
-<code>geometry-lattice</code>, an object of the <code>lattice</code>
-class.  We'll set it so that the first two basis vectors (the
-properties <code>basis1</code> and <code>basis2</code>) point 30
-degrees above and below the x axis, instead of their default value of
-the x and y axes:
+<code>geometry-lattice</code>.  We'll set it so that the first two
+basis vectors (the properties <code>basis1</code> and
+<code>basis2</code>) point 30 degrees above and below the x axis,
+instead of their default value of the x and y axes:
 
 <pre>
-(set! geometry-lattice (make lattice
+(set! geometry-lattice (make lattice (size 1 1 no-size)
 			 (basis1 (/ (sqrt 3) 2) 0.5)
 			 (basis2 (/ (sqrt 3) 2) -0.5)))
 </pre>
@@ -397,11 +409,8 @@ the x and y axes:
 the z axis.  Notice that Scheme supplies us all the ordinary
 arithmetic operators and functions, but they use prefix (Polish)
 notation, in Scheme fashion.  The <code>basis</code> properties only
-specify the directions of the lattice vectors, and not their
-lengths--the lengths default to unity, which is fine here.  In a later
-subsection, we'll do a supercell calculation where we'll want to
-change the lengths of the lattice vectors (using the <code>size</code>
-property).
+specify the directions of the lattice basis vectors, and not their
+lengths--the lengths default to unity, which is fine here.
 
 <p>The irreducible Brillouin zone of a triangular lattice is different from
 that of a square lattice, so we'll need to modify the
@@ -427,7 +436,7 @@ same as in the previous subsection, so we can now call
 structure has an even larger TM gap than the square lattice:
 
 <pre>
-Gap from band 1 (0.275070820455975) to band 2 (0.446291213813384), 47.4714180185077%
+Gap from band 1 (0.275065617068082) to band 2 (0.446289918847647), 47.4729292989213%
 </pre>
 
 <h2><a name="max-gap">Maximizing the First TM Gap</a></h2>
@@ -492,7 +501,7 @@ After five iterations, the output is:
 
 <pre>
 radius at maximum: 0.176393202250021
-gap size at maximum: 48.6252831449909
+gap size at maximum: 48.6252611051049
 </pre>
 
 <p>The tolerance of 0.1 that we specified means that the true maximum
@@ -563,7 +572,7 @@ the computation:
 <p>The result, as expected, is a complete band gap:
 
 <pre>
-Gap from band 2 (0.223978579207912) to band 3 (0.275008627329051), 20.4534494883325%
+Gap from band 2 (0.223977612336924) to band 3 (0.274704473679751), 20.3443687933601%
 </pre>
 
 <p>(If we had computed the TM and TE bands separately, we would have
@@ -584,7 +593,7 @@ must first increase the size of the lattice by five, and then add all
 of the rods.  We create the lattice by:
 
 <pre>
-(set! geometry-lattice (make lattice (size 5 5 1)))
+(set! geometry-lattice (make lattice (size 5 5 no-size)))
 </pre>
 
 <p>Here, we have used the default orthogonal basis, but have changed
@@ -597,6 +606,9 @@ function, <code>geometric-objects-lattice-duplicates</code>, that
 duplicates a list of objects over the lattice:
 
 <pre>
+(set! geometry (list (make cylinder
+                       (center 0 0 0) (radius 0.2) (height infinity)
+                       (material (make dielectric (epsilon 12))))))
 (set! geometry (geometric-objects-lattice-duplicates geometry))
 </pre>
 
@@ -620,12 +632,11 @@ the end of <code>geometry</code>:
 two lists, and have also snuck in the predefined material type
 <code>air</code> (which has an epsilon of 1).
 
-<p>To accomodate the larger lattice, the grid size must be increased,
-although we'll be frugal and only use 16 points per cell instead of 32
-from before:
+<p>We'll be frugal and only use only 16 points per lattice unit
+(resulting in an 80x80 grid) instead of the 32 from before:
 
 <pre>
-(set! grid-size (vector3 (* 16 5) (* 16 5) 1))
+(set! resolution 16)
 </pre>
 
 <p>Only a single k point is needed for a point-defect calculation
@@ -679,7 +690,7 @@ cylinder (within a radius 1.0 of the origin):
  "\n")
 </pre>
 
-<p>The result is <code>0.624794534020562</code>, or over 62% of the
+<p>The result is <code>0.624794702341156</code>, or over 62% of the
 field energy in this localized region; the field decays exponentially
 into the bulk crystal.  The full range of available functions is
 described in the <a href="user-ref.html">reference section</a>, but
@@ -765,16 +776,16 @@ corresponding mode frequencies, is:
 
 <table cellspacing=2 cellpadding=1>
 <tr align=center> <th>epsilon</th> <th>frequency</th> </tr>
-<tr align=center> <td>1</td> <td>0.378165895344012</td> </tr>
-<tr align=center> <td>12</td> <td>0.283987107275112</td> </tr>
-<tr align=center> <td>6.5</td> <td>0.302998919737647</td> </tr>
-<tr align=center> <td>5.14623225009449</td> <td>0.317371756943676</td> </tr>
-<tr align=center> <td>5.82311612504725</td> <td>0.309702410332985</td> </tr>
-<tr align=center> <td>5.41898009928561</td> <td>0.314169111388137</td> </tr>
-<tr align=center> <td>5.62104811216643</td> <td>0.311893537700187</td> </tr>
+<tr align=center> <td>1</td> <td>0.378165893321125</td> </tr>
+<tr align=center> <td>12</td> <td>0.283987088221692</td> </tr>
+<tr align=center> <td>6.5</td> <td>0.302998920718043</td> </tr>
+<tr align=center> <td>5.14623274327171</td> <td>0.317371748739314</td> </tr>
+<tr align=center> <td>5.82311637163586</td> <td>0.309702408341706</td> </tr>
+<tr align=center> <td>5.41898003340128</td> <td>0.314169110036439</td> </tr>
+<tr align=center> <td>5.62104820251857</td> <td>0.311893530112625</td> </tr>
 </table>
 
-<p>The final answer that it returns is an epsilon of 5.41986138941919.
+<p>The final answer that it returns is an epsilon of 5.41986120170136
 Interestingly enough, the algorithm doesn't actually evaluate the
 function at the final point; you have to do so yourself if you want to
 find out how close it is to the root.  (Ridder's method successively
@@ -783,7 +794,7 @@ interpolation steps.  At the end, it does one last interpolation to
 give you its best guess for the root location within the current
 interval.)  If we go ahead and evaluate the band frequency at this
 dielectric constant (calling <code>(rootfun rooteps)</code>), we find
-that it is 0.314159007031965, matching our desired frequency to nearly
+that it is 0.314159008193209, matching our desired frequency to nearly
 eight decimal places after seven function evaluations!  (Of course,
 the computation isn't really this accurate anyway, due to the finite
 discretization.)
@@ -793,7 +804,7 @@ Ordinarily, each time you call the <code>(run-tm)</code> function, the
 fields are initialized to random values.  It would speed convergence
 somewhat to use the fields of the previous calculation as the starting
 point for the next calculation.  We can do this by instead calling a
-lower-level function, <code>(run-polarization TM false)</code>.  (The
+lower-level function, <code>(run-parity TM false)</code>.  (The
 first parameter is the polarization to solve for, and the second tells
 it not to reset the fields if possible.)
 

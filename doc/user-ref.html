@@ -48,20 +48,35 @@ they were shifted by all possible lattice vectors; i.e. they are made
 periodic in the lattice.
 
 <p><dt><code>geometry-lattice</code> [<code>lattice</code> class]
-<dd>Specifies the basis vectors and lattice size of the periodic
-structure.  These vectors form the basis for all other 3-vectors in
-the geometry, and the lattice size determines the size of the primitive
-cell.  Defaults to the orthogonal x-y-z vectors of unit length (i.e. a
-square/cubic lattice).
+<dd>Specifies the basis vectors and lattice size of the computational
+cell (which is centered on the origin of the coordinate system).
+These vectors form the basis for all other 3-vectors in the geometry,
+and the lattice size determines the size of the primitive cell.  If
+any dimension of the lattice size is the special value
+<code>no-size</code>, then the dimension of the lattice is reduced
+(i.e. it becomes two- or one-dimensional).  (That is, the dielectric
+function becomes two-dimensional; it is still, in principle, a three
+dimensional system, and the k-point vectors can be three-dimensional.)
+Generally, you should make any <code>no-size</code> dimension(s)
+perpendicular to the others.  Defaults to the orthogonal x-y-z vectors
+of unit length (i.e. a square/cubic lattice).
+
+<p><dt><code>resolution</code> [<code>number</code> or <code>vector3</code>]
+<dd>Specifies the computational grid resolution, in pixels per lattice
+unit (a lattice unit is one basis vector in a given direction).  If
+<code>resolution</code> is a <code>vector3</code>, then specifies a
+different resolution for each direction; otherwise the resolution is
+uniform.  (The grid size is then the product of the lattice size and
+the resolution, rounded up to the next positive integer.)  Defaults to
+<code>10</code>.
 
 <p><dt><code>grid-size</code> [<code>vector3</code>]
-<dd>Determines the size of the discrete computational grid along each
-of the lattice directions.  Defaults to 16x16x16.  If the third grid
-dimension is 1, the computation is two-dimensional.  (That is, the
-dielectric function is two-dimensional; it is still, in principle, a
-three dimensional system, and the k-point vectors can be
-three-dimensional.)  Note that the computational grid is centered on
-the origin of the coordinate system.
+<dd>Specifies the size of the discrete computational grid along each
+of the lattice directions.  <em>Deprecated:</em> the preferred method
+is to use the <code>resolution</code> variable, above, in which case
+the code>grid-size</code> defaults to <code>false</code>.  To get the
+grid size you should instead use the <code>(get-grid-size)</code>
+function.
 
 <p><dt><code>mesh-size</code> [<code>integer</code>]
 <dd>At each grid point, the dielectric constant is averaged over a
@@ -75,13 +90,13 @@ turns <em>off</em> dielectric function averaging and the creation of
 an effective dielectric tensor at interfaces.  Be sure you know what
 you're doing before you worsen convergence in this way.)
 
-
 <p><dt><code>dimensions</code> [<code>integer</code>]
 <dd>Explicitly specifies the dimensionality of the simulation; if the
 value is less than 3, the sizes of the extra dimensions in
-<code>grid-size</code> are ignored (assumed to be one).  Usually, it
-is easier to set the dimensions through <code>grid-size</code>, as
-discussed above.  Defaults to 3.
+<code>grid-size</code> are ignored (assumed to be one).  Defaults to 3.
+<em>Deprecated:</em> the preferred method is to set
+<code>geometry-lattice</code> to have size </code>no-size</code> in
+any unwanted dimensions.
 
 <p><dt><code><a name="k-points">k-points</a></code> [list of
 <code>vector3</code>]
@@ -92,9 +107,11 @@ vectors are defined as follows: Given the lattice vectors
 reciprocal lattice vector <code>G<sub>j</sub></code> satisfies
 <code>R<sub>i</sub> * G<sub>j</sub> = 2*Pi*delta<sub>i,j</sub></code>,
 where <code>delta<sub>i,j</sub></code> is the Kronecker delta (1 for
-<code>i = j</code> and 0 otherwise). Normally, the wavevectors should
-be in the first Brillouin zone (<a href="#first-brillouin-zone">see
-below</a>).  <code>k-points</code> defaults to none (empty list).
+<code>i = j</code> and 0 otherwise).  (<code>R<sub>i</sub></code> for
+any <code>no-size</code> dimensions is taken to be the corresponding
+basis vector.) Normally, the wavevectors should be in the first
+Brillouin zone (<a href="#first-brillouin-zone">see below</a>).
+<code>k-points</code> defaults to none (empty list).
 
 <p><dt><code>num-bands</code> [<code>integer</code>]
 <dd>Number of bands (eigenvectors) to compute at each k
@@ -287,6 +304,11 @@ components of <code>basis-size</code>.  (Alternatively, you can think
 of <code>size</code> as the vector between opposite corners of the
 primitive cell, specified in the lattice basis.)  Defaults to unit
 lengths.
+
+<p>If any dimension has the special size <code>no-size</code>, then
+the dimensionality of the problem is reduced by one; strictly
+speaking, the dielectric function is taken to be uniform along that
+dimension.
 </dl>
 
 </dl>

@@ -5,7 +5,7 @@
 
 ; first, define the lattice vectors and k-points for a triangular lattice:
 
-(set! geometry-lattice (make lattice
+(set! geometry-lattice (make lattice (size 1 1 no-size)
                          (basis1 (/ (sqrt 3) 2) 0.5)
                          (basis2 (/ (sqrt 3) 2) -0.5)))
 
@@ -26,10 +26,8 @@
 (set! geometry (list (make cylinder (center 0) (material air)
 			   (radius r) (height infinity))))
 
-(set! grid-size (vector3 32 32 1))
-
-(define-param nb 8) ; make this changeable from the command line
-(set! num-bands nb)
+(set-param! resolution 32)
+(set-param! num-bands 8)
 
 (if (= kz 0)
     (begin

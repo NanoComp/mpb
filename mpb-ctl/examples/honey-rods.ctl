@@ -3,13 +3,11 @@
 ; just a triangular lattice with two rods per unit cell, so we just
 ; take the lattice, k-points, etcetera from tri-rods.ctl.
 
-(set! num-bands 8)
-
 (define-param r 0.14) ; the rod radius
 (define-param eps 12) ; the rod dielectric constant
 
 ; triangular lattice:
-(set! geometry-lattice (make lattice
+(set! geometry-lattice (make lattice (size 1 1 no-size)
                          (basis1 (/ (sqrt 3) 2) 0.5)
                          (basis2 (/ (sqrt 3) 2) -0.5)))
 
@@ -31,8 +29,8 @@
 (define-param k-interp 4) ; number of k-points to interpolate
 (set! k-points (interpolate k-interp k-points))
 
-(define-param res 64) ; the grid resolution
-(set! grid-size (vector3 res res 1))
+(set-param! resolution 32)
+(set-param! num-bands 8)
 
 (run-tm)
 (run-te)

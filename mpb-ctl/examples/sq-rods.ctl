@@ -9,6 +9,8 @@
 
 (define Si (make dielectric (epsilon eps)))
 
+(set! geometry-lattice (make lattice (size 1 1 no-size))) ; 2d cell
+
 (set! geometry 
       (list
        (make cylinder 
@@ -20,9 +22,8 @@
 (define M (vector3 0.5 0.5 0))
 (set! k-points (interpolate k-interp (list Gamma X M Gamma)))
 
-(set! grid-size (vector3 32 32 1))
-
-(set! num-bands 8)
+(set-param! resolution 32)
+(set-param! num-bands 8)
 
 ; Compute the TE and TM bands.  Wrap in the (begin-time message ...)
 ; construct from libctl so that we report the total elapsed time:

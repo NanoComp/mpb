@@ -32,10 +32,9 @@
 
 ; (A simple fcc lattice would have only one sphere/object at the origin.)
 
-(define-param res 16) ; the grid resolution
-(set! grid-size (vector3 res res res))
-(set! mesh-size 5)
-(set! num-bands 5)
+(set-param! resolution 16) ; use a 16x16x16 grid
+(set-param! mesh-size 5)
+(set-param! num-bands 5)
 
 ; run calculation, outputting electric-field energy density at the U point:
 (run (output-at-kpoint (vector3 0 0.625 0.375) output-dpwr))

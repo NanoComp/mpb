@@ -31,7 +31,7 @@ consist of:
 <pre>
 (set! num-bands 8)
 
-(set! geometry-lattice (make lattice
+(set! geometry-lattice (make lattice (size 1 1 no-size)
                          (basis1 (/ (sqrt 3) 2) 0.5)
                          (basis2 (/ (sqrt 3) 2) -0.5)))
 (set! geometry (list (make cylinder
@@ -44,7 +44,7 @@ consist of:
                      (vector3 0 0 0)))        ; Gamma
 (set! k-points (interpolate 4 k-points))
 
-(set! grid-size (vector3 32 32 1))
+(set! resolution 32)
 
 (run-tm (output-at-kpoint (vector3 (/ -3) (/ 3) 0)
                           fix-efield-phase output-efield-z))
@@ -152,12 +152,12 @@ the word "<code>Gap</code>" in them:
 
 <pre>
 unix% grep Gap tri-rods.out
-Gap from band 1 (0.275066439346827) to band 2 (0.446290429077378), 47.4727550885009%
-Gap from band 3 (0.563584034021526) to band 4 (0.593059150925396), 5.09666546908704%
-Gap from band 4 (0.79116192674256) to band 5 (0.792043037927768), 0.111307279205154%
-Gap from band 5 (0.838732466052519) to band 6 (0.840307998313466), 0.187670552840708%
-Gap from band 6 (0.86928536632084) to band 7 (0.873497179273491), 0.483343485772052%
-Gap from band 4 (0.821661555010753) to band 5 (0.86445473122796), 5.07594601469253%
+Gap from band 1 (0.275065617068082) to band 2 (0.446289918847647), 47.4729292989213%
+Gap from band 3 (0.563582903703468) to band 4 (0.593059066215511), 5.0968516236891%
+Gap from band 4 (0.791161222813268) to band 5 (0.792042731370125), 0.111357548663006%
+Gap from band 5 (0.838730315053238) to band 6 (0.840305955160638), 0.187683867865441%
+Gap from band 6 (0.869285340346465) to band 7 (0.873496724070656), 0.483294361375001%
+Gap from band 4 (0.821658212109559) to band 5 (0.864454087942874), 5.07627823271133%
 </pre>
 
 <p>The first five gaps are for the TM bands (which we ran first), and
@@ -359,10 +359,9 @@ gap in periodic dielectric structures," <i>Phys. Rev. Lett.</i>
 
 ; (A simple fcc lattice would have only one sphere/object at the origin.)
 
-(define-param res 16) ; the grid resolution
-(set! grid-size (vector3 res res res))
-(set! mesh-size 5)
-(set! num-bands 5)
+(set-param! resolution 16) ; use a 16x16x16 grid
+(set-param! mesh-size 5)
+(set-param! num-bands 5)
 
 ; run calculation, outputting electric-field energy density at the U point:
 (run (output-at-kpoint (vector3 0 0.625 0.375) output-dpwr))
@@ -377,12 +376,12 @@ even if we log out:
 unix% nohup mpb diamond.ctl &gt;&amp; diamond.out &amp;
 </pre>
 
-<p>Note that, because we used <code>define-param</code> to define some
+<p>Note that, because we used <code>define-param</code> and <code>set-param!</code> to define/set some
 variables (see the <a
 href="http://ab-initio.mit.edu/libctl/doc/user-ref.html">libctl
 manual</a>), we can change them from the command line.  For example,
-to use a radius of 0.3 instead of 0.25, we can just type <code>mpb
-r=0.3 diamond.ctl</code>.  This is an extremely useful feature,
+to use a radius of 0.3 and a resolution of 20, we can just type <code>mpb
+r=0.3 resolution=20 diamond.ctl</code>.  This is an extremely useful feature,
 because it allows you to use one generic control file for many
 variations on the same structure.
 
@@ -410,7 +409,7 @@ sqrt(0.5), or <code>(sqrt 0.5)</code> in Scheme.
 
 <pre>
 unix% grep Gap diamond.out
-Gap from band 2 (0.396353494256268) to band 3 (0.440819524802721), 10.6229010095031%
+Gap from band 2 (0.396348703007373) to band 3 (0.440813418580596), 10.6227251392791%
 </pre>
 
 <p>We can also plot its band diagram, much as for the tri-rods case

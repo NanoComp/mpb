@@ -40,8 +40,8 @@
     (set! k-points (list K))
     (set! k-points (interpolate 4 (list Gamma M K Gamma))))
 
-(set! grid-size (vector3 32 32 64))
-(set! num-bands 9)
+(set-param! resolution (vector3 32 32 16))
+(set-param! num-bands 9)
 
 ; Run even and odd bands, outputting fields only at the K point:
 (run-zeven (output-at-kpoint K output-hfield-z))

@@ -14,7 +14,8 @@
 (set! geometry (list (make cylinder 
                        (center 0 0 0) (radius 0.2) (height infinity)
                        (material (make dielectric (epsilon 12))))))
-(set! grid-size (vector3 32 32 1))
+(set! geometry-lattice (make lattice (size 1 1 no-size)))
+(set! resolution 32)
 
 (print "********** Square lattice of rods: TE bands**********\n")
 (run-te)
@@ -32,7 +33,7 @@
 
 (print "********** Triangular lattice of rods in air **********\n")
 
-(set! geometry-lattice (make lattice
+(set! geometry-lattice (make lattice (size 1 1 no-size)
                          (basis1 (/ (sqrt 3) 2) 0.5)
                          (basis2 (/ (sqrt 3) 2) -0.5)))
 
@@ -64,17 +65,32 @@
 
 (set! mesh-size 3) ; reset to default value of 3
 
+; *** A Complete 2D Gap with an Anisotropic Dielectric ***
+
+(print "********** Anisotropic complete 2d gap **********\n")
+
+(set! geometry (list (make cylinder
+                       (center 0 0 0) (radius 0.3) (height infinity)
+                       (material (make dielectric-anisotropic
+                                   (epsilon-diag 1 1 12))))))
+(set! default-material (make dielectric-anisotropic (epsilon-diag 12 12 1)))
+(set! num-bands 8)
+(run) ; just use run, instead of run-te or run-tm, to find the complete gap
+
 ; *** Finding a Point-defect State ***
 
 (print "********** 5x5 point defect **********\n")
 
-(set! geometry-lattice (make lattice (size 5 5 1)))
+(set! geometry-lattice (make lattice (size 5 5 no-size)))
+(set! geometry (list (make cylinder
+                       (center 0 0 0) (radius 0.2) (height infinity)
+                       (material (make dielectric (epsilon 12))))))
 (set! geometry (geometric-objects-lattice-duplicates geometry))
 (set! geometry (append geometry 
                        (list (make cylinder (center 0 0 0) 
                                    (radius 0.2) (height infinity)
                                    (material air)))))
-(set! grid-size (vector3 (* 16 5) (* 16 5) 1))
+(set! resolution 16)
 (set! k-points (list (vector3 0.5 0.5 0)))
 
 (set! num-bands 50)
