@@ -58,17 +58,17 @@ void fieldio_write_complex_field(scalar_complex *field,
 	  CHK_MALLOC(phasey, scalar_complex, local_dims[1]);
 	  CHK_MALLOC(phasez, scalar_complex, local_dims[2]);
 	  for (i = 0; i < local_dims[0]; ++i) {
-	       real phase = s[0] * (i + start[0]);
+	       real phase = s[0] * (i + start[0] - 0.5 * dims[0]);
 	       phasex[i].re = cos(phase);
 	       phasex[i].im = sin(phase);
 	  }
 	  for (j = 0; j < local_dims[1]; ++j) {
-	       real phase = s[1] * (j + start[1]);
+	       real phase = s[1] * (j + start[1] - 0.5 * dims[1]);
 	       phasey[j].re = cos(phase);
 	       phasey[j].im = sin(phase);
 	  }
 	  for (k = 0; k < local_dims[2]; ++k) {
-	       real phase = s[2] * (k + start[2]);
+	       real phase = s[2] * (k + start[2] - 0.5 * dims[2]);
 	       phasez[k].re = cos(phase);
 	       phasez[k].im = sin(phase);
 	  }
