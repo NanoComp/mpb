@@ -1,6 +1,6 @@
 ; A simple function to compute the density of states (DOS) by summing
-; Gaussian smoothing functions around each computed frequency point,
-; suggested by Xavier Gonze and implemented in ABINIT
+; Gaussian smoothing functions around each computed frequency point.
+; This scheme was suggested by Xavier Gonze and implemented in ABINIT
 ; (http://www.mapr.ucl.ac.be/Fr/PCPM/ABINIT/), with further
 ; suggestions by Doug Allan of Corning.  (There are also more
 ; sophisticated algorithms employing the group velocity, but we have
