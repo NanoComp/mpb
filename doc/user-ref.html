@@ -58,8 +58,11 @@ square/cubic lattice).
 <p><dt><code>grid-size</code> [<code>vector3</code>]
 <dd>Determines the size of the discrete computational grid along each
 of the lattice directions.  Defaults to 16x16x16.  If the third grid
-dimension is 1, the computation is two-dimensional.  Note that the
-computational grid is centered on the origin of the coordinate system.
+dimension is 1, the computation is two-dimensional.  (That is, the
+dielectric function is two-dimensional; it is still, in principle, a
+three dimensional system, and the k-point vectors can be
+three-dimensional.)  Note that the computational grid is centered on
+the origin of the coordinate system.
 
 <p><dt><code>mesh-size</code> [<code>integer</code>]
 <dd>At each grid point, the dielectric constant is averaged over a
@@ -415,10 +418,10 @@ that were computed.
 
 <dd>These are the same as the <code>run</code> function except that
 they constrain their solutions to be TM- and TE-polarized,
-respectively, in two dimensions.  For three-dimensional simulations,
-or when a k point has a z component, the eigenstates are no longer
-completely polarized, and these functions behave identically to
-<code>run</code>.
+respectively, in two dimensions.  For a three-dimensional structure
+(<code>grid-size</code>) or when a k point has a z component, the
+eigenstates are no longer completely polarized, and these functions
+behave identically to <code>run</code>.
 
 <p><dt><code>(run-polarization <i>p reset-fields band-func ...</i>)</code>
 

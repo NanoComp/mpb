@@ -209,11 +209,13 @@ to a 32x32 two-dimensional grid:
 (set! grid-size (vector3 32 32 1))
 </pre>
 
-<p>Setting the z grid to 1 makes this a two-dimensional calculation.
-For efficient calculation, it is best to make the grid sizes a power
-of two, or factorizable into powers of small primes (such as 2, 3, 5
-and 7).  As a rule of thumb, you should use at least 8 grid points per
-unit cell in order to obtain reasonable accuracy.
+<p>Setting the z grid to 1 makes this a two-dimensional calculation
+(or, strictly speaking, it makes the dielectric function
+two-dimensional).  For efficient calculation, it is best to make the
+grid sizes a power of two, or factorizable into powers of small primes
+(such as 2, 3, 5 and 7).  As a rule of thumb, you should use at least
+8 grid points per unit cell (or per wavelength) in order to obtain
+reasonable accuracy.
 
 <p>Now, we're done setting the parameters--there are other parameters,
 but we're happy with their default values for now.  At this point,
