@@ -60,7 +60,7 @@ INCLUDES="$INCLUDES -I`pwd`/src"
 # Add lots of compiler warnings to check for if we are using gcc:
 # (The variable $GCC is set to "yes" by AC_PROG_CC if we are using gcc.)
 if test "$GCC" = "yes"; then
-	CFLAGS="$CFLAGS -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align -pedantic"
+	CFLAGS="$CFLAGS -Wall -W -Wbad-function-cast -Wcast-qual -Wpointer-arith -Wcast-align -pedantic"
 fi
 
 # Checks for libraries.
