@@ -170,32 +170,6 @@
 
 ; ****************************************************************
 
-; timing functions
-
-; Display the message followed by the time t in minutes and seconds,
-; returning t in seconds.
-(define (display-time message t)
-  (let ((minutes (quotient t 60)) (seconds (remainder t 60)))
-    (display message)
-    (if (> minutes 1)
-	(display-many minutes " minutes, ")
-	(if (> minutes 0)
-	    (display-many minutes " minute, ")))
-    (display-many seconds " seconds.\n"))
-  t)
-
-; (begin-time message ...statements...) works just like (begin
-; ...statements...) except that it also displays 'message' followed by
-; the elapsed time to execute the statements.  Additionally, it returns
-; the elapsed time in seconds, rather than the value of the last statement.
-(defmacro-public begin-time (message . statements)
-  `(begin
-     (let ((begin-time-start-t (current-time)))
-       ,@statements
-       (display-time ,message (- (current-time) begin-time-start-t)))))
-
-; ****************************************************************
-
 ; (run) functions, to do vanilla calculations.  They all take zero or
 ; more "band functions."  Each function should take a single
 ; parameter, the band index, and is called for each band index at
