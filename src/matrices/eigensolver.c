@@ -278,7 +278,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  }
 #endif
 
-	  if (((flags & EIGS_VERBOSE) && (iteration + 1) % 10 == 0) ||
+	  if ((flags & EIGS_VERBOSE) ||
 	      MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
 	      > FEEDBACK_TIME) {
 	       printf("    iteration %4d: "
