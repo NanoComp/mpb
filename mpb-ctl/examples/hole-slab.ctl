@@ -45,7 +45,10 @@
 (set-param! num-bands 9)
 
 ; Run even and odd bands, outputting fields only at the K point:
-(run-zeven (output-at-kpoint K output-hfield-z))
-(run-zodd (output-at-kpoint K output-dfield-z))
+(if (= loweps 1.0)
+    (begin ; we only have even/odd classification for symmetric structure
+      (run-zeven (output-at-kpoint K output-hfield-z))
+      (run-zodd (output-at-kpoint K output-dfield-z)))
+    (run (output-at-kpoint K output-hfield-z) display-zparities))
 
 (display-eigensolver-stats)
