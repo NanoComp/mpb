@@ -307,6 +307,9 @@ implementation, including both serial and parallel FFTs.  You can
 download FFTW and find out more about it from the <a
 href="http://www.fftw.org">FFTW Home Page</a>.
 
+<p><b>Important:</b> the current release of MPB requires FFTW 2.x, and
+will <i>not</i> compile with FFTW 3.x.
+
 <p>If you want to use MPB on a parallel machine with MPI, you will
 also need to install the MPI FFTW libraries (this just means including
 <code>--enable-mpi</code> in the FFTW <code>configure</code> flags).
