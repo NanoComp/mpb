@@ -8,7 +8,9 @@
 
 #include "eigensolver.h"
 
-#define EIGENSOLVER_MAX_ITERATIONS 5000
+#define STRINGIZEx(x) #x /* a hack so that we can stringize macro values */
+#define STRINGIZE(x) STRINGIZEx(x)
+#define EIGENSOLVER_MAX_ITERATIONS 10000
 
 /* Preconditioned eigensolver.  Finds the lowest Y.p eigenvectors
    and eigenvalues of the operator A, and returns them in Y and
@@ -146,7 +148,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  prev_E = E;
      } while (++iteration < EIGENSOLVER_MAX_ITERATIONS);
      
-     CHECK(iteration < EIGENSOLVER_MAX_ITERATIONS, "failure to converge");
+     CHECK(iteration < EIGENSOLVER_MAX_ITERATIONS,
+	   "failure to converge after "
+	   STRINGIZE(EIGENSOLVER_MAX_ITERATIONS)
+	   " iterations");
 
      /* Now that we've converged, we need to find the actual eigenvectors
 	and eigenvalues. */
