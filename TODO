@@ -4,15 +4,13 @@ Allow real-complex transforms for structures with inversion symmetry.
 
 Export/import DXF, VRML, POV, ...?
 
-Add ability to solve for only even/odd bands w.r.t. z=0 plane.
+Add ability to unskew HDF output for non-orthogonal unit cells.
 
 Used enhanced analytic trace minimization algorithm to minimized in a
 p-dimensional space at each step, instead of a 1-dimensional space.
 
 More profiling to find performance bottlenecks.  More systematic
 comparisons with our old code.
-
-Optimize multiplications by diagonal matrices?
 
 Store epsilon differently?
 
