@@ -18,11 +18,14 @@ extern void Cop(evectmatrix Xin, evectmatrix Xout);
 extern void printmat(scalar *A, int m, int n);
 extern void printmat_matlab(scalar *A, int m, int n);
 
+extern void debug_check_memory_leaks(void);
+
 int main(int argc, char **argv)
 {
      int i, j, n = 0, p;
-     sqmatrix X, U, Y, W[3];
-     real *eigvals, *eigvals_dense;
+     sqmatrix X, U;
+     evectmatrix Y, W[3];
+     real *eigvals, *eigvals_dense, sum = 0.0;
      int num_iters;
 
      srand(time(NULL));
@@ -45,7 +48,7 @@ int main(int argc, char **argv)
      sqmatrix_AeBC(U, X, 1, X, 0); /* also assign U */
      
      if (n <= 20) {
-	  printf("Solving for eigenvalues of %d x %d matrix: \n", n, n);
+	  printf("Solving for eigenvalues of %d x %d matrix: \nA = ", n, n);
 	  printmat_matlab(A.data, n, n);
      }
 
@@ -54,12 +57,15 @@ int main(int argc, char **argv)
 
      sqmatrix_eigensolve(U, eigvals_dense, X);
 
-     p = MIN(MAX(5, MIN(n/4, 2)), n);
+     p = MIN(MIN(5, MAX(n/4, 2)), n);
      printf("\nSolving for %d eigenvals out of %d.\n", p, n);
 
      printf("\nSolved A by dense eigensolver.\nEigenvalues = ");
-     for (i = 0; i < p; ++i)
-	  printf("  %f", eigvals_dense[i]);
+     for (sum = 0.0, i = 0; i < p; ++i) {
+       sum += eigvals_dense[i];
+       printf("  %f", eigvals_dense[i]);
+     }
+     printf("\nEigenvalue sum = %f\n", sum);
      printf("\nEigenvectors are (by row): \n");
      printmat(U.data, p, n);
 
@@ -72,13 +78,16 @@ int main(int argc, char **argv)
      for (i = 0; i < n*p; ++i)
 	  ASSIGN_REAL(Y.data[i], rand() * 1.0 / RAND_MAX);
 
-     eigensolver(Y, eigvals, Aop, Cop, W, 3, 1e-5, &num_iters);
+     eigensolver(Y, eigvals, Aop, Cop, W, 3, 1e-10, &num_iters);
 
      printf("\nSolved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
-     for (i = 0; i < p; ++i)
-          printf("  %f", eigvals[i]);
-     printf("\nEigenvectors are (by column): \n");
+     for (sum = 0.0, i = 0; i < p; ++i) {
+       sum += eigvals[i];
+       printf("  %f", eigvals[i]);
+     }
+     printf("\nEigenvalue sum = %f\n", sum);
+     printf("Eigenvectors are (by column): \n");
      printmat(Y.data, n, p);
      
      destroy_sqmatrix(A);
@@ -87,6 +96,11 @@ int main(int argc, char **argv)
      destroy_evectmatrix(Y);
      for (i = 0; i < 3; ++i)
 	  destroy_evectmatrix(W[i]);
+
+     free(eigvals);
+     free(eigvals_dense);
+
+     debug_check_memory_leaks();
 
      return EXIT_SUCCESS;
 }
@@ -111,7 +125,7 @@ void Cop(evectmatrix Xin, evectmatrix Xout)
      evectmatrix_copy(Xout, Xin);
 #else
      for (in = 0; in < Xin.n; ++in)
-	  for (ip = 0; ip < Xin.p, ++ip) {
+	  for (ip = 0; ip < Xin.p; ++ip) {
 	       scalar xin = Xin.data[in * Xin.p + ip];
 	       real diag;
 	       
@@ -132,12 +146,21 @@ void printmat(scalar *A, int m, int n)
   for (i = 0; i < m; ++i) {
        for (j = 0; j < n; ++j) {
 #ifdef SCALAR_COMPLEX
-      printf("  (%6.3f,%6.3f)", A[i*n + j].re, A[i*n + j].im);
+	 printf("  (%6.3f,%6.3f)", A[i*n + j].re, A[i*n + j].im);
 #else
-      printf("  %6.3f", A[i*n + j]);
+	 printf("  %6.3f", A[i*n + j]);
 #endif
+
+	 if (j > 7) {
+	   printf("  ...");
+	   break;
+	 }
        }
-    printf("\n");
+       printf("\n");
+       if (i > 7) {
+	 printf("   ...\n");
+	 break;
+       }
   }
 }
 
@@ -148,7 +171,7 @@ void printmat_matlab(scalar *A, int m, int n)
   printf("[");
   for (i = 0; i < m; ++i) {
        for (j = 0; j < n; ++j) {
-      printf("  %f", SCALAR_RE(A[i*n + j]));
+	 printf("  %f", SCALAR_RE(A[i*n + j]));
        }
     printf(";\n");
   }
