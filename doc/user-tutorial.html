@@ -159,11 +159,14 @@ in the new list:
 0.4 0.0) #(0.5 0.5 0) #(0.4 0.4 0.0) #(0.3 0.3 0.0) #(0.2 0.2 0.0)
 #(0.1 0.1 0.0) #(0 0 0))</code>
 
-<p>The k points, and all vectors in this program, are specified in the
-basis of the unit vectors in the lattice directions.  In this case, we
-don't have to specify the lattice directions, because we are happy
-with the defaults--the lattice vectors default to the Cartesian unit
-axes (i.e. the most common case, a square/cubic lattice).
+<p>All spatial vectors in the program are specified in the basis of
+the unit vectors in the lattice directions, while the k points are
+specified in the basis of the reciprocal lattice vectors.  In this
+case, we don't have to specify the lattice directions, because we are
+happy with the defaults--the lattice vectors default to the cartesian
+unit axes (i.e. the most common case, a square/cubic lattice).  (The
+reciprocal lattice vectors in this case are also the unit axes.)
+We'll see how to change the lattice vectors in later subsections.
 
 <p>Now, we want to set the geometry of the system--we need to specify
 which objects are in the primitive cell of the lattice, centered on
