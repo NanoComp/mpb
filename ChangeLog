@@ -1,7 +1,16 @@
-2001-04-30  Steven G. Johnson  <stevenj@alum.mit.edu>
+2001-05-06  Steven G. Johnson  <stevenj@gil-galad>
 
-	* mpb-ctl/mpb.c: Fixed bug in field output for kz != 0.  Thanks to
-	Jesper Riishede for the bug report.
+	* /home/stevenj/Repository/mpb/doc/analysis-tutorial.html: K is
+	C_{3v}, not C_{6v}.
+
+2001-04-30  Steven G. Johnson  <stevenj@gil-galad>
+
+	* /home/stevenj/Repository/mpb/NEWS,
+	/home/stevenj/Repository/mpb/configure.in,
+	/home/stevenj/Repository/mpb/ChangeLog: updated & bumped version
+
+	* /home/stevenj/Repository/mpb/mpb-ctl/mpb.c: Fixed bug in field
+	output for kz != 0.  Thanks to Jesper Riishede for the bug report.
 
 2001-04-29  Steven G. Johnson  <stevenj@alum.mit.edu>
 
