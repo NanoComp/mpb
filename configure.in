@@ -279,7 +279,7 @@ GEN_CTL_IO=gen-ctl-io
 AC_SUBST(GEN_CTL_IO)
 
 # check for -lctl:
-AC_CHECK_LIB(ctl, ctl_get_list)
+AC_CHECK_LIB(ctl, ctl_get_vector3)
 
 # ----------------------------------------------------------------------
 # Checks for header files.
