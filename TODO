@@ -1,22 +1,22 @@
-Different convergence test, like in old code: eigenvalue converged
-*and* |grad|/|y| small.  In old code, tolerance in eigenval is
-specified in cntrl file, and tolerance in residual (gradient) defaults
-to 1 (is number after tolerance in cntrl file, which is normally
-omitted).  (What is |grad|/|y|?  Units don't make sense.)
-
-Profile--where is the performance going?  Systematic comparisons with old code.
-
-Add ability to solve for only even/odd bands w.r.t. z=0 plane.
-
-Optimize multiplications by diagonal matrices?
+Support for parallel transform with MPI.
 
 Allow real-complex transforms for structures with inversion symmetry.
 
 Export/import DXF, VRML, POV, ...?
 
+Add ability to solve for only even/odd bands w.r.t. z=0 plane.
+
+Used enhanced analytic trace minimization algorithm to minimized in a
+p-dimensional space at each step, instead of a 1-dimensional space.
+
+More profiling to find performance bottlenecks.  More systematic
+comparisons with our old code.
+
+Optimize multiplications by diagonal matrices?
+
 Store epsilon differently?
 
-implement create_evectmatrix_clone, evectmatrices_conformant_p
-(convenience functions)
+Implement create_evectmatrix_clone, evectmatrices_conformant_p
+(convenience functions to clean things up a bit).
 
 World domination.
