@@ -1,4 +1,8 @@
-Arghh...fix maxwell op.  Why isn't it positive-definite?
+Finish tuning maxwell preconditioner.
+
+Profile--where is the performance going?
+
+Optimize multiplications by diagonal matrices?
 
 Check which order to link in -lblas and -ldgemm.
 

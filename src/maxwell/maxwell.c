@@ -14,7 +14,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				  int num_bands,
 				  int num_fft_bands)
 {
-     int n[3] = {nx, ny, nz}, rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
+     int n[3] = {nx, ny, nz}, rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3, i;
      maxwell_data *d = 0;
      int fft_data_size;
 
@@ -129,10 +129,13 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      CHECK(d->fft_data, "out of memory");
 
      d->k_plus_G = (k_data*) malloc(sizeof(k_data) * *local_N);
-     d->k_plus_G_normsqr_inv = (real*) malloc(sizeof(real) * *local_N);
+     d->k_plus_G_normsqr = (real*) malloc(sizeof(real) * *local_N);
      d->eps_inv_mean = (real*) malloc(sizeof(real) * num_bands);
-     CHECK(d->k_plus_G && d->k_plus_G_normsqr_inv && d->eps_inv_mean,
+     CHECK(d->k_plus_G && d->k_plus_G_normsqr && d->eps_inv_mean,
 	   "out of memory");
+
+     for (i = 0; i < num_bands; ++i)
+	  d->eps_inv_mean[i] = 1.0;
 
      return d;
 }
@@ -159,7 +162,7 @@ void destroy_maxwell_data(maxwell_data *d)
 	  free(d->eps_inv);
 	  free(d->fft_data);
 	  free(d->k_plus_G);
-	  free(d->k_plus_G_normsqr_inv);
+	  free(d->k_plus_G_normsqr);
 	  free(d->eps_inv_mean);
 
 	  free(d);
@@ -182,14 +185,14 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
      int nx = d->nx, ny = d->ny, nz = d->nz;
      int cx = d->nx/2, cy = d->ny/2, cz = d->nz/2;
      k_data *kpG = d->k_plus_G;
-     real *kpGni = d->k_plus_G_normsqr_inv;
+     real *kpGn2 = d->k_plus_G_normsqr;
      int x, y, z;
 
      for (x = d->local_x_start; x < d->local_x_start + d->local_nx; ++x) {
 	  int kxi = (x > cx) ? (x - nx) : x;
 	  for (y = 0; y < ny; ++y) {
 	       int kyi = (y > cy) ? (y - ny) : y;
-	       for (z = 0; z < nz; ++z, kpG++, kpGni++) {
+	       for (z = 0; z < nz; ++z, kpG++, kpGn2++) {
 		    int kzi = (z > cz) ? (z - nz) : z;
 		    real kx, ky, kz, a, b, c, leninv;
 
@@ -200,7 +203,7 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 
 		    a = kx*kx + ky*ky + kz*kz;
 		    kpG->kmag = sqrt(a);
-		    *kpGni = 1.0 / a;
+		    *kpGn2 = a;
 		    
 		    /* Now, compute the two normal vectors: */
 
@@ -412,7 +415,8 @@ static void assign_matrix_vector(scalar_complex *newv,
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
 
 /* Compute Xout = curl(1/epsilon * curl(Xin)) */
-void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
+void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
+		      int is_current_eigenvector)
 {
      maxwell_data *d = (maxwell_data *) data;
      int cur_band_start;
@@ -420,6 +424,7 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
      scalar_complex *cdata;
      real scale;
      int i, b;
+     real *e_field_sums = 0;
      
      CHECK(d, "null maxwell data pointer!");
      CHECK(Xin.c == 2, "fields don't have 2 components!");
@@ -427,10 +432,19 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
 
      fft_data = d->fft_data;
 
+     if (is_current_eigenvector) {
+	  e_field_sums = (real *) malloc(sizeof(real) * d->num_fft_bands);
+	  CHECK(e_field_sums, "out of memory!");
+	  for (b = 0; b < Xin.p; ++b)
+	       d->eps_inv_mean[b] = 0.0;
+     }
+
      scale = -1.0 / Xout.N;  /* scale factor to normalize FFT; 
 				negative sign comes from 2 i's from curls */
 
 #ifdef SCALAR_COMPLEX
+
+     /********************************************/
 
      /* first, compute fft_data = curl(Xin): */
      for (i = 0; i < Xin.localN; ++i) {
@@ -441,20 +455,61 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
 				scale);
      }
 
-     /* Now, multiply fft_data by 1/epsilon using FFT/IFFT pair: */
+     /********************************************/
+
+     /* Now, multiply fft_data by 1/epsilon using FFT/IFFT pair.
+        While we're at it, compute avererage 1/epsilon for each band
+	(if is_current_eigenvector is true). */
 
      compute_fft(+1, d, fft_data, d->num_fft_bands*3, d->num_fft_bands*3, 1);
 
-     cdata = (scalar_complex *) fft_data;
-     for (i = 0; i < d->fft_output_size; ++i) {
-	  symmetric_matrix eps_inv = d->eps_inv[i];
+     if (is_current_eigenvector)
 	  for (b = 0; b < d->num_fft_bands; ++b)
-	       assign_matrix_vector(&cdata[3 * (i * d->num_fft_bands + b)],
-				    eps_inv,
-				    &cdata[3 * (i * d->num_fft_bands + b)]);
-     }
+	       e_field_sums[b] = 0.0;
+
+     cdata = (scalar_complex *) fft_data;
+
+     if (is_current_eigenvector)
+	  for (i = 0; i < d->fft_output_size; ++i) {
+	       symmetric_matrix eps_inv = d->eps_inv[i];
+	       for (b = 0; b < d->num_fft_bands; ++b) {
+		    int ib = 3 * (i * d->num_fft_bands + b);
+		    scalar_complex prod0, prod1, prod2;
+		    
+		    prod0 = cdata[ib];
+		    prod1 = cdata[ib + 1];
+		    prod2 = cdata[ib + 2];
+		    e_field_sums[b] += prod0.re * prod0.re +
+			               prod0.im * prod0.im + 
+		                       prod1.re * prod1.re +
+                                       prod1.im * prod1.im +
+		                       prod2.re * prod2.re +
+                                       prod2.im * prod2.im;
+		    
+		    assign_matrix_vector(&cdata[ib], eps_inv, &cdata[ib]);
+		    
+		    d->eps_inv_mean[b] +=
+			 prod0.re*cdata[ib].re   + prod0.im*cdata[ib].im   +
+			 prod1.re*cdata[ib+1].re + prod1.im*cdata[ib+1].im +
+			 prod2.re*cdata[ib+2].re + prod2.im*cdata[ib+2].im;
+	       }
+	  }
+     else
+          for (i = 0; i < d->fft_output_size; ++i) {
+               symmetric_matrix eps_inv = d->eps_inv[i];
+               for (b = 0; b < d->num_fft_bands; ++b) {
+                    int ib = 3 * (i * d->num_fft_bands + b);
+		    assign_matrix_vector(&cdata[ib], eps_inv, &cdata[ib]);
+	       }
+	  }
+
+     if (is_current_eigenvector)
+	  for (b = 0; b < d->num_fft_bands; ++b)
+	       d->eps_inv_mean[b] /= e_field_sums[b];
 
      compute_fft(-1, d, fft_data, d->num_fft_bands*3, d->num_fft_bands*3, 1);
+
+     /********************************************/
 
      /* finally, compute Xout = curl(fft_data): */
      for (i = 0; i < Xout.localN; ++i) {
@@ -463,6 +518,8 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
 	       assign_cross_c2t(&Xout.data[i * 2 * Xout.p + b], Xout.p,
 				cur_k, &fft_data[3 * (i * Xout.p + b)]);
      }
+
+     /********************************************/
 
 #else /* not SCALAR_COMPLEX */
 
@@ -477,6 +534,29 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
      }
 
 #endif
-     
+
+     if (is_current_eigenvector)
+	  free(e_field_sums);
 }
 
+void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout, void *data,
+			    evectmatrix Y, real *eigenvals)
+{
+     maxwell_data *d = (maxwell_data *) data;
+     int i, c, b;
+     real *kpGn2 = d->k_plus_G_normsqr;
+
+     for (i = 0; i < Xout.localN; ++i) {
+	  for (c = 0; c < Xout.c; ++c) {
+	       for (b = 0; b < Xout.p; ++b) {
+		    int index = (i * Xout.c + c) * Xout.p + b;
+		    real scale = kpGn2[i] * d->eps_inv_mean[b] - eigenvals[b];
+
+		    scale = 1.0 / (scale + copysign(0.01, scale));
+		    ASSIGN_SCALAR(Xout.data[index],
+				  scale * SCALAR_RE(Xin.data[index]),
+				  scale * SCALAR_IM(Xin.data[index]));
+	       }
+	  }
+     }
+}

@@ -55,7 +55,7 @@ typedef struct {
      scalar *fft_data;
      
      k_data *k_plus_G;
-     real *k_plus_G_normsqr_inv;
+     real *k_plus_G_normsqr;
 
      symmetric_matrix *eps_inv;
      real *eps_inv_mean;
@@ -71,6 +71,9 @@ extern void destroy_maxwell_data(maxwell_data *d);
 extern void update_maxwell_data_k(maxwell_data *d, real k[3],
 				  real G1[3], real G2[3], real G3[3]);
 
-extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data);
-
+extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
+			     int is_current_eigenvector);
+extern void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout,
+				   void *data,
+				   evectmatrix Y, real *eigenvals);
 #endif /* MAXWELL_H */
