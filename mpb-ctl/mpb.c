@@ -33,6 +33,7 @@
 
 /* Header files for my eigensolver routines: */
 #include "../src/config.h"
+#include <mpiglue.h>
 #include <check.h>
 #include <blasglue.h>
 #include <matrices.h>
@@ -305,6 +306,14 @@ void init_params(int p, boolean reset_fields)
      else
 	  srand(time(NULL)); /* init random seed for field initialization */
    
+     if (deterministicp) {  /* check input variable "deterministic?" */
+	  /* seed should be the same for each run, although
+	     it should be different for each process: */
+	  int rank;
+	  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	  srand(314159 * (rank + 1));
+     }
+
      printf("Creating Maxwell data...\n");
      mdata = create_maxwell_data(nx, ny, nz, &local_N, &N_start, &alloc_N,
                                  num_bands, NUM_FFT_BANDS);
@@ -375,7 +384,7 @@ void solve_kpoint(vector3 kvector)
      if (mtdata) {  /* solving for bands near a target frequency */
 	  eigensolver(H, eigvals,
 		      maxwell_target_operator, (void *) mtdata,
-		      simple_preconditioner ? 
+		      simple_preconditionerp ? 
 		      maxwell_target_preconditioner :
 		      maxwell_target_preconditioner2,
 		      (void *) mtdata, NULL,
@@ -391,7 +400,7 @@ void solve_kpoint(vector3 kvector)
      else
 	  eigensolver(H, eigvals,
 		      maxwell_operator, (void *) mdata,
-		      simple_preconditioner ?
+		      simple_preconditionerp ?
 		      maxwell_preconditioner :
 		      maxwell_preconditioner2,
 		      (void *) mdata, NULL,
@@ -402,6 +411,8 @@ void solve_kpoint(vector3 kvector)
      
      if (num_write_output_vars > 1)
 	  free(freqs.items); /* clean up from prev. call */
+
+     iterations = num_iters; /* iterations output variable */
 
      /* create freqs array for storing frequencies in a Guile list */
      freqs.num_items = num_bands;

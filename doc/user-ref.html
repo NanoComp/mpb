@@ -106,11 +106,18 @@ been reached (when the eigenvalues have a fractional change less than
 <dd>A string prepended to all output filenames.  Defaults to
 <code>""</code> (no prefix).
 
-<p><dt><code>simple-preconditioner</code> [<code>boolean</code>]
+<p><dt><code>simple-preconditioner?</code> [<code>boolean</code>]
 <dd>Whether or not to use a simplified preconditioner; defaults to
 <code>false</code> (this is fastest most of the time).  (Turning this
 on increases the number of iterations, but decreases the time for each
 iteration.)
+
+<p><dt><code>deterministic?</code> [<code>boolean</code>]
+<dd>Since the fields are initialized to random values at the start of
+each run, there are normally slight differences in the number of
+iterations, etcetera, between runs.  Setting
+<code>deterministic?</code> to <code>true</code> makes things
+deterministic (the default is <code>false</code>).
 
 </dl>
 
@@ -146,6 +153,9 @@ band <code>b</code> can be retrieved via <code>(list-ref freqs (- b
 <dd>This is a list of the gaps found by the eigensolver, and is set by
 the <code>run</code> functions when two or more k-points are solved.
 (It is the empty list if no gaps are found.)
+
+<p><dt><code>iterations</code> [<code>integer</code>]
+<dd>The number of iterations required for convergence of the last k point.
 
 </dl>
 
