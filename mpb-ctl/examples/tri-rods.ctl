@@ -19,6 +19,7 @@
 
 (set! grid-size (vector3 32 32 1))
 
-(run-tm (output-at-kpoint (vector3 (/ -3) (/ 3) 0) output-efield-z))
+(run-tm (output-at-kpoint (vector3 (/ -3) (/ 3) 0) 
+			  fix-efield-phase output-efield-z))
 (run-te)
 

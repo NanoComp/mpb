@@ -48,13 +48,15 @@ consist of:
 
 (set! grid-size (vector3 32 32 1))
 
-(run-tm (output-at-kpoint (vector3 (/ -3) (/ 3) 0) output-efield-z))
+(run-tm (output-at-kpoint (vector3 (/ -3) (/ 3) 0)
+                          fix-efield-phase output-efield-z))
 (run-te)
 </pre>
 
 <p>Notice that we're computing both TM and TE bands (where we expect a
 gap in the TM bands), and are outputting the z component of the
-electric field for the TM bands at the K point.
+electric field for the TM bands at the K point.  (The
+<code>fix-efield-phase</code> will be explained below.)
 
 <p>Now, run the calculation, directing the output to a file, by
 entering the following command at the Unix prompt:
@@ -257,14 +259,19 @@ component of the electric field.)
 
 </table>
 
-<p>Don't be alarmed if your images differ slightly from these, e.g. by
-a sign or a lattice shift.  When we look at the real parts of the
-fields, we are really looking at the fields of the modes at a
-particular instant in time (and the imaginary part is half a period
-later).  Since the phase of the field output by MPB is random, you are
-looking at a random point in time and thus the field patterns may vary
-from run to run (unless you set the <code>deterministic?</code> input
-variable to <code>true</code>).
+<p>Your images should look the same as the ones above.  If we hadn't
+included <code>fix-efield-phase</code> before
+<code>output-efield-z</code> in the ctl file, on the other hand, yours
+would have differed slightly (e.g. by a sign or a lattice shift),
+because by default the phase is <em>random</em>.
+
+<p>When we look at the real parts of the fields, we are really looking
+at the fields of the modes at a particular instant in time (and the
+imaginary part is half a period later).  The point in time (relative
+to the periodic oscillation of the state) is determined by the phase
+of the eigenstate.  The <code>fix-efield-phase</code> band function
+picks a canonical phase for the eigenstate, giving us a deterministic
+picture.
 
 <p>We can see several things from these plots.
 
@@ -282,11 +289,12 @@ be.)
 <p>We can also see the deep impact of symmetry on the states.  The K
 point has the full C<sub>6v</sub> symmetry of the dielectric
 structure.  This symmetry group has only one two-dimensional
-representation, and we can see that all three pairs of degenerate
-states (2/3, 4/5, and 7/8) fall into this "p-like" category (where the
-states differ by 90 degree rotations, essentially).  The other two
-bands, 1 and 6, transform under the trivial "s-like" representation
-(with band 6 just a higher-order version of 1).
+representation--this is what gives rise to the degenerate pairs of
+states (2/3, 4/5, and 7/8), all of which fall into this "p-like"
+category (where the states could have been chosen to differ only by 90
+degree rotations, essentially).  The other two bands, 1 and 6,
+transform under the trivial "s-like" representation (with band 6 just
+a higher-order version of 1).
 
 <h2><a name="diamond">Diamond Lattice of Spheres</a></h2>
 
