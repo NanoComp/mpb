@@ -587,19 +587,21 @@ function, is:
 
 <dl>
 
-<dt><code>(run <i>band-func ...</i>)</code>
-<dd>This runs the simulation described by the input parameters (see
-above), with no constraints on the polarization of the solution.  That
-is, it reads the input parameters, initializes the simulation, and
-solves for the requested eigenstates of each k-point.  The dielectric
-function is outputted to "<code>epsilon.h5</code>" before any
-eigenstates are computed.  <code>run</code> takes as arguments zero or
-more "band functions" <code>band-func</code>.  A band function should
-be a function of one integer parameter, the band index, so that
+<dt><code>(run <i>band-func ...</i>)</code> <dd>This runs the
+simulation described by the input parameters (see above), with no
+constraints on the polarization of the solution.  That is, it reads
+the input parameters, initializes the simulation, and solves for the
+requested eigenstates of each k-point.  The dielectric function is
+outputted to "<code>epsilon.h5</code>" before any eigenstates are
+computed.  <code>run</code> takes as arguments zero or more "band
+functions" <code>band-func</code>.  A band function should be a
+function of one integer argument, the band index, so that
 <code>(band-func which-band)</code> performs some operation on the
-band <code>which-band</code> (e.g. outputting fields).  After every k
-point, each band function is called for the indices of all the bands
-that were computed.
+band <code>which-band</code> (e.g. outputting fields).  After every
+k-point, each band function is called for the indices of all the bands
+that were computed.  Alternatively, a band function may be a "thunk"
+(function of zero arguments), in which case <code>(band-func)</code>
+is called exactly once per k-point.
 
 <p><dt><code>(run-te <i>band-func ...</i>), (run-tm <i>band-func ...</i>)</code>
 <dd>These are the same as the <code>run</code> function except that

@@ -12,6 +12,10 @@
     the Gamma (k=0) point.  This k point should no longer converge
     slowly (or cause additional problems in the targeted eigensolver).
 
+  * You can now pass a "thunk" (function of no arguments) to run, and
+    it will be evaluated once per k-point (instead of once per band
+    per k-point as for ordinary band functions).
+
   * compute-field-energy function now also returns the fraction of the
     energy in the various field components.
 
