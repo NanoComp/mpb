@@ -380,29 +380,22 @@ lattice</a></h3>
 
 <p><a href="user-tutorial.html#units">As usual,</a> all distances are
 in the "dimensionless" units determined by the length of the lattice
-vectors; here, the lattice vectors are unit vectors (the default), so
-their length is our unit of distance.  We refer to these units as
-<i>a</i>, and frequencies are given in units of <i>c/a</i>.
+vectors.  We refer to these units as <i>a</i>, and frequencies are
+given in units of <i>c/a</i>.  By default, the lattice vectors are
+unit vectors, but in the case of fcc lattices this conflicts with the
+convention in the literature.  In particular, the canonical <i>a</i>
+for fcc is the edge-length of a cubic supercell containing the lattice.
 
-<p>MPB users are sometimes confused by these units, because textbooks
-and papers often use a different convention for <i>a</i> in the fcc
-lattice.  Commonly, they depict a diamond/fcc lattice in a cubic
-supercell, and designate the side of the supercell by <i>a</i>.  This
-is <b>not</b> the same as MPB's <i>a</i>, which comes directly from
-the <em>primitive</em> lattice vectors that you specify (not from a
-supercell).  In particular, MPB's <i>a</i> is 1/sqrt(2) times the
-cubic-supercell <i>a</i> (and the frequencies are scaled by the same
-factor).
+<p>In order to follow this convention, we set the length of our
+lattice vectors appropriately using the <code>size</code> property of
+<code>geometry-lattice</code>.  If the cubic supercell edge has unit
+length (<i>a</i>), then the fcc lattice vectors have length sqrt(0.5),
+or <code>(sqrt 0.5)</code> in Scheme.
 
-<p>So, for example, in an fcc lattice of spheres, MPB's default
-<i>a</i> units would equal the center-to-center separation of the
-spheres, and close-packed (tangent) spheres would have a radius of
-0.5.  (The diamond structure is more complicated because it has two
-"atoms" per unit cell.)  If, on the other hand, you wanted to use the
-lattice units from the cubic supercell, you could just change the
-lengths of the lattice vectors by specifing a <code>(size (sqrt 0.5)
-(sqrt 0.5) (sqrt 0.5))</code> property for
-<code>geometry-lattice</code> (instead of the default unit lengths).
+<p>Note that coordinate vectors (such as the centers of objects) are
+specified in the basis of the <em>unit</em> vectors in the lattice
+directions, ignoring the lattice vector lengths.  (This is so that the
+coordinate system doesn't change if you use a supercell.)
 
 <h3><a name="diamond-bands">Gaps and and band diagram for the diamond lattice</a></h3>
 
