@@ -1111,10 +1111,10 @@ number of processes.
 
 <p><code>mpb-mpi</code> divides each band at each k-point between the
 available processors.  This means that, even if you have only a single
-k-point (e.g. in a defect calculation), it can benefit from
-parallelization.  Moreover, memory usage per processor is inversely
-proportional to the number of processors used.  For sufficiently large
-problems, the speedup is also nearly linear.
+k-point (e.g. in a defect calculation) and/or a single band, it can
+benefit from parallelization.  Moreover, memory usage per processor is
+inversely proportional to the number of processors used.  For
+sufficiently large problems, the speedup is also nearly linear.
 
 <p>MPI support in MPB is thanks to generous support from <a
 href="http://www.clarendonphotonics.com/">Clarendon Photonics</a>.
