@@ -481,7 +481,7 @@ void get_epsilon(void)
 
      curfield = (scalar_complex *) mdata->fft_data;
      epsilon = (real *) curfield;
-     curfield_band = -1;
+     curfield_band = 0;
      curfield_type = 'n';
 
      /* get epsilon.  Recall that we actually have an inverse
@@ -651,7 +651,7 @@ void output_field_extended(vector3 copiesv)
 		  curfield_type, kpoint_index, curfield_band);
 	  sprintf(description, "%c field, kpoint %d, band %d, freq=%g",
 		  curfield_type, kpoint_index, curfield_band, 
-		  freqs.items[curfield_band]);
+		  freqs.items[curfield_band - 1]);
 	  fname2 = strcat_new(filename_prefix, fname);
 	  printf("Outputting fields to %s...\n", fname2);
 	  fieldio_write_complex_field(curfield, 3, dims,
@@ -671,7 +671,7 @@ void output_field_extended(vector3 copiesv)
 	       sprintf(description,
 		       "%c field energy density, kpoint %d, band %d, freq=%g",
 		       curfield_type, kpoint_index, curfield_band, 
-		       freqs.items[curfield_band]);
+		       freqs.items[curfield_band - 1]);
 	  }
 	  fname2 = strcat_new(filename_prefix, fname);
 	  printf("Outputting %s...\n", fname2);
