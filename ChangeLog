@@ -1,11 +1,32 @@
+2001-11-20  Steven G. Johnson  <stevenj@ab-initio>
+
+	* NEWS, configure.ac: bumped version
+
+	* Makefile.in, install-sh: autoconf file should not be in cvs
+
+	* NEWS, src/util/debug_malloc.c: cleanups, allow malloc(0)
+
+	* mpb-ctl/mpb.c: ugh, ugh, fixed memory overwrite due to
+	mis-parenthesization; thanks to Karl Koch for the bug report.
+
+2001-11-16  Steven G. Johnson  <stevenj@ab-initio>
+
+	* NEWS: correction
+
+	* NEWS: slight fix
+
+	* NEWS: added date
+
+	* ChangeLog: updated
+
 2001-11-15  Steven G. Johnson  <stevenj@ab-initio>
 
 	* ChangeLog, NEWS: updated
 
 	* mpb-ctl/examples/line-defect.ctl: slight correction
 
-	* mpb-ctl/examples/line-defect.ctl:
-	switched to rods, not holes, and cleaned up a bit
+	* mpb-ctl/examples/line-defect.ctl: switched to rods, not holes,
+	and cleaned up a bit
 
 	* doc/analysis-tutorial.html, doc/user-tutorial.html,
 	doc/acknowledgments.html, doc/developer.html,
