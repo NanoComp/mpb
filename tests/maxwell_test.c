@@ -40,7 +40,7 @@
 
 /* routines for analytic calculation of Bragg bands: */
 
-static const TWOPI = 6.2831853071795864769252867665590057683943388;
+static const double TWOPI = 6.2831853071795864769252867665590057683943388;
 
 /* We have an analytic expression for k as a function of omega
    for Bragg mirrors.  This will have to be numerically inverted
@@ -88,7 +88,7 @@ real bragg_omega(real omega_guess,
      if (omega_guess_low < 0.0)
 	  omega_guess_low = 0.0;
 
-     for (tol = (omega_guess_high - omega_guess_low) / 4.0;
+     for (tol = (omega_guess_high - omega_guess_low) / 10.0;
 	  tol > tolerance;
 	  tol *= 0.25) {
 	  for (omega_guess = omega_guess_low + tol;
