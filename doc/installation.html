@@ -29,6 +29,12 @@ In the following list, some of the packages are dependent upon
 packages listed earlier, so you should install them in more-or-less
 the order given.
 
+<p>Many of these libraries may be available in precompiled binary
+form, especially for GNU/Linux systems.  Be aware, however, that
+library binary packages often come in two parts, <code>library</code>
+and <code>library-dev</code>, and <em>both</em> are required to
+compile programs using it.
+
 <h2><a name="paths">Installation Paths</a></h2>
 
 <p>First, let's review some important information about installing
@@ -243,7 +249,8 @@ tab-completion, emacs keybindings, and other shell-like niceties to
 command-line programs.  This is an <em>optional</em> package, but one
 that can be used by Guile (see below) if it is installed; we recommend
 getting it.  You can <a href="ftp://ftp.gnu.org/gnu/readline">download
-Readline from the GNU ftp site</a>.
+Readline from the GNU ftp site</a>.  (Readline is typically
+preinstalled on GNU/Linux systems).
 
 <h2><a name="guile">GNU Guile</a></h2>
 
@@ -252,7 +259,7 @@ Scheme, and we use it to provide a rich, fully-programmable
 user-interface with minimal effort.  It's free, of course, and you can
 download it from the <a
 href="http://www.gnu.org/software/guile/">Guile Home
-Page</a>.
+Page</a>.  (Guile is typically included with GNU/Linux systems.)
 
 <h2><a name="autoconf">GNU Autoconf</a> <i>(optional)</i></h2>
 
