@@ -21,4 +21,4 @@
 (set! num-bands 5)
 
 (if (not norun)
-    (run))
+    (run-tm))
