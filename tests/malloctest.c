@@ -31,7 +31,7 @@ int main(void)
      void *pointers[NUM_POINTERS];
      int i, iter;
 
-#ifdef DEBUG
+#ifdef DEBUG_MALLOC
      printf("Using debug_malloc and debug_free routines.\n");
 #else
      fprintf(stderr, 
