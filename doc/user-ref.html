@@ -260,7 +260,7 @@ also get a list of the available classes, along with their property
 types and default values, at runtime with the <code>(help)</code>
 command.
 
-<h3>lattice</h3>
+<h3><a name="lattice">lattice</a></h3>
 
 <p>The lattice class is normally used only for the
 <code>geometry-lattice</code> variable, and specifies the three
@@ -288,7 +288,7 @@ Defaults to unit lengths.
 
 </dl>
 
-<h3>material-type</h3>
+<h3><a name="material-type">material-type</a></h3>
 
 <p>This class is used to specify the materials that geometric objects
 are made of.  Currently, there are two subclasses,
@@ -332,7 +332,7 @@ the z direction) would be specified via <code>(make
 
 </dl>
 
-<h3>geometric-object</h3>
+<h3><a name="geometric-object">geometric-object</a></h3>
 
 <p>This class, and its descendants, are used to specify the solid
 geometric objects that form the dielectric structure being simulated.
@@ -464,7 +464,7 @@ href="http://ab-initio.mit.edu/libctl/doc/user-ref.html">reference
 section</a> of the libctl manual, which describes a number of useful
 functions defined by libctl.
 
-<h3>Geometry utilities</h3>
+<h3><a name="geom-utils">Geometry utilities</a></h3>
 
 <p>Some utility functions are provided to help you manipulate
 geometric objects:
@@ -578,7 +578,7 @@ the first Brillouin zone of the current lattice
 entire <code>k-points</code> list with the Scheme expression:
 <code>(map first-brillouin-zone k-points)</code>.
 
-<h3>Run functions</h3>
+<h3><a name="run">Run functions</a></h3>
 
 <p>These are functions to help you run and control the simulation.
 The ones you will most commonly use are the <code>run</code> function
@@ -703,7 +703,7 @@ previous calculation.
 
 </dl>
 
-<h3>Band/output functions</h3>
+<h3><a name="band-funcs">Band/output functions</a></h3>
 
 <p>All of these are functions that, given a band index, output the
 corresponding field or compute some function thereof (in the primitive
@@ -821,7 +821,7 @@ dielectric function that is output automatically by <code>run</code>.
 <p>This, of course, doesn't affect any band functions that you write
 "manually" using the <code>output-field</code> function below.
 
-<h3>Group velocity calculation</h3>
+<h3><a name="group-vel">Group velocity calculation</a></h3>
 
 <p>Given a set of eigenstates at a given k-point, MPB can compute
 their group velocities (the derivative of frequency with respect to
@@ -850,7 +850,7 @@ reciprocal-lattice basis (like the k-points); its length is ignored.
 
 </dl>
 
-<h3>Field manipulation functions</h3>
+<h3><a name="field">Field manipulation functions</a></h3>
 
 <p>The Photonic-Bands package provides a number of ways to take the
 field of a band and manipulate, process, or output it.  These methods

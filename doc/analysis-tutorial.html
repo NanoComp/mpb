@@ -28,7 +28,7 @@ air from the tutorial.  The control file for this calculation, which
 can also be found in <code>mpb-ctl/examples/tri-rods.ctl</code>, will
 consist of:
 
-<h3>The tri-rods.ctl control file</h3>
+<h3><a name="tri-rods-ctl">The tri-rods.ctl control file</a></h3>
 
 <pre>
 (set! num-bands 8)
@@ -67,7 +67,7 @@ unix% mpb tri-rods.ctl &gt;&amp; tri-rods.out
 
 <p>It should finish after a minute or two.
 
-<h3>The tri-rods dielectric function</h3>
+<h3><a name="tri-rods-eps">The tri-rods dielectric function</a></h3>
 
 <p>In most cases, the first thing we'll want to do is to look at the
 dielectric function, to make sure that we specified the correct
@@ -146,7 +146,7 @@ form a triangular lattice.
 
 <br clear="right">
 
-<h3>Gaps and and band diagram for tri-rods</h3>
+<h3><a name="tri-rods-bands">Gaps and and band diagram for tri-rods</a></h3>
 
 <p>At this point, let's check for band gaps by picking out lines with
 the word "<code>Gap</code>" in them:
@@ -193,7 +193,8 @@ Although some of our bands go above that frequency, we didn't compute
 enough bands to fill in all of the states in that range.  Besides, we
 only really care about the states around the gap(s), in most cases.
 
-<h3>The source of the TM gap: examining the modes</h3>
+<h3><a name="tri-rods-modes">The source of the TM gap: examining the
+modes</a></h3>
 
 <p>Now, let's actually examine the electric-field distributions for
 some of the bands (which were saved at the K point, remember).
@@ -323,7 +324,7 @@ gap in periodic dielectric structures," <i>Phys. Rev. Lett.</i>
 <p>The control file for this calculation, which can also be found in
 <code>mpb-ctl/examples/diamond.ctl</code>, consists of:
 
-<h3>Diamond control file</h3>
+<h3><a name="diamond-ctl">Diamond control file</a></h3>
 
 <pre>
 (set! geometry-lattice (make lattice
@@ -402,7 +403,7 @@ lengths of the lattice vectors by specifing a <code>(size (sqrt 0.5)
 (sqrt 0.5) (sqrt 0.5))</code> property for
 <code>geometry-lattice</code> (instead of the default unit lengths).
 
-<h3>Gaps and and band diagram for the diamond lattice</h3>
+<h3><a name="diamond-bands">Gaps and and band diagram for the diamond lattice</a></h3>
 
 <p>The diamond lattice has a complete band gap:
 
@@ -426,7 +427,7 @@ reality the upper portion of the plot would contain a lot more bands
 <p align="center"><img src="diamond-bands.gif" width="452"
 height="346" alt="diamond band diagram">
 
-<h3>Visualizing the diamond lattice structure and bands</h3>
+<h3><a name="diamond-vis">Visualizing the diamond lattice structure and bands</a></h3>
 
 <p>Visualizing fields in a useful way for general three-dimensional
 structures is fairly difficult, but we'll show you what we can with
