@@ -80,8 +80,12 @@ fi
 # ----------------------------------------------------------------------
 AC_CHECK_LIB(m, sqrt)
 
-AC_F77_LIBRARY_LDFLAGS
-LIBS="$LIBS $FLIBS"
+# If we have a Fortran compiler, link to its libraries, since these
+# are probably needed to link with the BLAS/LAPACK libraries.
+if test -n "$F77"; then
+	AC_F77_LIBRARY_LDFLAGS
+	LIBS="$LIBS $FLIBS"
+fi
 
 # ----------------------------------------------------------------------
 # In principle, we should abort if some of the following libraries are

@@ -1,3 +1,7 @@
+  * configure should work even when there is no Fortran compiler on your
+    system (assuming your BLAS, etc., libraries work without Fortran libs).
+    Thanks to Antti Renko for the bug report.
+
   * Added run-even and run-odd functions, so you can now compute only
     even/odd states (with respect to a z=0 mirror plane) in systems with
     sufficient symmetry.
