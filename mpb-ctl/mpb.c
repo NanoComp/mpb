@@ -2350,7 +2350,7 @@ cnumber compute_field_integral(function f)
 		    CASSIGN_MULT_RE(F.z.re, curfield[3*index+2], phase);
 		    CASSIGN_MULT_IM(F.z.im, curfield[3*index+2], phase);
 		    integrand =
-                         scm2cnumber(
+			 ctl_convert_cnumber_to_c(
                               gh_call3(f,
 				       ctl_convert_cvector3_to_scm(F),
 				       ctl_convert_number_to_scm(epsilon),
@@ -2414,7 +2414,7 @@ cnumber compute_field_integral(function f)
 			      CASSIGN_MULT_IM(F.z.im, Fz, phase);
 
 			      integrand =
-				   ctl_convert_number_to_c(
+				   ctl_convert_cnumber_to_c(
 					gh_call3(f,
 					    ctl_convert_cvector3_to_scm(F),
 				            ctl_convert_number_to_scm(epsilon),
