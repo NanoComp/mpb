@@ -118,13 +118,59 @@ Finding a good preconditioner involves making an approximate inverse
 of <code>M</code>, and is something of a black art with lots of trial
 and error.
 
-<p>There are some other tricks that one employs to get good
-convergence.  For example, the dielectric function is smoothed
-(averaged) at the resolution of the grid.  Since different
+<h2>Dielectric Function Computation</h2>
+
+<p>The initialization of the dielectric function deserves some
+additional discussion, both because it is crucial for good
+convergence, and because we use somewhat complicated algorithms for
+performance reasons.
+
+<p>To ameliorate the convergence problems caused in a planewave basis
+by a discontinuous dielectric function, the dielectric function is
+smoothed (averaged) at the resolution of the grid.  Another way of
+thinking about it is that this brings the average dielectric constant
+(over the grid) closer to its true value.  Since different
 polarizations of the field prefer different averaging methods, one has
 to construct an effective dielectric tensor at the boundaries between
 dielectrics, as described by Meade <i>et al.</i> in the paper
-referenced above.
+referenced above (note also the erratum).
+
+<p>This averaging has two components.  First, at each grid point the
+dielectric constant (epsilon) and its inverse are averaged over a
+uniform mesh extending halfway to the neighboring grid points.  (The
+mesh resolution is controlled by the <code>mesh-size</code> user input
+variable.)  Second, for grid points on the boundary between two
+dielectrics, we compute the vector normal to the dielectric interface;
+this is done by averaging the "dipole moment" of the dielectric
+function over a spherically-symmetric distribution of points.  The
+normal vector and the two averages of epsilon are then combined into
+an effective dielectric tensor for the grid point.
+
+<p>All of this averaging is handled by a subroutine in
+<code>src/maxwell/</code> (see below) that takes as input a function
+epsilon(<b>r</b>), which returns the dielectric constant for a given
+position <b>r</b>.  This epsilon function must be as efficient as
+possible, because it is evaluated a large number of times: the size of
+the grid multiplied by <code>mesh-size</code><sup>3</sup> (in three
+dimensions).
+
+<p>To specify the geometry, the user provides a list of geometric
+objects (blocks, spheres, cylinders and so on).  These are parsed into
+an efficient data structure and are used to to provide the epsilon
+function described above.  (All of this is handled by the libctlgeom
+component of libctl, described below.)  At the heart of the epsilon
+function is a routine to return the geometric object enclosing a given
+point, taking into account the fact that the objects are periodic in
+the lattice vectors.  Our first algorithm for doing this was a simple
+linear search through the list of objects and their translations by
+the lattice vectors, but this proved to be too slow, especially in
+supercell calculations where there are many objects.  We addressed the
+performance problem in two ways.  First, for each object we construct
+a bounding box, with which point inclusion can be tested rapidly.
+Second, we build a hierarchical tree of bounding boxes, recursively
+partitioning the set of objects in the cell.  This allows us to search
+for the object containing a point in a time logarithmic in the number
+of objects (instead of linear as before).
 
 <h2>Code Organization</h2>
 
@@ -228,6 +274,12 @@ that are visible to the Guile user.  It also defines a number of
 Scheme subroutines for the user to call directly, like
 <code>(run)</code>.  It is often simpler and more flexible to define
 functions like this in Scheme rather than in C.
+
+<p>All of the code to handle the geometric objects resides in
+libctlgeom, a set of Scheme and C utility functions included with
+libctl (see the file <code>utils/README</code> in the libctl package).
+(These functions could also be useful in other programs, such as a
+time-domain Maxwell's equation simulator.)
 
 <hr>
 Go to the <a href="acknowledgments.html">next</a>, <a
