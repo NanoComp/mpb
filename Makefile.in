@@ -34,7 +34,7 @@ install: install-recursive
 
 dist:
 	cvs export -D now -d $(distdir) $(package)
-	pushd $(distdir) && autoconf && popd
+	pushd $(distdir) && autoheader && autoconf && popd
 	rm -f $(distdir).tar.gz
 	GZIP="--best" tar chozf $(distdir).tar.gz $(distdir)
 	rm -rf $(distdir)
