@@ -1,3 +1,285 @@
+2001-02-06  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in: workaround for older versions of Guile where
+	we can't get the number of arguments to a function (apparently)
+
+	* configure.in: fixed gen-ctl-io check, removed AC_PROG_CC_STDC
+	ifdef...there's something not working about ifdef that I don't
+	understand
+
+	* configure.in: call AC_PROG_CC_STDC if defined, in part so that
+	autoconf 2.5 doesn't complain
+
+	* configure.in: added MPI checks
+
+	* src/util/mpi_utils.c: clarification
+
+	* src/matrixio/matrixio.c: fixed misnamed function call
+
+	* configure.in, src/config.h.in, src/matrixio/matrixio.c: support
+	HDF5 file i/o without H5Pset_mpi
+
+2001-02-05  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* src/util/mpiglue.h, src/util/mpi_utils.c, src/util/mpi_utils.h:
+	added critical section utility, intended for mediating output file
+	access
+
+2001-02-04  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in: turn off printing unless we
+	are the master process
+
+	* doc/user-tutorial.html, mpb-ctl/examples/check.ctl,
+	mpb-ctl/examples/tutorial.ctl, mpb-ctl/mpb.scm.in: display-many ->
+	print
+
+	* mpb-ctl/Makefile.in: make main() in new libctl call our hooks
+
+	* mpb-ctl/epsilon_file.c, mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in,
+	src/matrices/eigensolver.c, src/matrices/eigensolver_davidson.c,
+	src/matrices/linmin.c, src/matrices/matrices.c,
+	src/matrixio/fieldio.c, src/matrixio/matrixio.h,
+	src/maxwell/maxwell.c, src/maxwell/maxwell_eps.c,
+	src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c,
+	src/util/mpiglue.h, src/util/mpi_utils.c, src/util/mpi_utils.h:
+	many cleanups in preparation for MPI
+
+	* mpb-ctl/mpb.c: give error if k-point is incompatible with the
+	polarization
+
+	* configure.in, tests/blastest.complex.out, tests/blastest.out,
+	tests/blastest.real.out, tests/Makefile.in: fixed blastest 'make
+	check' for complex scalars
+
+2001-02-03  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.c, src/maxwell/maxwell_eps.c, src/maxwell/maxwell.h:
+	checks to see if dielectric tensor is okay; return error if TE/TM
+	is specified but impossible
+
+	* doc/index.html: fixed typo
+
+2001-01-30  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* configure.in: use vendor cc, too, so that Fortran and C are in
+	sync (there may be linking problems, otherwise).
+
+	* doc/developer.html, doc/license.html: noted MPB paper
+
+2001-01-27  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.c: fixed compute_energy_in_object_list for
+	non-orthogonal lattices
+
+2001-01-26  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in: filename-prefix is once again a define-param
+	variable
+
+2001-01-24  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* NEWS: clarified the purpose of "nothing"
+
+	* doc/user-tutorial.html, mpb-ctl/examples/tutorial.ctl,
+	mpb-ctl/mpb.c: in compute-energy-in-objects, let 'nothing'
+	material punch a hole
+
+2001-01-23  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html, doc/user-tutorial.html,
+	mpb-ctl/examples/tutorial.ctl, mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in,
+	NEWS: added 'nothing' material
+
+	* doc/installation.html: clarified simultaneous installation of
+	mpb and mpbi
+
+2001-01-21  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/examples/check.ctl: collect error statistics
+
+	* mpb-ctl/examples/check.ctl: Fix a bug (Bragg-sine not resetting
+	default-material).  Also raise tolerance slightly.
+
+	* Makefile.in, tests/Makefile.in: print friendly message when
+	(if?) make check passes
+
+	* mpb-ctl/examples/check.ctl: added sinusoidal Bragg to make check
+
+	* doc/user-ref.html: warn user about run-te and run-tm with
+	anisotropic dielectrics
+
+	* NEWS: give credit
+
+	* doc/user-ref.html, mpb-ctl/examples/bragg-sine.ctl,
+	mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, NEWS: added material-function
+	type
+
+	* configure.in: don't check for ctl_get_list (not there anymore)
+
+	* doc/installation.html, doc/user-ref.html, NEWS: let's not
+	capitalize 'Hermitian'
+
+	* tests/Makefile.in: whoops, fixed $ substitution
+
+	* Makefile.in: changed subdir order in make check
+
+	* Makefile.in, mpb-ctl/Makefile.in, tests/Makefile.in: added 'make
+	check'
+
+	* tests/maxwell_test.c: fix -E
+
+	* tests/maxwell_test.c: use epsilon with inversion symmetry, so it
+	works with mpbi
+
+	* tests/blastest.out: added sample output
+
+	* tests/maxwell_test.c: allow option to fail if error is too large
+
+	* src/maxwell/maxwell.c: Earlier, we flipped the sign of the G
+	vector in order to have a consistent sign of k for mpbi and
+	mpbi--it is especially important to be careful about this when you
+	have a complex-Hermitian dielectric tensor that breaks (k,-k)
+	time-reversal symmetry.  However, this made our planewave basis
+	slightly different from before.  It used to be that we had 1 more
+	positive-G planewave than negative-G (for even grid sizes), but
+	the above change reverses this situation.  It doesn't matter in an
+	absolute sense, since the planewave cutoff is still the same, but
+	the difference was an annoyance--it caused check.ctl to fail
+	because of microscopic changes in the results, and also made us
+	inconsistent with the MPB paper.  This change fixes that,
+	restoring the +G/-G planewave balance to what it was before
+	(although the basis elements are stored in a different order, with
+	the -G waves first).
+
+	* src/maxwell/maxwell.c, src/maxwell/maxwell_op.c: fixed G sign
+	convention to be consistent for mpbi and mpb
+
+2001-01-20  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/developer.html, doc/user-ref.html, doc/user-tutorial.html:
+	spelling correction
+
+	* doc/developer.html, doc/introduction.html: link to
+	barnesandnoble.com instead of Amazon to be GNU-ly correct
+
+	* doc/user-tutorial.html: added link
+
+	* doc/installation.html, doc/user-ref.html, NEWS: documented
+	complex-Hermitian epsilon
+
+	* src/maxwell/maxwell_op.c: slight change
+
+	* configure.in, mpb-ctl/epsilon_file.c, mpb-ctl/mpb.c,
+	mpb-ctl/mpb.scm.in, src/config.h.in, src/matrices/scalar.h,
+	src/maxwell/maxwell_eps.c, src/maxwell/maxwell.h,
+	src/maxwell/maxwell_op.c, tests/maxwell_test.c: added
+	--with-hermitian-epsilon
+
+2001-01-11  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in: Modified band-range data functions so that
+	they are tail recursive, lest stack overflow crashes occur when
+	large numbers of bands (e.g. 600) are computed.  Thanks to Mihai
+	Ibanescu for the bug report.
+
+2001-01-10  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* src/matrices/minpack2-linmin.c: use MIN, MAX, and ABS in case
+	some header file defines these macros too (like AIX...grrr).
+	Thanks to Angelo R. Rossi for the bug report.
+
+2001-01-07  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/analysis-tutorial.html: clarification
+
+	* doc/analysis-tutorial.html: slight clarification
+
+	* doc/user-ref.html: slight formatting fix
+
+	* TODO: updated
+
+	* ChangeLog, configure.in, NEWS: bumped version number, prepare
+	for release
+
+2001-01-06  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/license.html: clarification
+
+	* doc/analysis-tutorial.html: updated fcc units note
+
+	* doc/analysis-tutorial.html, doc/diamond-bands.gif,
+	mpb-ctl/examples/diamond.ctl: use standard units for fcc (diamond)
+
+	* mpb-ctl/mpb.scm.in: bug fix in filename-prefix use (fixes bug
+	introduced by previous change)
+
+	* doc/analysis-tutorial.html, doc/index.html, doc/user-ref.html:
+	expanded table of contents
+
+	* doc/installation.html: clarification of efence
+
+	* doc/installation.html: fixes
+
+	* doc/installation.html: fixed missing link
+
+	* doc/installation.html: slight change
+
+	* doc/installation.html: emphasize HDF5
+
+	* doc/installation.html: noted more clearly that MPI is not yet
+	used
+
+	* doc/installation.html: fixed ref
+
+	* doc/installation.html: recommend ATLAS
+
+	* doc/installation.html: moved Bourne shell note up front.
+
+	* doc/installation.html: grammar fix(?)
+
+	* doc/installation.html: notes on binary packages for Linux
+
+	* doc/license.html: clarification
+
+	* doc/license.html: expanded and updated referencing suggestions
+
+	* doc/license.html: comma goes outside of link
+
+	* doc/license.html: fixed capitalization
+
+	* src/matrices/matrices.c, src/matrices/matrices.h,
+	src/matrices/scalar.h, src/matrices/sqmatrix.c,
+	src/matrixio/evectmatrixio.c, src/matrixio/fieldio.c,
+	src/matrixio/matrixio.c, src/matrixio/matrixio.h,
+	src/maxwell/maxwell.c, src/maxwell/maxwell_eps.c,
+	src/maxwell/maxwell.h, src/maxwell/maxwell_op.c,
+	src/maxwell/maxwell_pre.c, src/util/check.h,
+	src/util/debug_malloc.c, src/util/fortranize.h,
+	src/util/mpiglue.h, src/util/mpi_utils.c, src/util/mpi_utils.h,
+	tests/blastest.c, tests/eigs_test.c, tests/malloctest.c,
+	tests/maxwell_test.c, utils/mpb-data.1, utils/mpb-data.c,
+	COPYRIGHT, mpb-ctl/epsilon_file.c, mpb-ctl/mpb.1, mpb-ctl/mpb.c,
+	mpb-ctl/mpb.h, mpb-ctl/mpb.scm.in, src/matrices/blasglue.c,
+	src/matrices/blasglue.h, src/matrices/eigensolver.c,
+	src/matrices/eigensolver_davidson.c, src/matrices/eigensolver.h,
+	src/matrices/eigensolver_utils.c, src/matrices/evectmatrix.c,
+	src/matrices/linmin.c, src/matrices/linmin.h: 2001 copyright year
+	update
+
+	* doc/license.html: fixed copyright year
+
+	* doc/license.html: Added Latin quote and fixed reference.
+
+	* doc/developer.html: fixed reference
+
+	* ChangeLog: fixed email
+
+	* ChangeLog: updated
+
+	* mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, NEWS: read filename-prefix on
+	each output call
+
 2001-01-06  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* /home/stevenj/Repository/mpb/doc/license.html: clarification
