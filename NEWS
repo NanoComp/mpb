@@ -1,10 +1,11 @@
   * Added new material-function material type, so that you can now
     specify that the dielectric tensor be an arbitrary function of
-    position.
+    position.  Thanks to Peter Bermel for needing this.
 
   * If MPB is configured with the flag --with-hermitian-epsilon, then
     complex-hermitian dielectric tensors (corresponding to magnetic
     materials, which break time-reversal symmetry) are supported.
+    Thanks to Shanhui Fan for pestering me about this.
 
 MPB 0.13 (1/7/2001)
 
