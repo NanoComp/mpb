@@ -1,3 +1,61 @@
+2001-11-15  Steven G. Johnson  <stevenj@ab-initio>
+
+	* NEWS: updated
+
+	* mpb-ctl/examples/line-defect.ctl: slight correction
+
+	* mpb-ctl/examples/line-defect.ctl:
+	switched to rods, not holes, and cleaned up a bit
+
+	* doc/analysis-tutorial.html, doc/user-tutorial.html,
+	doc/acknowledgments.html, doc/developer.html,
+	doc/installation.html, doc/introduction.html, doc/license.html,
+	doc/user-ref.html: make it easier to filter Go To lines
+
+	* doc/index.html: indent contents for easy filtering
+
+2001-11-14  Steven G. Johnson  <stevenj@ab-initio>
+
+	* configure.ac: fixed bash-ism
+
+	* doc/installation.html: Note the necessity of installing
+	guile-devel RPM (grr, FAQ).
+
+2001-11-13  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/examples/line-defect.ctl: added triangular-lattice
+	line-defect example
+
+2001-10-22  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/examples/honey-rods.ctl: slightly more optimal rod-size
+	parameter
+
+2001-10-11  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/examples/diamond.ctl: use new basis-size property
+
+	* Makefile.in: copy config.guess, config.sub to 'make dist'
+	directory
+
+	* config.guess, config.sub: removed non-owned files
+
+	* configure.ac: bumped version
+
+	* NEWS: updated
+
+	* doc/analysis-tutorial.html, doc/user-ref.html,
+	doc/user-tutorial.html: noted new basis-size property in libctl
+
+2001-10-10  Steven G. Johnson  <stevenj@ab-initio>
+
+	* NEWS, doc/analysis-tutorial.html, mpb-ctl/examples/check.ctl,
+	mpb-ctl/examples/diamond.ctl: rotated W and K points to be consist
+	with the picture in John's book; thanks to Robert Sheldon for the
+	suggestion
+
+	* NEWS: some updates
+
 2001-10-09  Steven G. Johnson  <stevenj@ab-initio>
 
 	* TODO: add more example files

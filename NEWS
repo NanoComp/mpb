@@ -13,13 +13,14 @@ MPB 1.2
     to Mischa Megens for bugging me.
 
   * Now outputs D and H in consistent units (previously, D was multiplied
-    by a factor of i/frequency).
+    by a factor of i/frequency).  Thanks to Michelle Povinelli for worrying.
 
   * epsilon.h5 file now includes extra datasets for all components of the
     effective dielectric tensor.  (This feature is not yet supported if
     you configure --with-inv-symmetry and --with-hermitian-epsilon.)
 
   * Noted new basis-size property of geometry-lattice, from libctl 1.5.
+    This makes it easier to use conventional units in the fcc lattice.
 
   * Group-velocity computation no longer silently invalidates fields
     that have been loaded with get-dfield, etcetera.  Thanks to Marin
@@ -32,6 +33,12 @@ MPB 1.2
     they are oriented similarly to those in the Photonic Crystals book
     by Joannopoulos et al. (eigenfrequencies are not affected).  Thanks
     to Robert Sheldon for pointing out that this was confusing.
+
+  * Added honey-rods.ctl example file: a 2d honeycomb lattice of rods.
+
+  * Added line-defect.ctl example file: a line-defect waveguide in
+    a 2d triangular lattice of dielectric rods, formed by a missing
+    row of rods.
 
 MPB 1.1.1 (7/4/2001)
 
