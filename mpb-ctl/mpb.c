@@ -127,7 +127,7 @@ static real epsilon_func(real r[3], void *edata)
 	in the lattice vector basis.  Also, shift origin to the center
         of the grid. */
      p.x = (r[0] - 0.5) * geometry_lattice.size.x;
-     p.y = (r[1] - 0.5)* geometry_lattice.size.y;
+     p.y = (r[1] - 0.5) * geometry_lattice.size.y;
      p.z = (r[2] - 0.5) * geometry_lattice.size.z;
 
      /* call search routine from libctl/utils/libgeom/geom.c: */
@@ -174,12 +174,14 @@ void randomize_fields(void)
    p = 0 means NO_POLARIZATION
    p = 1 means TE_POLARIZATION
    p = 2 means TM_POLARIZATION
-   p = 3 means the polarization of the previous call, 
+   p = 3 means EVEN_Z_POLARIZATION
+   p = 4 means ODD_Z_POLARIZATION
+   p = -1 means the polarization of the previous call, 
        or NO_POLARIZATION if this is the first call */
 
 void set_polarization(int p)
 {
-     static int last_p = 0xDEADBEEF;  /* initialize to some non-value */
+     static int last_p = -2;  /* initialize to some non-value */
 
      if (!mdata) {
 	  fprintf(stderr,
@@ -187,8 +189,8 @@ void set_polarization(int p)
 	  return;
      }
 
-     if (p == 3)
-	  p = last_p == 0xDEADBEEF ? 0 : last_p;
+     if (p == -1)
+	  p = last_p < 0 ? 0 : last_p;
 
      switch (p) {
 	 case 0:
@@ -203,6 +205,14 @@ void set_polarization(int p)
 	      printf("Solving for TM-polarized bands.\n");
 	      set_maxwell_data_polarization(mdata, TM_POLARIZATION);
 	      break;
+	 case 3:
+	      printf("Solving for bands even about z=0.\n");
+	      set_maxwell_data_polarization(mdata, EVEN_Z_POLARIZATION);
+	      break;
+	 case 4:
+	      printf("Solving for bands odd about z=0.\n");
+	      set_maxwell_data_polarization(mdata, ODD_Z_POLARIZATION);
+	      break;
 	 default:
 	      fprintf(stderr, "Unknown polarization type!\n");
 	      return;
@@ -211,6 +221,14 @@ void set_polarization(int p)
      last_p = p;
      kpoint_index = 0;  /* reset index */
 }
+
+static char polarization_strings[5][10] = {
+     "",      /* NO_POLARIZATION */
+     "te",    /* TE_POLARIZATION */
+     "tm",    /* TM_POLARIZATION */
+     "even",  /* EVEN_Z_POLARIZATION */
+     "odd"    /* ODD_Z_POLARIZATION */
+};
 
 /**************************************************************************/
 
@@ -401,13 +419,12 @@ void solve_kpoint(vector3 kvector)
      /* if this is the first k point, print out a header line for
 	for the frequency grep data: */
      if (!kpoint_index) {
-	  printf("%s:, k index, kx, ky, kz, kmag/2pi",
-		 mdata->polarization == NO_POLARIZATION ? "freqs" :
-	      (mdata->polarization == TM_POLARIZATION? "tmfreqs" : "tefreqs"));
+	  printf("%sfreqs:, k index, kx, ky, kz, kmag/2pi",
+		 polarization_strings[mdata->polarization]);
 	  for (i = 0; i < num_bands; ++i)
-	       printf(", %sband %d",
-		      mdata->polarization == NO_POLARIZATION ? "" :
-		      (mdata->polarization == TM_POLARIZATION ? "tm " : "te "),
+	       printf(", %s%sband %d", 
+		      polarization_strings[mdata->polarization],
+		      mdata->polarization == NO_POLARIZATION ? "" : " ",
 		      i + 1);
 	  printf("\n");
      }
@@ -489,9 +506,8 @@ void solve_kpoint(vector3 kvector)
      freqs.num_items = num_bands;
      CHK_MALLOC(freqs.items, number, freqs.num_items);
      
-     printf("%s:, %d, %g, %g, %g, %g",
-	    mdata->polarization == NO_POLARIZATION ? "freqs" :
-	    (mdata->polarization == TE_POLARIZATION ? "tefreqs" : "tmfreqs"),
+     printf("%sfreqs:, %d, %g, %g, %g, %g",
+	    polarization_strings[mdata->polarization],
 	    ++kpoint_index, k[0], k[1], k[2],
 	    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
      for (i = 0; i < num_bands; ++i) {
@@ -714,14 +730,25 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 
 /**************************************************************************/
 
-/* Return a newly allocated string that is s1 concatenated with s2;
-   if either parameter is NULL it is treated as the empty string. */
-static char *strcat_new(const char *s1, const char *s2)
+/* Prepend the prefix to the fname, and append a polarization
+   specifier (if any) (e.g. ".te"), returning a new string, which
+   should be deallocated with free().   fname or prefix may be NULL,
+   in which case they are treated as the empty string. */
+static char *fix_fname(const char *fname, const char *prefix,
+		       polarization_t p)
 {
      char *s;
-     CHK_MALLOC(s, char, (s1 ? strlen(s1) : 0) + (s2 ? strlen(s2) : 0) + 1);
-     strcpy(s, s1 ? s1 : "");
-     strcat(s, s2 ? s2 : "");
+     CHK_MALLOC(s, char,
+		(fname ? strlen(fname) : 0) + 
+		(prefix ? strlen(prefix) : 0) + 20);
+     strcpy(s, fname ? fname : "");
+     strcat(s, prefix ? prefix : "");
+     if (p != NO_POLARIZATION) {
+	  /* assumes polarization suffix is less than 20 characters;
+	     currently it is less than 12 */
+	  strcat(s, ".");
+	  strcat(s, polarization_strings[p]);
+     }
      return s;
 }
 
@@ -763,7 +790,7 @@ void output_field_extended(vector3 copiesv, int which_component)
 	  sprintf(description, "%c field, kpoint %d, band %d, freq=%g",
 		  curfield_type, kpoint_index, curfield_band, 
 		  freqs.items[curfield_band - 1]);
-	  fname2 = strcat_new(filename_prefix, fname);
+	  fname2 = fix_fname(fname, filename_prefix, mdata->polarization);
 	  printf("Outputting fields to %s...\n", fname2);
 	  fieldio_write_complex_field(curfield, 3, dims, which_component,
 				      local_nx, local_x_start,
@@ -784,7 +811,10 @@ void output_field_extended(vector3 copiesv, int which_component)
 		       curfield_type, kpoint_index, curfield_band, 
 		       freqs.items[curfield_band - 1]);
 	  }
-	  fname2 = strcat_new(filename_prefix, fname);
+	  fname2 = fix_fname(fname, filename_prefix, 
+			     /* no polarization suffix for epsilon: */
+			     curfield_type == 'n' ? NO_POLARIZATION :
+			     mdata->polarization);
 	  printf("Outputting %s...\n", fname2);
 	  fieldio_write_real_vals((real *) curfield, 3, dims,
 				  local_nx, local_x_start, copies,

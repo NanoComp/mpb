@@ -425,8 +425,8 @@ indented by <code>indent-by</code> spaces.
 
 <p>These are functions to help you run and control the simulation.
 The ones you will most commonly use are the <code>run</code> function
-and its two variants, <code>run-tm</code> and <code>run-te</code>.
-The syntax of these functions, and one lower-level function, is:
+and its variants.  The syntax of these functions, and one lower-level
+function, is:
 
 <dl>
 
@@ -444,13 +444,27 @@ band <code>which-band</code> (e.g. outputting fields).  After every k
 point, each band function is called for the indices of all the bands
 that were computed.
 
-<p><dt><code>(run-tm <i>band-func ...</i>), (run-te <i>band-func ...</i>)</code>
+<p><dt><code>(run-te <i>band-func ...</i>), (run-tm <i>band-func ...</i>)</code>
 <dd>These are the same as the <code>run</code> function except that
-they constrain their solutions to be TM- and TE-polarized,
+they constrain their solutions to be TE- and TM-polarized,
 respectively, in two dimensions.  For a three-dimensional structure
 (<code>grid-size</code>) or when a k point has a z component, the
 eigenstates are no longer completely polarized, and these functions
 behave identically to <code>run</code>.
+
+<p><dt><code>(run-even <i>band-func ...</i>), (run-odd <i>band-func ...</i>)</code>
+<dd>These are the same as the <code>run</code> function except that
+they constrain their solutions to have even and odd symmetry with
+respect to the z=0 plane.  You should use these functions
+<em>only</em> for structures that are symmetric through z=0, where the
+third basis vector is in the z direction (0,0,1), and when the k
+vectors are in the xy plane.  Under these conditions, the eigenmodes
+always have either even or odd symmetry.  The even/odd distinction is
+strongly analogous to TE/TM, respectively, and is equivalent in 2d; it
+is useful for structures such as waveguides and photonic-crystal
+slabs.  (For example, see the paper by S. G. Johnson <i>et al.</i>,
+"Guided modes in photonic crystal slabs," <i>PRB</i> <b>60</b>, 5751,
+August 1999.)
 
 <p><dt><code>(run-polarization <i>p reset-fields band-func ...</i>)</code>
 <dd>Like the <code>run</code> function, except that it takes two extra
@@ -458,15 +472,15 @@ parameters, a polarization <code>p</code> and a boolean
 (<code>true</code>/<code>false</code>) value
 <code>reset-fields</code>.  <code>p</code> specifies a polarization
 constraint, and should be one of the predefined variables
-<code>NO-POLARIZATION</code>, <code>TM</code>, or <code>TE</code>.  If
+<code>NO-POLARIZATION</code>, <code>TE</code>, <code>TM</code>,
+<code>EVEN-Z</code>, or <code>ODD-Z</code> (equivalent to
+<code>run</code>, <code>run-te</code>, <code>run-tm</code>,
+<code>run-even</code>, and <code>run-odd</code>, respectively).  If
 <code>reset-fields</code> is <code>false</code>, the fields from any
 previous calculation will be reused as the starting point from this
 calculation, if possible; otherwise, the fields are reset to random
-values.  <code>(run-polarization NO-POLARIZATION true ...)</code> is
-equivalent to <code>(run ...)</code>, <code>(run-polarization TM true
-...)</code> is equivalent\ to <code>(run-tm ...)</code>, and
-<code>(run-polarization TE true ...)</code> is equivalent\ to
-<code>(run-te ...)</code>.
+values.  The ordinary <code>run</code> functions use a default
+<code>reset-fields</code> of<code>true</code>.
 
 <p><dt><code>(display-eigensolver-stats)</code>
 <dd>Display some statistics on the eigensolver convergence; this function is

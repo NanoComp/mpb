@@ -1,3 +1,7 @@
+  * Added run-even and run-odd functions, so you can now compute only
+    even/odd states (with respect to a z=0 mirror plane) in systems with
+    sufficient symmetry.
+
   * Fixed problems detecting BLAS and LAPACK shared libraries in configure.
     Thanks to Karri Varris for the bug report.
 
@@ -5,7 +9,7 @@
     on some systems.  (Thanks to Ron Chase for the bug report.)
 
   * Added epsilon-input-file variable, so that you can now read the
-    dielectric function from a file (see manual reference section).
+    dielectric function from a file.
 
 MPB 0.8.1 (11/22/1999)
 

@@ -114,6 +114,113 @@ void maxwell_constraint(evectmatrix X, void *data)
 	       for (j = 0; j < X.p; ++j) {
 		    ASSIGN_ZERO(X.data[(i * X.c) * X.p + j]);
 	       }
+     else
+	  maxwell_zparity_constraint(X, data);
+}
+
+/**************************************************************************/
+
+/* In 3d dielectric structures having a z=0 mirror plane (symmetric
+   under z -> -z), the states will exhibit an analogue of TM and TE
+   polarizations (when k has no z-component to break the symmetry).
+
+   In this case, the states can be classified as "even" or "odd" with
+   respect to mirror-flips through z=0.  This is referred to as the
+   "parity" of the state, where even is parity +1 and odd is parity -1
+   (the state is an eigenvector of the mirror flip operator with this
+   eigenvalue).  Even/odd states are the analogues of TE/TM states,
+   respectively (and in the mirror plane itself they are truly TE/TM
+   polarized).
+
+   Note that the magnetic field is a pseudo-vector, so the mirror
+   operation acts specially on it.  Also, because of the way the
+   m,n transverse basis for H is chosen, the basis vectors transform
+   in a very simple way (just flip sign). */
+
+/* Project X to its even or odd component, so that we can solve
+   for only one parity of states (the projection operator, like the
+   mirror flip operator, commutes with the Maxwell operator, so this
+   projection should not slow convergence).  */
+void maxwell_zparity_constraint(evectmatrix X, void *data)
+{
+     maxwell_data *d = (maxwell_data *) data;
+     int i, j, b;
+     int zparity = (d->polarization == EVEN_Z_POLARIZATION ? +1 :
+		    (d->polarization == ODD_Z_POLARIZATION ? -1 : 0));
+
+     if (zparity == 0)
+	  return;
+
+     CHECK(d, "null maxwell data pointer!");
+     CHECK(X.c == 2, "fields don't have 2 components!");
+
+     for (i = 0; i < d->other_dims; ++i)
+	  for (j = 0; 2*j < d->last_dim; ++j) {
+	       int ij = i * d->last_dim + j; 
+	       int ij2 = i * d->last_dim + (j > 0 ? d->last_dim - j : 0);
+	       for (b = 0; b < X.p; ++b) {
+		    scalar u,v, u2,v2;
+		    u = X.data[(ij * 2) * X.p + b];
+		    v = X.data[(ij * 2 + 1) * X.p + b];
+		    u2 = X.data[(ij2 * 2) * X.p + b];
+		    v2 = X.data[(ij2 * 2 + 1) * X.p + b];
+		    ASSIGN_SCALAR(X.data[(ij * 2) * X.p + b],
+				  0.5*(SCALAR_RE(u) + zparity*SCALAR_RE(u2)),
+				  0.5*(SCALAR_IM(u) + zparity*SCALAR_IM(u2)));
+		    ASSIGN_SCALAR(X.data[(ij * 2 + 1) * X.p + b],
+				  0.5*(SCALAR_RE(v) - zparity*SCALAR_RE(v2)),
+				  0.5*(SCALAR_IM(v) - zparity*SCALAR_IM(v2)));
+		    ASSIGN_SCALAR(X.data[(ij2 * 2) * X.p + b],
+				  0.5*(SCALAR_RE(u2) + zparity*SCALAR_RE(u)),
+				  0.5*(SCALAR_IM(u2) + zparity*SCALAR_IM(u)));
+		    ASSIGN_SCALAR(X.data[(ij2 * 2 + 1) * X.p + b],
+				  0.5*(SCALAR_RE(v2) - zparity*SCALAR_RE(v)),
+				  0.5*(SCALAR_IM(v2) - zparity*SCALAR_IM(v)));
+	       }
+	  }
+}
+
+/* Compute the parity of all of the states in X, returning an array
+   of the parities (which the caller should deallocate with free).
+   The parity of an arbitrary state is defined as the expectation value
+   of the mirror flip operator, and will be +1/-1 for even/odd eigenstates
+   and something in between for everything else. */
+real *maxwell_zparity(evectmatrix X, maxwell_data *d)
+{
+     int i, j, b;
+     real *zparity;
+
+     CHECK(d, "null maxwell data pointer!");
+     CHECK(X.c == 2, "fields don't have 2 components!");
+
+     CHK_MALLOC(zparity, real, X.p);
+     for (b = 0; b < X.p; ++b)
+	  zparity[b] = 0.0;
+
+     for (i = 0; i < d->other_dims; ++i)
+	  for (j = 0; 2*j < d->last_dim; ++j) {
+	       int ij = i * d->last_dim + j; 
+	       int ij2 = i * d->last_dim + (j > 0 ? d->last_dim - j : 0);
+	       for (b = 0; b < X.p; ++b) {
+		    scalar u,v, u2,v2;
+		    u = X.data[(ij * 2) * X.p + b];
+		    v = X.data[(ij * 2 + 1) * X.p + b];
+		    u2 = X.data[(ij2 * 2) * X.p + b];
+		    v2 = X.data[(ij2 * 2 + 1) * X.p + b];
+		    zparity[b] +=
+			 SCALAR_RE(u) * SCALAR_RE(u2) +
+			 SCALAR_IM(u) * SCALAR_IM(u2) -			 
+			 SCALAR_RE(v) * SCALAR_RE(v2) -
+			 SCALAR_IM(v) * SCALAR_IM(v2);
+	       }
+	  }
+     
+     /* correct for the fact that we only summed over (approximately)
+	half of the array: */
+     for (b = 0; b < X.p; ++b)
+	  zparity[b] = d->last_dim * zparity[b] / ((d->last_dim + 1) / 2);
+
+     return zparity;
 }
 
 /**************************************************************************/
@@ -153,11 +260,13 @@ void maxwell_zero_k_constraint(evectmatrix X, void *data)
      if (X.Nstart > 0)
 	  return;  /* DC frequency is not on this process*/
 		      
-     if (d->polarization == TE_POLARIZATION) {
+     if (d->polarization == TE_POLARIZATION ||
+	 d->polarization == EVEN_Z_POLARIZATION) {
 	  ASSIGN_SCALAR(X.data[0], 1.0, 0.0);
 	  ASSIGN_SCALAR(X.data[X.p], 0.0, 0.0);
      }
-     else if (d->polarization == TM_POLARIZATION) {
+     else if (d->polarization == TM_POLARIZATION ||
+	      d->polarization == ODD_Z_POLARIZATION) {
 	  ASSIGN_SCALAR(X.data[0], 0.0, 0.0);
 	  ASSIGN_SCALAR(X.data[X.p], 1.0, 0.0);
      }

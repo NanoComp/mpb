@@ -60,7 +60,9 @@ typedef struct {
 } symmetric_matrix;
 
 typedef enum { 
-     TE_POLARIZATION, TM_POLARIZATION, NO_POLARIZATION
+     NO_POLARIZATION = 0,
+     TE_POLARIZATION = 1, TM_POLARIZATION = 2,
+     EVEN_Z_POLARIZATION = 3, ODD_Z_POLARIZATION = 4
 } polarization_t;
 
 typedef struct {
@@ -147,7 +149,10 @@ extern void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout,
 				    evectmatrix Y, real *eigenvals);
 
 extern void maxwell_constraint(evectmatrix X, void *data);
+extern void maxwell_zparity_constraint(evectmatrix X, void *data);
 extern void maxwell_zero_k_constraint(evectmatrix X, void *data);
+
+extern real *maxwell_zparity(evectmatrix X, maxwell_data *d);
 
 typedef struct {
      maxwell_data *d;

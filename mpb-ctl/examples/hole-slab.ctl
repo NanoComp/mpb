@@ -5,6 +5,11 @@
 ; "Guided modes in photonic crystal slabs," PRB 60, 5751 (August
 ; 1999).
 
+; Note that this structure has mirror symmetry throught the z=0 plane,
+; and we are looking at k-vectors in the xy plane only.  Thus, we can
+; break up the modes into even and odd (analogous to TE and TM), using
+; the run-even and run-odd functions.
+
 (define-param h 0.5) ; the thickness of the slab
 (define-param eps 12.0) ; the dielectric constant of the slab
 (define-param loweps 1.0) ; the dielectric constant of the substrate
@@ -35,14 +40,18 @@
     (set! k-points (list K))
     (set! k-points (interpolate 4 (list Gamma M K Gamma))))
 
-(set! grid-size (vector3 32 32 32))
-(set! num-bands 20)
+(set! grid-size (vector3 32 32 64))
+(set! num-bands 9)
 
-; Define a band function to output the magnetic fields only at the K point:
+; Define band functions to output fields only at the K point:
 (define (output-hfield-z-only-at-K band)
   (if (vector3= current-k K)
       (output-hfield-z band)))
+(define (output-dfield-z-only-at-K band)
+  (if (vector3= current-k K)
+      (output-dfield-z band)))
 
-(run output-hfield-z-only-at-K)
+(run-even output-hfield-z-only-at-K)
+(run-odd output-dfield-z-only-at-K)
 
 (display-eigensolver-stats)

@@ -302,7 +302,9 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 void set_maxwell_data_polarization(maxwell_data *d,
 				   polarization_t polarization)
 {
-     if (d->current_k[2] != 0.0 || d->nz != 1)
+     if (d->current_k[2] != 0.0 || 
+	 ((polarization == TE_POLARIZATION || polarization == TM_POLARIZATION)
+	  && d->nz != 1))
 	  polarization = NO_POLARIZATION;
      d->polarization = polarization;
 }

@@ -74,14 +74,16 @@
   no-return-value 'integer 'boolean)
 
 ; (set-polarization p) changes the polarization that is solved for by
-; solve-kpoint, below.  p should be one of the constants
-; NO-POLARIZATION, TE, or TM.  init-params should already have been
-; called.  Be sure to call (randomize-fields) if you change the
-; polarization from TE to TM or vice versa without calling init-params.
+; solve-kpoint, below.  p should be one of the following constants
+; init-params should already have been called.  Be sure to call
+; (randomize-fields) if you change the polarization without calling
+; init-params.
 (define NO-POLARIZATION 0)
 (define TE 1)
 (define TM 2)
-(define PREV-POLARIZATION 3)
+(define EVEN-Z 3)
+(define ODD-Z 4)
+(define PREV-POLARIZATION -1)
 (define-external-function set-polarization false false 
   no-return-value 'integer)
 
@@ -254,6 +256,12 @@
 
 (define (run-tm . band-functions)
   (apply run-polarization (append (list TM true) band-functions)))
+
+(define (run-even . band-functions)
+  (apply run-polarization (append (list EVEN-Z true) band-functions)))
+
+(define (run-odd . band-functions)
+  (apply run-polarization (append (list ODD-Z true) band-functions)))
 
 ; ****************************************************************
 
