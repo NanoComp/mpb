@@ -1431,11 +1431,12 @@ void output_field_extended(integer which_component,
 			   string filename_prefix)
 {
      char fname[100], *fname2, description[100];
-     int dims[3], local_nx, local_x_start;
+     int dims[3], local_dims[3], start[3] = {0,0,0};
      matrixio_id file_id = -1;
      int attr_dims[2] = {3, 3};
      real output_k[3]; /* kvector in reciprocal lattice basis */
      real output_R[3][3];
+     scalar_complex total_phase = {1.0, 0.0};
 
      if (!curfield) {
 	  mpi_one_fprintf(stderr, 
@@ -1447,10 +1448,10 @@ void output_field_extended(integer which_component,
      /* The first two dimensions (x and y) of the position-space fields
 	are transposed when we use MPI, so we need to transpose everything. */
      dims[0] = mdata->ny;
-     dims[1] = mdata->nx;
-     dims[2] = mdata->nz;
-     local_nx = mdata->local_ny;
-     local_x_start = mdata->local_y_start;
+     local_dims[1] = dims[1] = mdata->nx;
+     local_dims[2] = dims[2] = mdata->nz;
+     local_dims[0] = mdata->local_ny;
+     start[0] = mdata->local_y_start;
      output_k[0] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
 	  + R[1][0]*mdata->current_k[2];
      output_k[1] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
@@ -1462,10 +1463,10 @@ void output_field_extended(integer which_component,
      output_R[2][0]=R[2][0]; output_R[2][1]=R[2][1]; output_R[2][2]=R[2][2];
 #else /* ! HAVE_MPI */
      dims[0] = mdata->nx;
-     dims[1] = mdata->ny;
-     dims[2] = mdata->nz;
-     local_nx = mdata->local_nx;
-     local_x_start = mdata->local_x_start;
+     local_dims[1] = dims[1] = mdata->ny;
+     local_dims[2] = dims[2] = mdata->nz;
+     local_dims[0] = mdata->local_nx;
+     start[0] = mdata->local_x_start;
      output_k[0] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
 	  + R[0][0]*mdata->current_k[2];
      output_k[1] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
@@ -1493,9 +1494,9 @@ void output_field_extended(integer which_component,
 	  fname2 = fix_fname(fname, filename_prefix, mdata->polarization);
 	  mpi_one_printf("Outputting fields to %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
-	  fieldio_write_complex_field(curfield, 3, dims, which_component,
-				      local_nx, local_x_start,
-				      output_k, file_id);
+	  fieldio_write_complex_field(curfield, 3, dims, local_dims, start,
+				      which_component, output_k, total_phase,
+				      file_id, 0);
 	  free(fname2);
 	  matrixio_write_data_attr(file_id, "Bloch wavevector",
 				   output_k, 1, attr_dims);
@@ -1521,8 +1522,8 @@ void output_field_extended(integer which_component,
 			     mdata->polarization);
 	  mpi_one_printf("Outputting %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
-	  fieldio_write_real_vals((real *) curfield, 3, dims,
-				  local_nx, local_x_start, file_id);
+	  fieldio_write_real_vals((real *) curfield, 3, dims, 
+				  local_dims, start, file_id, 0);
 	  free(fname2);
      }
      else

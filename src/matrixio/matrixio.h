@@ -35,6 +35,9 @@ extern matrixio_id matrixio_create_sub(matrixio_id id,
                                 const char *name, const char *description);
 extern void matrixio_close_sub(matrixio_id id);
 
+extern matrixio_id matrixio_open_dataset(matrixio_id id,
+					 const char *name,
+					 int rank, const int *dims);
 extern matrixio_id matrixio_create_dataset(matrixio_id id,
                                     const char *name, const char *description,
                                     int rank, const int *dims);
@@ -68,14 +71,19 @@ extern void evectmatrixio_readall_raw(const char *filename, evectmatrix a);
 extern void fieldio_write_complex_field(scalar_complex *field,
 					int rank,
 					const int dims[3],
+					const int local_dims[3],
+					const int start[3],
 					int which_component,
-					int local_nx, int local_x_start,
 					const real kvector[3],
-					matrixio_id file_id);
-void fieldio_write_real_vals(real *vals,
-                             int rank,
-                             const int dims[3],
-                             int local_nx, int local_x_start,
-			     matrixio_id file_id);
+					scalar_complex total_phase,
+					matrixio_id file_id,
+					int append);
+extern void fieldio_write_real_vals(real *vals,
+				    int rank,
+				    const int dims[3],
+				    const int local_dims[3],
+				    const int start[3],
+				    matrixio_id file_id,
+				    int append);
 
 #endif /* MATRIXIO_H */

@@ -437,6 +437,45 @@ void matrixio_close_sub(matrixio_id id)
 
 /*****************************************************************************/
 
+matrixio_id matrixio_open_dataset(matrixio_id id,
+				  const char *name,
+				  int rank, const int *dims)
+{
+#if defined(HAVE_HDF5)
+     int i, rank_copy;
+     hid_t space_id, data_id;
+     hsize_t *dims_copy, *maxdims;
+
+     data_id = H5Dopen(id, name);
+
+     CHECK((data_id = H5Dopen(id, name)) >= 0, "error in H5Dopen");
+
+     CHECK((space_id = H5Dget_space(data_id)) >= 0,
+	   "error in H5Dget_space");
+
+     rank_copy = H5Sget_simple_extent_ndims(space_id);
+     CHECK(rank == rank_copy, "rank in HDF5 file doesn't match expected rank");
+     
+     CHK_MALLOC(dims_copy, hsize_t, rank);
+     CHK_MALLOC(maxdims, hsize_t, rank);
+     H5Sget_simple_extent_dims(space_id, dims_copy, maxdims);
+     free(maxdims);
+     for (i = 0; i < rank; ++i) {
+	  CHECK(dims_copy[i] == dims[i],
+		"array size in HDF5 file doesn't match expected size");
+     }
+     free(dims_copy);
+
+     H5Sclose(space_id);
+
+     return data_id;
+#else
+     return 0;
+#endif
+}
+
+/*****************************************************************************/
+
 matrixio_id matrixio_create_dataset(matrixio_id id,
 				    const char *name, const char *description,
 				    int rank, const int *dims)

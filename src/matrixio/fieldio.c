@@ -34,87 +34,70 @@
 void fieldio_write_complex_field(scalar_complex *field,
 				 int rank,
 				 const int dims[3],
+				 const int local_dims[3],
+				 const int start[3],
 				 int which_component,
-				 int local_nx, int local_x_start,
 				 const real kvector[3],
-				 matrixio_id file_id)
+				 scalar_complex total_phase,
+				 matrixio_id file_id,
+				 int append)
 {
      int i, j, k, component, ri_part;
-     int local_dims[3];
      real s[3]; /* the step size between grid points dotted with k */
-     char name[] = "x.i";
-     matrixio_id data_ids[3][2];
      scalar_complex *phasex, *phasey, *phasez;
-     real lastphase = 0.0;
 
-     for (i = 0; i < 3; ++i)
-	  local_dims[i] = dims[i];
      rank = dims[2] == 1 ? (dims[1] == 1 ? 1 : 2) : 3;
-     local_dims[0] = local_nx;
 
      for (i = 0; i < 3; ++i)
 	  s[i] = TWOPI * kvector[i] / dims[i];
 
-     /* create data sets for writing */
-     for (component = 0; component < 3; ++component)
-	  if (component == which_component || which_component < 0)
-	       for (ri_part = 0; ri_part < 2; ++ri_part) {
-		    name[0] = 'x' + component;
-		    name[2] = ri_part ? 'i' : 'r';
-		    data_ids[component][ri_part] =
-			 matrixio_create_dataset(file_id, name, NULL,
-						 rank, dims);
-	       }
-
      /* cache exp(ikx) along each of the directions, for speed */
-     CHK_MALLOC(phasex, scalar_complex, local_nx);
-     CHK_MALLOC(phasey, scalar_complex, dims[1]);
-     CHK_MALLOC(phasez, scalar_complex, dims[2]);
-     for (i = 0; i < local_nx; ++i) {
-	  real phase = s[0] * (i + local_x_start);
-	  phasex[i].re = cos(phase);
-	  phasex[i].im = sin(phase);
+     CHK_MALLOC(phasex, scalar_complex, local_dims[0])
+     CHK_MALLOC(phasey, scalar_complex, local_dims[1]);
+     CHK_MALLOC(phasez, scalar_complex, local_dims[2]);
+     for (i = 0; i < local_dims[0]; ++i) {
+	  real phase = s[0] * (i + start[0]);
+	  real re, im;
+	  re = cos(phase);
+	  im = sin(phase);
+	  phasex[i].re = total_phase.re * re - total_phase.im * im;
+	  phasex[i].im = total_phase.re * im + total_phase.im * re;
      }
-     for (j = 0; j < dims[1]; ++j) {
-	  real phase = s[1] * j;
+     for (j = 0; j < local_dims[1]; ++j) {
+	  real phase = s[1] * (j + start[1]);
 	  phasey[j].re = cos(phase);
 	  phasey[j].im = sin(phase);
      }
-     for (k = 0; k < dims[2]; ++k) {
-	  real phase = s[2] * k;
+     for (k = 0; k < local_dims[2]; ++k) {
+	  real phase = s[2] * (k + start[2]);
 	  phasez[k].re = cos(phase);
 	  phasez[k].im = sin(phase);
      }
 
      /* Now, multiply field by exp(i k*r): */
-     for (i = 0; i < local_nx; ++i) {
+     for (i = 0; i < local_dims[0]; ++i) {
 	  scalar_complex px = phasex[i];
 
-	  for (j = 0; j < dims[1]; ++j) {
+	  for (j = 0; j < local_dims[1]; ++j) {
 	       scalar_complex py;
 	       real re = phasey[j].re, im = phasey[j].im;
 	       py.re = px.re * re - px.im * im;
 	       py.im = px.re * im + px.im * re;
 	       
-	       for (k = 0; k < dims[2]; ++k) {
-		    int ijk = ((i * dims[1] + j) * dims[2] + k) * 3;
+	       for (k = 0; k < local_dims[2]; ++k) {
+		    int ijk = ((i * local_dims[1] + j) * local_dims[2] + k)*3;
 		    real p_re, p_im;
 		    real re = phasez[k].re, im = phasez[k].im;
 
 		    p_re = py.re * re - py.im * im;
 		    p_im = py.re * im + py.im * re;
 		    
-		    re = field[ijk].re; im = field[ijk].im;
-		    field[ijk].re = re * p_re - im * p_im;
-		    field[ijk].im = im * p_re + re * p_im;
-
-		    re = field[ijk+1].re; im = field[ijk+1].im;
-		    field[ijk+1].re = re * p_re - im * p_im;
-		    field[ijk+1].im = im * p_re + re * p_im;
-
-		    re = field[ijk+2].re; im = field[ijk+2].im;
-		    field[ijk+2].re = re * p_re - im * p_im;
-		    field[ijk+2].im = im * p_re + re * p_im;
+		    for (component = 0; component < 3; ++component) {
+			 int ijkc = ijk + component;
+			 re = field[ijkc].re; im = field[ijkc].im;
+			 field[ijkc].re = re * p_re - im * p_im;
+			 field[ijkc].im = im * p_re + re * p_im;
+		    }
 	       }
 	  }
      }
@@ -123,58 +106,48 @@ void fieldio_write_complex_field(scalar_complex *field,
      free(phasey);
      free(phasex);
 
-     /* write hyperslab: */
-     {
-	  int start[3] = {0,0,0}; /* the beginning of this hyperslab: */
-	  start[0] = local_x_start;
-	  
-	  /* now, write out the hyperslab for each component
-	     and for both the real and imaginary parts: */
-	  for (component = 0; component < 3; ++component)
-	       if (component == which_component ||
-		   which_component < 0)
-		    for (ri_part = 0; ri_part < 2; ++ri_part)
-			 matrixio_write_real_data(
-			      data_ids[component][ri_part],
-			      local_dims, start, 6,
-			      ri_part ? &field[component].im
-			      : &field[component].re);
-     }
-
-     /* close data sets */
+     /* write hyperslabs for each field component: */
      for (component = 0; component < 3; ++component)
-	  if (component == which_component || which_component < 0)
+	  if (component == which_component ||
+	      which_component < 0)
 	       for (ri_part = 0; ri_part < 2; ++ri_part) {
-		    matrixio_close_dataset(data_ids[component][ri_part]);
+		    char name[] = "x.i";
+		    matrixio_id data_id;
+		    
+		    name[0] = 'x' + component;
+		    name[2] = ri_part ? 'i' : 'r';
+		    data_id = append
+			 ? matrixio_open_dataset(file_id, name, rank, dims)
+			 : matrixio_create_dataset(file_id, name, NULL,
+						   rank, dims);
+		    
+		    matrixio_write_real_data(
+			 data_id, local_dims, start, 6,
+			 ri_part ? &field[component].im
+			 : &field[component].re);
+		    
+		    matrixio_close_dataset(data_id);
 	       }
 }
 
 void fieldio_write_real_vals(real *vals,
 			     int rank,
 			     const int dims[3],
-			     int local_nx, int local_x_start,
-			     matrixio_id file_id)
+			     const int local_dims[3],
+			     const int start[3],
+			     matrixio_id file_id,
+			     int append)
 {
      int i, j, k;
-     int local_dims[3];
      matrixio_id data_id;
 
-     for (i = 0; i < 3; ++i)
-	  local_dims[i] = dims[i];
      rank = dims[2] == 1 ? (dims[1] == 1 ? 1 : 2) : 3;
-     local_dims[0] = local_nx;
 
-     /* create output file & data set for writing */
-     data_id = matrixio_create_dataset(file_id, "data", NULL,
-				       rank, dims);
+     data_id = append
+	  ? matrixio_open_dataset(file_id, "data", rank, dims)
+	  : matrixio_create_dataset(file_id, "data", NULL, rank, dims);
 
-     /* write out hyperslab: */
-     {
-	  int start[3] = {0,0,0}; /* the beginning of this hyperslab: */
-	  start[0] = local_x_start;
-	  matrixio_write_real_data(data_id,local_dims,start,1,vals);
-     }
+     matrixio_write_real_data(data_id,local_dims,start,1,vals);
 
-     /* close data set and file */
      matrixio_close_dataset(data_id);
 }
