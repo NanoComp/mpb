@@ -28,6 +28,7 @@ AC_ARG_PROGRAM
 AC_ARG_ENABLE(single, [AC_HELP_STRING([--enable-single],[compile for single precision])], enable_single=$enableval, enable_single=no)
 if test "$enable_single" = "yes"; then
         AC_DEFINE(SCALAR_SINGLE_PREC,1,[Define to use single precision])
+	echo "*********************** SINGLE PRECISION ***********************"
 fi
 
 AC_ARG_ENABLE(debug, [AC_HELP_STRING([--enable-debug],[compile for debugging])], ok=$enableval, ok=no)
@@ -67,6 +68,7 @@ else
 	SCALAR_TYPE=real
 	# Make installed program mpbi instead of mpb, but don't change mpb-data
 	program_transform_name='s,^mpb$$,mpbi,'";$program_transform_name"
+	echo "*********************** INVERSION SYM. ***********************"
 fi
 AC_SUBST(SCALAR_TYPE)
 
@@ -74,6 +76,7 @@ AC_ARG_WITH(hermitian-eps,[AC_HELP_STRING([--with-hermitian-eps],[allow complex-
 if test "$hermitian_epsilon" = "yes"; then
         AC_DEFINE(WITH_HERMITIAN_EPSILON,1,[Define to support Hermitian/complex
                                             dielectric tensors.])
+	echo "*********************** HERMITIAN EPS. ***********************"
 fi
 
 # Add lots of compiler warnings to check for if we are using gcc:
