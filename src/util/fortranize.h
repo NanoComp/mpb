@@ -30,7 +30,7 @@
 
 /* Passing strings to C programs from Fortran is a pain.  We can simplify
    matters by requiring that the caller pass the length of the string,
-   but things are still bad because CRAY Fortran passes an "_fcd"
+   but things are still bad because Cray Fortran passes an "_fcd"
    (Fortran character descriptor) structure instead of a char * when
    a string is passed to a subroutine.   Sigh.  */
 
