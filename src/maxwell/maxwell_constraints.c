@@ -214,16 +214,16 @@ void maxwell_yparity_constraint(evectmatrix X, void *data)
 			 v = X.data[(ijk * 2 + 1) * X.p + b];
 			 u2 = X.data[(ijk2 * 2) * X.p + b];
 			 v2 = X.data[(ijk2 * 2 + 1) * X.p + b];
-			 ASSIGN_SCALAR(X.data[(ij * 2) * X.p + b],
+			 ASSIGN_SCALAR(X.data[(ijk * 2) * X.p + b],
 				  0.5*(SCALAR_RE(u) - yparity*SCALAR_RE(u2)),
 				  0.5*(SCALAR_IM(u) - yparity*SCALAR_IM(u2)));
-			 ASSIGN_SCALAR(X.data[(ij * 2 + 1) * X.p + b],
+			 ASSIGN_SCALAR(X.data[(ijk * 2 + 1) * X.p + b],
 				  0.5*(SCALAR_RE(v) + yparity*SCALAR_RE(v2)),
 				  0.5*(SCALAR_IM(v) + yparity*SCALAR_IM(v2)));
-			 ASSIGN_SCALAR(X.data[(ij2 * 2) * X.p + b],
+			 ASSIGN_SCALAR(X.data[(ijk2 * 2) * X.p + b],
 				  0.5*(SCALAR_RE(u2) - yparity*SCALAR_RE(u)),
 				  0.5*(SCALAR_IM(u2) - yparity*SCALAR_IM(u)));
-			 ASSIGN_SCALAR(X.data[(ij2 * 2 + 1) * X.p + b],
+			 ASSIGN_SCALAR(X.data[(ijk2 * 2 + 1) * X.p + b],
 				  0.5*(SCALAR_RE(v2) + yparity*SCALAR_RE(v)),
 				  0.5*(SCALAR_IM(v2) + yparity*SCALAR_IM(v)));
 		    }
