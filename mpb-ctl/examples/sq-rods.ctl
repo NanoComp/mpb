@@ -30,3 +30,5 @@
  "total time for both TE and TM bands: "
  (run-te)
  (run-tm))
+
+(display-eigensolver-stats)

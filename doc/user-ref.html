@@ -142,6 +142,9 @@ iterations, etcetera, between runs.  Setting
 <code>deterministic?</code> to <code>true</code> makes things
 deterministic (the default is <code>false</code>).
 
+<p><dt><code>eigensolver-flags</code> [<code>integer</code>]
+<dd>This variable is undocumented and reserved for use by Jedi Masters only.
+
 </dl>
 
 <h2>Predefined Variables</h2>
@@ -422,7 +425,6 @@ The syntax of these functions, and one lower-level function, is:
 <dl>
 
 <dt><code>(run <i>band-func ...</i>)</code>
-
 <dd>This runs the simulation described by the input parameters (see
 above), with no constraints on the polarization of the solution.  That
 is, it reads the input parameters, initializes the simulation, and
@@ -437,7 +439,6 @@ point, each band function is called for the indices of all the bands
 that were computed.
 
 <p><dt><code>(run-tm <i>band-func ...</i>), (run-te <i>band-func ...</i>)</code>
-
 <dd>These are the same as the <code>run</code> function except that
 they constrain their solutions to be TM- and TE-polarized,
 respectively, in two dimensions.  For a three-dimensional structure
@@ -446,7 +447,6 @@ eigenstates are no longer completely polarized, and these functions
 behave identically to <code>run</code>.
 
 <p><dt><code>(run-polarization <i>p reset-fields band-func ...</i>)</code>
-
 <dd>Like the <code>run</code> function, except that it takes two extra
 parameters, a polarization <code>p</code> and a boolean
 (<code>true</code>/<code>false</code>) value
@@ -461,6 +461,10 @@ equivalent to <code>(run ...)</code>, <code>(run-polarization TM true
 ...)</code> is equivalent\ to <code>(run-tm ...)</code>, and
 <code>(run-polarization TE true ...)</code> is equivalent\ to
 <code>(run-te ...)</code>.
+
+<p><dt><code>(display-eigensolver-stats)</code>
+<dd>Display some statistics on the eigensolver convergence; this function is
+useful mainly for MPB developers in tuning the eigensolver.
 
 </dl>
 

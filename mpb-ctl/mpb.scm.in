@@ -194,6 +194,24 @@
 
 ; ****************************************************************
 
+; stuff to keep statistics on the eigensolver performance, for tuning:
+(define eigensolver-iters '()) ; the iterations used, updated by (run)
+
+(define (display-eigensolver-stats)
+  (let ((num-runs (length eigensolver-iters))
+	(sorted-iters (sort eigensolver-iters <)))
+    (let ((min-iters (list-ref sorted-iters 0))
+	  (max-iters (list-ref sorted-iters (- num-runs 1)))
+	  (mean-iters (/ (fold-right + 0 sorted-iters) num-runs))
+	  (median-iters (/ (+ (list-ref sorted-iters (quotient num-runs 2))
+			      (list-ref sorted-iters (- (quotient num-runs 2)
+							1))) 2.0)))
+      (display-many "eigensolver iterations for " num-runs " k-points: "
+		    min-iters "-" max-iters
+		    ", mean = "  mean-iters ", median = " median-iters "\n"))))
+
+; ****************************************************************
+
 (define current-k (vector3 0)) ; current k point in the run function
 
 ; (run) functions, to do vanilla calculations.  They all take zero or
@@ -211,6 +229,7 @@
 	  (set! current-k k)
 	  (begin-time "elapsed time for k point: " (solve-kpoint k))
 	  (set! band-range-data (update-band-range-data band-range-data freqs))
+	  (set! eigensolver-iters (append eigensolver-iters (list iterations)))
 	  (map (lambda (f)
 		 (do ((band 1 (+ band 1))) ((> band num-bands)) (f band)))
 	       band-functions))

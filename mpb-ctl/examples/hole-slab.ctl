@@ -24,14 +24,20 @@
 (define Gamma (vector3 0 0 0))
 (define M (vector3 0 0.5 0))
 (define K (vector3 (/ -3) (/ 3) 0))
-(set! k-points (interpolate 4 (list Gamma M K Gamma)))
+
+(define-param only-K false) ; run with only-K=true to only do this k-point
+(if only-K
+    (set! k-points (list K))
+    (set! k-points (interpolate 4 (list Gamma M K Gamma))))
 
 (set! grid-size (vector3 32 32 32))
 (set! num-bands 20)
 
 ; Define a band function to output the magnetic fields only at the K point:
-(define (output-hfield-only-at-K band)
+(define (output-hfield-z-only-at-K band)
   (if (vector3= current-k K)
       (output-hfield-z band)))
 
 (run output-hfield-z-only-at-K)
+
+(display-eigensolver-stats)
