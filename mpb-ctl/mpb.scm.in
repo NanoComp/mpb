@@ -31,7 +31,7 @@
 (define-class material-type no-parent)
 
 (define-class dielectric material-type
-  (define-property epsilon 'number no-default positive?))
+  (define-property epsilon 'number no-default))
 
 (define (index n) (epsilon (* n n))) ; convenient substitute for epsilon
 
@@ -87,6 +87,12 @@
 (define-output-var freqs (make-list-type 'number))
 (define-output-var z-parity (make-list-type 'number))
 (define-output-var iterations 'integer)
+
+(define-input-var negative-epsilon-ok? false 'boolean)
+(define (allow-negative-epsilon)
+  (set! negative-epsilon-ok? true)
+  (set! eigensolver-davidson? true)
+  (set! eigensolver-nwork 10))
 
 ; ****************************************************************
 
@@ -306,6 +312,18 @@
 ; the format returned by update-band-range-data and output-gaps, above:
 (define band-range-data '())
 (define gap-list '())
+
+; Return the frequency gap from the band #lower-band to the band
+; #(lower-band+1), as a percentage of mid-gap frequency.  The "gap"
+; may be negative if the maximum of the lower band is higher than the
+; minimum of the upper band.  (The gap is computed from the
+; band-range-data of the previous run.)
+(define (retrieve-gap lower-band)
+  (if (> (+ lower-band 1) (length (band-range-data)))
+      (error "retrieve-gap called for higher band than was calculated")
+      (let ((f1 (cadr (list-ref band-range-data (- lower-band 1))))
+	    (f2 (caar (list-ref band-range-data lower-band))))
+	(/ (- f2 f1) (* 0.005 (+ f1 f2))))))
 
 ; ****************************************************************
 
