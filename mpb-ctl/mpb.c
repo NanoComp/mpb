@@ -811,7 +811,6 @@ void fix_field_phase(void)
 		   MPI_SUM, MPI_COMM_WORLD);
      jmax = sq_amp[0] > sq_amp[1] ? (sq_amp[0] > sq_amp[2] ? 0 : 2) :
 	  (sq_amp[1] > sq_amp[2] ? 1 : 2);
-     printf("biggest component = %d (%g)\n", jmax, sq_amp[jmax]);
  
      /* Compute the phase that maximizes the sum of the squares of
 	the real parts of the jmax component.  Equivalently, maximize
