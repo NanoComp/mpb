@@ -20,7 +20,7 @@ if test -z "$CFLAGS"; then
 	CFLAGS="-O3"
 fi
 
-INCLUDES=""
+INCLUDES="$INCLUDES"  # no default, beyond user-specified include flags
 AC_SUBST(INCLUDES)
 
 # Use native f77 if present
@@ -170,9 +170,12 @@ AC_CHECK_LIB(lapack, main)
 AC_ARG_WITH(hdf5, [  --without-hdf5          don't use HDF5 output], ok=$withval, ok=yes)
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(z, deflate)
+	save_CFLAGS="$CFLAGS"
+        CFLAGS="$CFLAGS $INCLUDES"
 	AC_CHECK_LIB(hdf5, H5Pcreate, [
 		AC_CHECK_HEADERS(hdf5.h, [LIBS="-lhdf5 $LIBS"
 			                  AC_DEFINE(HAVE_HDF5)])])
+        CFLAGS="$save_CFLAGS"
 fi
 
 # ----------------------------------------------------------------------
