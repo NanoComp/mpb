@@ -12,6 +12,9 @@
     materials, which break time-reversal symmetry) are supported.
     Thanks to Shanhui Fan for pestering me about this.
 
+  * Eliminated output-copies input variable; if you want to visualize
+    multiple unit cells, you should use mpb-data.
+
   * Added new "nothing" material type that punches a hole through other
     objects to the background.  (This is distinct from default-material
     when epsilon-input-file is used, or for compute-energy-in-objects.)

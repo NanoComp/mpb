@@ -36,27 +36,21 @@ void fieldio_write_complex_field(scalar_complex *field,
 				 const int dims[3],
 				 int which_component,
 				 int local_nx, int local_x_start,
-				 const int copies[3],
 				 const real kvector[3],
 				 matrixio_id file_id)
 {
      int i, j, k, component, ri_part;
-     int cpies[3];
-     int total_dims[3], local_dims[3], start[3] = {0,0,0}, localN;
+     int local_dims[3];
      real s[3]; /* the step size between grid points dotted with k */
      char name[] = "x.i";
      matrixio_id data_ids[3][2];
      scalar_complex *phasex, *phasey, *phasez;
      real lastphase = 0.0;
 
-     for (i = 0; i < 3; ++i) {
-	  cpies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
-	  total_dims[i] = dims[i] * cpies[i];
+     for (i = 0; i < 3; ++i)
 	  local_dims[i] = dims[i];
-     }
-     rank = total_dims[2] == 1 ? (total_dims[1] == 1 ? 1 : 2) : 3;
+     rank = dims[2] == 1 ? (dims[1] == 1 ? 1 : 2) : 3;
      local_dims[0] = local_nx;
-     localN = local_dims[0] * local_dims[1] * local_dims[2];
 
      for (i = 0; i < 3; ++i)
 	  s[i] = TWOPI * kvector[i] / dims[i];
@@ -69,7 +63,7 @@ void fieldio_write_complex_field(scalar_complex *field,
 		    name[2] = ri_part ? 'i' : 'r';
 		    data_ids[component][ri_part] =
 			 matrixio_create_dataset(file_id, name, NULL,
-						 rank, total_dims);
+						 rank, dims);
 	       }
 
      /* cache exp(ikx) along each of the directions, for speed */
@@ -129,58 +123,23 @@ void fieldio_write_complex_field(scalar_complex *field,
      free(phasey);
      free(phasex);
 
-     /* loop over copies, multiplying by phases and writing out hyperslabs: */
-     for (i = 0; i < cpies[0]; ++i)
-	  for (j = 0; j < cpies[1]; ++j)
-	       for (k = 0; k < cpies[2]; ++k) {
-		    int n;
-		    real phase = 
-			 s[0]*i*dims[0] + s[1]*j*dims[1] + s[2]*k*dims[2];
-		    double 
-			 c = cos(phase - lastphase), 
-			 s = sin(phase - lastphase);
-
-		    /* keep track of previous phase, so that we
-		       can subtract it from the exponent to undo the
-		       phase change of the previous loop iteration */
-		    lastphase = phase;
-
-		    /* multiply by overall phase of this copy: */
-		    if (phase != 0.0)
-			 for (n = 0; n < localN; ++n) {
-			      int ijk = n * 3;
-			      real re, im;
-			      
-			      re = field[ijk].re; im = field[ijk].im;
-			      field[ijk].re = re * c - im * s;
-			      field[ijk].im = im * c + re * s;
-			      
-			      re = field[ijk+1].re; im = field[ijk+1].im;
-			      field[ijk+1].re = re * c - im * s;
-			      field[ijk+1].im = im * c + re * s;
-			      
-			      re = field[ijk+2].re; im = field[ijk+2].im;
-			      field[ijk+2].re = re * c - im * s;
-			      field[ijk+2].im = im * c + re * s;
-			 }
-
-		    /* start[] is the beginning of this hyperslab: */
-		    start[0] = local_x_start + i * dims[0];
-		    start[1] = j * dims[1];
-		    start[2] = k * dims[2];
-
-		    /* now, write out the hyperslab for each component
-		       and for both the real and imaginary parts: */
-		    for (component = 0; component < 3; ++component)
-			 if (component == which_component ||
-			     which_component < 0)
-			      for (ri_part = 0; ri_part < 2; ++ri_part)
-				   matrixio_write_real_data(
-					data_ids[component][ri_part],
-					local_dims, start, 6,
-					ri_part ? &field[component].im
-					: &field[component].re);
-	       }
+     /* write hyperslab: */
+     {
+	  int start[3] = {0,0,0}; /* the beginning of this hyperslab: */
+	  start[0] = local_x_start;
+	  
+	  /* now, write out the hyperslab for each component
+	     and for both the real and imaginary parts: */
+	  for (component = 0; component < 3; ++component)
+	       if (component == which_component ||
+		   which_component < 0)
+		    for (ri_part = 0; ri_part < 2; ++ri_part)
+			 matrixio_write_real_data(
+			      data_ids[component][ri_part],
+			      local_dims, start, 6,
+			      ri_part ? &field[component].im
+			      : &field[component].re);
+     }
 
      /* close data sets */
      for (component = 0; component < 3; ++component)
@@ -194,35 +153,27 @@ void fieldio_write_real_vals(real *vals,
 			     int rank,
 			     const int dims[3],
 			     int local_nx, int local_x_start,
-			     const int copies[3],
 			     matrixio_id file_id)
 {
      int i, j, k;
-     int cpies[3], total_dims[3], local_dims[3], start[3] = {0,0,0};
+     int local_dims[3];
      matrixio_id data_id;
 
-     for (i = 0; i < 3; ++i) {
-	  cpies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
-	  total_dims[i] = dims[i] * cpies[i];
+     for (i = 0; i < 3; ++i)
 	  local_dims[i] = dims[i];
-     }
-     rank = total_dims[2] == 1 ? (total_dims[1] == 1 ? 1 : 2) : 3;
+     rank = dims[2] == 1 ? (dims[1] == 1 ? 1 : 2) : 3;
      local_dims[0] = local_nx;
 
      /* create output file & data set for writing */
      data_id = matrixio_create_dataset(file_id, "data", NULL,
-				       rank, total_dims);
+				       rank, dims);
 
-     /* loop over copies, writing out hyperslabs: */
-     for (i = 0; i < cpies[0]; ++i)
-	  for (j = 0; j < cpies[1]; ++j)
-	       for (k = 0; k < cpies[2]; ++k) {
-		    /* start[] is the beginning of this hyperslab: */
-		    start[0] = local_x_start + i * dims[0];
-		    start[1] = j * dims[1];
-		    start[2] = k * dims[2];
-		    matrixio_write_real_data(data_id,local_dims,start,1,vals);
-       }
+     /* write out hyperslab: */
+     {
+	  int start[3] = {0,0,0}; /* the beginning of this hyperslab: */
+	  start[0] = local_x_start;
+	  matrixio_write_real_data(data_id,local_dims,start,1,vals);
+     }
 
      /* close data set and file */
      matrixio_close_dataset(data_id);

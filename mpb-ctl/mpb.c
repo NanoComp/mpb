@@ -1427,12 +1427,11 @@ static char *fix_fname(const char *fname, const char *prefix,
    are stored.  Also allow the component to be specified
    (which_component 0/1/2 = x/y/z, -1 = all) for vector fields. 
    Also allow the user to specify a prefix string for the filename. */
-void output_field_extended(vector3 copiesv, integer which_component,
+void output_field_extended(integer which_component,
 			   string filename_prefix)
 {
      char fname[100], *fname2, description[100];
      int dims[3], local_nx, local_x_start;
-     int copies[3];
      matrixio_id file_id = -1;
      int attr_dims[2] = {3, 3};
      real output_k[3]; /* kvector in reciprocal lattice basis */
@@ -1452,9 +1451,6 @@ void output_field_extended(vector3 copiesv, integer which_component,
      dims[2] = mdata->nz;
      local_nx = mdata->local_ny;
      local_x_start = mdata->local_y_start;
-     copies[0] = copiesv.y;
-     copies[1] = copiesv.x;
-     copies[2] = copiesv.z;
      output_k[0] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
 	  + R[1][0]*mdata->current_k[2];
      output_k[1] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
@@ -1470,9 +1466,6 @@ void output_field_extended(vector3 copiesv, integer which_component,
      dims[2] = mdata->nz;
      local_nx = mdata->local_nx;
      local_x_start = mdata->local_x_start;
-     copies[0] = copiesv.x;
-     copies[1] = copiesv.y;
-     copies[2] = copiesv.z;
      output_k[0] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
 	  + R[0][0]*mdata->current_k[2];
      output_k[1] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
@@ -1502,7 +1495,7 @@ void output_field_extended(vector3 copiesv, integer which_component,
 	  file_id = matrixio_create(fname2);
 	  fieldio_write_complex_field(curfield, 3, dims, which_component,
 				      local_nx, local_x_start,
-				      copies, output_k, file_id);
+				      output_k, file_id);
 	  free(fname2);
 	  matrixio_write_data_attr(file_id, "Bloch wavevector",
 				   output_k, 1, attr_dims);
@@ -1529,22 +1522,15 @@ void output_field_extended(vector3 copiesv, integer which_component,
 	  mpi_one_printf("Outputting %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
 	  fieldio_write_real_vals((real *) curfield, 3, dims,
-				  local_nx, local_x_start, copies, file_id);
+				  local_nx, local_x_start, file_id);
 	  free(fname2);
      }
      else
 	  mpi_one_fprintf(stderr, "unknown field type!\n");
 
      if (file_id >= 0) {
-	  real rcopies[3];
-
 	  matrixio_write_data_attr(file_id, "lattice vectors",
 				   &output_R[0][0], 2, attr_dims);
-	  rcopies[0] = copies[0] < 1 ? 1 : copies[0];
-	  rcopies[1] = copies[1] < 1 ? 1 : copies[1];
-	  rcopies[2] = copies[2] < 1 ? 1 : copies[2];
-	  matrixio_write_data_attr(file_id, "lattice copies",
-				   rcopies, 1, attr_dims);
 	  matrixio_write_string_attr(file_id, "description", description);
 
 	  matrixio_close(file_id);

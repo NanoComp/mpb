@@ -134,7 +134,7 @@
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
 (define-external-function output-field-extended false false
-  no-return-value 'vector3 'integer 'string)  
+  no-return-value 'integer 'string)  
 (define-external-function compute-energy-in-object-list false false
   'number (make-list-type 'geometric-object))
 
@@ -223,21 +223,21 @@
 
 (define-param filename-prefix "")
 
-(define (output-field . copies)
-  (output-field-extended (apply vector3 copies) -1 filename-prefix))
+(define (output-field)
+  (output-field-extended -1 filename-prefix))
 
-(define (output-field-x . copies)
-  (output-field-extended (apply vector3 copies) 0 filename-prefix))
+(define (output-field-x)
+  (output-field-extended 0 filename-prefix))
 
-(define (output-field-y . copies)
-  (output-field-extended (apply vector3 copies) 1 filename-prefix))
+(define (output-field-y)
+  (output-field-extended 1 filename-prefix))
 
-(define (output-field-z . copies)
-  (output-field-extended (apply vector3 copies) 2 filename-prefix))
+(define (output-field-z)
+  (output-field-extended 2 filename-prefix))
 
-(define (output-epsilon . copies)
+(define (output-epsilon)
   (get-epsilon)
-  (output-field-extended (apply vector3 copies) -1 filename-prefix))
+  (output-field-extended -1 filename-prefix))
 
 (define (compute-energy-in-objects . objects)
   (compute-energy-in-object-list objects))
@@ -344,7 +344,7 @@
    (set! interactive? false)  ; don't be interactive if we call (run)
    (begin-time "elapsed time for initialization: "
 	       (init-params p reset-fields))
-   (apply output-epsilon output-copies) ; output epsilon immediately
+   (output-epsilon) ; output epsilon immediately
    (if (> num-bands 0)
        (begin
 	 (map (lambda (k)
@@ -392,57 +392,54 @@
 ; Some predefined output functions (functions of the band index),
 ; for passing to (run).
 
-; a global for the number of copies these band functions output
-(define-param output-copies '(1 1 1))
-
 (define (output-hfield which-band)
   (get-hfield which-band)
-  (apply output-field output-copies))
+  (output-field))
 (define (output-hfield-x which-band)
   (get-hfield which-band)
-  (apply output-field-x output-copies))
+  (output-field-x))
 (define (output-hfield-y which-band)
   (get-hfield which-band)
-  (apply output-field-y output-copies))
+  (output-field-y))
 (define (output-hfield-z which-band)
   (get-hfield which-band)
-  (apply output-field-z output-copies))
+  (output-field-z))
 
 (define (output-dfield which-band)
   (get-dfield which-band)
-  (apply output-field output-copies))
+  (output-field))
 (define (output-dfield-x which-band)
   (get-dfield which-band)
-  (apply output-field-x output-copies))
+  (output-field-x))
 (define (output-dfield-y which-band)
   (get-dfield which-band)
-  (apply output-field-y output-copies))
+  (output-field-y))
 (define (output-dfield-z which-band)
   (get-dfield which-band)
-  (apply output-field-z output-copies))
+  (output-field-z))
 
 (define (output-efield which-band)
   (get-efield which-band)
-  (apply output-field output-copies))
+  (output-field))
 (define (output-efield-x which-band)
   (get-efield which-band)
-  (apply output-field-x output-copies))
+  (output-field-x))
 (define (output-efield-y which-band)
   (get-efield which-band)
-  (apply output-field-y output-copies))
+  (output-field-y))
 (define (output-efield-z which-band)
   (get-efield which-band)
-  (apply output-field-z output-copies))
+  (output-field-z))
 
 (define (output-hpwr which-band)
   (get-hfield which-band)
   (compute-field-energy)
-  (apply output-field output-copies))
+  (output-field))
 
 (define (output-dpwr which-band)
   (get-dfield which-band)
   (compute-field-energy)
-  (apply output-field output-copies))
+  (output-field))
 
 ; The following function returns an output function that calls
 ; output-func for bands with D energy in objects > min-energy.
