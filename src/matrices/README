@@ -1,5 +1,6 @@
 In this directory are datatypes and subroutines to handle matrix types
-and operations common to iterative block eigensolver algorithms.
+and operations common to iterative block eigensolver algorithms.  The
+block eigensolver algorithm itself is implemented in eigensolver.c.
 
 Such algorithms solve for the first p eigenstates of an n x n (sparse)
 matrix A.  This corresponds to minimizing Yt*A*Y under the constraint
