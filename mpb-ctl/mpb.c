@@ -195,6 +195,10 @@ void randomize_fields(void)
 	  ASSIGN_SCALAR(H.data[i], rand() * 1.0 / RAND_MAX,
 			rand() * 1.0 / RAND_MAX);
      }
+
+     /* Pass it once through the simple (1/k^2) preconditioner, to
+	taper off the high-frequency components. */
+     maxwell_simple_precondition(H, mdata, NULL);
 }
 
 /**************************************************************************/
@@ -485,7 +489,7 @@ void solve_kpoint(vector3 kvector)
 		      simple_preconditionerp ? 
 		      maxwell_target_preconditioner :
 		      maxwell_target_preconditioner2,
-		      (void *) mtdata, NULL,
+		      (void *) mtdata,
 		      evectconstraint_chain_func, (void *) constraints,
 		      W, NWORK, tolerance, &num_iters, flags);
 	  /* now, diagonalize the real Maxwell operator in the
@@ -535,7 +539,7 @@ void solve_kpoint(vector3 kvector)
 		      simple_preconditionerp ?
 		      maxwell_preconditioner :
 		      maxwell_preconditioner2,
-		      (void *) mdata, NULL,
+		      (void *) mdata,
 		      evectconstraint_chain_func, (void *) constraints,
 		      W, NWORK, tolerance, &num_iters, flags);
      }

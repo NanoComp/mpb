@@ -298,7 +298,7 @@ void maxwell_compute_hfield(maxwell_data *d, evectmatrix Hin,
 
 /* Compute Xout = curl(1/epsilon * curl(Xin)) */
 void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
-		      int is_current_eigenvector)
+		      int is_current_eigenvector, evectmatrix Work)
 {
      maxwell_data *d = (maxwell_data *) data;
      int cur_band_start;
@@ -356,14 +356,21 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 }
 
 void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,
-			     int is_current_eigenvector)
+			     int is_current_eigenvector, evectmatrix Work)
 {
      maxwell_target_data *d = (maxwell_target_data *) data;
      real omega_sqr = d->target_frequency * d->target_frequency;
 
-     maxwell_operator(Xin, d->T, d->d, is_current_eigenvector);
-     evectmatrix_aXpbY(1.0, d->T, -omega_sqr, Xin);
+     CHECK(Work.data && Work.data != Xin.data && Work.data != Xout.data,
+	   "maxwell_target_operator must have distinct workspace!");
 
-     maxwell_operator(d->T, Xout, d->d, 0);
-     evectmatrix_aXpbY(1.0, Xout, -omega_sqr, d->T);
+     maxwell_operator(Xin, Work, d->d, is_current_eigenvector, Xout);
+     evectmatrix_aXpbY(1.0, Work, -omega_sqr, Xin);
+
+     /* note that maxwell_operator() doesn't actually need the
+	workspace (it can operate in-place, for that matter), so we
+	can safely pass Work here for the scratch parameter: */
+     maxwell_operator(Work, Xout, d->d, 0, Work);
+
+     evectmatrix_aXpbY(1.0, Xout, -omega_sqr, Work);
 }

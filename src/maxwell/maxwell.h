@@ -145,13 +145,17 @@ void assign_symmatrix_vector(scalar_complex *newv,
                              const scalar_complex *oldv);
 
 extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
-			     int is_current_eigenvector);
+			     int is_current_eigenvector, evectmatrix Work);
+extern void maxwell_simple_precondition(evectmatrix X,
+					void *data, real *eigenvals);
 extern void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout,
 				   void *data,
-				   evectmatrix Y, real *eigenvals);
+				   evectmatrix Y, real *eigenvals,
+				   sqmatrix YtY);
 extern void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout,
 				    void *data,
-				    evectmatrix Y, real *eigenvals);
+				    evectmatrix Y, real *eigenvals,
+				    sqmatrix YtY);
 
 extern void maxwell_constraint(evectmatrix X, void *data);
 extern void maxwell_zparity_constraint(evectmatrix X, void *data);
@@ -161,7 +165,6 @@ extern real *maxwell_zparity(evectmatrix X, maxwell_data *d);
 
 typedef struct {
      maxwell_data *d;
-     evectmatrix T;
      real target_frequency;
 } maxwell_target_data;
 
@@ -169,13 +172,15 @@ extern maxwell_target_data *create_maxwell_target_data(maxwell_data *d,
 						       real target_frequency);
 extern void destroy_maxwell_target_data(maxwell_target_data *d);
 extern void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout,
-				    void *data,
-				    int is_current_eigenvector);
+				    void *data, int is_current_eigenvector,
+				    evectmatrix Work);
 extern void maxwell_target_preconditioner(evectmatrix Xin, evectmatrix Xout,
 					  void *data,
-					  evectmatrix Y, real *eigenvals);
+					  evectmatrix Y, real *eigenvals,
+					  sqmatrix YtY);
 extern void maxwell_target_preconditioner2(evectmatrix Xin, evectmatrix Xout,
 					   void *data,
-					   evectmatrix Y, real *eigenvals);
+					   evectmatrix Y, real *eigenvals,
+					   sqmatrix YtY);
 
 #endif /* MAXWELL_H */

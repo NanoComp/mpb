@@ -15,7 +15,8 @@ AR = ar
 
 all: libs
 
-OBJECTS = eigensolver.o evectmatrix.o sqmatrix.o matrices.o blasglue.o
+OBJECTS = eigensolver.o eigensolver_utils.o \
+          evectmatrix.o sqmatrix.o matrices.o blasglue.o
 LIBNAME = matrices.a
 
 libs: $(LIBNAME)

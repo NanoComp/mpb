@@ -32,11 +32,11 @@ static sqmatrix A, Ainv;
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 extern void Aop(evectmatrix Xin, evectmatrix Xout, void *data,
-		int is_current_eigenvector);
+		int is_current_eigenvector, evectmatrix Work);
 extern void Ainvop(evectmatrix Xin, evectmatrix Xout, void *data,
 		   evectmatrix Y, real *eigenvals);
 extern void Cop(evectmatrix Xin, evectmatrix Xout, void *data,
-		evectmatrix Y, real *eigenvals);
+		evectmatrix Y, real *eigenvals, sqmatrix YtY);
 extern void printmat(scalar *A, int m, int n, int ldn);
 extern void printmat_matlab(scalar *A, int m, int n);
 
@@ -145,13 +145,13 @@ int main(int argc, char **argv)
 	  ASSIGN_REAL(Ystart.data[i], rand() * 1.0 / RAND_MAX);
 
      /* Check inverse Ainvop: */
-     Aop(Ystart, Y, NULL, 0);
+     Aop(Ystart, Y, NULL, 0, Y2);
      Ainvop(Y, Y2, NULL, Ystart, NULL);
      printf("\nDifference |Y - (1/A)*A*Y| / |Y| = %g\n",
 	    norm_diff(Ystart.data, Y2.data, Y.n * Y.p));
 
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL, NULL,
 		 W, NWORK, 1e-10,&num_iters, EIGS_DEFAULT_FLAGS);
      printf("\nSolved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving with exact inverse preconditioner...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, Ainvop, NULL, NULL, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, Ainvop, NULL, NULL, NULL,
 		 W, NWORK, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -192,7 +192,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving without conjugate-gradient...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL, NULL,
 		 W, NWORK - 1, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving without preconditioning...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL, NULL,
 		 W, NWORK, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving without conjugate-gradient or preconditioning...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL, NULL,
 		 W, NWORK - 1, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
 }
 
 void Aop(evectmatrix Xin, evectmatrix Xout, void *data,
-	 int is_current_eigenvector)
+	 int is_current_eigenvector, evectmatrix Work)
 {
      CHECK(A.p == Xin.n && A.p == Xout.n && Xin.p == Xout.p,
 	   "matrices not conformant");
@@ -267,21 +267,23 @@ void Ainvop(evectmatrix Xin, evectmatrix Xout, void *data,
 }
 
 void Cop_old(evectmatrix Xin, evectmatrix Xout, void *data,
-	 evectmatrix Y, real *eigenvals)
+	 evectmatrix Y, real *eigenvals, sqmatrix YtY)
 {
      int in, ip;
 
      CHECK(A.p == Xin.n && A.p == Xout.n && Xin.p == Xout.p,
            "matrices not conformant");
 
-     for (in = 0; in < Xin.n; ++in) {
+     evectmatrix_XeYS(Xout, Xin, YtY, 1);
+
+     for (in = 0; in < Xout.n; ++in) {
 	  real diag;
 	  
 	  diag = SCALAR_NORMSQR(A.data[in * A.p + in]);
 	  diag = (diag == 0.0) ? 1.0 : 1.0 / sqrt(diag);
 	  
-	  for (ip = 0; ip < Xin.p; ++ip) {
-	       scalar xin = Xin.data[in * Xin.p + ip];
+	  for (ip = 0; ip < Xout.p; ++ip) {
+	       scalar xin = Xout.data[in * Xout.p + ip];
 	       ASSIGN_SCALAR(Xout.data[in * Xout.p + ip],
 			     diag * SCALAR_RE(xin),
 			     diag * SCALAR_IM(xin));
@@ -290,23 +292,25 @@ void Cop_old(evectmatrix Xin, evectmatrix Xout, void *data,
 }
 
 void Cop(evectmatrix Xin, evectmatrix Xout, void *data,
-	  evectmatrix Y, real *eigenvals)
+	  evectmatrix Y, real *eigenvals, sqmatrix YtY)
 {
      int in, ip;
 
      CHECK(A.p == Xin.n && A.p == Xout.n && Xin.p == Xout.p,
            "matrices not conformant");
 
-     for (in = 0; in < Xin.n; ++in) {
+     evectmatrix_XeYS(Xout, Xin, YtY, 1);
+
+     for (in = 0; in < Xout.n; ++in) {
 	  scalar diag = A.data[in * A.p + in];
 	  
-	  for (ip = 0; ip < Xin.p; ++ip) {
+	  for (ip = 0; ip < Xout.p; ++ip) {
 	       scalar scale;
 	       ASSIGN_SCALAR(scale,
 			     SCALAR_RE(diag) - 0*eigenvals[ip],
 			     SCALAR_IM(diag));
 	       ASSIGN_DIV(Xout.data[in * Xout.p + ip],
-			  Xin.data[in * Xin.p + ip],
+			  Xout.data[in * Xout.p + ip],
 			  scale);
 	  }
      }

@@ -404,7 +404,7 @@ int main(int argc, char **argv)
      evectmatrix_copy(H, Hstart);
      eigensolver(H, eigvals,
 		 op, op_data,
-		 pre_op, pre_op_data, NULL,
+		 pre_op, pre_op_data,
 		 maxwell_constraint, (void *) mdata,
 		 W, NWORK, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
@@ -435,7 +435,7 @@ int main(int argc, char **argv)
      evectmatrix_copy(H, Hstart);
      eigensolver(H, eigvals,
 		 op, op_data,
-		 NULL, NULL, NULL,
+		 NULL, NULL,
 		 maxwell_constraint, (void *) mdata,
 		 W, NWORK, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
@@ -462,7 +462,7 @@ int main(int argc, char **argv)
      evectmatrix_copy(H, Hstart);
      eigensolver(H, eigvals,
 		 op, op_data,
-		 pre_op, pre_op_data, NULL,
+		 pre_op, pre_op_data,
 		 maxwell_constraint, (void *) mdata,
 		 W, NWORK - 1, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
@@ -488,7 +488,7 @@ int main(int argc, char **argv)
      evectmatrix_copy(H, Hstart);
      eigensolver(H, eigvals,
 		 op, op_data,
-		 NULL, NULL, NULL,
+		 NULL, NULL,
 		 maxwell_constraint, (void *) mdata,
 		 W, NWORK - 1, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 

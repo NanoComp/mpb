@@ -43,6 +43,7 @@ typedef scalar_complex scalar;
 #define ASSIGN_ZERO(a) { (a).re = 0.0; (a).im = 0.0; }
 
 #define ACCUMULATE_SUM(sum, a) { (sum).re += (a).re; (sum).im += (a).im; }
+#define ACCUMULATE_DIFF(sum, a) { (sum).re -= (a).re; (sum).im -= (a).im; }
 
 #define SCALAR_RE(a) ((a).re)
 #define SCALAR_IM(a) ((a).im)
@@ -110,6 +111,7 @@ typedef real scalar;
 #define ASSIGN_ZERO(a) (a) = 0.0;
 
 #define ACCUMULATE_SUM(sum, a) (sum) += (a);
+#define ACCUMULATE_DIFF(sum, a) (sum) -= (a);
 
 #define SCALAR_RE(a) (a)
 #define SCALAR_IM(a) 0.0

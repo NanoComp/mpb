@@ -29,12 +29,58 @@
 
 #define PRECOND_MIN_DENOM 1e-3
 
-void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout, void *data,
-			    evectmatrix Y, real *eigenvals)
+void maxwell_simple_precondition(evectmatrix X, void *data, real *eigenvals)
 {
      maxwell_data *d = (maxwell_data *) data;
      int i, c, b;
      real *kpGn2 = d->k_plus_G_normsqr;
+
+     for (i = 0; i < X.localN; ++i) {
+	  for (c = 0; c < X.c; ++c) {
+	       for (b = 0; b < X.p; ++b) {
+		    int index = (i * X.c + c) * X.p + b;
+		    real scale = kpGn2[i] * d->eps_inv_mean;
+
+#if PRECOND_SUBTR_EIGS
+		    if (eigenvals) {
+			 scale -= eigenvals[b];
+			 scale = 1.0 / (scale + copysign(PRECOND_MIN_DENOM, 
+							 scale));
+		    }
+		    else
+#else
+		    {
+			 scale = 1.0 / (scale + PRECOND_MIN_DENOM);
+		    }
+#endif
+
+		    ASSIGN_SCALAR(X.data[index],
+				  scale * SCALAR_RE(X.data[index]),
+				  scale * SCALAR_IM(X.data[index]));
+	       }
+	  }
+     }
+}
+
+void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout, void *data,
+			    evectmatrix Y, real *eigenvals, sqmatrix YtY)
+{
+     evectmatrix_XeYS(Xout, Xin, YtY, 1);
+     maxwell_simple_precondition(Xout, data, eigenvals);
+}
+
+void maxwell_target_preconditioner(evectmatrix Xin, evectmatrix Xout, 
+				   void *data,
+				   evectmatrix Y, real *eigenvals,
+				   sqmatrix YtY)
+{
+     maxwell_target_data *td = (maxwell_target_data *) data;
+     maxwell_data *d = td->d;
+     real omega_sqr = td->target_frequency * td->target_frequency;
+     int i, c, b;
+     real *kpGn2 = d->k_plus_G_normsqr;
+
+     evectmatrix_XeYS(Xout, Xin, YtY, 1);
 
      for (i = 0; i < Xout.localN; ++i) {
 	  for (c = 0; c < Xout.c; ++c) {
@@ -43,48 +89,27 @@ void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout, void *data,
 		    real scale = kpGn2[i] * d->eps_inv_mean;
 
 #if PRECOND_SUBTR_EIGS
-		    scale -= eigenvals[b];
-		    scale = 1.0 / (scale + copysign(PRECOND_MIN_DENOM, scale));
-#else
-		    scale = 1.0 / (scale + PRECOND_MIN_DENOM);
+		    scale -= omega_sqr;
 #endif
-
-		    ASSIGN_SCALAR(Xout.data[index],
-				  scale * SCALAR_RE(Xin.data[index]),
-				  scale * SCALAR_IM(Xin.data[index]));
-	       }
-	  }
-     }
-}
-
-void maxwell_target_preconditioner(evectmatrix Xin, evectmatrix Xout, 
-				   void *data,
-				   evectmatrix Y, real *eigenvals)
-{
-     maxwell_target_data *td = (maxwell_target_data *) data;
-     maxwell_data *d = td->d;
-     real omega_sqr = td->target_frequency * td->target_frequency;
-     int i, c, b;
-     real *kpGn2 = d->k_plus_G_normsqr;
-
-     for (i = 0; i < Xout.localN; ++i) {
-	  for (c = 0; c < Xout.c; ++c) {
-	       for (b = 0; b < Xout.p; ++b) {
-		    int index = (i * Xout.c + c) * Xout.p + b;
-		    real scale = kpGn2[i] * d->eps_inv_mean - omega_sqr;
 
 		    scale = scale * scale;
 
 #if PRECOND_SUBTR_EIGS
-		    scale -= eigenvals[b];
-		    scale = 1.0 / (scale + copysign(PRECOND_MIN_DENOM, scale));
+		    if (eigenvals) {
+			 scale -= eigenvals[b];
+			 scale = 1.0 / (scale + copysign(PRECOND_MIN_DENOM,
+							 scale));
+		    }
+		    else
 #else
-		    scale = 1.0 / (scale + PRECOND_MIN_DENOM);
+		    {
+			 scale = 1.0 / (scale + PRECOND_MIN_DENOM);
+		    }
 #endif
 
 		    ASSIGN_SCALAR(Xout.data[index],
-				  scale * SCALAR_RE(Xin.data[index]),
-				  scale * SCALAR_IM(Xin.data[index]));
+				  scale * SCALAR_RE(Xout.data[index]),
+				  scale * SCALAR_IM(Xout.data[index]));
 	       }
 	  }
      }
@@ -383,7 +408,8 @@ static void assign_crossinv_c2t(scalar *v, int vstride,
    the steps are (approximately) inverted: */
 
 void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
-			     evectmatrix Y, real *eigenvals)
+			     evectmatrix Y, real *eigenvals,
+			     sqmatrix YtY)
 {
      maxwell_data *d = (maxwell_data *) data;
      int cur_band_start;
@@ -395,15 +421,18 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
      CHECK(d, "null maxwell data pointer!");
      CHECK(Xin.c == 2, "fields don't have 2 components!");
 
+     if (Xout.data != Xin.data)
+	  evectmatrix_XeYS(Xout, Xin, YtY, 1);
+
      fft_data = d->fft_data;
      cdata = (scalar_complex *) fft_data;
 
      scale = -1.0 / Xout.N;  /* scale factor to normalize FFT;
                                 negative sign comes from 2 i's from curls */
 
-     for (cur_band_start = 0; cur_band_start < Xin.p;
+     for (cur_band_start = 0; cur_band_start < Xout.p;
           cur_band_start += d->num_fft_bands) {
-          int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
+          int cur_num_bands = MIN2(d->num_fft_bands, Xout.p - cur_band_start);
 
           /********************************************/
 	  /* Compute approx. inverse of curl (inverse cross product with k): */
@@ -418,9 +447,9 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
 			 assign_crossinv_t2c(&fft_data[3 * (ij2*cur_num_bands
 							    + b)],
 					     cur_k,
-					     &Xin.data[ij * 2 * Xin.p +
+					     &Xout.data[ij * 2 * Xout.p +
 						      b + cur_band_start],
-					     Xin.p);
+					     Xout.p);
 	       }
 
 	  /********************************************/
@@ -480,9 +509,10 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
 
 void maxwell_target_preconditioner2(evectmatrix Xin, evectmatrix Xout,
 				    void *data,
-				    evectmatrix Y, real *eigenvals)
+				    evectmatrix Y, real *eigenvals,
+				    sqmatrix YtY)
 {
      maxwell_target_data *d = (maxwell_target_data *) data;
-     maxwell_preconditioner2(Xin, d->T, d->d, Y, eigenvals);
-     maxwell_preconditioner2(d->T, Xout, d->d, Y, eigenvals);
+     maxwell_preconditioner2(Xin, Xout, d->d, Y, eigenvals, YtY);
+     maxwell_preconditioner2(Xout, Xout, d->d, Y, eigenvals, YtY);
 }

@@ -36,6 +36,24 @@ void sqmatrix_copy(sqmatrix A, sqmatrix B)
      blasglue_copy(A.p * A.p, B.data, 1, A.data, 1);
 }
 
+/* Asym = (A + adjoint(A)) / 2.  Asym is thus Hermitian. */
+void sqmatrix_symmetrize(sqmatrix Asym, sqmatrix A)
+{
+     int i, j;
+
+     CHECK(Asym.p == A.p, "arrays not conformant");
+
+     for (i = 0; i < A.p; ++i) 
+	  for (j = 0; j < A.p; ++j) {
+	       int ij = i * A.p + j, ji = j * A.p + i;
+	       ASSIGN_SCALAR(Asym.data[ij], 
+			     0.5 * (SCALAR_RE(A.data[ij]) +
+				    SCALAR_RE(A.data[ji])),
+			     0.5 * (SCALAR_IM(A.data[ij]) -
+				    SCALAR_IM(A.data[ji])));
+	  }
+}
+
 /* trace(U) */
 scalar sqmatrix_trace(sqmatrix U)
 {
@@ -75,12 +93,33 @@ void sqmatrix_AeBC(sqmatrix A, sqmatrix B, short bdagger,
                    1.0, B.data, B.p, C.data, C.p, 0.0, A.data, A.p);
 }
 
+/* A += a B * C.  bdagger, cdagger are as for sqmatrix_AeBC, above. */
+void sqmatrix_ApaBC(sqmatrix A, real a, sqmatrix B, short bdagger,
+		    sqmatrix C, short cdagger)
+{
+     CHECK(A.p == B.p && A.p == C.p, "matrices not conformant");
+
+     blasglue_gemm(bdagger ? 'C' : 'N', cdagger ? 'C' : 'N', A.p, A.p, A.p,
+                   a, B.data, B.p, C.data, C.p, 1.0, A.data, A.p);
+}
+
 /* A += a B */
 void sqmatrix_ApaB(sqmatrix A, real a, sqmatrix B)
 {
      CHECK(A.p == B.p, "matrices not conformant");
 
      blasglue_axpy(A.p * A.p, a, B.data, 1, A.data, 1);
+}
+
+/* compute A = a*A + b*B; A and B may be equal. */
+void sqmatrix_aApbB(real a, sqmatrix A, real b, sqmatrix B)
+{
+     CHECK(A.p == B.p, "arrays not conformant");
+
+     if (a != 1.0)
+          blasglue_scal(A.p * A.p, a, A.data, 1);
+
+     blasglue_axpy(A.p * A.p, b, B.data, 1, A.data, 1);
 }
 
 /* U <- 1/U.

@@ -75,11 +75,15 @@ extern scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y);
 /* sqmatrix operations, defined in sqmatrix.c: */
 
 extern void sqmatrix_copy(sqmatrix A, sqmatrix B);
+extern void sqmatrix_symmetrize(sqmatrix Asym, sqmatrix A);
 extern scalar sqmatrix_trace(sqmatrix U);
 extern scalar sqmatrix_traceAtB(sqmatrix A, sqmatrix B);
 extern void sqmatrix_AeBC(sqmatrix A, sqmatrix B, short bdagger,
 			  sqmatrix C, short cdagger);
+extern void sqmatrix_ApaBC(sqmatrix A, real a, sqmatrix B, short bdagger,
+			   sqmatrix C, short cdagger);
 extern void sqmatrix_ApaB(sqmatrix A, real a, sqmatrix B);
+extern void sqmatrix_aApbB(real a, sqmatrix A, real b, sqmatrix B);
 extern void sqmatrix_invert(sqmatrix U);
 extern void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W);
 extern void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W);
