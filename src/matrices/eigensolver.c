@@ -314,6 +314,11 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  else
                evectmatrix_copy(X, G);  /* preconditioner is identity */
 	  
+	  /* We have to apply the constraint here, in case it doesn't
+             commute with the preconditioner. */
+	  if (constraint)
+               constraint(X, constraint_data);
+
 	  if (flags & EIGS_PROJECT_PRECONDITIONING) {
                /* Operate projection P = (1 - Y U Yt) on X: */
                evectmatrix_XtY(symYtD, Y, X);  /* symYtD = Yt X */
@@ -420,16 +425,6 @@ void eigensolver(evectmatrix Y, real *eigenvals,
           }
 
 	  d_scale = 1.0;
-
-	  /* In principle, it should not be necessary to apply the
-	     constraints here to D as well as to Y below, since they
-	     (putatively) commute with the operator.  However, due
-	     to numerical errors, this "redundant" constraint makes
-	     a big difference in convergence, especially if the constraints
-	     include a deflation constraint (e.g. when we are only solving
-	     for a few bands at a time). */
-	  if (constraint)
-               constraint(D, constraint_data);
 
 	  /* Minimize the trace along Y + lamba*D: */
 
@@ -564,6 +559,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       evectmatrix_aXpbY(cos(theta), Y, sin(theta), D);
 	  }
 
+	  /* In exact arithmetic, we don't need to do this, but in practice
+	     it is probably a good idea to keep errors from adding up and
+	     eventually violating the constraints. */
 	  if (constraint)
                constraint(Y, constraint_data);
 
