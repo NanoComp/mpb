@@ -20,8 +20,8 @@ installing various prerequisites.  As much as possible, we have
 attempted to take advantage of existing packages such as BLAS, LAPACK,
 FFTW, and GNU Guile, in order to make our code smaller, more robust,
 faster, and more flexible.  Unfortunately, this may make the
-installation of Photonic-Bands more complicated if you do not already
-have these packages.
+installation of MPB more complicated if you do not already have these
+packages.
 
 <p>You will also need an ANSI C compiler, of course (gcc is fine), and
 installation will be easiest on a UNIX-like system (Linux is fine).
@@ -204,7 +204,7 @@ Most commercial supercomputers already have an MPI implementation
 installed; two free MPI implementations that you can install yourself
 are <a href="http://www-unix.mcs.anl.gov/mpi/mpich/">MPICH</a> and <a
 href="http://www.mpi.nd.edu/lam/">LAM</a>.  MPI is <i>not required</i>
-to compile the ordinary, uniprocessor version of Photonic-Bands.
+to compile the ordinary, uniprocessor version of MPB.
 
 <p>In order for the MPI version of MPB to run successfully, we have a
 slightly nonstandard requirement: each process must be able to read
@@ -235,9 +235,8 @@ href="http://www.clarendonphotonics.com/">Clarendon Photonics</a>.
 
 <p>We require a portable, standard binary format for outputting the
 electromagnetic fields and similar volumetric data, and for this we
-use HDF.  (If you don't have HDF5, you can still compile
-Photonic-Bands, but you won't be able to output the fields or the
-dielectric function.)
+use HDF.  (If you don't have HDF5, you can still compile MPB, but you
+won't be able to output the fields or the dielectric function.)
 
 <p>HDF is a widely-used, free, portable library and file format
 for multi-dimensional scientific data, developed in the National
@@ -299,12 +298,11 @@ Page</a>.  (Guile is typically included with GNU/Linux systems.)
 
 <h2><a name="autoconf">GNU Autoconf</a> <i>(optional)</i></h2>
 
-<p>If you want to be a developer of the Photonic-Bands package (as
-opposed to merely a user), you will also need the GNU Autoconf
-program.  Autoconf is a portability tool that generates
-<code>configure</code> scripts to automatically detect the
-capabilities of a system and configure a package accordingly.  You can
-find out more at the <a
+<p>If you want to be a developer of the MPB package (as opposed to
+merely a user), you will also need the GNU Autoconf program.  Autoconf
+is a portability tool that generates <code>configure</code> scripts to
+automatically detect the capabilities of a system and configure a
+package accordingly.  You can find out more at the <a
 href="http://sources.redhat.com/autoconf/">Autoconf Home Page</a>
 (autoconf is typically installed by default on Linux systems).  In
 order to install Autoconf, you will also need the GNU <code>m4</code>
@@ -330,15 +328,15 @@ want to install libctl somewhere else (like your home directory), you
 can do so with the standard <code>--prefix=<i>dir</i></code> option to
 <code>configure</code> (the default prefix is
 <code>/usr/local</code>).  In this case, however, you'll need to
-specify the location of the libctl shared files for the Photonic-Bands
-package, using the <code>--with-libctl=<i>dir</i>/share/libctl</code>
-option to the Photonic-Bands <code>configure</code>.
+specify the location of the libctl shared files for the MPB package,
+using the <code>--with-libctl=<i>dir</i>/share/libctl</code> option to
+the MPB <code>configure</code> script.
 
 <h2><a name="mpb">MIT Photonic-Bands</a></h2>
 
 <p>Okay, if you've made it all the way here, you're ready to install
-the Photonic-Bands package and start cranking out eigenmodes.  (You
-can download the latest version and read this manual at the <a
+the MPB package and start cranking out eigenmodes.  (You can download
+the latest version and read this manual at the <a
 href="http://ab-initio.mit.edu/mpb/">MIT Photonic-Bands Homepage</a>.)
 Once you've unpacked it, just run:
 
@@ -357,10 +355,9 @@ Matter of Programming</a> to correct the problem.
 <code>configure</code> accepts several flags to help control its
 behavior.  Some of these are standard, like
 <code>--prefix=<i>dir</i></code> to specify and installation directory
-prefix, and some of them are specific to the Photonic-Bands package
+prefix, and some of them are specific to the MPB package
 (<code>./configure --help</code> for more info).  The
-<code>configure</code> flags specific to the Photonic-Bands package
-are:
+<code>configure</code> flags specific to MPB are:
 
 <dl>
 
