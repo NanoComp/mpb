@@ -1,5 +1,5 @@
   * If MPB is configured with the flag --with-hermitian-epsilon, then
-    complex-Hermitian dielectric tensors (corresponding to magnetic
+    complex-hermitian dielectric tensors (corresponding to magnetic
     materials, which break time-reversal symmetry) are supported.
 
 MPB 0.13 (1/7/2001)

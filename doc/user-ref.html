@@ -337,11 +337,11 @@ Defaults to zero.
 of the dielectric tensor; defaults to zero.  This is only supported
 when MPB is configured with the <code>--with-hermitian-epsilon</code>
 flag.  If non-zero imaginary parts are specified, then the dielectric
-tensor is complex-Hermitian.  This is not dissipative (the eigenvalues
+tensor is complex-hermitian.  This is not dissipative (the eigenvalues
 of epsilon are real), but rather breaks time-reversal symmetry,
 corresponding to a magnetic material.  Note that <a
 href="#inv-symmetry">inversion symmetry</a> may not mean what you
-expect for complex-Hermitian epsilon, so be cautious about using
+expect for complex-hermitian epsilon, so be cautious about using
 <code>mpbi</code> in this case.
 
 </dl>
@@ -1005,7 +1005,7 @@ affected.  Or, more technically, that:
 epsilon(-x,-y,-z)<sup><small>*</small></sup>,
 
 <p>where the conjugation is significant for <a
-href="#dielectric-anisotropic">complex-Hermitian dielectric
+href="#dielectric-anisotropic">complex-hermitian dielectric
 tensors</a>.  This symmetry is very common; all of the examples in
 this manual have inversion symmetry, for example.
 
