@@ -44,7 +44,9 @@ int main(int argc, char **argv)
 
      /* fill X with random data */
      for (i = 0; i < n*n; ++i)
-	  ASSIGN_REAL(X.data[i], rand() * 1.0 / RAND_MAX);
+	  ASSIGN_SCALAR(X.data[i],
+			rand() * 1.0 / RAND_MAX,
+			rand() * 1.0 / RAND_MAX);
 
      /* assign A = adjoint(X) * X to get a Hermitian matrix: */
      sqmatrix_AeBC(A, X, 1, X, 0);
