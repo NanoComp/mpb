@@ -231,7 +231,8 @@
   (begin-time "total elapsed time for run: "
    (define band-range-data '())
    (set! interactive? false)  ; don't be interactive if we call (run)
-   (init-params p reset-fields)
+   (begin-time "elapsed time for initialization: "
+	       (init-params p reset-fields))
    (apply output-epsilon output-copies) ; output epsilon immediately
    (if (> num-bands 0)
        (begin
