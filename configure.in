@@ -61,10 +61,13 @@ fi
 AC_ARG_WITH(inv-symmetry,[  --with-inv-symmetry     take advantage of (and require) inv. sym.], inv_sym=$withval, inv_sym=no)
 if test "$inv_sym" = "no"; then
         AC_DEFINE(SCALAR_COMPLEX)
+	SCALAR_TYPE=complex
 else
+	SCALAR_TYPE=real
 	# Make installed program mpbi instead of mpb, but don't change mpb-data
 	program_transform_name='s,^mpb$$,mpbi,'";$program_transform_name"
 fi
+AC_SUBST(SCALAR_TYPE)
 
 AC_ARG_WITH(hermitian-epsilon,[  --with-hermitian-epsilon     allow complex-Hermitian dielectric tensors], hermitian_epsilon=$withval, hermitian_epsilon=no)
 if test "$hermitian_epsilon" = "yes"; then
