@@ -89,6 +89,10 @@ static matrix3x3 Rm, Gm; /* same thing, but matrix3x3 */
 /* index of current kpoint, for labeling output */
 static int kpoint_index = 0;
 
+#define USE_GEOMETRY_TREE 1
+geom_box_tree geometry_tree = NULL; /* recursive tree of geometry objects
+				       for fast searching */
+
 /**************************************************************************/
 
 /* Given a position r in the basis of the lattice vectors, return the
@@ -111,7 +115,13 @@ static real epsilon_func(real r[3], void *edata)
      p.y = (r[1] - 0.5)* geometry_lattice.size.y;
      p.z = (r[2] - 0.5) * geometry_lattice.size.z;
 
-     material = material_of_point(p);  /* from libctl/utils/libgeom/geom.c */
+     /* call search routine from libctl/utils/libgeom/geom.c: */
+#if USE_GEOMETRY_TREE
+     material = material_of_point_in_tree(p, geometry_tree);
+#else
+     material = material_of_point(p);
+#endif
+
      return material.epsilon;
 }
 
@@ -199,6 +209,7 @@ void init_params(int p, boolean reset_fields)
      int nx, ny, nz;
      int mesh[3];
      int have_old_fields = 0;
+     int tree_depth, tree_nobjects;
      
      /* Output a bunch of stuff so that the user can see what we're
 	doing and what we've read in. */
@@ -255,12 +266,23 @@ void init_params(int p, boolean reset_fields)
      matrix3x3_to_arr(R, Rm);
      matrix3x3_to_arr(G, Gm);
 
+     /* we must do this to correct for a non-orthogonal lattice basis: */
+     geom_fix_objects();
+
      printf("Geometric objects:\n");
      for (i = 0; i < geometry.num_items; ++i) {
 	  display_geometric_object_info(5, geometry.items[i]);
 	  printf("%*sdielectric constant epsilon = %g\n", 5 + 5, "",
 		 geometry.items[i].material.epsilon);
      }
+
+     destroy_geom_box_tree(geometry_tree);  /* destroy any tree from
+					       previous runs */
+     geometry_tree =  create_geom_box_tree();
+     geom_box_tree_stats(geometry_tree, &tree_depth, &tree_nobjects);
+     printf("Geometric object tree has depth %d and %d object nodes"
+	    " (vs. %d actual objects)\n",
+	    tree_depth, tree_nobjects, geometry.num_items);
 
      printf("%d k-points:\n", k_points.num_items);
      for (i = 0; i < k_points.num_items; ++i)
@@ -725,7 +747,8 @@ number compute_energy_in_object_list(geometric_object_list objects)
 		    int n;
 		    p.x = i * s1 - c1; p.y = j * s2 - c2; p.z = k * s3 - c3;
 		    for (n = objects.num_items - 1; n >= 0; --n)
-			 if (point_in_periodic_objectp(p, objects.items[n])) {
+			 if (point_in_periodic_fixed_objectp(p,
+							objects.items[n])) {
 			      energy_sum += energy[(i*n2 + j)*n3 + k];
 			      break;
 			 }
