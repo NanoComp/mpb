@@ -1,0 +1,18 @@
+Arghh...fix maxwell op.  Why isn't it positive-definite?
+
+Check which order to link in -lblas and -ldgemm.
+
+Discriminate between TE/TM modes.
+
+Allow real-complex transforms for structures with inversion symmetry.
+
+Store epsilon differently?
+
+Output fields to HDF.  (Eventually, use HDF5...?)
+
+Interface with libctl for input and control.
+
+implement create_evectmatrix_clone, evectmatrices_conformant_p
+(convenience functions)
+
+World domination.

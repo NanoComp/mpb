@@ -17,7 +17,14 @@ all: all-recursive
 libs: libs-recursive
 
 clean: clean-recursive
-	rm config.cache
+
+distclean: clean
+	@list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "rm -f $$subdir/Makefile"; rm -f $$subdir/Makefile; done
+	rm -f config.cache Makefile src/config.h config.log
+
+maintainer-clean: distclean
+	rm -f configure
 
 # Recursive makes in subdirectories:
 # (borrowed from automake)

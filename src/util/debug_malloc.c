@@ -15,6 +15,14 @@
  *   DEBUGGING CODE
  **********************************************************/
 
+#ifdef DEBUG
+
+void check_breakpoint(void)
+{
+     /* this function is only here so that we can drop into a breakpoint
+	in a debugger when a CHECK macro fails... */
+}
+
 /*
  * debugging malloc/free.  Initialize every malloced and freed area to
  * random values, just to make sure we are not using uninitialized
@@ -112,13 +120,17 @@ void debug_free(void *p)
      }
 }
 
+#endif /* DEBUG */
+
 /* check for memory leaks when debugging */
 void debug_check_memory_leaks(void)
 {
+#ifdef DEBUG
      if (debug_malloc_cnt || debug_malloc_total)
 	  mpi_die("MEMORY LEAK!!!\n"
 		  "number of unbalanced malloc calls = %d\n"
 		  "total leaked bytes = %d\n",
 		  debug_malloc_cnt,
 		  debug_malloc_total);
+#endif
 }

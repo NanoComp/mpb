@@ -50,8 +50,15 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      X = Work[1];
      
      usingConjugateGradient = nWork >= 3;
-     if (usingConjugateGradient)
+     if (usingConjugateGradient) {
+	  int i;
 	  D = Work[2];
+	  /* we must initialize D to zero even though we multiply
+	     it by zero (initial gamma) later on...otherwise, D
+	     might contain NaN values */
+	  for (i = 0; i < D.n * D.p; ++i)
+	       ASSIGN_ZERO(D.data[i]);
+     }
      else
 	  D = X;
      
@@ -80,9 +87,18 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  evectmatrix_XtY(YtAYU, Y, G);
 	  E = SCALAR_RE(sqmatrix_trace(YtAYU));
 
-	  if (fabs(E - prev_E) < tolerance * 0.5 * (fabs(E) + fabs(prev_E)))
+	  CHECK(!BADNUM(E), "crazy number detected in trace!!\n");
+
+	  if (iteration > 0 &&
+	      fabs(E - prev_E) < tolerance * 0.5 * (fabs(E) + fabs(prev_E)))
 	       break; /* convergence!  hooray! */
 	  
+#ifdef DEBUG
+	  if (iteration % 10 == 0)
+	       printf("it. %4d: tr. = %g (%g%% change)\n", iteration, E,
+		      200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
+#endif
+
 	  sqmatrix_AeBC(UYtAYU, U, 0, YtAYU, 0);
 	  evectmatrix_XpaYS(G, -1.0, Y, UYtAYU); /* G is now the gradient of
 						    the functional */
@@ -162,7 +178,6 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
      {
        sqmatrix Usqrt = create_sqmatrix(U.p);
-       int i;
 
        sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
        evectmatrix_XeYS(X, Y, Usqrt, 1);

@@ -30,4 +30,7 @@
 /* define to disable CHECK macros */
 #undef CHECK_DISABLE
 
+/* define to enable expensive debugging checks, etcetera */
+#undef DEBUG
+
 #endif /* CONFIG_H */

@@ -12,11 +12,33 @@
 #  endif
 #endif
 
+/* This data structure is designed to hold k+G data at a given point.
+   (kx,ky,kz) is the k+G vector.  kmag is its length.  The other two
+   vectors are orthogonal unit vectors orthogonal to (kx,ky,kz).
+   These are used as the basis for the H vector (to maintain
+   transversality). */
+typedef struct {
+     real kx, ky, kz;
+     real kmag;
+     real mx, my, mz;
+     real nx, ny, nz;
+} k_data;
+
+/* Data structure to hold the upper triangle of a symmetric real matrix
+   (e.g. the dielectric tensor). */
+typedef struct {
+     real m00, m01, m02,
+               m11, m12,
+                    m22;
+} symmetric_matrix;
+
 typedef struct {
      int nx, ny, nz;
      int local_nx, local_ny;
      int local_x_start, local_y_start;
      int last_dim, other_dims;
+
+     int fft_output_size;
 
      int num_fft_bands;
 
@@ -34,33 +56,23 @@ typedef struct {
 
      scalar *fft_data;
      
-     real *k_plus_G;
-
-     real *eps_inv;
-
+     k_data *k_plus_G;
      real *k_plus_G_normsqr_inv;
+
+     symmetric_matrix *eps_inv;
      real *eps_inv_mean;
 } maxwell_data;
 
-#define EPS_MATRIX_COMPONENTS 6  /* see below */
-
-/* eps_inv is an array of 3x3 real matrices.  However, since these matrices
-   are guaranteed to be symmetric, we need to store only 6 components,
-   whose offsets in the array are indicated as follows:
-
-                          [ 0 1 2 ]
-                          [ x 3 4 ]
-                          [ x x 5 ]
-
-   An "x" here indicates a matrix element that is not stored. */
-
 extern maxwell_data *create_maxwell_data(int nx, int ny, int nz,
-					 int *local_N, int *alloc_N,
+					 int *local_N, int *N_start,
+					 int *alloc_N,
 					 int num_bands,
 					 int num_fft_bands);
+extern void destroy_maxwell_data(maxwell_data *d);
 
 extern void update_maxwell_data_k(maxwell_data *d, real k[3],
 				  real G1[3], real G2[3], real G3[3]);
 
+extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data);
 
 #endif /* MAXWELL_H */
