@@ -22,7 +22,7 @@ clean: clean-recursive
 distclean: clean
 	@list='$(SUBDIRS)'; for subdir in $$list; do \
 	  echo "rm -f $$subdir/Makefile"; rm -f $$subdir/Makefile; done
-	rm -f config.cache Makefile src/config.h config.log
+	rm -f config.cache Makefile src/config.h config.log config.status
 
 maintainer-clean: distclean
 	rm -f configure
