@@ -56,7 +56,9 @@ static void display_object_info(geometric_object obj)
 	    obj.material.epsilon);    
      switch (obj.which_subclass) {
 	 case CYLINDER:
-	      printf("          cylinder with height %g, axis (%g, %g, %g)\n",
+	      printf("          cylinder with radius %g, height %g, "
+		     "axis (%g, %g, %g)\n",
+		     obj.subclass.cylinder_data->radius,
 		     obj.subclass.cylinder_data->height,
 		     obj.subclass.cylinder_data->axis.x,
 		     obj.subclass.cylinder_data->axis.y,
