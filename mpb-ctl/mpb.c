@@ -513,7 +513,8 @@ void solve_kpoint(vector3 kvector)
 	          goes in the other direction--after the Gamma point,
 	          subsequent k-points are screwed up and don't converge
 	          properly, so we need to rerandomize after Gamma too
-	          (see below).  This occurs e.g. in a sq. lattice of rods.) */
+	          (see below).  This occurs e.g. in a sq. lattice of rods.)
+	          Is this necessary any more with the new exact linmin? */
 	       if (kpoint_index)
 		    randomize_fields();
 

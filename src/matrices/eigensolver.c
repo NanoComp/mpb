@@ -246,7 +246,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                  int flags)
 {
      evectmatrix G, D, X, prev_G;
-     short usingConjugateGradient = 0, use_polak_ribiere = 0;
+     short usingConjugateGradient = 0, use_polak_ribiere = 0,
+	   use_linmin = 1;
      real E, prev_E = 0.0;
      real traceGtX, prev_traceGtX = 0.0;
      real theta, prev_theta = 0.5;
@@ -281,7 +282,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                ASSIGN_ZERO(prev_G.data[i]);
      }
      else
-          prev_G = X; /* never use prev_G, but do this to avoid cc warnings */
+          prev_G = G;
      
      YtAYU = create_sqmatrix(Y.p);  /* holds Yt A Y */
      DtAD = create_sqmatrix(Y.p);  /* holds Dt A D */
@@ -319,6 +320,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  blasglue_scal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
 
 	  sqmatrix_copy(U, YtY);
+
 	  sqmatrix_invert(U);
 
 	  A(Y, X, Adata, 1, G); /* X = AY; G is scratch */
@@ -402,10 +404,12 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  /* Minimize the trace along Y + lamba*D: */
 
-	  {
+	  if (use_linmin) {
 	       real dE, d2E;
 	       real d_norm2;
 	       real improvement;
+
+	  linmin:
 
 	       A(D, G, Adata, 0, X); /* G = A D; X is scratch */
 	       evectmatrix_XtX(DtD, D);
@@ -441,7 +445,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 			 printf("    near maximum in trace\n");
 		    theta = dE > 0 ? -fabs(prev_theta) : fabs(prev_theta);
 	       }
-	       else if (E + 0.5*dE*theta < 2.0 * fabs(E-prev_E)) {
+	       else if (-0.5*dE*theta > 2.0 * fabs(E-prev_E)) {
 		    if (flags & EIGS_VERBOSE)
 			 printf("    large trace change predicted (%g%%)\n",
 				-0.5*dE*theta/E * 100.0);
@@ -459,11 +463,69 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       theta = linmin(&improvement,
 			      0, E, dE, dE > 0 ? -K_PI : K_PI, theta,
 			      tolerance, trace_func, &tfd);
-	  }
 
-	  /* Shift Y to Y + tan(theta) * D, where theta was (hopefully)
-	     chosen above so as to minimize the trace along D. */
-	  evectmatrix_aXpbY(cos(theta), Y, sin(theta) / d_norm, D);
+	       if (improvement > 0 && improvement < tolerance &&
+		   !(flags & EIGS_ALWAYS_EXACT_LINMIN)) {
+		    use_linmin = 0;
+		    if (flags & EIGS_VERBOSE)
+			 printf("    switching to approximate "
+				"line minimization\n");
+	       }
+
+	       /* Shift Y to new location minimizing the trace along D: */
+	       evectmatrix_aXpbY(cos(theta), Y, sin(theta) / d_norm, D);
+	  }
+	  else { /* approximate line minimization */
+	       real dE, E2, d2E, t;
+
+	       /* Here, we do an approximate line minimization along D
+		  by evaluating dE (the derivative) at the current point,
+		  and the trace E2 at a second point, and then approximating
+		  the second derivative d2E by finite differences.  Then,
+		  we use one step of Newton's method on the derivative. */
+
+	       d_norm = sqrt(SCALAR_RE(evectmatrix_traceXtY(D,D)) / Y.p);
+
+	       /* dE = 2 * tr Gt D.  (Use prev_G instead of G so that
+		  it works even when we are using Polak-Ribiere.) */
+	       dE = 2.0 * SCALAR_RE(evectmatrix_traceXtY(prev_G, D)) / d_norm;
+
+	       /* shift Y by prev_theta along D, in the downhill direction: */
+	       t = dE < 0 ? -fabs(prev_theta) : fabs(prev_theta);
+	       evectmatrix_aXpbY(1.0, Y, t / d_norm, D);
+
+	       evectmatrix_XtX(U, Y);
+	       sqmatrix_invert(U);  /* U = 1 / (Yt Y) */
+	       A(Y, X, Adata, 1, G); /* X = AY; G is scratch */
+	       evectmatrix_XtY(S1, Y, X);  /* S1 = Yt A Y */
+	       
+	       E2 = SCALAR_RE(sqmatrix_traceAtB(S1, U));
+
+	       /* Get finite-difference approximation for the 2nd derivative
+		  of the trace.  Equivalently, fit to a quadratic of the
+		  form:  E(theta) = E + dE theta + 1/2 d2E theta^2 */
+	       d2E = (E2 - E - dE * t) / (0.5 * t * t);
+
+	       theta = -dE/d2E;
+
+	       /* If the 2nd derivative is negative, or a big shift
+		  in the trace is predicted (compared to the previous
+		  iteration), then this approximate line minimization is
+		  probably not very good; switch back to the exact
+		  line minimization.  Hopefully, we won't have to
+		  abort like this very often, as it wastes operations. */
+	       if (d2E < 0 || -0.5*dE*theta > 10.0 * fabs(E-prev_E)) {
+		    if (flags & EIGS_VERBOSE)
+			 printf("    switching back to exact "
+				"line minimization\n");
+		    use_linmin = 1;
+		    evectmatrix_aXpbY(1.0, Y, -t / d_norm, D);
+		    goto linmin;
+	       }
+
+	       /* Shift Y to new location, hopefully minimizing the trace: */
+               evectmatrix_aXpbY(1.0, Y, (theta - t) / d_norm, D);
+	  }
 
 	  if (constraint)
                constraint(Y, constraint_data);

@@ -48,9 +48,10 @@ extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 #define EIGS_PROJECT_PRECONDITIONING (1<<0)
 #define EIGS_VERBOSE (1<<1)
 #define EIGS_RESET_CG (1<<2)
+#define EIGS_ALWAYS_EXACT_LINMIN (1<<3)
 
 /* default flags: what we think works best most of the time: */
-#define EIGS_DEFAULT_FLAGS (EIGS_RESET_CG)
+#define EIGS_DEFAULT_FLAGS (EIGS_RESET_CG | EIGS_ALWAYS_EXACT_LINMIN)
 
 typedef struct evectconstraint_chain_struct {
      evectconstraint C;
