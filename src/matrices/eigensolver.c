@@ -200,8 +200,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
 	       evectmatrix_XeYS(X, Y, S1, 1);
 
-	       /* Note that we use YtAYU as a scratch matrix below,
-		  but set it to its intended use at the end of this block. */
+	       /* Note that we use YtAYU as a scratch matrix below;
+		  we also don't compute the actual value of Yt A Y U at
+		  the end of the block because it is just diag(eigenvals) */
 	       
 	       /* Now, compute eigenvectors: */
 	       A(X, Y, Adata, 1); /* Y = AX = A (Y/sqrt(U)) */
@@ -222,8 +223,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       if (Cdata_update)
 		    Cdata_update(Cdata, S2);
 	       
-	       /* skip this since YtG should be diag(eigenvals)? */
-	       evectmatrix_XtY(YtAYU, Y, G);
+	       /* skip this since YtG should be diag(eigenvals): */
+	       /* evectmatrix_XtY(YtAYU, Y, G); */
 	  }
 	  else {
 	       A(Y, X, Adata, 1); /* X = AY */
@@ -231,7 +232,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       evectmatrix_XtY(YtAYU, Y, G);
 	  }
 
-	  E = SCALAR_RE(sqmatrix_trace(YtAYU));
+	  if (flags & EIGS_DIAGONALIZE_EACH_STEP)
+	       E = matrix_diag_real_trace(eigenvals, U.p);
+	  else
+	       E = SCALAR_RE(sqmatrix_trace(YtAYU));
 
 	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
 	       real E_check = 0.0;
@@ -280,8 +284,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  /* Compute gradient of functional G = (1 - Y U Yt) A Y U: */
 	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
-	       /* optimize this since YtAYU should be diagonal? */
-	       evectmatrix_XpaYS(G, -1.0, Y, YtAYU);
+	       /* G = G - Y * (YtAYU * U), optimized since
+		  U is the identity and YtAYU = diag(eigenvals) */
+	       matrix_XpaY_diag_real(G.data, -1.0, Y.data, eigenvals, G.n,G.p);
 	  }
 	  else {
 	       sqmatrix_AeBC(S2, U, 0, YtAYU, 0);
@@ -391,7 +396,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    traceXtAXU = SCALAR_RE(evectmatrix_traceXtY(X, G));
 
 		    evectmatrix_XtY(S1, X, X); /* S1 = Xt X */
-		    traceUYtAYUXtX = SCALAR_RE(sqmatrix_traceAtB(S1,YtAYU));
+		    traceUYtAYUXtX = 
+			 matrix_re_trace_A_diag_real(S1.data, eigenvals, S1.p);
 
 		    x_norm = sqrt(X.p / SCALAR_RE(sqmatrix_trace(S1)));
 	       }

@@ -108,6 +108,21 @@ void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y)
 		   SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 }
 
+/* compute only the diagonal elements of XtY */
+void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag)
+{
+     matrix_XtY_diag(X.data, Y.data, X.n, X.p, diag);
+     MPI_Allreduce(diag, diag, X.p, SCALAR_MPI_TYPE * SCALAR_NUMVALS,
+		   MPI_SUM, MPI_COMM_WORLD);
+}
+
+/* compute only the diagonal elements of XtX */
+void evectmatrix_XtX_diag_real(evectmatrix X, real *diag)
+{
+     matrix_XtX_diag_real(X.data, X.n, X.p, diag);
+     MPI_Allreduce(diag, diag, X.p, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+}
+
 /* compute trace(adjoint(X) * Y) */
 scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y)
 {
