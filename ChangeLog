@@ -1,3 +1,146 @@
+Tue Oct 26 00:54:42 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/developer.html: Fixed missing </code> tags.
+
+	* photon-ctl/examples/tutorial.ctl, doc/user-ref.html,
+	doc/user-tutorial.html: Tutorial revisions, mainly to reflect new
+	mesh size.
+
+	* photon-ctl/photon.scm.in: Use default mesh of 3, like Fortran
+	code.
+
+Mon Oct 25 21:06:14 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/developer.html: Wrote first-draft developer section.
+
+	* doc/introduction.html: small change
+
+Thu Oct 21 22:06:28 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* photon-ctl/photon.c: Use new geom_fix_objects and geom_box_tree
+	routines...the latter greatly speed up dielectric function
+	calculation!!
+
+Wed Oct 20 22:45:55 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* photon-ctl/photon.scm.in, configure.in: Added code to activate
+	readline in Guile 1.3.2+.  Also shuffled around BLAS libraries
+	somewhat.  Try the atlas library, and stop checking for BLAS
+	libraries after we find one.
+
+Tue Oct 19 00:30:28 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* photon-ctl/examples/tutorial.ctl: added comments to output.
+
+Mon Oct 18 19:25:58 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* photon-ctl/examples/tutorial.ctl: Added file of commands from
+	the User Tutorial (in the manual).
+
+Wed Oct 13 23:11:28 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* configure.in: Fixed bug when gcc and/or Guile are installed in
+	non-standard directories.
+
+Fri Oct  1 19:44:34 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/matrices/blasglue.c: herk routines take only *real*
+	coefficients to multiply matrices by.
+
+Thu Sep 30 19:35:50 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* photon-ctl/photon.c: Check NWORK size before using W[0], W[1].
+
+Fri Sep 17 00:15:29 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/malloctest.c: DEBUG -> DEBUG_MALLOC
+
+	* src/util/debug_malloc.c, configure.in, src/config.h.in,
+	src/util/check.h: split --enable-debug-malloc into separate flag,
+	added --with-efence, removed a couple of Fortran library checks
+	(should be added automatically by AC_F77_LIBRARY_LDFLAGS), and
+	moved ordering of Guile libs.
+
+Thu Sep 16 23:09:22 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/eigs_test.c, tests/malloctest.c, tests/maxwell_test.c,
+	src/util/debug_malloc.c, src/util/mpi_utils.c, tests/blastest.c,
+	src/maxwell/maxwell_eps.c, src/maxwell/maxwell_op.c,
+	src/maxwell/maxwell_pre.c, src/matrices/evectmatrix.c,
+	src/matrices/matrices.c, src/matrices/sqmatrix.c,
+	src/maxwell/maxwell.c, src/matrices/blasglue.c,
+	src/matrices/eigensolver.c, configure.in, photon-ctl/photon.c:
+	Changed #include <config.h> to #include "path/config.h", where
+	path is the appropriate relative path.  This way, we can compile
+	on the @#$#@-ing Origin, which includes a file called config.h in
+	one of its system header directories.
+
+	* src/maxwell/maxwell_eps.c, tests/maxwell_test.c,
+	src/maxwell/Makefile.in, src/maxwell/maxwell.c,
+	src/maxwell/maxwell.h, photon-ctl/photon.c: Separated epsilon
+	tensor calculation into maxwell_eps.c, and compute normal vectors
+	using separate "moment mesh."
+
+	* photon-ctl/Makefile.in: Rebuild program when libraries change.
+
+	* photon-ctl/examples/sq-rods.ctl: run-tm, not run.
+
+Wed Sep 15 03:05:32 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* configure.in: Fixed library detection for SGI.
+
+	* configure.in: Added more warnings.
+
+	* tests/blastest.c: Got rid of warning about unused main() params.
+
+Tue Sep 14 18:24:59 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/Makefile.in, tests/malloctest.c: Added malloctest.
+
+	* src/util/debug_malloc.c: Noted provenance of debug_malloc and
+	friends.
+
+Mon Sep 13 18:45:17 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/acknowledgments.html: Fixed ack's.
+
+Sun Sep 12 01:47:36 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* configure.in: compress test program a little
+
+	* configure.in: Replaced m4 "dnl" comments with sh "#" comments
+	(this means that they get passed through to the configure script,
+	but so what).
+
+Fri Sep 10 23:41:28 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/matrices/blasglue.c: Reverted changes (which I hadn't meant
+	to commit)--passing args as strings doesn't help things on the
+	$*@#$ alpha.
+
+	* photon-ctl/Makefile.in: added explanatory comment.
+
+	* configure.in, photon-ctl/Makefile.in: --program-suffix, etcetera
+	now work.
+
+	* doc/installation.html: Documented new libctl & photon
+	installation procedure.
+
+	* configure.in: Added AC_PROG_INSTALL check.
+
+	* install-sh, config.sub, config.guess: Updated versions of
+	autoconf files.
+
+	* tests/Makefile.in, src/matrixio/Makefile.in,
+	src/maxwell/Makefile.in, src/util/Makefile.in,
+	photon-ctl/photon.scm.in, src/matrices/Makefile.in,
+	src/matrices/blasglue.c, photon-ctl/Attic/photon.scm,
+	photon-ctl/Makefile.in, photon-ctl/photon.c, Makefile.in, TODO,
+	configure.in: Mirrored changes in libctl (which is now installed
+	in a central location).  Also, separated CFLAGS from -I flags (so
+	that CFLAGS can be overridden more easily).  configure script now
+	looks for Guile, libctl.
+
 Thu Sep  9 18:07:15 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* README: Mentioned contact addresses in manual.
@@ -456,4 +599,3 @@ Wed May 20 01:18:50 1998  Steven G. Johnson  <stevenj@superjdj>
 	* README: Created photonic-bands repository.
 
 	* README: Initial revision
-
