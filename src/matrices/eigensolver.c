@@ -228,10 +228,11 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  E = SCALAR_RE(sqmatrix_trace(YtAYU));
 
 	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
-	       E2 = 0.0;
+	       real E_check = 0.0;
 	       for (i = 0; i < Y.p; ++i)
-		    E2 += eigenvals[i];
-	       CHECK(fabs(E2 - E) < (fabs(E) + fabs(E2)) * 0.5 * tolerance,
+		    E_check += eigenvals[i];
+	       CHECK(fabs(E_check - E) < 
+		     (fabs(E) + fabs(E_check)) * 0.5 * tolerance,
 		     "eigenvalue sum does not match trace!");
 	  }
 
