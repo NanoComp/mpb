@@ -64,8 +64,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	
 	At the end, Y / sqrt(Yt*Y) will be the lowest eigenvectors.
 	
-	This is equivalent to minimizing trace[Xt*A*X] under the
-	constraint Xt*X == 1.  (X = Y / sqrt(Yt*Y)).  */
+	This is equivalent to minimizing trace[Zt*A*Z] under the
+	constraint Zt*Z == 1.  (Z = Y / sqrt(Yt*Y)).  */
      
      do {
 	  evectmatrix_XtX(U, Y);
