@@ -7,7 +7,9 @@
 ; not implemented them yet.)
 
 ; To apply it to output, say, the density of states at 100 points
-; points in the frequency range 0 to 1 you would do:
+; points in the frequency range 0 to 1 you would do the following
+; (*after* using (run) to compute the frequencies at a bunch of
+; k-points filling the irreducible Brillouin zone):
 ;
 ; (include "dos.scm")
 ; (print-dos 0 1 100)
