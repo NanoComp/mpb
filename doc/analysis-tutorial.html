@@ -226,9 +226,12 @@ The real and imaginary parts of the fields correspond to what the
 fields look like at half-period intervals in time, and in general they
 are different.  However, at K they are redundant, due to the inversion
 symmetry of that k-point (proof left as an exercise for the reader).
-So, it suffices in our case to look at the real parts.  (And, of
-course, since these are TM fields, the z component is the only
-component of the electric field.)
+In general, looking at the real parts alone gives you a pretty good
+picture of the state, especially if you use
+<code>fix-efield-phase</code> (see below), which chooses the phase to
+maximize the field energy in the real part.  (And, of course, since
+these are TM fields, the z component is the only component of the
+electric field.)
 
 <p>The resulting field images are shown below:
 
