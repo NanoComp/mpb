@@ -28,6 +28,9 @@
 
 #include "mpb.h"
 
+/* null mark function, for smobs containing no SCM objects */
+static SCM mark_null(SCM obj) { (void) obj; return SCM_BOOL_F;
+
 /*************************************************************************/
 
 long scm_tc16_smob_field_smob = 0;
@@ -80,6 +83,8 @@ static size_t free_field_smob(SCM obj)
      free(pf);
      return 0;
 }
+
+#define mark_field_smob mark_null
 
 SCM field2scm(field_smob *pf)
 {

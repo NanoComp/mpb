@@ -29,6 +29,9 @@
 
 #include "mpb.h"
 
+/* null mark function, for smobs containing no SCM objects */
+static SCM mark_null(SCM obj) { (void) obj; return SCM_BOOL_F; }
+
 /*************************************************************************/
 
 long scm_tc16_smob_evectmatrix = 0;
@@ -68,6 +71,8 @@ static size_t free_evectmatrix(SCM obj)
      return 0;
 }
 
+#define mark_evectmatrix mark_null
+
 /*************************************************************************/
 
 long scm_tc16_smob_sqmatrix = 0;
@@ -106,6 +111,8 @@ static size_t free_sqmatrix(SCM obj)
      free(pm);
      return 0;
 }
+
+#define mark_sqmatrix mark_null
 
 /*************************************************************************/
 
