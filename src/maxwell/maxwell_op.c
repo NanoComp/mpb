@@ -197,10 +197,10 @@ static void assign_matrix_vector(scalar_complex *newv,
 #endif
 }
 
-/* compute the D field in position space from Xin, which holds
-   the H field in Fourier space, for the specified bands.
-   The output array, dfield, is N x cur_num_bands x 3, where N
-   is the spatial indices and 3 is the field components. */
+/* compute the D field in position space from Xin, which holds the H
+   field in Fourier space, for the specified bands.  The output array,
+   dfield, is localN x cur_num_bands x 3, where localN is the local
+   spatial indices and 3 is the field components. */
 void maxwell_compute_dfield(maxwell_data *d, evectmatrix Xin, 
 			    scalar_complex *dfield,
 			    int cur_band_start, int cur_num_bands)
