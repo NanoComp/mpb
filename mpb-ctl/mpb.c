@@ -757,8 +757,10 @@ void get_epsilon(void)
 
 /* Replace curfield (either d or h) with the scalar energy density function,
    normalized to one.  While we're at it, compute some statistics about
-   the relative strength of different field components. */
-void compute_field_energy(void)
+   the relative strength of different field components.  Also return
+   the integral of the energy density, which we used to normalize it,
+   in case the user needs the unnormalized version. */
+number compute_field_energy(void)
 {
      int i, N;
      real comp_sum[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
@@ -767,7 +769,7 @@ void compute_field_energy(void)
 
      if (!curfield || !strchr("dh", curfield_type)) {
 	  fprintf(stderr, "The D or H field must be loaded first.\n");
-	  return;
+	  return 0;
      }
 
      N = mdata->fft_output_size;
@@ -822,6 +824,8 @@ void compute_field_energy(void)
 
      /* remember that we now have energy density; denoted by capital D/H */
      curfield_type = toupper(curfield_type);
+
+     return energy_sum;
 }
 
 /**************************************************************************/

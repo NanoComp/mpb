@@ -814,14 +814,19 @@ has been loaded.
 
 <p><dt><code>(compute-field-energy)</code>
 <dd>Given the H or D fields, computes the corresponding energy density
-function.  Also prints the fraction of the field in each of its
-cartesian components in the following form (suitable for grepping):
+function (normalized by the total energy).  Also prints the fraction
+of the field in each of its cartesian components in the following form
+(suitable for grepping):
 
 <pre>
 <i>f</i>-energy-components:, <i>k-index</i>, <i>band-index</i>, <i>x-fraction</i>, <i>y-fraction</i>, <i>z-fraction</i>
 </pre>
 
-<p>where <code><i>f</i></code> is either <code>h</code> or <code>d</code>.
+<p>where <code><i>f</i></code> is either <code>h</code> or
+<code>d</code>.  The return value of <code>compute-field-energy</code>
+is the total, unnormalized energy, which is in arbitrary units
+deriving from the normalization of the eigenstate (e.g. the total
+energy for H is always 1.0).
 
 </dl>
 

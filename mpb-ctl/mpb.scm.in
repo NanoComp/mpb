@@ -105,7 +105,7 @@
 (define-external-function get-efield-from-dfield false false no-return-value)
 (define-external-function get-epsilon false false no-return-value)
 (define-external-function fix-field-phase false false no-return-value)
-(define-external-function compute-field-energy false false no-return-value)
+(define-external-function compute-field-energy false false 'number)
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
 (define-external-function output-field-extended false false
