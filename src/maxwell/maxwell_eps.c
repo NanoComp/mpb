@@ -28,6 +28,46 @@
 
 /**************************************************************************/
 
+/* Lapack eigenvalue functions */
+#ifdef SCALAR_SINGLE_PREC
+#  define HEEV F77_FUNC(cheev,CHEEV)
+#  define SYEV F77_FUNC(ssyev,ssyev)
+#else
+#  define HEEV F77_FUNC(zheev,ZHEEV)
+#  define SYEV F77_FUNC(dsyev,dsyev)
+#endif
+extern void HEEV(char *, char *, int *, scalar *, int *, real *,
+		 scalar *, int *, real *, int *);
+extern void SYEV(char *, char *, int *, real *, int *, real *,
+		 real *, int *, int *);
+
+/* compute the 3 real eigenvalues of the matrix V */
+void maxwell_sym_matrix_eigs(real eigs[3], const symmetric_matrix *V)
+{
+     int n = 3, nw = 9, info;
+#if defined(WITH_HERMITIAN_EPSILON)
+     scalar_complex Vm[3][3], W[9], W2[9];
+     CASSIGN_SCALAR(Vm[0][0], V->m00, 0);
+     CASSIGN_SCALAR(Vm[1][1], V->m11, 0);
+     CASSIGN_SCALAR(Vm[2][2], V->m22, 0);
+     Vm[0][1] = V->m01; CASSIGN_CONJ(Vm[1][0], V->m01);
+     Vm[0][2] = V->m02; CASSIGN_CONJ(Vm[2][0], V->m02);
+     Vm[1][2] = V->m12; CASSIGN_CONJ(Vm[2][1], V->m12);
+     HEEV("V", "U", &n, &Vm[0][0], &n, eigs, W, &nw, W2, &info);
+#else
+     real Vm[3][3], W[9];
+     Vm[0][0] = V->m00;
+     Vm[1][1] = V->m11;
+     Vm[2][2] = V->m22;
+     Vm[0][1] = Vm[1][0] = V->m01;
+     Vm[0][2] = Vm[2][0] = V->m02;
+     Vm[1][2] = Vm[2][1] = V->m12;
+     SYEV("V", "U", &n, &Vm[0][0], &n, eigs, W, &nw, &info);
+#endif
+     CHECK(info >= 0, "invalid argument in heev");
+     CHECK(info <= 0, "failure to converge in heev");
+}
+
 /* Set Vinv = inverse of V, where both V and Vinv are real-symmetric
    (or possibly complex-Hermitian) matrices. */
 void maxwell_sym_matrix_invert(symmetric_matrix *Vinv, 

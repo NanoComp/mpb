@@ -154,6 +154,7 @@ extern void set_maxwell_dielectric(maxwell_data *md,
 				   maxwell_dielectric_function epsilon,
 				   void *epsilon_data);
 
+extern void maxwell_sym_matrix_eigs(real eigs[3], const symmetric_matrix *V);
 extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
                                       const symmetric_matrix *V);
 

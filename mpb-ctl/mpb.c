@@ -1071,6 +1071,18 @@ void get_efield(integer which_band)
      get_efield_from_dfield();
 }
 
+/* Extract the mean epsilon from the effective inverse dielectric tensor,
+   which contains two eigenvalues that correspond to the mean epsilon,
+   and one which corresponds to the harmonic mean. */
+static real mean_epsilon(const symmetric_matrix *eps_inv)
+{
+     real eps_eigs[3];
+     maxwell_sym_matrix_eigs(eps_eigs, eps_inv);
+     /* the harmonic mean should be the largest eigenvalue (smallest
+	epsilon), so we'll ignore it and average the other two: */
+     return 2.0 / (eps_eigs[0] + eps_eigs[1]);
+}
+
 /* get the dielectric function, and compute some statistics */
 void get_epsilon(void)
 {
@@ -1102,9 +1114,7 @@ void get_epsilon(void)
      nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
 
      for (i = 0; i < N; ++i) {
-          epsilon[i] = 3.0 / (mdata->eps_inv[i].m00 +
-                              mdata->eps_inv[i].m11 +
-                              mdata->eps_inv[i].m22);
+          epsilon[i] = mean_epsilon(mdata->eps_inv + i);
 	  if (epsilon[i] < eps_low)
 	       eps_low = epsilon[i];
 	  if (epsilon[i] > eps_high)
@@ -1488,9 +1498,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
      nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
 
      for (i = 0; i < N; ++i) {
-	  epsilon = 3.0 / (mdata->eps_inv[i].m00 +
-			   mdata->eps_inv[i].m11 +
-			   mdata->eps_inv[i].m22);
+	  epsilon = mean_epsilon(mdata->eps_inv +i);
 	  if (epsilon >= eps_low && epsilon <= eps_high) {
 	       energy_sum += energy[i];
 #ifndef SCALAR_COMPLEX
@@ -2104,9 +2112,7 @@ number compute_energy_integral(function f)
 	       real epsilon;
 	       vector3 p;
 
-	       epsilon = 3.0 / (mdata->eps_inv[index].m00 +
-				mdata->eps_inv[index].m11 +
-				mdata->eps_inv[index].m22);
+	       epsilon = mean_epsilon(mdata->eps_inv + index);
 	       
 	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
 	       energy_integral += 
