@@ -194,18 +194,37 @@ Applications on Linux (SAL) LAPACK page">SAL</a>.
 directory via the <code>LDFLAGS</code> environment variable as
 described earlier).
 
-<h2><a name="mpi">MPI</a> <i>(optional, not yet used)</i></h2>
+<h2><a name="mpi">MPI</a> <i>(optional)</i></h2>
 
-<p>Optionally, MPB will someday be able to run on a distributed-memory
-parallel machine, and to do this we use the standard MPI
-message-passing interface.  You can download and learn about MPI from
-the <a href="http://www-unix.mcs.anl.gov/mpi/index.html">MPI Home
-Page</a>.  Most commercial supercomputers already have an MPI
-implementation installed.
+<p>Optionally, MPB is able to run on a distributed-memory parallel
+machine, and to do this we use the standard MPI message-passing
+interface.  You can download and learn about MPI from the <a
+href="http://www-unix.mcs.anl.gov/mpi/index.html">MPI Home Page</a>.
+Most commercial supercomputers already have an MPI implementation
+installed.  MPI is <i>not required</i> to compile the ordinary,
+uniprocessor version of Photonic-Bands.
 
-<p>MPI is <i>not required</i> to compile the ordinary, uniprocessor
-version of Photonic-Bands.  In fact, our MPI code is not even fully
-implemented yet; thank you for your patience (we value your call).
+<p>In order for the MPI version of MPB to run successfully, we have a
+slightly nonstandard requirement: each process must be able to read
+from the disk.  (This way, Guile can boot for each process and they
+can all read your control file in parallel.)  Many (most?) commercial
+supercomputers, Linux <a href="http://www.beowulf.org">Beowulf</a>
+clusters, etcetera, satisfy this requirement.
+
+<p>Also, in order to get good performance, you'll need fast
+interconnect hardware such as Myrinet; 100Mbps Ethernet probably won't
+cut it.  The speed bottleneck comes from the FFT, which requires most
+of the communications in MPB.  FFTW's MPI transforms (<a
+href="#fftw">see below</a>) come with benchmark programs that will
+give you a good idea of whether you can get speedups on your system.
+Of course, even with slow communications, you can still benefit from
+the memory savings per CPU for large problems.
+
+<p>As described <a href="mpb">below</a>, when you configure MPB with
+MPI support (<code>--with-mpi</code>), it installs itself as
+<code>mpb-mpi</code>.  See also the <a
+href="user-ref.html#parallel">user reference</a> section for
+information on using MPB on parallel machines.
 
 <h2><a name="hdf5">HDF5</a> <i>(optional, strongly advised)</i></h2>
 
@@ -240,8 +259,9 @@ href="http://ab-initio.mit.edu/mpb/hdf.html">useful HDF software</a>.
 <p>FFTW is a self-optimizing, portable, high-performance FFT
 implementation, including both serial and parallel FFTs.  You can
 download FFTW and find out more about it from the <a
-href="http://www.fftw.org">FFTW Home Page</a>.  If, in the future, you
-want to use Photonic-Bands on a parallel machine with MPI, you will
+href="http://www.fftw.org">FFTW Home Page</a>.
+
+<p>If you want to use MPB on a parallel machine with MPI, you will
 also need to install the MPI FFTW libraries (this just means including
 <code>--enable-mpi</code> in the FFTW <code>configure</code> flags).
 
@@ -362,18 +382,23 @@ break inversion symmetry).
 double precision (C <code>double</code>) for computations.  (Not
 recommended.)
 
-<p><dt><code>--without-fastblas</code>
-<dt><code>--with-fastblas=<i>lib</i></code>
-<dd>The <code>configure</code> script automatically attempts to detect
-accelerated BLAS libraries, like DXML (DEC/Alpha), SCSL and SGIMATH
-(SGI/MIPS), ESSL (IBM/PowerPC), ATLAS, and PHiPACK.  You can disable
-these by using <code>--without-fastblas</code>, or supply another
-library name to try via <code>--with-fastblas=<i>lib</i></code> (it
-will attempt to link with <code>-l<i>lib</i></code>).
-
 <p><dt><code>--without-hdf5</code>
 <dd>Don't use the HDF5 library for field and dielectric function
 output.  (In which case, no field output is possible.)
+
+<p><dt><code>--with-mpi</code>
+<dd>Attempt to compile a <a href="user-ref.html#parallel">parallel
+version of MPB</a> using MPI; the resulting program will be installed
+as <code>mpb-mpi</code>.  Requires <a href="#mpi">MPI</a> and <a
+href="#fftw">MPI FFTW</a> libraries to be installed, as described
+above.
+
+<p>Does <em>not</em> compile the serial MPB, or <code>mpb-data</code>;
+if you want those, you should <code>make distclean</code> and
+compile/install them separately.  
+
+<p>Currently, <code>--with-mpi</code> cannot be used simultaneously
+with <code>--with-inv-symmetry</code>.
 
 <p><dt><code>--with-libctl=<i>dir</i></code>
 <dd>If libctl was installed in a nonstandard location (i.e. neither
@@ -382,6 +407,15 @@ the location of the libctl directory, <code><i>dir</i></code>.  This
 is either <code><i>prefix</i>/share/libctl</code>, where
 <code><i>prefix</i><code> is the installation prefix of libctl, or the
 original libctl source code directory.
+
+<p><dt><code>--without-fastblas</code>
+<dt><code>--with-fastblas=<i>lib</i></code>
+<dd>The <code>configure</code> script automatically attempts to detect
+accelerated BLAS libraries, like DXML (DEC/Alpha), SCSL and SGIMATH
+(SGI/MIPS), ESSL (IBM/PowerPC), ATLAS, and PHiPACK.  You can disable
+these by using <code>--without-fastblas</code>, or supply another
+library name to try via <code>--with-fastblas=<i>lib</i></code> (it
+will attempt to link with <code>-l<i>lib</i></code>).
 
 <p><dt><code>--disable-checks</code>
 <dd>Disable runtime checks.  (Not recommended; the disabled checks

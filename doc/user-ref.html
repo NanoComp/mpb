@@ -1056,10 +1056,68 @@ other half by the inversion symmetry, so the resulting structure
 description did not.  So, you should be careful, and look at the
 <code>epsilon.h5</code> output to make sure it is what you expected.
 
+<h2><a name="parallel">Parallel MPB</a></h2>
+
+<p>If you <code>configure</code> MPB with the <code>--with-mpi</code>
+flag, then the program is compiled to take advantage of
+distributed-memory parallel machines with <a
+href="http://www-unix.mcs.anl.gov/mpi/index.html">MPI</a>, and is
+installed as <code>mpb-mpi</code>.  (See also the <a
+href="installation.html#mpi">installation section</a>.)  This means
+that computations will (potentially) run more quickly and take up less
+memory per processor than for the serial code.
+
+<p>Using the parallel MPB is almost identical to using the serial
+version, with a couple of minor exceptions.  The same ctl files should
+work for both.  Running a program that uses MPI requires slightly
+different invocations on different systems, but will typically be
+something like:
+
+<pre>
+unix% mpirun -np 4 mpb-mpi foo.ctl
+</pre>
+
+<p>to run on e.g. 4 processors.  A second difference is that 1D
+systems are currently not supported in the MPI code, but the serial
+code should be fast enough for those anyway.  A third difference is
+that the output HDF5 files (epsilon, fields, etcetera) from
+<code>mpb-mpi</code> have their first two dimensions (x and y)
+<em>transposed</em>; i.e. they are output as YxXxZ arrays.  This
+doesn't prevent you from visualizing them, but the coordinate system
+is left-handed; to un-transpose the data, you can process it with
+<code>mpb-data</code> and the <code>-T</code> option (in addition to
+any other options).
+
+<p>In order to get optimal benefit (time and memory savings) from
+<code>mpb-mpi</code>, the first two dimensions (x and y) of your grid
+should <em>both</em> be divisible by the number of processes.  If you
+violate this constraint, MPB will still work, but the load balance
+between processors will be uneven.  At worst, if either your x or y
+grid size is smaller than the number of processes, then some of the
+processors will be idle for part (or all) of the computation.
+
+<p><code>mpb-mpi</code> divides each band at each k-point between the
+available processors.  This means that, even if you have only a single
+k-point (e.g. in a defect calculation), it can benefit from
+parallelization.  Moreover, memory usage per processor is inversely
+proportional to the number of processors used.  For sufficiently large
+problems, the speedup is also nearly linear.
+
+<h3>Alternative parallelization</h3>
+
+<p>There is an alternative method of parallelization when you have
+multiple k points: do each k-point on a different processor.  This
+does not provide any memory benefits, and does not allow one k-point
+to benefit by starting with the fields of the previous k-point, but is
+easy and may be the only effective way to parallelize calculations for
+small problems.  This method, however, can utilize the ordinary
+<code>mpb</code> program unmodified, and it is easy to write a script
+to parcel up the k-points between processors.
+
 <hr>
 Go to the <a href="developer.html">next</a>, <a
-href="analysis-tutorial.html">previous</a>, or <a href="index.html">main</a>
-section.
+href="analysis-tutorial.html">previous</a>, or <a
+href="index.html">main</a> section.
 
 </BODY>
 </HTML>
