@@ -107,9 +107,9 @@ static real epsilon_func(real r[3], void *edata)
      /* p needs to be in the lattice *unit* vector basis, while r is
 	in the lattice vector basis.  Also, shift origin to the center
         of the grid. */
-     p.x = r[0] * geometry_lattice.size.x - 0.5;
-     p.y = r[1] * geometry_lattice.size.y - 0.5;
-     p.z = r[2] * geometry_lattice.size.z - 0.5;
+     p.x = (r[0] - 0.5) * geometry_lattice.size.x;
+     p.y = (r[1] - 0.5)* geometry_lattice.size.y;
+     p.z = (r[2] - 0.5) * geometry_lattice.size.z;
      
      material = material_of_point(p);  /* from libctl/utils/libgeom/geom.c */
      return material.epsilon;
@@ -670,7 +670,7 @@ void output_field_extended(vector3 copiesv)
 number compute_energy_in_object_list(geometric_object_list objects)
 {
      int i, j, k, n1, n2, n3;
-     real s1, s2, s3;
+     real s1, s2, s3, c1, c2, c3;
      real *energy = (real *) curfield;
      real energy_sum = 0;
 
@@ -690,13 +690,16 @@ number compute_energy_in_object_list(geometric_object_list objects)
      s1 = geometry_lattice.size.x / n1;
      s2 = geometry_lattice.size.y / n2;
      s3 = geometry_lattice.size.z / n3;
+     c1 = geometry_lattice.size.x * 0.5;
+     c2 = geometry_lattice.size.y * 0.5;
+     c3 = geometry_lattice.size.z * 0.5;
 
      for (i = 0; i < n1; ++i)
 	  for (j = 0; j < n2; ++j)
 	       for (k = 0; k < n3; ++k) {
 		    vector3 p;
 		    int n;
-		    p.x = i * s1; p.y = j * s2; p.z = k * s3;
+		    p.x = i * s1 - c1; p.y = j * s2 - c2; p.z = k * s3 - c3;
 		    for (n = objects.num_items - 1; n >= 0; --n)
 			 if (point_in_periodic_objectp(p, objects.items[n])) {
 			      energy_sum += energy[(i*n2 + j)*n3 + k];
