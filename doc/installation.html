@@ -98,24 +98,28 @@ Applications on Linux (SAL) LAPACK page">SAL</a>.
 directory via the <code>LDFLAGS</code> environment variable; see
 below).
 
-<h2>MPI</h2>
+<h2>MPI <i>(optional)</i></h2>
 
-<p>Optionally, Photonic-Bands can run on a distributed-memory parallel
-machine, and to do this we use the standard MPI message-passing
-interface.  You can download and learn about MPI from the <a
-href="http://www-unix.mcs.anl.gov/mpi/index.html">MPI Home Page</a>.
-Most commercial supercomputers already have an MPI implementation
-installed.
+<p>Optionally, MPB will someday be able to run on a distributed-memory
+parallel machine, and to do this we use the standard MPI
+message-passing interface.  You can download and learn about MPI from
+the <a href="http://www-unix.mcs.anl.gov/mpi/index.html">MPI Home
+Page</a>.  Most commercial supercomputers already have an MPI
+implementation installed.
 
 <p>MPI is <i>not required</i> to compile the ordinary, uniprocessor
 version of Photonic-Bands.  In fact, our MPI code is not even fully
 implemented yet; thank you for your patience (we value your call).
 
-<h2>HDF5</h2>
+<h2>HDF5 <i>(optional)</i></h2>
 
 <p>We require a portable, standard binary format for outputting the
 electromagnetic fields and similar volumetric data, and for this we
-use HDF.  HDF is a widely-used, free, portable library and file format
+use HDF.  (If you don't have HDF5, you can still compile
+Photonic-Bands, but you won't be able to output the fields or the
+dielectric function.)
+
+<p>HDF is a widely-used, free, portable library and file format
 for multi-dimensional scientific data, developed in the National
 Center for Supercomputing Applications (NCSA) at the University of
 Illinois (UIUC, home of the <a
@@ -131,9 +135,7 @@ and data-analysis tools still use HDF4, but HDF5 includes an
 HDF4 files.
 
 <p>You can get HDF and learn about it on the <a
-href="http://hdf.ncsa.uiuc.edu">HDF Home Page</a>.  (Note: if you
-don't have HDF5, you can still compile Photonic-Bands, but you won't
-be able to output the fields or the dielectric function.)
+href="http://hdf.ncsa.uiuc.edu">HDF Home Page</a>.
 
 <h2>FFTW</h2>
 
@@ -146,7 +148,7 @@ install the <a href="">MPI FFTW</a> libraries (this just means
 including <code>--enable-mpi</code> in the FFTW <code>configure</code>
 flags).
 
-<h2>GNU Readline</h2>
+<h2>GNU Readline <i>(optional)</i></h2>
 
 <p>GNU Readline is a library to provide command-line history,
 tab-completion, emacs keybindings, and other shell-like niceties to
@@ -187,7 +189,7 @@ specify the location of the libctl shared files for the Photonic-Bands
 package, using the <code>--with-libctl=<i>dir</i>/share/libctl</code>
 option to the Photonic-Bands <code>configure</code>.
 
-<h2>GNU Autoconf</h2>
+<h2>GNU Autoconf <i>(optional)</i></h2>
 
 <p>If you want to be a developer of the Photonic-Bands package (as
 opposed to merely a user), you will also need the GNU Autoconf
@@ -196,7 +198,10 @@ program.  Autoconf is a portability tool that generates
 capabilities of a system and configure a package accordingly.  You can
 find out more at the <a
 href="http://sourceware.cygnus.com/autoconf/">Autoconf Home Page</a>
-(autoconf is typically installed by default on Linux systems).
+(autoconf is typically installed by default on Linux systems).  In
+order to install Autoconf, you will also need the GNU <code>m4</code>
+program if you do not already have it (see the <a
+href="http://www.seindal.dk/rene/gnu/">GNU m4 Home Page</a>).
 
 <h2>MIT Photonic-Bands</h2>
 
