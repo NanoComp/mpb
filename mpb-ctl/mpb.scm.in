@@ -120,6 +120,8 @@
 (define-external-function compute-group-velocity-component false false
   (make-list-type 'number) 'vector3)
 
+; Return a list of the group velocity vector3's, in the cartesian
+; basis (and units of c):
 (define (compute-group-velocities)
   (let ((vx (compute-group-velocity-component
 	     (cartesian->reciprocal (vector3 1 0 0))))
@@ -128,6 +130,15 @@
 	(vz (compute-group-velocity-component
 	     (cartesian->reciprocal (vector3 0 0 1)))))
     (map (lambda (x y z) (vector3 x y z)) vx vy vz)))
+
+; Define a band function to be passed to run, so that you can easily
+; display the group velocities for each k-point.  The band index b is
+; only used to ensure that the output is printed just once (by only
+; outputting for b=1):
+(define (display-group-velocities b)
+  (if (= b 1)
+      (display-many "group velocities at " current-k ": "
+		    (compute-group-velocities) "\n")))
 
 ; ****************************************************************
 
