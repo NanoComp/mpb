@@ -88,8 +88,14 @@ discussed above.  Defaults to 3.
 <p><dt><code>k-points</code> [list of <code>vector3</code>]
 <dd>List of Bloch wavevectors to compute the bands at, expressed in
 the basis of the reciprocal lattice vectors (<em>not</em> the
-unit-normalized reciprocal lattice vectors).  Defaults to none (empty
-list).
+unit-normalized reciprocal lattice vectors).  The reciprocal lattice
+vectors are defined as follows:  Given the lattice vectors
+<code>R<sub>i</sub></code>, the reciprocal lattice vector
+<code>G<sub>j</sub></code> satisfies <code>R<sub>i</sub> *
+G<sub>j</sub> = 2*Pi*delta<sub>i,j</sub></code>, where
+<code>delta<sub>i,j</sub></code> is the Kronecker delta (1 for <code>i
+= j</code> and 0 otherwise). <code>k-points</code> defaults to none
+(empty list).
 
 <p><dt><code>num-bands</code> [<code>integer</code>]
 <dd>Number of bands (eigenvectors) to compute at each k
