@@ -155,8 +155,9 @@
 
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
-(define-external-function compute-energy-integral false false
+(define-external-function compute-field-integral false false
   'number 'function)
+(define compute-energy-integral compute-field-integral)
 (define-external-function compute-energy-in-object-list false false
   'number (make-list-type 'geometric-object))
 

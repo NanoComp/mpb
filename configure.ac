@@ -3,7 +3,7 @@ AC_INIT
 AC_CONFIG_SRCDIR([src/matrices/matrices.c])
 AC_CONFIG_HEADER(src/config.h)
 
-MPB_VERSION=1.2.2
+MPB_VERSION=1.3beta
 AC_SUBST(MPB_VERSION)
 
 AC_MSG_CHECKING([for vendor f77 to be used instead of g77])
@@ -256,6 +256,8 @@ else
 		AC_MSG_ERROR([Couldn't find the required Guile library.])
 	fi
 fi
+
+AC_CHECK_FUNCS(gh_call4)
 
 # Check how to activate Guile readline support:
 

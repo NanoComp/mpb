@@ -61,6 +61,8 @@ extern int verbose;
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
 
+#define TWOPI 6.2831853071795864769252867665590057683943388
+
 /**************************************************************************/
 
 /* The following are hook functions called from main() when
@@ -454,9 +456,12 @@ void init_params(integer p, boolean reset_fields)
      mesh[1] = (dimensions > 1) ? mesh_size : 1;
      mesh[2] = (dimensions > 2) ? mesh_size : 1;
 
-     Rm.c0 = vector3_scale(geometry_lattice.size.x, geometry_lattice.basis.c0);
-     Rm.c1 = vector3_scale(geometry_lattice.size.y, geometry_lattice.basis.c1);
-     Rm.c2 = vector3_scale(geometry_lattice.size.z, geometry_lattice.basis.c2);
+     Rm.c0 = vector3_scale(nx == 1 ? 1 : geometry_lattice.size.x, 
+			   geometry_lattice.basis.c0);
+     Rm.c1 = vector3_scale(ny == 1 ? 1 : geometry_lattice.size.y,
+			   geometry_lattice.basis.c1);
+     Rm.c2 = vector3_scale(nz == 1 ? 1 : geometry_lattice.size.z,
+			   geometry_lattice.basis.c2);
      mpi_one_printf("Lattice vectors:\n");
      mpi_one_printf("     (%g, %g, %g)\n", Rm.c0.x, Rm.c0.y, Rm.c0.z);  
      mpi_one_printf("     (%g, %g, %g)\n", Rm.c1.x, Rm.c1.y, Rm.c1.z);
@@ -1655,8 +1660,6 @@ vector3 get_bloch_field_im_point(vector3 p)
      return F;
 }
 
-#define TWOPI 6.2831853071795864769252867665590057683943388
-
 static void get_field_point_reim(vector3 p, vector3 *re, vector3 *im)
 {
      int conjugate;
@@ -2223,21 +2226,35 @@ number compute_energy_in_object_list(geometric_object_list objects)
 
 /**************************************************************************/
 
-/* Compute the integral of f(energy, epsilon, r) over the cell. */
-number compute_energy_integral(function f)
+#ifndef HAVE_GH_CALL4
+static SCM gh_call4 (SCM proc, SCM arg1, SCM arg2, SCM arg3, SCM arg4)
+{
+     return scm_apply (proc, arg1, 
+		       scm_cons(arg2, 
+				scm_cons2 (arg3, arg4, scm_listofnull)));
+}
+#endif
+
+
+/* Compute the integral of f(energy/field, epsilon, r) over the cell. */
+number compute_field_integral(function f)
 {
      int i, j, k, n1, n2, n3, n_other, n_last, rank, last_dim;
 #ifdef HAVE_MPI
      int local_n2, local_y_start, local_n3;
 #endif
      real s1, s2, s3, c1, c2, c3;
+     int integrate_energy, hfield;
      real *energy = (real *) curfield;
-     real energy_integral = 0;
+     real integral = 0;
 
-     if (!curfield || !strchr("DH", curfield_type)) {
-          mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
+     if (!curfield || !strchr("dheDH", curfield_type)) {
+          mpi_one_fprintf(stderr, "The D or H energy/field must be loaded first.\n");
           return 0.0;
      }
+
+     integrate_energy = strchr("DH", curfield_type) != NULL;
+     hfield = strchr("h", curfield_type) != NULL;
 
      n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
      n_other = mdata->other_dims;
@@ -2337,12 +2354,37 @@ number compute_energy_integral(function f)
 	       epsilon = mean_epsilon(mdata->eps_inv + index);
 	       
 	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
-	       energy_integral += 
-		    ctl_convert_number_to_c(
-			 gh_call3(f,
-				  ctl_convert_number_to_scm(energy[index]),
-				  ctl_convert_number_to_scm(epsilon),
-				  ctl_convert_vector3_to_scm(p)));	  
+	       if (integrate_energy)
+		    integral += 
+			 ctl_convert_number_to_c(
+			      gh_call3(f,
+				     ctl_convert_number_to_scm(energy[index]),
+				       ctl_convert_number_to_scm(epsilon),
+				       ctl_convert_vector3_to_scm(p)));	  
+	       else {
+		    vector3 Fre, Fim;
+		    double phase_phi;
+		    scalar_complex phase;
+
+		    phase_phi = TWOPI * 
+			 (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
+			  cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
+			  cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+		    CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
+		    CASSIGN_MULT_RE(Fre.x, curfield[3*index+0], phase);
+		    CASSIGN_MULT_IM(Fim.x, curfield[3*index+0], phase);
+		    CASSIGN_MULT_RE(Fre.y, curfield[3*index+1], phase);
+		    CASSIGN_MULT_IM(Fim.y, curfield[3*index+1], phase);
+		    CASSIGN_MULT_RE(Fre.z, curfield[3*index+2], phase);
+		    CASSIGN_MULT_IM(Fim.z, curfield[3*index+2], phase);
+		    integral +=
+                         ctl_convert_number_to_c(
+                              gh_call4(f,
+				       ctl_convert_vector3_to_scm(Fre),
+				       ctl_convert_vector3_to_scm(Fim),
+				       ctl_convert_number_to_scm(epsilon),
+                                       ctl_convert_vector3_to_scm(p)));
+	       }
 
 #ifndef SCALAR_COMPLEX
 	       {
@@ -2364,21 +2406,62 @@ number compute_energy_integral(function f)
 			 p.x = i2c * s1 - c1; 
 			 p.y = j2c * s2 - c2; 
 			 p.z = k2c * s3 - c3;
-			 energy_integral += 
-			      ctl_convert_number_to_c(
-				   gh_call3(f,
+			 if (integrate_energy)
+			      integral += 
+				   ctl_convert_number_to_c(
+					gh_call3(f,
 				      ctl_convert_number_to_scm(energy[index]),
 				      ctl_convert_number_to_scm(epsilon),
 				      ctl_convert_vector3_to_scm(p)));
+			 else {
+			      vector3 Fre, Fim;
+			      double phase_phi;
+			      scalar_complex phase, Fx, Fy, Fz;
+			      
+			      Fx = curfield[3*index+0];
+			      Fy = curfield[3*index+1];
+			      Fz = curfield[3*index+2];
+			      /* conjugate and flip field */
+			      if (hfield) { /* pseudo-vectors aren't flipped */
+				   Fx.im= -Fx.im; Fy.im= -Fy.im; Fz.im= -Fz.im;
+			      }
+			      else {
+				   Fx.re= -Fx.re; Fy.re= -Fy.re; Fz.re= -Fz.re;
+			      }
+
+			      phase_phi = TWOPI * 
+				   (cur_kvector.x 
+				    * (p.x/geometry_lattice.size.x+0.5) +
+				    cur_kvector.y 
+				    * (p.y/geometry_lattice.size.y+0.5) +
+				    cur_kvector.z 
+				    * (p.z/geometry_lattice.size.z+0.5));
+			      CASSIGN_SCALAR(phase, 
+					     cos(phase_phi), sin(phase_phi));
+			      CASSIGN_MULT_RE(Fre.x, Fx, phase);
+			      CASSIGN_MULT_IM(Fim.x, Fx, phase);
+			      CASSIGN_MULT_RE(Fre.y, Fy, phase);
+			      CASSIGN_MULT_IM(Fim.y, Fy, phase);
+			      CASSIGN_MULT_RE(Fre.z, Fz, phase);
+			      CASSIGN_MULT_IM(Fim.z, Fz, phase);
+
+			      integral +=
+				   ctl_convert_number_to_c(
+					gh_call4(f,
+					    ctl_convert_vector3_to_scm(Fre),
+				            ctl_convert_vector3_to_scm(Fim),
+				            ctl_convert_number_to_scm(epsilon),
+                                            ctl_convert_vector3_to_scm(p)));
+			 }
 		    }
 	       }
 #endif
 	  }
      }
 
-     mpi_allreduce_1(&energy_integral, real, SCALAR_MPI_TYPE,
+     mpi_allreduce_1(&integral, real, SCALAR_MPI_TYPE,
 		     MPI_SUM, MPI_COMM_WORLD);
-     return energy_integral;
+     return integral;
 }
 
 /**************************************************************************/
