@@ -45,6 +45,8 @@ snapshot:
 	ss_vers=`date +"%Y%m%d"` && \
 	ss_dir=$(package)-$$ss_vers && \
 	cvs export -D now -d $$ss_dir $(package) && \
+	cp config.guess config.sub $$ss_dir && \
+	cp install-sh $$ss_dir && \
 	(sed "s/VERSION=@MPB_VERSION@/VERSION=$$ss_vers/" $$ss_dir/configure.ac > $$ss_dir/configure.ac.ss) && \
 	mv -f $$ss_dir/configure.ac.ss $$ss_dir/configure.ac && \
 	pushd $$ss_dir && autoconf && popd && \
