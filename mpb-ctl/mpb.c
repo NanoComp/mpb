@@ -1520,13 +1520,13 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  last_dim_start = local_dims[last_dim_index];
 	  last_dim_size = dims[last_dim_index] - local_dims[last_dim_index];
      }
-#  endif
+#  endif /* ! SCALAR_COMPLEX */
      output_k[0] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
-	  + R[1][0]*mdata->current_k[2];
+	  + R[1][2]*mdata->current_k[2];
      output_k[1] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
-	  + R[0][0]*mdata->current_k[2];
+	  + R[0][2]*mdata->current_k[2];
      output_k[2] = R[2][0]*mdata->current_k[0] + R[2][1]*mdata->current_k[1]
-	  + R[2][0]*mdata->current_k[2];
+	  + R[2][2]*mdata->current_k[2];
      output_R[0][0]=R[1][0]; output_R[0][1]=R[1][1]; output_R[0][2]=R[1][2];
      output_R[1][0]=R[0][0]; output_R[1][1]=R[0][1]; output_R[1][2]=R[0][2];
      output_R[2][0]=R[2][0]; output_R[2][1]=R[2][1]; output_R[2][2]=R[2][2];
@@ -1545,11 +1545,11 @@ void output_field_to_file(integer which_component, string filename_prefix)
 #  endif
      start[0] = mdata->local_x_start;
      output_k[0] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
-	  + R[0][0]*mdata->current_k[2];
+	  + R[0][2]*mdata->current_k[2];
      output_k[1] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
-	  + R[1][0]*mdata->current_k[2];
+	  + R[1][2]*mdata->current_k[2];
      output_k[2] = R[2][0]*mdata->current_k[0] + R[2][1]*mdata->current_k[1]
-	  + R[2][0]*mdata->current_k[2];
+	  + R[2][2]*mdata->current_k[2];
      output_R[0][0]=R[0][0]; output_R[0][1]=R[0][1]; output_R[0][2]=R[0][2];
      output_R[1][0]=R[1][0]; output_R[1][1]=R[1][1]; output_R[1][2]=R[1][2];
      output_R[2][0]=R[2][0]; output_R[2][1]=R[2][1]; output_R[2][2]=R[2][2];
