@@ -1,6 +1,6 @@
 2001-11-15  Steven G. Johnson  <stevenj@ab-initio>
 
-	* NEWS: updated
+	* ChangeLog, NEWS: updated
 
 	* mpb-ctl/examples/line-defect.ctl: slight correction
 
