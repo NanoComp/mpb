@@ -36,6 +36,8 @@
 #include <matrixio.h>
 #include <maxwell.h>
 
+#include <ctl.h>
+
 #include "mpb.h"
 
 typedef struct {
