@@ -38,7 +38,7 @@
 
 (define-input-var grid-size (vector3 16 16 16) 'vector3
   (lambda (v) (vector-for-all? v (lambda (x) (and (> x 0) (integer? x))))))
-(define-input-var mesh-size 7 'integer positive?)
+(define-input-var mesh-size 3 'integer positive?)
 
 (define-input-var filename-prefix "" 'string)
 
