@@ -13,9 +13,12 @@ MYLIBS = ../src/maxwell/maxwell.a \
          ../src/matrices/matrices.a \
          ../src/util/util.a 
 
-all: blastest eigs_test maxwell_test
+all: blastest eigs_test maxwell_test malloctest
 
 libs:
+
+malloctest: malloctest.o $(MYLIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) malloctest.o $(MYLIBS) $(LIBS) -o $@
 
 blastest: blastest.o $(MYLIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) blastest.o $(MYLIBS) $(LIBS) -o $@
@@ -31,4 +34,4 @@ maxwell_test: maxwell_test.o $(MYLIBS)
 
 clean: 
 	rm -f blastest eigs_test maxwell_test blastest.o \
-              eigs_test.o maxwell_test.o core
+              eigs_test.o maxwell_test.o malloctest.o malloctest core
