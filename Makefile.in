@@ -31,6 +31,17 @@ dist:
 	GZIP="--best" tar chozf $(distdir).tar.gz $(distdir)
 	rm -rf $(distdir)
 
+snapshot:
+	ss_vers=`date +"%Y%m%d"` && \
+	ss_dir=$(package)-$$ss_vers && \
+	cvs export -D now -d $$ss_dir $(package) && \
+	(sed "s/VERSION=@MPB_VERSION@/VERSION=$$ss_vers/" $$ss_dir/configure.in > $$ss_dir/configure.in.ss) && \
+	mv -f $$ss_dir/configure.in.ss $$ss_dir/configure.in && \
+	pushd $$ss_dir && autoconf && popd && \
+	rm -f $$ss_dir".tar.gz" && \
+	GZIP="--best" tar chozf $$ss_dir".tar.gz" $$ss_dir && \
+	rm -rf $$ss_dir
+
 clean: clean-recursive
 	rm -f core
 
