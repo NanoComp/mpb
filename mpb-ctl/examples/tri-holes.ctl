@@ -15,7 +15,8 @@
                      (vector3 0 0.5 kz)        ; M
                      (vector3 (/ -3) (/ 3) kz) ; K
                      (vector3 0 0 kz)))        ; Gamma
-(set! k-points (interpolate 4 k-points))
+(define-param k-interp 4)
+(set! k-points (interpolate k-interp k-points))
 
 ; Now, define the geometry, etcetera:
 
