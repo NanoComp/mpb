@@ -355,6 +355,7 @@ void solve_kpoint(vector3 kvector)
      real *eigvals;
      real k[3];
      int flags;
+     evectconstraint_chain *constraints = NULL;
 
      printf("solve_kpoint (%g,%g,%g):\n",
 	    kvector.x, kvector.y, kvector.z);
@@ -390,6 +391,10 @@ void solve_kpoint(vector3 kvector)
      if (verbose)
 	  flags |= EIGS_VERBOSE;
 
+     constraints = evect_add_constraint(constraints,
+					maxwell_constraint,
+					(void *) mdata);
+
      if (mtdata) {  /* solving for bands near a target frequency */
 	  eigensolver(H, eigvals,
 		      maxwell_target_operator, (void *) mtdata,
@@ -397,7 +402,7 @@ void solve_kpoint(vector3 kvector)
 		      maxwell_target_preconditioner :
 		      maxwell_target_preconditioner2,
 		      (void *) mtdata, NULL,
-		      maxwell_constraint, (void *) mdata,
+		      evectconstraint_chain_func, (void *) constraints,
 		      W, NWORK, tolerance, &num_iters, flags);
 	  /* now, diagonalize the real Maxwell operator in the
 	     solution subspace to get the true eigenvalues and
@@ -413,8 +418,10 @@ void solve_kpoint(vector3 kvector)
 		      maxwell_preconditioner :
 		      maxwell_preconditioner2,
 		      (void *) mdata, NULL,
-		      maxwell_constraint, (void *) mdata,
+		      evectconstraint_chain_func, (void *) constraints,
 		      W, NWORK, tolerance, &num_iters, flags);
+
+     evect_destroy_constraints(constraints);
 
      printf("Finished solving for bands after %d iterations.\n", num_iters);
      

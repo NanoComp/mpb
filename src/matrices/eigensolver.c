@@ -427,3 +427,43 @@ void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
      destroy_sqmatrix(Usqrt);
      destroy_sqmatrix(Uwork);
 }
+
+/* Subroutines for chaining constraints, to make it easy to pass
+   multiple constraint functions to the eigensolver: */
+
+evectconstraint_chain *evect_add_constraint(const evectconstraint_chain
+					    *constraints,
+					    evectconstraint C,
+					    void *constraint_data)
+{
+     evectconstraint_chain *new_constraints;
+
+     new_constraints =
+	  (evectconstraint_chain *) malloc(sizeof(evectconstraint_chain));
+     CHECK(new_constraints, "out of memory!");
+
+     new_constraints->C = C;
+     new_constraints->constraint_data = constraint_data;
+     new_constraints->next = constraints;
+     return new_constraints;
+}
+
+void evect_destroy_constraints(evectconstraint_chain *constraints)
+{
+     while (constraints) {
+	  evectconstraint_chain *cur_constraint = constraints;
+	  constraints = constraints->next;
+	  free(cur_constraint);
+     }
+}
+
+void evectconstraint_chain_func(evectmatrix X, void *data)
+{
+     evectconstraint_chain *constraints = (evectconstraint_chain *) data;
+
+     while (constraints) {
+	  if (constraints->C)
+	       constraints->C(X, constraints->constraint_data);
+          constraints = constraints->next;
+     }
+}
