@@ -449,6 +449,19 @@ void matrixio_close_dataset(matrixio_id data_id)
 #endif
 }
 
+int matrixio_dataset_exists(matrixio_id id, const char *name)
+{
+#if defined(HAVE_HDF5)
+     hid_t data_id;
+     SUPPRESS_HDF5_ERRORS(data_id = H5Dopen(id, name));
+     if (data_id >= 0)
+	  H5Dclose(data_id);
+     return (data_id >= 0);
+#else
+     return 0;
+#endif
+}
+
 /*****************************************************************************/
 
 void matrixio_write_real_data(matrixio_id data_id,

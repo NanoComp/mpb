@@ -39,6 +39,7 @@ extern matrixio_id matrixio_create_dataset(matrixio_id id,
                                     const char *name, const char *description,
                                     int rank, const int *dims);
 extern void matrixio_close_dataset(matrixio_id data_id);
+extern int matrixio_dataset_exists(matrixio_id id, const char *name);
 
 extern void matrixio_write_real_data(matrixio_id data_id,
                               const int *local_dims, const int *local_start,

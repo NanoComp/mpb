@@ -87,6 +87,8 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 {
      int i, j, k;
      real s[3]; /* phase difference per cell in each lattice direction */
+     real min_out_re = 1e20, max_out_re = -1e20, 
+	  min_out_im = 1e20, max_out_im = -1e20;
 
      CHECK(d_in_re && d_out_re, "invalid arguments");
      CHECK((d_out_im && d_in_im) || (!d_out_im && !d_in_im),
@@ -191,6 +193,8 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 					       d_in_im[IN_INDEX(i2,j2,k2)],
 					       xi2, yi2, zi2, s,
 					       dx * dy * dz);
+			 min_out_im = MIN2(min_out_im, d_out_im[ijk]);
+			 max_out_im = MAX2(min_out_im, d_out_im[ijk]);
 		    }
 		    else {
 			 d_out_re[ijk] =
@@ -203,8 +207,16 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 			      d_in_re[IN_INDEX(i2,j2,k1)] * dx * dy * mdz +
 			      d_in_re[IN_INDEX(i2,j2,k2)] * dx * dy * dz;
 		    }
+		    min_out_re = MIN2(min_out_re, d_out_re[ijk]);
+		    max_out_re = MAX2(min_out_re, d_out_re[ijk]);
 #undef IN_INDEX
 	       }
+
+     if (verbose) {
+	  printf("real part range: %g .. %g\n", min_out_re, max_out_re);
+	  if (d_out_im)
+	       printf("imag part range: %g .. %g\n", min_out_re, max_out_re);
+     }
 }
 
 void handle_dataset(matrixio_id in_file, matrixio_id out_file, 
@@ -217,7 +229,7 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      int in_dims[3] = {1,1,1}, out_dims[3] = {1,1,1}, rank = 3, i, N;
      int start[3] = {0,0,0};
      hid_t data_id;
-     char out_name[1000];
+     char out_name[1000], out_name2[1000];
 
      d_in_re = matrixio_read_real_data(in_file, name_re, &rank, in_dims,
 				       0, 0, 0, NULL);
@@ -279,9 +291,18 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      strcpy(out_name, name_re);
      if (out_file == in_file)
 	  strcat(out_name, "-new");
+     for (i = 1; i < 10000; ++i) {
+	  if (i > 1)
+	       sprintf(out_name2, "%s%d", out_name, i);
+	  else
+	       strcpy(out_name2, out_name);
+	  if (!matrixio_dataset_exists(out_file, out_name2))
+	       break;
+     }
+     CHECK(i < 10000, "crazy number of datasets in output file");
      if (verbose)
-	  printf("Writing dataset to %s...\n", out_name);
-     data_id = matrixio_create_dataset(out_file, out_name, "", rank, out_dims);
+	  printf("Writing dataset to %s...\n", out_name2);
+     data_id = matrixio_create_dataset(out_file, out_name2,"", rank, out_dims);
      matrixio_write_real_data(data_id, out_dims, start, 1, d_out_re);
      matrixio_close_dataset(data_id);
 
@@ -289,9 +310,13 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
 	  strcpy(out_name, name_im);
 	  if (out_file == in_file)
 	       strcat(out_name, "-new");
+	  if (i > 1)
+               sprintf(out_name2, "%s%d", out_name, i);
+          else
+               strcpy(out_name2, out_name);
 	  if (verbose)
-	       printf("Writing dataset to %s...\n", out_name);
-	  data_id = matrixio_create_dataset(out_file, out_name, "",
+	       printf("Writing dataset to %s...\n", out_name2);
+	  data_id = matrixio_create_dataset(out_file, out_name2, "",
 					    rank, out_dims);
 	  matrixio_write_real_data(data_id, out_dims, start, 1, d_out_im);
 	  matrixio_close_dataset(data_id);
