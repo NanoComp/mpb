@@ -40,6 +40,8 @@
   (lambda (v) (vector-for-all? v (lambda (x) (and (> x 0) (integer? x))))))
 (define-input-var mesh-size 7 'integer positive?)
 
+(define-input-var filename-prefix "" 'string)
+
 (define-output-var freqs (make-list-type 'number))
 
 ; ****************************************************************
@@ -175,7 +177,7 @@
 	 (solve-kpoint k)
 	 (set! band-range-data (update-band-range-data band-range-data freqs))
 	 (map (lambda (f)
-		(do ((band 0 (+ band 1))) ((= band num-bands)) (f band)))
+		(do ((band 1 (+ band 1))) ((> band num-bands)) (f band)))
 	      band-functions))
        k-points)
   (if (> (length k-points) 1)

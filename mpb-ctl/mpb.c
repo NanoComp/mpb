@@ -213,8 +213,16 @@ void init_params(boolean reset_fields)
 	  int true_rank = nz > 1 ? 3 : (ny > 1 ? 2 : 1);
 	  if (true_rank < dimensions)
 	       dimensions = true_rank;
-	  else if (true_rank > dimensions)
-	       fprintf(stderr, "WARNING: true rank of grid is > dimensions\n");
+	  else if (true_rank > dimensions) {
+	       fprintf(stderr, 
+		       "WARNING: rank of grid is > dimensions.\n"
+		       "         setting extra grid dims. to 1.\n");
+	       /* force extra dims to be 1: */
+	       if (dimensions <= 2)
+		    nz = 1;
+	       if (dimensions <= 1)
+		    ny = 1;
+	  }
      }
 
      printf("Working in %d dimensions.\n", dimensions);
@@ -298,22 +306,6 @@ void init_params(boolean reset_fields)
      else
 	  set_polarization(-(3+1)); /* make same as prev. call, but
 				       don't reinitialize the fields. */
-
-     printf("Stuff for grepping:\n");
-     printf("sumfrq:, k index, kx, ky, kz, kmag/2pi");
-     for (i = 0; i < num_bands; ++i)
-	  printf(", band %d", i + 1);
-     printf("\n");
-     if (dimensions <= 2) {
-	  printf("sumte:, k index, kx, ky, kz, kmag/2pi");
-	  for (i = 0; i < num_bands; ++i)
-	       printf(", band %d", i + 1);
-	  printf("\n");
-	  printf("sumtm:, k index, kx, ky, kz, kmag/2pi");
-	  for (i = 0; i < num_bands; ++i)
-	       printf(", band %d", i + 1);
-	  printf("\n");
-     }
 }
 
 /**************************************************************************/
@@ -332,6 +324,20 @@ void solve_kpoint(vector3 kvector)
      if (!mdata) {
 	  fprintf(stderr, "init-params must be called before solve-kpoint!\n");
 	  return;
+     }
+
+     /* if this is the first k point, print out a header line for
+	for the frequency grep data: */
+     if (!kpoint_index) {
+	  printf("%s:, k index, kx, ky, kz, kmag/2pi",
+		 mdata->polarization == NO_POLARIZATION ? "sumfrq" :
+		 (mdata->polarization == TM_POLARIZATION ? "sumtm" : "sumte"));
+	  for (i = 0; i < num_bands; ++i)
+	       printf(", %sband %d",
+		      mdata->polarization == NO_POLARIZATION ? "" :
+		      (mdata->polarization == TM_POLARIZATION ? "tm " : "te "),
+		      i + 1);
+	  printf("\n");
      }
 
      vector3_to_arr(k, kvector);
@@ -410,15 +416,15 @@ void get_dfield(int which_band)
 	  fprintf(stderr, "solve-kpoint must be called before get-dfield!\n");
 	  return;
      }
-     if (which_band >= mdata->num_bands) {
-	  fprintf(stderr, "band index must be < num_bands (%d)\n",
+     if (which_band < 1 || which_band > mdata->num_bands) {
+	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",
 		  mdata->num_bands);
      }
 
      curfield = (scalar_complex *) mdata->fft_data;
      curfield_band = which_band;
      curfield_type = 'd';
-     maxwell_compute_dfield(mdata, H, curfield, which_band, 1);
+     maxwell_compute_dfield(mdata, H, curfield, which_band - 1, 1);
 }
 
 void get_hfield(int which_band)
@@ -431,15 +437,15 @@ void get_hfield(int which_band)
 	  fprintf(stderr, "solve-kpoint must be called before get-hfield!\n");
 	  return;
      }
-     if (which_band >= mdata->num_bands) {
-	  fprintf(stderr, "band index must be < num_bands (%d)\n",
+     if (which_band < 1 || which_band > mdata->num_bands) {
+	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",
 		  mdata->num_bands);
      }
 
      curfield = (scalar_complex *) mdata->fft_data;
      curfield_band = which_band;
      curfield_type = 'h';
-     maxwell_compute_hfield(mdata, H, curfield, which_band, 1);
+     maxwell_compute_hfield(mdata, H, curfield, which_band - 1, 1);
 }
 
 void get_efield_from_dfield(void)
@@ -596,13 +602,26 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 
 /**************************************************************************/
 
+/* Return a newly allocated string that is s1 concatenated with s2;
+   if either parameter is NULL it is treated as the empty string. */
+static char *strcat_new(const char *s1, const char *s2)
+{
+     char *s;
+     s = (char *) malloc((s1 ? strlen(s1) : 0) + 
+			 (s2 ? strlen(s2) : 0) + 1);
+     CHECK(s, "out of memory!");
+     strcpy(s, s1 ? s1 : "");
+     strcat(s, s2 ? s2 : "");
+     return s;
+}
+
 /* given the field in curfield, store it to HDF (or whatever) using
    the matrixio (fieldio) routines.  Allow the user to specify that
    the fields be periodically extended, so that several lattice cells
    are stored. */
 void output_field_extended(vector3 copiesv)
 {
-     char fname[100], description[100];
+     char fname[100], *fname2, description[100];
      int dims[3], local_nx, local_x_start;
      int copies[3];
 
@@ -628,16 +647,18 @@ void output_field_extended(vector3 copiesv)
      local_x_start = mdata->local_x_start;
      
      if (strchr("dhe", curfield_type)) { /* outputting vector field */
-	  sprintf(fname, "%c.%02d.%02d",
+	  sprintf(fname, "%c.k%02d.b%02d",
 		  curfield_type, kpoint_index, curfield_band);
 	  sprintf(description, "%c field, kpoint %d, band %d, freq=%g",
 		  curfield_type, kpoint_index, curfield_band, 
 		  freqs.items[curfield_band]);
-	  printf("Outputting fields to %s...\n", fname);
+	  fname2 = strcat_new(filename_prefix, fname);
+	  printf("Outputting fields to %s...\n", fname2);
 	  fieldio_write_complex_field(curfield, 3, dims,
 				      local_nx, local_x_start,
 				      copies, mdata->current_k, R,
-				      fname, description);
+				      fname2, description);
+	  free(fname2);
      }
      else if (strchr("DHn", curfield_type)) { /* scalar field */
 	  if (curfield_type == 'n') {
@@ -645,17 +666,19 @@ void output_field_extended(vector3 copiesv)
 	       sprintf(description, "dielectric function, epsilon");
 	  }
 	  else {
-	       sprintf(fname, "%cpwr.%02d.%02d",
+	       sprintf(fname, "%cpwr.k%02d.b%02d",
 		       tolower(curfield_type), kpoint_index, curfield_band);
 	       sprintf(description,
 		       "%c field energy density, kpoint %d, band %d, freq=%g",
 		       curfield_type, kpoint_index, curfield_band, 
 		       freqs.items[curfield_band]);
 	  }
-	   printf("Outputting %s...\n", fname);
-	   fieldio_write_real_vals((real *) curfield, 3, dims,
-				   local_nx, local_x_start, copies,
-				   fname, description);
+	  fname2 = strcat_new(filename_prefix, fname);
+	  printf("Outputting %s...\n", fname2);
+	  fieldio_write_real_vals((real *) curfield, 3, dims,
+				  local_nx, local_x_start, copies,
+				  fname2, description);
+	  free(fname2);
      }
      else
 	  fprintf(stderr, "unknown field type!\n");

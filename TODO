@@ -1,18 +1,3 @@
-Fix convergence bug when running e.g. tst2.ctl!!!  [ fixed? ]
-
-dimensions < true_rank should make grid sizes 1 in extra dimensions.
-
-Prevent sumte/sumtm/sumfrq header lines from being output when not
-needed (put in solve-kpoint, when called with kpoint_index == 0,
-instead of in init_params).
-
-Add "filename-prefix" input variable for adding a prefix to all output
-filenames.
-
-Prepend "k" and "b" to k-point and band indices in output filenames.
-
-Start band indices with one.
-
 Finish tuning maxwell preconditioner.  Implement fancy preconditioner.
 
 Profile--where is the performance going?
@@ -26,8 +11,6 @@ Fix linking with -lessl on AIX...what is going on there?
 Allow real-complex transforms for structures with inversion symmetry.
 
 Store epsilon differently?
-
-Output fields to HDF.  (HDF5?)
 
 implement create_evectmatrix_clone, evectmatrices_conformant_p
 (convenience functions)
