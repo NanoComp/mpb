@@ -27,7 +27,11 @@
 
 #define PRECOND_SUBTR_EIGS 0
 
-#define PRECOND_MIN_DENOM 1e-3
+#define PRECOND_MIN_DENOM 5e-3
+#define MIN2(a,b) ((a) < (b) ? (a) : (b))
+#define MAX2(a,b) ((a) > (b) ? (a) : (b))
+
+#define FIX_DENOM(x) MAX2(x, PRECOND_MIN_DENOM)
 
 void maxwell_simple_precondition(evectmatrix X, void *data, real *eigenvals)
 {
@@ -50,7 +54,7 @@ void maxwell_simple_precondition(evectmatrix X, void *data, real *eigenvals)
 		    else
 #else
 		    {
-			 scale = 1.0 / (scale + PRECOND_MIN_DENOM);
+			 scale = 1.0 / FIX_DENOM(scale);
 		    }
 #endif
 
@@ -103,7 +107,7 @@ void maxwell_target_preconditioner(evectmatrix Xin, evectmatrix Xout,
 		    else
 #else
 		    {
-			 scale = 1.0 / (scale + PRECOND_MIN_DENOM);
+			 scale = 1.0 / FIX_DENOM(scale);
 		    }
 #endif
 
@@ -354,7 +358,7 @@ static void assign_crossinv_t2c(scalar *a, const k_data k,
 	in maxwell_op.c, except that we divide by -k^2: */
 
      scalar v0 = v[0], v1 = v[vstride];
-     real kmag_inv = -1.0 / (k.kmag + PRECOND_MIN_DENOM);
+     real kmag_inv = -1.0 / FIX_DENOM(k.kmag);
 
      ASSIGN_SCALAR(a[0],
                    (SCALAR_RE(v0)*k.nx - SCALAR_RE(v1)*k.mx) * kmag_inv,
@@ -392,7 +396,7 @@ static void assign_crossinv_c2t(scalar *v, int vstride,
           SCALAR_IM(a0)*k.nx + SCALAR_IM(a1)*k.ny + SCALAR_IM(a2)*k.nz);
 
      /* combine scale factor and k * (-1/k^2) */
-     scale = -scale / (k.kmag + PRECOND_MIN_DENOM);
+     scale = -scale / FIX_DENOM(k.kmag);
      
      ASSIGN_SCALAR(v[0],
                    - scale * SCALAR_RE(at1),
@@ -401,8 +405,6 @@ static void assign_crossinv_c2t(scalar *v, int vstride,
                    scale * SCALAR_RE(at0),
                    scale * SCALAR_IM(at0));
 }
-
-#define MIN2(a,b) ((a) < (b) ? (a) : (b))
 
 /* Fancy preconditioner.  This is very similar to maxwell_op, except that
    the steps are (approximately) inverted: */
