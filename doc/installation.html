@@ -189,6 +189,14 @@ someday, such as <code>--enable-mpi</code> to turn on MPI support, as
 well as a number of standard flags that work already
 (<code>./configure --help</code> for more info).
 
+<p>The <code>configure</code> script automatically attempts to detect
+accelerated BLAS libraries, like DXML (DEC/Alpha), SCSL and SGIMATH
+(SGI/MIPS), ESSL (IBM/PowerPC), ATLAS, and PHiPACK.  You can disable
+these by using <code>./configure --without-fastblas</code>, or supply
+another library name to try via
+<code>--with-fastblas=<i>lib</i></code> (it will attempt to link with
+<code>-l<i>lib</i></code>).
+
 <p>Once compiled, the main program (as opposed to various test
 programs) resides in the <code>photon-ctl/</code> subdirectory, and is
 called <code>photon</code>.  You can install this program under

@@ -109,7 +109,12 @@ AC_CHECK_LIB(blas, main)
 save_LIBS="$LIBS"
 
 AC_ARG_WITH(fastblas, [  --without-fastblas      don't use accelerated BLAS], ok=$withval, ok=yes)
-if test "$ok" = "no"; then save_LIBS="xxxxxxxx"; fi
+if test "$ok" = "no"; then
+	save_LIBS="xxxxxxxx"
+elif test "$ok" != "yes"; then
+	# user specified a BLAS library to try on the command line
+	AC_CHECK_LIB($ok, main)
+fi
 
 if test "$save_LIBS" = "$LIBS"; then
 	# BLAS in Alpha DXML library?
