@@ -31,7 +31,7 @@
 
 /* T_SMOB(T, X) returns the T * with the guts of the X instance; it
    assumes X is a T SMOB instance, and could crash if it is not */
-#define T_SMOB(T, X)  ((T *) SCM_SMOB_DATA(gh_cdr(X)))
+#define T_SMOB(T, X)  ((T *) SCM_SMOB_DATA(X))
 
 #else
 

@@ -610,11 +610,11 @@
 
 (define (get-tot-pwr which-band)
   (get-dfield which-band)
-  (compute-energy-density)
+  (compute-field-energy)
   (let ((epwr (field-copy cur-field))
         (tot-pwr (rscalar-field-make cur-field)))
     (get-hfield which-band)
-    (compute-energy-density)
+    (compute-field-energy)
     (field-map! tot-pwr
                 (lambda (epwr hpwr) (+ epwr hpwr))
                 epwr cur-field)
