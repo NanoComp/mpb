@@ -1,4 +1,96 @@
+2003-02-27  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.scm.in: bug fix: kdir is in reciprocal coordinates.
+	Thanks to Suxia (Susan) Yang for tracking down this bug.
+
+2003-02-25  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/epsilon.c: fixed SunOS problem where guile 1/infinity
+	and C 1/infinity give apparently different results...thanks to
+	Benjamin Cowan for the bug report
+
+2003-02-21  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.scm.in: change prompt to mpb>
+
+2003-01-21  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/examples/sq-rods.ctl: whoops
+
+	* mpb-ctl/examples/sq-rods.ctl: GaAs is n=11.56
+
+2002-12-17  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.scm.in: fixed find-k for band-min != 0; thanks to
+	M. Povinelli
+
+2002-12-14  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.scm.in: fix find-k to work for thunk band functions
+
+2002-12-03  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/examples/tri-holes.ctl: added k-interp
+
+2002-12-02  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/examples/hole-slab.ctl: use k-interp param
+
+2002-11-02  Steven G. Johnson  <stevenj@ab-initio>
+
+	* doc/installation.html: typo
+
+2002-10-24  Steven G. Johnson  <stevenj@ab-initio>
+
+	* acx_mpi.m4: check for mpich lib
+
+2002-09-26  Steven G. Johnson  <stevenj@ab-initio>
+
+	* acx_mpi.m4: added whitespace
+
+2002-09-24  Steven G. Johnson  <stevenj@ab-initio>
+
+	* acx_mpi.m4: slight comment fix
+
+	* acx_mpi.m4: fixed punctuation
+
+	* acx_mpi.m4, configure.ac: use new acx_mpi.m4
+
+2002-09-20  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.c: freqs: line should list headings as "k1, k2, k3"
+	instead of "kx, ky, kz" since they are in reciprocal-lattice, not
+	cartesian, coords.  Thanks to Theis Peter Hanson for the
+	suggestion.
+
+2002-09-17  Steven G. Johnson  <stevenj@ab-initio>
+
+	* NEWS, mpb-ctl/epsilon.c: don't resize lattice basis for
+	grid-size==1 unless no-size specified; thanks to Tairan Wang
+
+2002-09-15  Steven G. Johnson  <stevenj@ab-initio>
+
+	* NEWS: updated
+
+	* mpb-ctl/epsilon.c, mpb-ctl/field-smob.c, mpb-ctl/fields.c,
+	mpb-ctl/mpb.c, mpb-ctl/mpb.h: whoops, take absolute value of Rm
+	determinant for volume; thanks to Rumen Iliew for the bug report
+
+2002-09-14  Steven G. Johnson  <stevenj@ab-initio>
+
+	* configure.ac, mpb-ctl/my-smob.h: improved smob
+	compatibility...grrr, damn guile
+
+	* mpb-ctl/Makefile.in, src/matrices/Makefile.in,
+	src/matrixio/Makefile.in, src/maxwell/Makefile.in,
+	src/util/Makefile.in, tests/Makefile.in, utils/Makefile.in: put my
+	CPPFLAGS *first*; thanks to Cazimir G. Bostan for the bug report
+
 2002-09-13  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.c: include field-smob.h
+
+	* ChangeLog, NEWS: updated
 
 	* mpb-ctl/field-smob.c: whoops
 

@@ -1,3 +1,23 @@
+MPB 1.4.2
+
+  * Interactive prompt is now "mpb>" not "guile>".
+
+  * Output "freqs:" line lists headings as "k1, k2, k3" instead of
+    "kx, ky, kz" since they are in reciprocal-lattice, not cartesian,
+    coordinates.  Thanks to Theis Peter Hanson for the suggestion.
+
+  * Bug fix in find-k for non-orthogonal lattices; thanks to Suxia
+    (Susan) Yang for tracking down this bug.
+
+  * Fixed SunOS problem where k vectors along no-size dimensions failed;
+    thanks to Benjamin Cowan for the bug report.
+
+  * Fixed find-k to work for band-min > 1; thanks to M. Povinelli for
+    the bug report.
+
+  * Fix find-k to work for thunk band functions (which take no arguments
+    and are called only once instead of per-band).
+
 MPB 1.4.1 (9/16/2002)
 
   * Fixed NaN in field normalization when basis determinant was negative.
