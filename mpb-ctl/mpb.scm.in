@@ -682,6 +682,7 @@
 
 (define (find-k p omega band-min band-max kdir
 		tol kmag-guess kmag-min kmag-max . band-funcs)
+  (define (ncdr n lst) (if (> n 0) (ncdr (- n 1) (cdr lst)) lst))
   (let ((num-bands-save num-bands) (k-points-save k-points)
 	(nb (- band-max band-min -1)) 
 	(kdir1 (unit-vector3 kdir))
@@ -711,7 +712,9 @@
 			     (vector-set! k0s (- b band-min) k))) ; cache k0
 		       (set! bktab (cons (cons (cons b k) (cons (- f omega) v))
 					 bktab)))
-		     (arith-sequence band-min 1 (- b band-min -1)) freqs v)
+		     (arith-sequence band-min 1 (- b band-min -1)) 
+		     (ncdr (- band-min 1) freqs)
+		     (ncdr (- band-min 1) v))
 		; finally return (frequency - omega . derivative):
 		(let ((fun (- (car (reverse freqs)) omega)))
 		  (print "find-k " b " at " k ": " fun "\n")
