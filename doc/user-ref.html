@@ -306,24 +306,44 @@ can also use <code>(index <i>n</i>)</code> as a synonym for
 <code>(epsilon (* <i>n n</i>))</code>.
 </dl>
 
-<p><dt><code>dielectric-anisotropic</code>
+<p><dt><code><a name="dielectric-anisotropic">dielectric-anisotropic</a></code>
 <dd>A uniform, possibly anisotropic, linear dielectric material.  For
-this material type, you specify the (real, symmetric) dielectric
-tensor (relative to the cartesian xyz axes):
+this material type, you specify the (real-symmetric, or possibly
+complex-hermitian) dielectric tensor (relative to the cartesian xyz
+axes):
 <pre>
              a  u  v
-epsilon =  ( u  b  w )
-             v  w  c
+epsilon =  ( u* b  w )
+             v* w* c
 </pre>
 <p>This allows your dielectric to have different dielectric constants
-for fields polarized in different directions.  The components of the
-tensor are specified via two properties:
+for fields polarized in different directions.  The epsilon tensor
+<em>must be positive-definite</em> (have all positive eigenvalues); if
+it is not, MPB may not function properly, and it is the user's
+responsibility to ensure that this requirement is satisfied.  (This
+does <em>not</em> imply that all of the entries of the epsilon matrix
+need be positive.)
+
+<p>The components of the tensor are specified via three properties:
 <dl>
 <dt><code>epsilon-diag</code> [<code>vector3</code>]
 <dd>The diagonal elements (a b c) of the dielectric tensor.  No default value.
 <dt><code>epsilon-offdiag</code> [<code>vector3</code>]
-<dd>The off-diagonal elements (u v w) of the dielectric tensor.  Defaults to
-zero.
+<dd>The off-diagonal elements (u v w) of the dielectric tensor (or
+their real parts if <code>epsilon-offdiag-imag</code> is used).
+Defaults to zero.
+<dt><code>epsilon-offdiag-imag</code> [<code>vector3</code>]
+<dd>The <em>imaginary parts</em> of the off-diagonal elements (u v w)
+of the dielectric tensor; defaults to zero.  This is only supported
+when MPB is configured with the <code>--with-hermitian-epsilon</code>
+flag.  If non-zero imaginary parts are specified, then the dielectric
+tensor is complex-Hermitian.  This is not dissipative (the eigenvalues
+of epsilon are real), but rather breaks time-reversal symmetry,
+corresponding to a magnetic material.  Note that <a
+href="#inv-symmetry">inversion symmetry</a> may not mean what you
+expect for complex-Hermitian epsilon, so be cautious about using
+<code>mpbi</code> in this case.
+
 </dl>
 <p>For example, a material with a dielectric constant of 3.0 for TE
 fields (polarized in the xy plane) and 5.0 for TM fields (polarized in
@@ -970,17 +990,24 @@ the components, while the other variants output only one component.
 <h2><a name="inv-symmetry">Inversion Symmetry</a></h2>
 
 <p>If you <code>configure</code> MPB with the
-<code>--with-inv-symmetry</code>, then the program is configured to
-assume inversion symmetry in the dielectric function.  This allows it
-to run at least twice as fast and use half as much memory as the more
-general case.  This version of MPB is normally installed as
+<code>--with-inv-symmetry</code> flag, then the program is configured
+to assume inversion symmetry in the dielectric function.  This allows
+it to run at least twice as fast and use half as much memory as the
+more general case.  This version of MPB is by default installed as
 <code>mpbi</code>, so that it can coexist with the usual
 <code>mpb</code> program.
 
 <p>Inversion symmetry means that if you transform (x,y,z) to
 (-x,-y,-z) in the coordinate system, the dielectric structure is not
-affected.  This is very common; all of the examples in this manual
-have inversion symmetry, for example.
+affected.  Or, more technically, that:
+
+<p align=center>epsilon(x,y,z) =
+epsilon(-x,-y,-z)<sup><small>*</small></sup>,
+
+<p>where the conjugation is significant for <a
+href="#dielectric-anisotropic">complex-Hermitian dielectric
+tensors</a>.  This symmetry is very common; all of the examples in
+this manual have inversion symmetry, for example.
 
 <p>Note that inversion symmetry is defined with respect to a specific
 origin, so that you may "break" the symmetry if you define a given
