@@ -33,7 +33,7 @@ typedef struct {
 } sqmatrix;
 
 /* try to keep track of flops, at least from evectmatrix multiplications */
-extern int evectmatrix_flops;
+extern double evectmatrix_flops;
 
 /* general creation/destruction operations: */
 

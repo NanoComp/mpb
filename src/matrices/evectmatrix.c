@@ -26,7 +26,7 @@
 #include "matrices.h"
 #include "blasglue.h"
 
-extern int evectmatrix_flops = 0;
+extern double evectmatrix_flops = 0;
 
 /* Operations on evectmatrix blocks:
        X + a Y, X * S, X + a Y * S, Xt * X, Xt * Y, trace(Xt * Y), etc.
