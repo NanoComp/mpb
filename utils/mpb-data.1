@@ -28,11 +28,11 @@ transformations of HDF5 files output by MPB, the MIT Photonic-Bands
 program.  In particular, it is designed to make the output more
 amenable to visualization by reformatting it into a rectangular grid,
 extending it to multiple periods, and rescaling the data.
-
+.PP
 MIT Photonic Bands (MPB) is a free program to compute the band
 structures (dispersion relations) and electromagnetic modes of
 periodic dielectric structures.
-
+.PP
 HDF5 is a free, portable binary format and supporting library developed
 by the National Center for Supercomputing Applications at the University
 of Illinois in Urbana-Champaign.  A single
@@ -43,12 +43,12 @@ operates on all of the MPB-produced datasets in the file, but this can
 be changed via the
 .B -d
 option, or by using the syntax \fIHDF5FILE:DATASET\fR.
-
+.PP
 .I mpb-data
 writes its output datasets as additional datasets in the input file(s), with "-new" appended to the dataset names.  Alternatively, it can write its output to a separate file, specified by the
 .B -o
 option.
-
+.PP
 Note also that, by default, the output datasets are identical to the
 input datasets; you must use one or more of the options below to
 specify a transformation (the
@@ -124,3 +124,5 @@ Send bug reports to S. G. Johnson, stevenj@alum.mit.edu.
 .SH AUTHORS
 Written by Steven G. Johnson.  Copyright (c) 1999, 2000 by the Massachusetts
 Institute of Technology.
+.SH "SEE ALSO"
+.BR mpb (1)

@@ -1,0 +1,90 @@
+.\" Copyright (C) 1999, 2000 Massachusetts Institute of Technology.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+.\"
+.TH MPB 1 "January 27, 2000" "MPB" "MIT Photonic-Bands Package"
+.SH NAME
+mpb \- compute band structures of periodic dielectric structures
+.SH SYNOPSIS
+.B mpb
+[\fIOPTION\fR]... [\fIDEFINITION\fR]... [\fICTLFILE\fR]...
+.SH DESCRIPTION
+.PP
+." Add any additional description here
+MIT Photonic Bands (MPB) is a free program to compute the band
+structures (dispersion relations) and electromagnetic modes of
+periodic dielectric structures, and is applicable both to photonic
+crystals (photonic band-gap materials) and a wide range of other
+optical problems. Its features include: fully-vectorial, 3D
+computations; a flexible user-interface based upon the GNU Guile
+scripting language; output in HDF format; and iterative, targeted
+eigensolver methods to address very large problems by solving for only
+a few states near a specified frequency.
+.PP
+More information on MPB, including a detailed manual, can be found
+online at the MPB home page:
+.I http://ab-initio.mit.edu/mpb/
+.PP
+A typical invocation of MPB looks like:
+.PP
+.Vb 1
+\&    mpb foo.ctl >& foo.out
+.Ve
+.PP
+This causes MPB to process the control file foo.ctl and redirect its output
+to foo.out.  (One typically redirects output to a file, as the output is
+verbose and contains a number of comma-delimited datasets that one can
+extract by grepping.)
+.PP
+You can also use MPB in an interactive mode, in which you can type in
+MPB commands (in Scheme/Guile) and immediately see their results.
+Interactive mode is entered when you invoke
+.I mpb
+with no control files, or if your control files don't contain any
+.I run
+statements (which disable interactive mode), or if the last control file ends
+by setting
+.I (set! interactive? true)
+in which case interactive mode is entered after the control files
+execute.
+.PP
+Another useful feature is that you can alter parameters in your control files
+from the command line, by including definitions of the form
+\fIvariable\fR=\fIvalue\fR as arguments to
+.I mpb
+(before the control files).  This overrides the values of variables
+defined with
+.I define-param
+in the control file (including all of the predefined MPB input variables).
+.PP
+Multiple control files and definitions are executed in sequence, in
+the order they are specified on the command line.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\--help\fR
+Display help on the command-line options and usage.
+.TP
+\fB\-V\fR, \fB\--version\fR
+Print the version number and copyright info for mpb.
+.TP
+\fB\-v\fR, \fB\--verbose\fR
+Verbose output.
+.SH BUGS
+Send bug reports to S. G. Johnson, stevenj@alum.mit.edu.
+.SH AUTHORS
+Written by Steven G. Johnson.  Copyright (c) 1999, 2000 by the Massachusetts
+Institute of Technology.
+.SH "SEE ALSO"
+.BR mpb-data (1)
