@@ -57,6 +57,16 @@
 
 /**************************************************************************/
 
+#if defined(DEBUG) && defined(HAVE_FEENABLEEXCEPT)
+#  ifndef _GNU_SOURCE
+#    define _GNU_SOURCE 1
+#  endif
+#  include <fenv.h>
+#  if !HAVE_DECL_FEENABLEEXCEPT
+extern "C" int feenableexcept (int EXCEPTS);
+#  endif
+#endif
+
 /* force use of Guile garbage-collector when we run low */
 static void *malloc_hook(size_t n)
 {
@@ -77,7 +87,10 @@ void ctl_start_hook(int *argc, char ***argv)
 {
      my_malloc_hook = malloc_hook;
      MPI_Init(argc, argv);
-     feenableexcept(FE_INVALID | FE_OVERFLOW);
+#if defined(DEBUG) && defined(HAVE_FEENABLEEXCEPT)
+     // crash if NaN created, or overflow:
+     feenableexcept(FE_INVALID | FE_OVERFLOW); 
+#endif
 }
 
 void ctl_stop_hook(void)

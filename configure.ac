@@ -406,6 +406,25 @@ if test x"$SH_JOB" = xsh; then
 fi
 
 ##############################################################################
+# The following function is used only for debugging.  Note that
+# we must test for it *after* setting the compiler flags (which
+# affect whether it is declared, as it is a GNU extension).
+# We need to #include <stdio.h> because that somehow affects whether
+# the function is declared with older gcc versions.  We need
+# to use AC_TRY_COMPILE because the test in AC_HAVE_DECL seems
+# to be optimized out.
+
+AC_CHECK_FUNCS(feenableexcept) dnl GNU libc fp exception control function
+AC_MSG_CHECKING([whether feenableexcept declaration is usable])
+feenableexcept_decl_ok=yes
+AC_TRY_COMPILE([#include <stdio.h>
+#define _GNU_SOURCE 1
+#include <fenv.h>], [feenableexcept(0);],
+[AC_DEFINE([HAVE_DECL_FEENABLEEXCEPT],[1],[Define if fenv.h declares this.])],
+[feenableexcept_decl_ok=no])
+AC_MSG_RESULT($feenableexcept_decl_ok)
+
+##############################################################################
 
 AC_CONFIG_FILES([Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm mpb-ctl/mpb-split utils/Makefile meb/Makefile meb/meb.scm meb/meb-split])
 AC_OUTPUT
