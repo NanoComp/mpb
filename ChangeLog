@@ -1,4 +1,39 @@
-2001-05-06  Steven G. Johnson  <stevenj@gil-galad>
+2001-06-26  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/maxwell/maxwell_op.c: yikes, fixed bug in H output for cases
+	lacking inversion symmetry
+
+2001-06-21  Steven G. Johnson  <stevenj@superjdj>
+
+	* configure.in: detect MPI compiler for AIX...this test needs to
+	be split into a separate macro, really
+
+2001-06-12  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/maxwell/maxwell_eps.c, src/maxwell/maxwell.h,
+	src/maxwell/maxwell_op.c, src/matrices/eigensolver_davidson.c,
+	mpb-ctl/mpb.c: Laid some groundwork for negative epsilon support,
+	but need a new eigensolver algorithm before it can really work.
+	More importantly, fixed bug in mpbi for 1d transforms (arrays were
+	not written properly, and worse: array bounds were violated,
+	causing random results).
+
+2001-06-03  Steven G. Johnson  <stevenj@superjdj>
+
+	* mpb-ctl/mpb.scm.in: added retrieve-gap function
+
+2001-05-09  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/matrices/eigensolver.c: output malloc count when verbose
+
+	* src/util/check.h, src/util/debug_malloc.c: add
+	debug_output_malloc_count
+
+2001-05-06  Steven G. Johnson  <stevenj@superjdj>
+
+	* NEWS, ChangeLog: updated
+
+	* doc/analysis-tutorial.html: K is C_{3v}, not C_{6v}.
 
 	* /home/stevenj/Repository/mpb/doc/analysis-tutorial.html: K is
 	C_{3v}, not C_{6v}.
