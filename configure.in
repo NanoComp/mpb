@@ -6,7 +6,7 @@ MPB_VERSION=0.13
 AC_SUBST(MPB_VERSION)
 
 # set CFLAGS to -O3, unless the user has set the CFLAGS env. variable:
-if test -z "$CFLAGS"; then
+if test x = x"$CFLAGS"; then
 	CFLAGS="-O3"
 fi
 
@@ -94,7 +94,7 @@ AC_CHECK_LIB(m, sqrt)
 
 # If we have a Fortran compiler, link to its libraries, since these
 # are probably needed to link with the BLAS/LAPACK libraries.
-if test -n "$F77"; then
+if test x != x"$F77"; then
 	AC_F77_LIBRARY_LDFLAGS
 	LIBS="$LIBS $FLIBS"
 fi
@@ -118,7 +118,7 @@ else
 	fi
 fi
 
-if test -z "`echo $LIBS | grep fftw`"; then
+if test x = x"`echo $LIBS | egrep 'l[[ds]]fftw'`"; then
 	AC_CHECK_LIB(fftw, fftw)
 	if test x"$inv_sym" = xyes; then
 		AC_CHECK_LIB(rfftw, rfftw)
@@ -202,8 +202,59 @@ fi
 AC_CHECK_LIB(lapack, main)
 
 # check for ATLAS LAPACK replacements functions:
-if test -n "`echo $LIBS | grep atlas`"; then
+if test x != x"`echo $LIBS | grep atlas`"; then
 	AC_CHECK_LIB(atlaslapack, main)
+fi
+
+# ----------------------------------------------------------------------
+# Check for MPI library
+
+AC_ARG_WITH(mpi, [  --with-mpi          enable MPI parallelization], with_mpi=$withval, with_mpi=no)
+
+if test "x$with_mpi" = "xyes"; then
+	AC_CHECK_PROGS(MPICC, mpicc hcc mpcc, $CC)
+        CC="$MPICC"
+        if test x = x"$MPILIBS"; then
+                AC_CHECK_FUNC(MPI_Init, [MPILIBS=" "])
+        fi
+        if test x = x"$MPILIBS"; then
+                AC_CHECK_LIB(mpi, MPI_Init, [MPILIBS="-lmpi"])
+        fi
+
+        if test x = x"$MPILIBS"; then
+                AC_MSG_ERROR(couldn't find mpi library for --with-mpi)
+	fi
+
+	LIBS="$MPILIBS $LIBS"
+
+	# Make installed program mpb_mpi instead of mpb
+        if test x"$inv_sym" = xyes; then
+	        program_transform_name='s,^mpb$$,mpbi-mpi,'";$program_transform_name"
+	else
+	        program_transform_name='s,^mpb$$,mpb-mpi,'";$program_transform_name"
+	fi
+
+	# Check for fftw_mpi library.
+	if test "$enable_single" = "yes"; then
+        	AC_CHECK_LIB(sfftw_mpi, fftwnd_mpi)
+	        if test x"$inv_sym" = xyes; then
+	                AC_CHECK_LIB(srfftw_mpi, rfftwnd_mpi)
+	        fi
+	else
+	        AC_CHECK_LIB(dfftw_mpi, fftwnd_mpi)
+	        if test x"$inv_sym" = xyes; then
+	                AC_CHECK_LIB(drfftw_mpi, rfftwnd_mpi)
+	        fi
+	fi
+	if test x = x"`echo $LIBS | egrep 'l[[ds]]fftw_mpi'`"; then
+       		AC_CHECK_LIB(fftw_mpi, fftwnd_mpi)
+	        if test x"$inv_sym" = xyes; then
+	                AC_CHECK_LIB(rfftw_mpi, rfftwnd_mpi)
+	        fi
+	fi
+	if test x = x"`echo $LIBS | egrep 'l[[ds]]*fftw_mpi'`"; then
+		AC_MSG_ERROR(couldn't find fftw_mpi library for --with-mpi)
+	fi
 fi
 
 # ----------------------------------------------------------------------
@@ -216,15 +267,16 @@ if test "$ok" = "yes"; then
 			                    AC_DEFINE(HAVE_HDF5)],
 			         AC_MSG_WARN([**** Did you forget to set CPPFLAGS for HDF5? ***]))])
 
-	# FIXME: move this after MPI check:
-	AC_MSG_CHECKING([for H5Pset_mpi])
-	AC_TRY_LINK([#include <mpi.h>
+        if test x != x"$MPILIBS"; then
+		AC_MSG_CHECKING([for H5Pset_mpi])
+		AC_TRY_LINK([#include <mpi.h>
 #include <hdf5.h>],
 		[H5Pset_mpi(H5P_DEFAULT, MPI_COMM_WORLD, MPI_INFO_NULL);],
 		ok=yes, ok=no)
-	AC_MSG_RESULT($ok)
-	if test "x$ok" = xyes; then
-		AC_DEFINE(HAVE_H5PSET_MPI)
+		AC_MSG_RESULT($ok)
+		if test "x$ok" = xyes; then
+			AC_DEFINE(HAVE_H5PSET_MPI)
+		fi
 	fi
 fi
 
@@ -277,16 +329,16 @@ elif test "$ok" != "yes"; then
 fi
 
 AC_MSG_CHECKING([for libctl dir])
-if test -n "$LIBCTL_DIR" -a ! -r "$LIBCTL_DIR/base/ctl.scm"; then
+if test x != x"$LIBCTL_DIR" -a ! -r "$LIBCTL_DIR/base/ctl.scm"; then
 	LIBCTL_DIR=""
 fi
-if test -z "$LIBCTL_DIR" -a -r /usr/local/share/libctl/base/ctl.scm; then
+if test x = x"$LIBCTL_DIR" -a -r /usr/local/share/libctl/base/ctl.scm; then
 	LIBCTL_DIR="/usr/local/share/libctl"
 fi
-if test -z "$LIBCTL_DIR" -a -r /usr/share/libctl/base/ctl.scm; then
+if test x = x"$LIBCTL_DIR" -a -r /usr/share/libctl/base/ctl.scm; then
         LIBCTL_DIR="/usr/share/libctl"
 fi
-if test -z "$LIBCTL_DIR"; then
+if test x = x"$LIBCTL_DIR"; then
 	AC_ERROR([could not find libctl files; use --with-libctl=<dir>])
 fi
 AC_MSG_RESULT($LIBCTL_DIR)
