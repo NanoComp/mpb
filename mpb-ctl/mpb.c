@@ -165,6 +165,20 @@ geom_box_tree geometry_tree = NULL; /* recursive tree of geometry objects
 
 /**************************************************************************/
 
+static scalar_complex cnumber2cscalar(cnumber c)
+{
+     scalar_complex cs;
+     CASSIGN_SCALAR(cs, cnumber_re(c), cnumber_im(c));
+     return cs;
+}
+
+static cnumber cscalar2cnumber(scalar_complex cs)
+{
+     return make_cnumber(CSCALAR_RE(cs), CSCALAR_IM(cs));
+}
+
+/**************************************************************************/
+
 typedef struct {
      maxwell_dielectric_function eps_file_func;
      void *eps_file_func_data;
@@ -266,20 +280,23 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 		   eps->m11 = d->epsilon_diag.y;
 		   eps->m22 = d->epsilon_diag.z;
 #ifdef WITH_HERMITIAN_EPSILON
-		   eps->m01.re = d->epsilon_offdiag.x;
-		   eps->m02.re = d->epsilon_offdiag.y;
-		   eps->m12.re = d->epsilon_offdiag.z;
-		   eps->m01.im = d->epsilon_offdiag_imag.x;
-		   eps->m02.im = d->epsilon_offdiag_imag.y;
-		   eps->m12.im = d->epsilon_offdiag_imag.z;
+		   CASSIGN_SCALAR(eps->m01, d->epsilon_offdiag.x.re,
+				  d->epsilon_offdiag.x.im +
+				  d->epsilon_offdiag_imag.x);
+		   CASSIGN_SCALAR(eps->m02, d->epsilon_offdiag.y.re,
+				  d->epsilon_offdiag.y.im +
+				  d->epsilon_offdiag_imag.y);
+		   CASSIGN_SCALAR(eps->m12, d->epsilon_offdiag.z.re,
+				  d->epsilon_offdiag.z.im +
+				  d->epsilon_offdiag_imag.z);
 #else
-		   eps->m01 = d->epsilon_offdiag.x;
-		   eps->m02 = d->epsilon_offdiag.y;
-		   eps->m12 = d->epsilon_offdiag.z;
-		   CHECK(d->epsilon_offdiag_imag.x == 0.0 &&
-			 d->epsilon_offdiag_imag.y == 0.0 &&
-			 d->epsilon_offdiag_imag.z == 0.0,
-			 "epsilon-offdiag-imag is only supported when MPB is configured --with-hermitian-epsilon");
+		   eps->m01 = d->epsilon_offdiag.x.re;
+		   eps->m02 = d->epsilon_offdiag.y.re;
+		   eps->m12 = d->epsilon_offdiag.z.re;
+		   CHECK(vector3_norm(vector3_plus(
+			     cvector3_re(d->epsilon_offdiag),
+			     d->epsilon_offdiag_imag)) == 0.0,
+			 "imaginary epsilon-offdiag is only supported when MPB is configured --with-hermitian-epsilon");
 #endif
 		   maxwell_sym_matrix_invert(eps_inv, eps);
 		   break;
@@ -1598,39 +1615,22 @@ number get_epsilon_point(vector3 p)
      return mean_epsilon(&eps_inv);
 }
 
-matrix3x3 get_epsilon_inverse_tensor_point(vector3 p)
+cmatrix3x3 get_epsilon_inverse_tensor_point(vector3 p)
 {
-     matrix3x3 eps_inv3x3;
-     symmetric_matrix eps_inv;
-     eps_inv = interp_eps_inv(p);
-
-     eps_inv3x3.c0.x = eps_inv.m00;
-     eps_inv3x3.c1.y = eps_inv.m11;
-     eps_inv3x3.c2.z = eps_inv.m22;
-#ifdef WITH_HERMITIAN_EPSILON /* only return real part; see below for im */
-     eps_inv3x3.c0.y = eps_inv3x3.c1.x = CSCALAR_RE(eps_inv.m01);
-     eps_inv3x3.c0.z = eps_inv3x3.c2.x = CSCALAR_RE(eps_inv.m02);
-     eps_inv3x3.c1.z = eps_inv3x3.c2.y = CSCALAR_RE(eps_inv.m12);
-#else
-     eps_inv3x3.c0.y = eps_inv3x3.c1.x = eps_inv.m01;
-     eps_inv3x3.c0.z = eps_inv3x3.c2.x = eps_inv.m02;
-     eps_inv3x3.c1.z = eps_inv3x3.c2.y = eps_inv.m12;
-#endif
-     return eps_inv3x3;
-}
-
-matrix3x3 get_epsilon_inverse_tensor_im_point(vector3 p)
-{
-     matrix3x3 eps_inv3x3 = {{0,0,0},{0,0,0},{0,0,0}};
      symmetric_matrix eps_inv;
      eps_inv = interp_eps_inv(p);
 
 #ifdef WITH_HERMITIAN_EPSILON
-     eps_inv3x3.c0.y = -(eps_inv3x3.c1.x = CSCALAR_IM(eps_inv.m01));
-     eps_inv3x3.c0.z = -(eps_inv3x3.c2.x = CSCALAR_IM(eps_inv.m02));
-     eps_inv3x3.c1.z = -(eps_inv3x3.c2.y = CSCALAR_IM(eps_inv.m12));
+     return make_hermitian_cmatrix3x3(eps_inv.m00,eps_inv.m11,eps_inv.m22,
+				      cscalar2cnumber(eps_inv.m01),
+				      cscalar2cnumber(eps_inv.m02),
+				      cscalar2cnumber(eps_inv.m12));
+#else
+     return make_hermitian_cmatrix3x3(eps_inv.m00,eps_inv.m11,eps_inv.m22,
+				      make_cnumber(eps_inv.m01,0),
+				      make_cnumber(eps_inv.m02,0),
+				      make_cnumber(eps_inv.m12,0));
 #endif
-     return eps_inv3x3;
 }
 
 number get_energy_point(vector3 p)
@@ -1640,38 +1640,27 @@ number get_energy_point(vector3 p)
      return interp_val(p, (real *) curfield, 1, 0);
 }
 
-vector3 get_bloch_field_re_point(vector3 p)
+cvector3 get_bloch_field_point(vector3 p)
 {
      scalar_complex field[3];
-     vector3 F;
+     cvector3 F;
 
      CHECK(curfield && strchr("dhe", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
      field[0] = interp_cval(p, &curfield[0].re, 6);
      field[1] = interp_cval(p, &curfield[1].re, 6);
      field[2] = interp_cval(p, &curfield[2].re, 6);
-     F.x = field[0].re; F.y = field[1].re; F.z = field[2].re;
+     F.x = cscalar2cnumber(field[0]);
+     F.y = cscalar2cnumber(field[1]);
+     F.z = cscalar2cnumber(field[2]);
      return F;
 }
 
-vector3 get_bloch_field_im_point(vector3 p)
-{
-     scalar_complex field[3];
-     vector3 F;
-
-     CHECK(curfield && strchr("dhe", curfield_type),
-	   "field must be must be loaded before get-*field*-point");
-     field[0] = interp_cval(p, &curfield[0].re, 6);
-     field[1] = interp_cval(p, &curfield[1].re, 6);
-     field[2] = interp_cval(p, &curfield[2].re, 6);
-     F.x = field[0].im; F.y = field[1].im; F.z = field[2].im;
-     return F;
-}
-
-static void get_field_point_reim(vector3 p, vector3 *re, vector3 *im)
+cvector3 get_field_point(vector3 p)
 {
      scalar_complex field[3], phase;
      double phase_phi;
+     cvector3 F;
 
      CHECK(curfield && strchr("dhe", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
@@ -1687,22 +1676,10 @@ static void get_field_point_reim(vector3 p, vector3 *re, vector3 *im)
      CASSIGN_MULT(field[1], field[1], phase);
      CASSIGN_MULT(field[2], field[2], phase);
 
-     re->x = field[0].re; re->y = field[1].re; re->z = field[2].re;
-     im->x = field[0].im; im->y = field[1].im; im->z = field[2].im;
-}
-
-vector3 get_field_re_point(vector3 p)
-{
-     vector3 Fre, Fim;
-     get_field_point_reim(p, &Fre, &Fim);
-     return Fre;
-}
-
-vector3 get_field_im_point(vector3 p)
-{
-     vector3 Fre, Fim;
-     get_field_point_reim(p, &Fre, &Fim);
-     return Fim;
+     F.x = cscalar2cnumber(field[0]);
+     F.y = cscalar2cnumber(field[1]);
+     F.z = cscalar2cnumber(field[2]);
+     return F;
 }
 
 /**************************************************************************/
@@ -2230,18 +2207,8 @@ number compute_energy_in_object_list(geometric_object_list objects)
 
 /**************************************************************************/
 
-#ifndef HAVE_GH_CALL4
-static SCM gh_call4 (SCM proc, SCM arg1, SCM arg2, SCM arg3, SCM arg4)
-{
-     return scm_apply (proc, arg1, 
-		       scm_cons(arg2, 
-				scm_cons2 (arg3, arg4, scm_listofnull)));
-}
-#endif
-
-
 /* Compute the integral of f(energy/field, epsilon, r) over the cell. */
-number compute_field_integral(function f)
+cnumber compute_field_integral(function f)
 {
      int i, j, k, n1, n2, n3, n_other, n_last, rank, last_dim;
 #ifdef HAVE_MPI
@@ -2250,11 +2217,11 @@ number compute_field_integral(function f)
      real s1, s2, s3, c1, c2, c3;
      int integrate_energy;
      real *energy = (real *) curfield;
-     real integral = 0;
+     cnumber integral = {0,0};
 
      if (!curfield || !strchr("dheDH", curfield_type)) {
           mpi_one_fprintf(stderr, "The D or H energy/field must be loaded first.\n");
-          return 0.0;
+          return integral;
      }
 
      integrate_energy = strchr("DH", curfield_type) != NULL;
@@ -2357,36 +2324,39 @@ number compute_field_integral(function f)
 	       epsilon = mean_epsilon(mdata->eps_inv + index);
 	       
 	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
-	       if (integrate_energy)
-		    integral += 
+	       if (integrate_energy) {
+		    integral.re +=
 			 ctl_convert_number_to_c(
 			      gh_call3(f,
 				     ctl_convert_number_to_scm(energy[index]),
 				       ctl_convert_number_to_scm(epsilon),
 				       ctl_convert_vector3_to_scm(p)));	  
+	       }
 	       else {
-		    vector3 Fre, Fim;
+		    cvector3 F;
 		    double phase_phi;
 		    scalar_complex phase;
+		    cnumber integrand;
 
 		    phase_phi = TWOPI * 
 			 (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
 			  cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
 			  cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
 		    CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
-		    CASSIGN_MULT_RE(Fre.x, curfield[3*index+0], phase);
-		    CASSIGN_MULT_IM(Fim.x, curfield[3*index+0], phase);
-		    CASSIGN_MULT_RE(Fre.y, curfield[3*index+1], phase);
-		    CASSIGN_MULT_IM(Fim.y, curfield[3*index+1], phase);
-		    CASSIGN_MULT_RE(Fre.z, curfield[3*index+2], phase);
-		    CASSIGN_MULT_IM(Fim.z, curfield[3*index+2], phase);
-		    integral +=
-                         ctl_convert_number_to_c(
-                              gh_call4(f,
-				       ctl_convert_vector3_to_scm(Fre),
-				       ctl_convert_vector3_to_scm(Fim),
+		    CASSIGN_MULT_RE(F.x.re, curfield[3*index+0], phase);
+		    CASSIGN_MULT_IM(F.x.im, curfield[3*index+0], phase);
+		    CASSIGN_MULT_RE(F.y.re, curfield[3*index+1], phase);
+		    CASSIGN_MULT_IM(F.y.im, curfield[3*index+1], phase);
+		    CASSIGN_MULT_RE(F.z.re, curfield[3*index+2], phase);
+		    CASSIGN_MULT_IM(F.z.im, curfield[3*index+2], phase);
+		    integrand =
+                         scm2cnumber(
+                              gh_call3(f,
+				       ctl_convert_cvector3_to_scm(F),
 				       ctl_convert_number_to_scm(epsilon),
                                        ctl_convert_vector3_to_scm(p)));
+		    integral.re += integrand.re;
+		    integral.im += integrand.im;
 	       }
 
 #ifndef SCALAR_COMPLEX
@@ -2410,16 +2380,17 @@ number compute_field_integral(function f)
 			 p.y = j2c * s2 - c2; 
 			 p.z = k2c * s3 - c3;
 			 if (integrate_energy)
-			      integral += 
+			      integral.re += 
 				   ctl_convert_number_to_c(
 					gh_call3(f,
 				      ctl_convert_number_to_scm(energy[index]),
 				      ctl_convert_number_to_scm(epsilon),
 				      ctl_convert_vector3_to_scm(p)));
 			 else {
-			      vector3 Fre, Fim;
+			      cvector3 F;
 			      double phase_phi;
 			      scalar_complex phase, Fx, Fy, Fz;
+			      cnumber integrand;
 			      
 			      Fx = curfield[3*index+0];
 			      Fy = curfield[3*index+1];
@@ -2435,20 +2406,21 @@ number compute_field_integral(function f)
 				    * (p.z/geometry_lattice.size.z+0.5));
 			      CASSIGN_SCALAR(phase, 
 					     cos(phase_phi), sin(phase_phi));
-			      CASSIGN_MULT_RE(Fre.x, Fx, phase);
-			      CASSIGN_MULT_IM(Fim.x, Fx, phase);
-			      CASSIGN_MULT_RE(Fre.y, Fy, phase);
-			      CASSIGN_MULT_IM(Fim.y, Fy, phase);
-			      CASSIGN_MULT_RE(Fre.z, Fz, phase);
-			      CASSIGN_MULT_IM(Fim.z, Fz, phase);
+			      CASSIGN_MULT_RE(F.x.re, Fx, phase);
+			      CASSIGN_MULT_IM(F.x.im, Fx, phase);
+			      CASSIGN_MULT_RE(F.y.re, Fy, phase);
+			      CASSIGN_MULT_IM(F.y.im, Fy, phase);
+			      CASSIGN_MULT_RE(F.z.re, Fz, phase);
+			      CASSIGN_MULT_IM(F.z.im, Fz, phase);
 
-			      integral +=
+			      integrand =
 				   ctl_convert_number_to_c(
-					gh_call4(f,
-					    ctl_convert_vector3_to_scm(Fre),
-				            ctl_convert_vector3_to_scm(Fim),
+					gh_call3(f,
+					    ctl_convert_cvector3_to_scm(F),
 				            ctl_convert_number_to_scm(epsilon),
                                             ctl_convert_vector3_to_scm(p)));
+			      integral.re += integrand.re;
+			      integral.im += integrand.im;
 			 }
 		    }
 	       }
@@ -2456,9 +2428,22 @@ number compute_field_integral(function f)
 	  }
      }
 
-     mpi_allreduce_1(&integral, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
-     return integral;
+     {
+	  cnumber integral_sum;
+	  mpi_allreduce(&integral, &integral_sum, 2, number, 
+			MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	  return integral_sum;
+     }
+}
+
+number compute_energy_integral(function f)
+{
+     if (!curfield || !strchr("DH", curfield_type)) {
+          mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
+          return 0.0;
+     }
+
+     return cnumber_re(compute_field_integral(f));
 }
 
 /**************************************************************************/

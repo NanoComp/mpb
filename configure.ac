@@ -257,8 +257,6 @@ else
 	fi
 fi
 
-AC_CHECK_FUNCS(gh_call4)
-
 # Check how to activate Guile readline support:
 
 ACTIVATE_READLINE=""

@@ -28,7 +28,7 @@ In brackets after each variable is the type of value that it should
 hold.  (The classes, complex datatypes like
 <code>geometric-object</code>, are described in a later subsection.
 The basic datatypes, like <code>integer</code>, <code>boolean</code>,
-and <code>vector3</code>, are defined by libctl.)
+<code>cnumber</code>, and <code>vector3</code>, are defined by libctl.)
 
 <dl>
 
@@ -351,21 +351,27 @@ the entries of the epsilon matrix need be positive.)
 <dl>
 <dt><code>epsilon-diag</code> [<code>vector3</code>]
 <dd>The diagonal elements (a b c) of the dielectric tensor.  No default value.
-<dt><code>epsilon-offdiag</code> [<code>vector3</code>]
-<dd>The off-diagonal elements (u v w) of the dielectric tensor (or
-their real parts if <code>epsilon-offdiag-imag</code> is used).
-Defaults to zero.
+<dt><code>epsilon-offdiag</code> [<code>cvector3</code>]
+<dd>The off-diagonal elements (u v w) of the dielectric tensor.
+Defaults to zero.  This is a <code>cvector3</code>, which simply
+means that the components may be complex numbers
+(e.g. <code>3+0.1i</code>).  If non-zero imaginary parts are
+specified, then the dielectric tensor is complex-hermitian.  This is
+only supported when MPB is configured with the
+<code>--with-hermitian-eps</code> flag.  This is not dissipative (the
+eigenvalues of epsilon are real), but rather breaks time-reversal
+symmetry, corresponding to a gyrotropic (magneto-optic) material.
+Note that <a href="#inv-symmetry">inversion symmetry</a> may not mean
+what you expect for complex-hermitian epsilon, so be cautious about
+using <code>mpbi</code> in this case.
+
 <dt><code>epsilon-offdiag-imag</code> [<code>vector3</code>]
-<dd>The <em>imaginary parts</em> of the off-diagonal elements (u v w)
-of the dielectric tensor; defaults to zero.  This is only supported
-when MPB is configured with the <code>--with-hermitian-eps</code>
-flag.  If non-zero imaginary parts are specified, then the dielectric
-tensor is complex-hermitian.  This is not dissipative (the eigenvalues
-of epsilon are real), but rather breaks time-reversal symmetry,
-corresponding to a gyrotropic (magneto-optic) material.  Note that <a
-href="#inv-symmetry">inversion symmetry</a> may not mean what you
-expect for complex-hermitian epsilon, so be cautious about using
-<code>mpbi</code> in this case.
+
+<dd><em>Deprecated:</em> The imaginary parts of the off-diagonal
+elements (u v w) of the dielectric tensor; defaults to zero.  Setting
+the imaginary parts directly by specifying complex numbers in
+<code>epsilon-offdiag</code> is preferred.
+</dl>
 
 <p>For example, a material with a dielectric constant of 3.0 for TE
 fields (polarized in the xy plane) and 5.0 for TM fields (polarized in
@@ -990,8 +996,11 @@ y-fraction</i></code>, and so on).
 
 </dl>
 
-<p>Given an energy-density function, loaded by
-<code>compute-field-energy</code>, various functions can be computed:
+<p>Various integrals and other information about the eigenstate can be
+accessed by the following functions, useful e.g. for perturbation
+theory.  Functions dealing with the field vectors require a field to
+be loaded, and functions dealing with the energy density require an
+energy density to be loaded via <code>compute-field-energy</code>.
 
 <dl>
 
@@ -1013,6 +1022,40 @@ and <code><i>r</i></code>, the position vector (in lattice
 coordinates) of the point.  <code>compute-energy-integral</code>
 returns the integral of <code><i>f</i></code> over the unit cell.
 (This can be useful for perturbation-theory calculations.)
+
+<p><dt><code>(compute-field-integral <i>f</i>)</code>
+<dd>Like <code>compute-energy-integral</code>, but
+<code><i>f</i></code> is a function <code>(<i>f F eps r</i>)</code>
+that returns a number (possibly complex) where <code><i>F</i></code>
+is the complex field vector at the given point.
+
+<p><dt><code>(get-epsilon-point <i>r</i>)
+<dd>Given a position vector <code><i>r</i></code> (in lattice
+coordinates), return the interpolated dielectric constant at that
+point.  (Since MPB uses a an effective dielectric tensor internally,
+this actually returns the mean dielectric constant.)
+
+<p><dt><code>(get-epsilon-inverse-tensor-point <i>r</i>)
+<dd>Given a position vector <code><i>r</i></code> (in lattice
+coordinates), return the interpolated inverse dielectric tensor (a 3x3
+matrix) at that point.  (Near a dielectric interface, the effective
+dielectric constant is a tensor even if you input only scalar
+dielectrics; see the <a href="developer.html#epsilon">epsilon
+overview</a> for more information.)  The returned matrix may be
+complex-Hermetian if you are employing magnetic materials.
+
+<p><dt><code>(get-energy-point <i>r</i>)
+<dd>Given a position vector <code><i>r</i></code> (in lattice
+coordinates), return the interpolated energy density at that point.
+
+<p><dt><code>(get-field-point <i>r</i>)
+<dd>Given a position vector <code><i>r</i></code> (in lattice
+coordinates), return the interpolated (complex) field vector at that point.
+
+<p><dt><code>(get-bloch-field-point <i>r</i>)
+<dd>Given a position vector <code><i>r</i></code> (in lattice
+coordinates), return the interpolated (complex) Bloch field vector at that
+point (this is the field without the exp(ikx) envelope).
 
 </dl>
 
