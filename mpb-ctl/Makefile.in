@@ -65,6 +65,7 @@ LDFLAGS = $(MY_LDFLAGS) @LDFLAGS@
 
 INSTALL = @INSTALL@
 prefix = @prefix@
+transform=@program_transform_name@
 @SET_MAKE@
 
 ##############################################################################
@@ -120,7 +121,7 @@ geom.c: $(LIBCTL_DIR)/utils/geom.c
 
 install: $(PROGRAM_NAME)
 	$(INSTALL) -d $(prefix)/bin
-	$(INSTALL) -m 0755 -s .$(PROGRAM_NAME) $(prefix)/bin/$(PROGRAM_NAME)
+	$(INSTALL) -m 0755 -s .$(PROGRAM_NAME) $(prefix)/bin/`echo $(PROGRAM_NAME)|sed '$(transform)'`
 	$(INSTALL) -d $(prefix)/share/libctl/specs
 	$(INSTALL) -m 0644 $(SPECIFICATION_FILE) $(prefix)/share/libctl/specs
 
