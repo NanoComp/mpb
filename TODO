@@ -1,10 +1,12 @@
-Support for parallel transform with MPI.
-
-Allow real-complex transforms for structures with inversion symmetry.
+Support for parallel transform with MPI.  Support other types of
+parallelization (e.g. doing different k points in parallel) without
+requiring external scripts.
 
 Export/import DXF, VRML, POV, ...?
 
-More eigensolver improvements...adaptive selection of an iteration technique.
+More eigensolver improvements...adaptive selection of an iteration technique?
+
+Try Jacobi-Davidson method with harmonic eigenvalues for targeted solver.
 
 Support Hermitian (complex) dielectric tensors for magneto-optical materials.
 
@@ -12,8 +14,5 @@ More profiling to find performance bottlenecks.  More systematic
 comparisons with our old code.
 
 Store epsilon differently?
-
-Implement create_evectmatrix_clone, evectmatrices_conformant_p
-(convenience functions to clean things up a bit).
 
 World domination.
