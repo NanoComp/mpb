@@ -1,3 +1,6 @@
+  * Fixed behavior of filename-prefix input variable; thanks to Karl Koch
+    for the bug report.
+
 MPB 0.9 (1/2/1999)
 
   * Added run-even and run-odd functions, so you can now compute only
