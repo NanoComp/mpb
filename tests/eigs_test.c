@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 
      sqmatrix_copy(U, A);
      
-     if (n <= 20) {
+     if (n <= 10) {
 	  printf("Solving for eigenvalues of %d x %d matrix: \nA = ", n, n);
 	  printmat_matlab(A.data, n, n);
      }
