@@ -13,11 +13,170 @@ href="index.html">main</a> section.
 
 <h1>Introduction</h1>
 
-<p>This is the introduction.  Isn't it informative?  Okay, moving on...
+<p>Photonic-Bands is a software package to compute definite-frequency
+eigenstates of Maxwell's equations in periodic dielectric structures.
+Its primary intended application is the study of photonic crystals,
+periodic dielectric structures exhibiting a band gap in their optical
+modes, prohibiting propagation of light in that frequency range.
+However, it could just also be applied to compute other optical
+dispersion relations and eigenstates.
+
+<p>This manual assumes that the reader is familiar with concepts from
+solid-state physics such as eigenstates, band structures, and Bloch's
+theorem.  We also do not attempt to instruct the reader on photonic
+crystals or other optical applications for which this code might be
+useful.  For an excellent introduction to all of these topics in the
+context of photonic crystals, see the book <i>Photonic Crystals:
+Molding the Flow of Light</i>, by J. D. Joannopoulos, R. D. Meade, and
+J. N. Winn (Princeton, 1995).
+
+<p>Some of the main features and design goals of this package are:
+
+<ul>
+
+<li>Flexible interface.  Readable, extensible, scriptable...see
+also the <a
+href="http://ab-initio.mit.edu/libctl/doc/introduction.html">libctl
+design goals</a>.
+
+<p><li>Parallelizable.  (Targeted at distributed-memory machines with MPI.)
+
+<p><li>Modularity.  The eigensolver, Maxwell's equations, user interface,
+and so on, should be oblivious to each other as much as possible.
+This way, they can be debugged separately, combined in various ways,
+replaced, used in other programs...all the usual benefits of modular
+design.
+
+<p><li>Leverages existing software (LAPACK, BLAS, FFTW, HDF, MPI...).
+
+<p><li>"Targeted" eigensolver: find modes nearest to a specified
+frequency, not just the lowest-frequency bands.  (For defect
+calculations.)
+
+<p><li>Take advantage of inversion symmetry in the dielectric
+function, but don't require it.  (This means that we have to handle
+both real and complex fields.)
+
+</ul>
+
+<h2>History</h2>
+
+<p>In order to shed some light on the past development and design
+decisions of the Photonic-Band package, as well as to pay homage to my
+enormous ego, I thought I'd write a few paragraphs about its history.
+Read on to enjoy my narcissist ramblings.
+
+<p>Many different people have written codes to compute the modes of
+periodic dielectric materials (although we don't know of any others
+that have been freely released).  I have had experience with several
+programs written within our group, and this experience has guided the
+design of the Photonic-Bands package.
+
+<p>The first program of this sort that I came in contact with, and the
+code that was used in our group until the development of this package,
+was initially written around 1990 (in Fortran 77).  As this software
+grew organically over time, several problems became apparent.  First,
+the input format was very inflexible (difficult to add new features
+without breaking old simulations), sensitive to whitespace and other
+formatting, and required repeated entry of information that was often
+the same from file to file.  Often, pre- and post-processing steps
+were required using additional scripts and tools.  Second, there was
+no clear modularity or flow of control within the program, making it
+difficult to follow or modify substantially.  Parallelizing it, or
+removing constraints that it imposed like inversion symmetry, or even
+replacing the input format would be impractical. Besides, even reading
+code with variables named <code>gxgzco</code> (in common block
+<code>cabgv</code>) is an ordeal.
+
+<p>After an initial experience in the Spring of 1996 at writing a code
+based on a wavelet, rather than a planewave, basis (which turned out
+not to be practical), I set out to write a replacement for our Fortran
+eigensolver.  My main aims at this time (Fall 1996) were a more
+flexible and powerful input format and a code that would be amenable
+to parallelization.  I succeeded in achieving a working code with
+similar convergence to the old code, but I discovered several things.
+I had lots of fun learning to use <code>lex</code> and
+<code>yacc</code> (Yet Another Compiler-Compiler) to make a flexible,
+C-like input format with variables and other advanced features.
+Having input files that were almost, but not quite, like a programming
+language made me realize, however, that what I really wanted
+<em>was</em> a programming language--no matter how many features I
+added, I always wanted one more "simple" thing.  As far as
+parallelization, I quickly realized that I had a problem: I needed a
+parallel FFT, and the only ones that were available were proprietary
+(non-portable), used incompatible data distribution formats, and were
+often designed to be called only from special languages like HPF.
+That, plus my dissatisfaction with the available free FFTs, led me to
+embark on a side project (with my friend Matteo Frigo of MIT's
+Laboratory for Computer Science) to develop a new, free FFT library,
+<a href="http://www.fftw.org">FFTW</a>, that included portable
+parallel routines.  Also, I decided that attempting to support too
+many models of parallel programming (threads, MPI, Cray
+<code>shmem</code>) in one program resulted in a mess; it was better
+to stick with MPI (supporting running only a single process, of
+course).  Another mistake I discovered was that I allowed the
+eigensolver to get too intertwined with the specific problem of
+Maxwell's equations--the eigensolver knew about the data structures
+for the fields, etcetera, making it difficult to plug in replacement
+eigensolvers, test things in isolation, or to implement features like
+the "targeted" eigensolver of Photonic-Bands (which diagonalizes a
+different operator).  The whole program was too mired in complexity.
+Finally, in the interim I had learned about block eigensolver
+algorithms.  Not only can such algorithms leverage prepackaged,
+highly-optimized routines like BLAS and LAPACK, but they also promised
+to be inherently more suited for parallelization (since they remove
+the serial process of solving for the bands one by one).  All of these
+things convinced me that I needed to rewrite the code again from
+scratch.
+
+<p>So, I started work on the new package (in Spring 1998), this time
+determined to develop and debug each component (matrix operations,
+eigensolver, maxwell operator, user input) in isolation.  At the same
+time, I was thinking about how I would implement the user control
+language, wanting to develop a general tool that could be applied to
+other problems and software in our research.  It seemed clear that, in
+order to get other people to use it in their programs, as well as to
+avoid a lot of the manual labor that went into my previous effort, I
+wanted to automatically generate the user/program interface from an
+abstract specification.  As for the control language, I briefly
+considered implementing my own, but was happily led to GNU Guile
+instead, which gave me a powerful language with little effort.  So
+armed, I set out to write libctl (which generates the Guile interface
+from an abstract Scheme specification), partially as an experiment to
+see how hard it would be and what the result would look like.  After a
+weekend of work, it was obvious that I had a powerful tool; I spent
+couple of weeks adding some finishing touches, writing documentation,
+and so on, and proudly showed it off to my groupmates in the hope that
+they could use it for their programs.  Without a real example of a
+program using libctl, however, it was hard to convince them to plug a
+scripting language into their existing, working codes.  So, I went
+back to puttering at my eigensolvers.
+
+<p>Of course, all this time I was allegedly doing real research, and
+long periods would go by with little progress on the Photonic-Bands
+package.  The original, Fortran code was still working, and in time
+one learned to bear its quirks and limitations with stoicism, although
+we cringed every time we had to show it to anyone else.  By the summer
+of 1999, I had a working block eigensolver (supporting several
+iteration-scheme variants), a Maxwell operator to plug into the
+eigensolver (including a "targeted" operator, whose convergence I was
+unhappy with), and a test program to do convergence experiments on
+bands of a Bragg mirror.  I hadn't attached any general user
+interface, field output, or other necessary components.  At this
+point, Dr. Doug Allan of Corning (a former student of
+Prof. Joannopoulos), heard about the new code--in particular, the
+targeted eigensolver--and began clamoring to try it out.  Not put off
+by my excuses, he asked for a copy of my current code, regardless of
+its status, to play with.  Not wanting to refuse, but aghast at the
+prospect of someone seeing my masterpiece only half-painted, I told
+him to give me a week...in which time I added the interface and
+discovered that I had a useful tool. Over the next week, I added many
+features, fixed bugs, and wrote documentation, drawing near to a
+release at last...
 
 <hr>
-Go to the <a href="installation.html">next</a> or <a href="index.html">main</a>
-section.
+Go to the <a href="installation.html">next</a> or <a
+href="index.html">main</a> section.
 
 </BODY>
 </HTML>
