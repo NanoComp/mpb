@@ -249,7 +249,7 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 void handle_dataset(matrixio_id in_file, matrixio_id out_file, 
 		    const char *name_re, const char *name_im,
 		    matrix3x3 Rout, matrix3x3 coord_map,
-		    real *kvector, int resolution, real multiply_size[3],
+		    real *kvector, double resolution, real multiply_size[3],
 		    int pick_nearest, int transpose)
 {
      real *d_in_re = NULL, *d_in_im = NULL, *d_out_re = NULL, *d_out_im = NULL;
@@ -361,7 +361,7 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
 void handle_file(const char *fname, const char *out_fname,
 		 const char *data_name,
 		 int rectify,  int have_ve, vector3 ve,
-		 int resolution, real multiply_size[3],
+		 double resolution, real multiply_size[3],
 		 int pick_nearest, int transpose)
 {
      matrixio_id in_file, out_file;
@@ -582,7 +582,8 @@ else { /* treat as if ":" were at the end of fname */
 int main(int argc, char **argv)
 {
      char *out_fname = NULL, *data_name = NULL;
-     int rectify = 0, resolution = 0, have_ve = 0;
+     int rectify = 0, have_ve = 0;
+     double resolution = 0;
      vector3 ve = {1,0,0};
      real multiply_size[3] = {1,1,1};
      int pick_nearest = 0, transpose = 0;
@@ -634,7 +635,7 @@ int main(int argc, char **argv)
                    multiply_size[2] = atof(optarg);
                    break;
               case 'n':
-                   resolution = atoi(optarg);
+                   resolution = atof(optarg);
 		   CHECK(resolution > 0,
 			 "invalid resolution for -n (must be positive)");
                    break;
