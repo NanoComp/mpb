@@ -120,8 +120,10 @@ referenced above.
 <p>The code is organized to keep the core computation independent of
 the user interface, and to keep the eigensolver routines independent
 of the operator they are computing the eigenvector of.  The
-computational code is located in the <code>src/<code> directory, with
-a few major subdirectories, described below.  The Guile-based user interface is completely contained within the <code>photon-ctl/<code> directory.
+computational code is located in the <code>src/</code> directory, with
+a few major subdirectories, described below.  The Guile-based user
+interface is completely contained within the <code>photon-ctl/</code>
+directory.
 
 <h3>src/matrices/</h3>
 
@@ -129,8 +131,8 @@ a few major subdirectories, described below.  The Guile-based user interface is 
 <code>eigensolver.c</code>, to which you pass an operator and it
 returns the eigenvectors.  Eigenvectors are stored using the
 <code>evectmatrix</code> data structure, which holds <code>p</code>
-eigenvectors of length <code>n<code>, potentially distributed over
-<code>n</code> in MPI.  See <code>src/matrices/README<code> for more
+eigenvectors of length <code>n</code>, potentially distributed over
+<code>n</code> in MPI.  See <code>src/matrices/README</code> for more
 information about the data structures.  In particular, you should use
 the supplied functions (<code>create_evectmatrix</code>, etcetera) to
 create and manipulate the data structures, where possible.
