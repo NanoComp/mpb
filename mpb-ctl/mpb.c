@@ -103,10 +103,11 @@ static real epsilon_func(real r[3], void *edata)
      vector3 p;
 
      /* p needs to be in the lattice *unit* vector basis, while r is
-	in the lattice vector basis; convert: */
-     p.x = r[0] * geometry_lattice.size.x;
-     p.y = r[1] * geometry_lattice.size.y;
-     p.z = r[2] * geometry_lattice.size.z;
+	in the lattice vector basis.  Also, shift origin to the center
+        of the grid. */
+     p.x = r[0] * geometry_lattice.size.x - 0.5;
+     p.y = r[1] * geometry_lattice.size.y - 0.5;
+     p.z = r[2] * geometry_lattice.size.z - 0.5;
      
      material = material_of_point(p);  /* from libctl/utils/libgeom/geom.c */
      return material.epsilon;
