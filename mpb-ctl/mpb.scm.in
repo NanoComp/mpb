@@ -90,8 +90,7 @@
 (define-input-var negative-epsilon-ok? false 'boolean)
 (define (allow-negative-epsilon)
   (set! negative-epsilon-ok? true)
-  (set! eigensolver-davidson? true)
-  (set! eigensolver-nwork 10))
+  (set! target-freq (/ 1 infinity)))
 
 ; ****************************************************************
 
