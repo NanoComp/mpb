@@ -273,6 +273,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       printf("    iteration %4d: "
 		      "trace = %g (%g%% change)\n", iteration, E,
 		      200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
+	       fflush(stdout); /* make sure output appears */
 	       pref_feedback_time = MPI_Wtime(); /* reset feedback clock */
 	  }
 
