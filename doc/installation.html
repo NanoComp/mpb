@@ -14,6 +14,167 @@ section.
 
 <h1>Installation</h1>
 
+<p>In this section, we outline the procedure for installing the
+Photonic-Bands package.  Mainly, this consists of downloading and
+installing various prerequisites.  As much as possible, we have
+attempted to take advantage of existing packages such as BLAS, LAPACK,
+FFTW, and GNU Guile, in order to make our code smaller, more robust,
+faster, and more flexible.  Unfortunately, this may make the
+installation of Photonic-Bands more complicated if you do not already
+have these packages.
+
+<p>You will also need an ANSI C compiler, of course (gcc is fine), and
+installation will be easiest on a UNIX-like system (Linux is fine).
+
+<h2>BLAS</h2>
+
+<p>The first thing you must have on your system is a BLAS
+implementation.  "BLAS" stands for "Basic Linear Algebra Subroutines,"
+and is a standard interface for operations like matrix multiplication.
+It is designed as a building-block for other linear-algebra
+applications, and is used both directly by our code and in LAPACK (see
+below).  By using it, we can take advantage of many highly-optimized
+implementations of these operations that have been written to the BLAS
+interface.  (Note that you will need implementations of BLAS levels 1-3.)
+
+<p>You can find more BLAS information, as well as a basic
+implementation, on the <a href="http://www.netlib.org/blas/">BLAS
+Homepage</a>.  It is a good idea to try and find a more optimized BLAS
+code for your hardware, though.  Vendor-optimized BLAS implementations
+are available as part of the Compaq CXML, IBM ESSL, SGI sgimath, and
+other libraries.  Recently, there has also been work on
+self-optimizing BLAS implementations that can achieve performance
+competitive with vendor-tuned codes; see the <a
+href="http://www.cs.berkeley.edu/~siyer/">PhiPACK</a> and <a
+href="http://www.netlib.org/atlas/">ATLAS</a> homepages (these only
+implement some BLAS operations, however, so you will still need a
+generic BLAS).  Links to more BLAS implementations can be found on <a
+href="http://SAL.KachinaTech.COM/B/0/BLAS.html" title="Scientific
+Applications on Linux (SAL) BLAS page">SAL</a>.
+
+<h2>LAPACK</h2>
+
+<p>LAPACK, the Linear Algebra PACKage, is a standard collection of
+routines, built on BLAS, for more-complicated (dense) linear algebra
+operations like matrix inversion and diagonalization.  You can
+download LAPACK from the <a
+href="http://www.netlib.org/lapack/">LAPACK Home Page</a>.  More
+LAPACK links can be found on <a
+href="http://SAL.KachinaTech.COM/B/0/LAPACK.html" title="Scientific
+Applications on Linux (SAL) LAPACK page">SAL</a>.
+
+<h2>HDF5</h2>
+
+<p>We require a portable, standard binary format for outputting the
+electromagnetic fields and similar volumetric data, and for this we
+use HDF.  HDF is a widely-used, free, portable library and file format
+for multi-dimensional scientific data, developed in the National
+Center for Supercomputing Applications (NCSA) at the University of
+Illinois (UIUC, home of the <a
+href="http://www.fightingillini.com/">Fighting Illini</a> and <i>alma
+mater</i> of many of my fine relatives).
+
+<p>There are two incompatible versions of HDF, HDF4 and HDF5 (no, not
+HDF1 and HDF2).  We require the newer version, HDF5.  (We use the
+newer version because it will be the focus of future development, it
+is cleaner, and it supports parallel I/O via MPI.)  Many visualization
+and data-analysis tools still use HDF4, but HDF5 includes an
+<code>h5toh4</code> conversion program that you can use if you need
+HDF4 files.
+
+<p>You can get HDF and learn about it on the <a
+href="http://hdf.ncsa.uiuc.edu">HDF Home Page</a>.
+
+<h2>MPI</h2>
+
+<p>Optionally, Photonic-Bands can run on a distributed-memory parallel
+machine, and to do this we use the standard MPI message-passing
+interface.  You can download and learn about MPI from the <a
+href="http://www-unix.mcs.anl.gov/mpi/index.html">MPI Home Page</a>.
+Most commercial supercomputers already have an MPI implementation
+installed.
+
+<p>MPI is <i>not required</i> to compile the ordinary, uniprocessor
+version of Photonic-Bands.  In fact, our MPI code is not even fully
+implemented yet; thank you for your patience (we value your call).
+
+<h2>FFTW</h2>
+
+<p>FFTW is a self-optimizing, portable, high-performance FFT
+implementation, including both serial and parallel FFTs.  You can
+download FFTW and find out more about it from the <a
+href="http://www.fftw.org">FFTW Home Page</a>.  If you want to use
+Photonic-Bands on a parallel machine with MPI, you will also need to
+install the <a href="">MPI FFTW</a> libraries (this just means
+including <code>--enable-mpi</mpi> in the FFTW <code>configure</code>
+flags).
+
+<h2>GNU Guile</h2>
+
+GNU Guile is an extension/scripting language implementation based on
+Scheme, and we use it to provide a rich, fully-programmable
+user-interface with minimal effort.  It's free, of course, and you can
+download it from the <a
+href="http://www.gnu.org/software/guile/">Guile Home
+Page</a>.
+
+<h2>libctl</h2>
+
+Instead of using Guile directly, we separated much of the user
+interface code into a package called libctl, in the hope that this
+might be more generally useful.  libctl automatically handles the
+communication between the program and Guile, converting complicated
+data structures and so on, to make it even easier to use Guile to
+control scientific applications.  Download libctl from the <a
+href="http://ab-initio.mit.edu/libctl/">libctl home site</a>, unpack
+it, and run the included <code>configure</code> script.  You'll also
+want to browse its <a
+href="http://ab-initio.mit.edu/libctl/doc/">manual</a>, as this will
+give you a general overview of what the user interface will be like.
+
+<p>Currently, the <code>libctl/</code> and <code>photonic-bands/</code>
+directories (the latter being the Photonic-Bands package), must both
+reside within the same parent directory.
+
+<h2>GNU Autoconf</h2>
+
+<p>If you want to be a developer of the Photonic-Bands package (as
+opposed to a user), you will also need the GNU Autoconf program.
+Autoconf is a portability tool that generates <code>configure</code>
+scripts to automatically detect the capabilities of a system and
+configure a package accordingly.  You can find out more at the <a
+href="http://sourceware.cygnus.com/autoconf/">Autoconf Home Page</a>
+(autoconf is typically installed by default on Linux systems).
+
+<h2>Photonic-Bands</h2>
+
+<p>Okay, if you've made it all the way here, you're ready to install
+the Photonic-Bands package and start cranking out eigenmodes.  (You
+can download the latest version and read this manual at the <a
+href="http://ab-initio.mit.edu/photonic-bands/">Photonic-Bands
+Homepage</a>.)  Once you've unpacked it, just run:
+
+<pre>
+./configure
+make
+</pre>
+
+<p>to configure and compile the package.  Hopefully, the
+<code>configure</code> script will correctly detect the BLAS, FFTW,
+etcetera libraries that you've dutifully installed, as well as the C
+compiler and so on, and the <code>make</code> compilation will proceed
+without a hitch.  If not, it's a <a
+href="http://www.tuxedo.org/~esr/jargon/html/entry/SMOP.html">Simple
+Matter of Programming</a> to correct the problem.
+<code>configure</code> accepts several flags that we hope will work
+someday, such as <code>--enable-mpi</code> to turn on MPI support, as
+well as a number of standard flags that work already
+(<code>./configure --help</code> for more info).
+
+<p>Once compiled, the main program (as opposed to various test
+programs) resides in the <code>photon-ctl/</code> subdirectory, and is
+called <code>photon</code>.
+
 <hr>
 Go to the <a href="user-tutorial.html">next</a>, <a
 href="introduction.html">previous</a>, or <a href="index.html">main</a>
