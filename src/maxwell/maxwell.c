@@ -133,7 +133,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
      CHECK(rank > 2, "rank <= 2 MPI computations must use SCALAR_COMPLEX");
 
-#  error rfftw MPI transforms not yet supported
+#      error rfftw MPI transforms not yet supported
 
 #    endif /* not SCALAR_COMPLEX */
      
