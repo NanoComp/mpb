@@ -132,11 +132,14 @@ if test "$save_LIBS" = "$LIBS"; then
 fi
 
 if test "$save_LIBS" = "$LIBS"; then
-	# Check for BLAS in Sun Performance library:
-	# AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
-	AC_CHECK_LIB(sunmath, acosp)
-	AC_CHECK_LIB(sunperf, dgemm_,
-        	[LIBS="-xlic_lib=sunperf $LIBS"; AC_DEFINE(HAVE_LIBSUNPERF)])
+	if test "x$GCC" != xyes; then
+		# Check for BLAS in Sun Performance library:
+		# AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
+		AC_CHECK_LIB(sunmath, acosp,
+			AC_CHECK_LIB(sunperf, dgemm_,
+        			[LIBS="-xlic_lib=sunperf -lsunmath $LIBS"
+				 AC_DEFINE(HAVE_LIBSUNPERF)], , -lsunmath))
+	fi
 fi
 
 if test "$save_LIBS" = "$LIBS"; then
