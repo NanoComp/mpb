@@ -141,6 +141,7 @@ mpb-split-tmp:
 	sed "s%\./mpb%$$mpb_name%g" mpb-split > mpb-split-tmp;
 
 install-mpb-split: mpb-split-tmp
+	mpb_name=`echo mpb | sed '$(transform)'`; \
 	$(INSTALL) -m 0755 mpb-split-tmp $(prefix)/bin/$${mpb_name}-split
 
 clean:
