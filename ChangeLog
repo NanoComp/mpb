@@ -1,3 +1,145 @@
+Fri Nov 19 00:45:13 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* TODO: updated and cleaned up a bit
+
+	* doc/license.html, doc/user-tutorial.html: noted example ctl
+	files
+
+	* mpb-ctl/examples/hole-slab.ctl: output hfield instead of dpwr.
+
+	* mpb-ctl/examples/hole-slab.ctl: added hole-slab example
+
+Thu Nov 18 20:43:17 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* configure.in: don't look in ../libctl and print error if libctl
+	not found
+
+	* src/matrices/eigensolver.c: flush iteration output
+
+	* mpb-ctl/mpb.scm.in, doc/user-ref.html: added current-k global
+
+	* mpb-ctl/mpb.c: print out geometry box tree in --verbose mode
+
+	* mpb-ctl/examples/sq-rods.ctl: slight cleanup
+
+	* mpb-ctl/examples/bragg.ctl, mpb-ctl/examples/sq-rods.ctl:
+	updated examples
+
+	* doc/user-tutorial.html: recommend using mpb foo.ctl >& foo.out
+	so that foo.out catches errors.
+
+	* Makefile.in: added 'make dist' target
+
+	* mpb-ctl/mpb.c: explained that hack from 1.32 was to get good
+	convergence.
+
+	* mpb-ctl/mpb.c: hack: for some reason I don't comprehend, it is
+	necessary to re-randomize the fields before doing a zero-k point,
+	at least with the new "analytic" linmin in eigensolver.c.  Hey, it
+	works, and it can't do any harm.
+
+	* configure.in: bumped beta version number
+
+	* src/matrices/sqmatrix.c: Added explanatory comment to
+	sqmatrix_AeBC, noting the probable relative efficiency of various
+	operations.
+
+	* src/matrices/eigensolver.c: tiny fix in comment
+
+	* src/matrices/eigensolver.h, src/matrices/eigensolver.c: Added
+	"analytic" line minimization based on exact minimization of
+	rigorous expansion of the functional for small displacements
+	(truly exact for p=1).  Also cleaned up eigensolver code a bit,
+	giving generic names to matrices UYtAYU and Usqrt that were being
+	used for lots of random things.
+
+Wed Nov 17 23:56:34 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/user-ref.html: grammar fix
+
+	* doc/introduction.html: link to feature list at MPB home page.
+
+	* doc/index.html: slight wording change
+
+	* doc/index.html, README: noted author
+
+	* doc/license.html: gnu web page -> gnu web site
+
+	* doc/user-tutorial.html, mpb-ctl/mpb.c: sumfrq -> freqs, etcetera
+
+	* mpb-ctl/mpb.scm.in: interactive -> interactive?
+
+	* src/maxwell/maxwell_pre.c, src/maxwell/maxwell.c,
+	src/maxwell/maxwell.h, mpb-ctl/mpb.c: Put in special-case code for
+	k ~ 0 lowest bands (constant fields), to fix problems with slow
+	convergence.
+
+	* src/matrices/eigensolver.c, src/matrices/eigensolver.h,
+	mpb-ctl/mpb.c: Added constraint "chaining" utilities.
+
+Tue Nov 16 07:10:08 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/matrices/eigensolver.c: renamed check variable (don't reuse
+	E2--bad style)
+
+	* doc/user-ref.html, doc/user-tutorial.html: noted that 2d grid
+	does not mean k is 2d
+
+	* doc/developer.html: <emph> -> <em>, and fixed missing close tag
+	(why have I been closing everything with </code>?)
+
+	* mpb-ctl/mpb.c: added missing return statements in error code
+
+Mon Nov 15 23:51:42 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* TODO: we can't add HDF4 support because the HDF4 license
+	conflicts with the GPL
+
+	* TODO: updated; we now restart CG every 100 iterations
+
+	* mpb-ctl/mpb.c: Use EIGS_VERBOSE flag when run with --verbose.
+	We should probably print even more output than we already do with
+	this flag.
+
+	* configure.in: Fixed version number.
+
+	* mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, doc/user-ref.html: Added
+	"deterministic?" and "iterations" input and output variables.
+
+	* src/matrices/eigensolver.h, src/util/mpiglue.h,
+	src/matrices/eigensolver.c: Periodically print feedback in
+	eigensolver, even when EIGS_VERBOSE is not set, if the user is
+	kept waiting more than a couple of seconds.  Also, implement
+	resetting of CG direction every 100 iters (determined by some
+	experimentation with the 5x5 defect).
+
+Sun Nov 14 20:29:37 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/eigs_test.c, tests/malloctest.c, tests/maxwell_test.c,
+	src/util/mpi_utils.h, src/util/mpiglue.h, tests/blastest.c,
+	src/util/check.h, src/util/debug_malloc.c, src/util/fortranize.h,
+	src/util/mpi_utils.c, src/maxwell/maxwell_eps.c,
+	src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c,
+	src/maxwell/maxwell.c, src/maxwell/maxwell.h,
+	src/matrixio/evectmatrixio.c, src/matrixio/fieldio.c,
+	src/matrixio/matrixio.c, src/matrixio/matrixio.h,
+	src/matrices/matrices.h, src/matrices/scalar.h,
+	src/matrices/sqmatrix.c, src/matrices/eigensolver.h,
+	src/matrices/evectmatrix.c, src/matrices/matrices.c,
+	src/matrices/blasglue.c, src/matrices/blasglue.h,
+	src/matrices/eigensolver.c, COPYRIGHT, mpb-ctl/mpb.c: fixed
+	indenting in COPYRIGHT
+
+	* mpb-ctl/Makefile.in, mpb-ctl/mpb.c, doc/installation.html,
+	doc/user-tutorial.html, configure.in, doc/developer.html,
+	doc/index.html, README, TODO, Makefile.in: Great Renaming II: we
+	are now MPB
+
+	* doc/index.html: noted mpb-discuss mailing list.
+
+	* configure.in: check for -lcxml in addition to -ldxml (name
+	changed due to acquisition by Compaq).
+
 Fri Nov 12 20:46:38 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* photon-ctl/photon.scm.in: Removed begin-time macro (moved it to
