@@ -87,7 +87,7 @@ void get_dfield(int which_band)
 	  else
 	       scale = -1.0; /* arbitrary */
 
-	  scale /= matrix3x3_determinant(Rm);
+	  scale /= sqrt(matrix3x3_determinant(Rm));
 
 	  for (i = 0; i < 3*N; ++i) {
 	       curfield[i].re *= scale;
@@ -128,7 +128,7 @@ void get_hfield(integer which_band)
 	  double scale;
 	  N = mdata->fft_output_size;
 
-	  scale = 1.0 / matrix3x3_determinant(Rm);
+	  scale = 1.0 / sqrt(matrix3x3_determinant(Rm));
 
 	  for (i = 0; i < 3*N; ++i) {
 	       curfield[i].re *= scale;
