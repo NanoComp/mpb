@@ -1066,7 +1066,7 @@ that computations will (potentially) run more quickly and take up less
 memory per processor than for the serial code.
 
 <p>Using the parallel MPB is almost identical to using the serial
-version, with a couple of minor exceptions.  The same ctl files should
+version(s), with a couple of minor exceptions.  The same ctl files should
 work for both.  Running a program that uses MPI requires slightly
 different invocations on different systems, but will typically be
 something like:
@@ -1087,12 +1087,19 @@ is left-handed; to un-transpose the data, you can process it with
 any other options).
 
 <p>In order to get optimal benefit (time and memory savings) from
-<code>mpb-mpi</code>, the first two dimensions (x and y) of your grid
-should <em>both</em> be divisible by the number of processes.  If you
-violate this constraint, MPB will still work, but the load balance
-between processors will be uneven.  At worst, if either your x or y
-grid size is smaller than the number of processes, then some of the
-processors will be idle for part (or all) of the computation.
+<code>mpb-mpi</code>, the first two dimensions
+(n<sub><small>x</small></sub> and n<sub><small>y</small></sub>) of
+your grid should <em>both</em> be divisible by the number of
+processes.  If you violate this constraint, MPB will still work, but
+the load balance between processors will be uneven.  At worst, e.g. if
+either n<sub><small>x</small></sub> or n<sub><small>y</small></sub> is
+smaller than the number of processes, then some of the processors will
+be idle for part (or all) of the computation.  When using <a
+href="#inv-symmetry">inversion symmetry</a> (<code>mpbi-mpi</code>)
+for 2D grids, the optimal case is somewhat more complicated:
+n<sub><small>x</small></sub> and (n<sub><small>y</small></sub>/2 + 1),
+not n<sub><small>y</small></sub>, should both be divisible by the
+number of processes.
 
 <p><code>mpb-mpi</code> divides each band at each k-point between the
 available processors.  This means that, even if you have only a single
