@@ -14,6 +14,7 @@ trap 'echo "killing subprocesses: $subprocesses"; kill -9 $subprocesses; rm -f $
 # the first chunk going to stdout and the rest going to temporary files
 # to be output later.
 ./mpb interactive?=false k-split-index=0 k-split-num=$* &
+subprocesses="$subprocesses $!"
 i=1
 while test `expr $i \< $1` = 1; do
     ./mpb interactive?=false k-split-index=$i k-split-num=$* > $tmpname.$i &
