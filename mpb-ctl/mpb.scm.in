@@ -345,6 +345,13 @@
   (lambda (which-band)
     (map (lambda (f) (f which-band)) band-funcs)))
 
+; Only invoke the given band functions for the specified k-point:
+(define (output-at-kpoint kpoint . band-funcs)
+  (let ((band-func (apply combine-band-functions band-funcs)))
+    (lambda (which-band)
+      (if (vector3= current-k kpoint)
+	  (band-func which-band)))))
+
 ; ****************************************************************
 
 ; Load GNU Readline support, for easier command-line editing support.

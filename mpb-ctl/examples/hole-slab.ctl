@@ -43,15 +43,8 @@
 (set! grid-size (vector3 32 32 64))
 (set! num-bands 9)
 
-; Define band functions to output fields only at the K point:
-(define (output-hfield-z-only-at-K band)
-  (if (vector3= current-k K)
-      (output-hfield-z band)))
-(define (output-dfield-z-only-at-K band)
-  (if (vector3= current-k K)
-      (output-dfield-z band)))
-
-(run-even output-hfield-z-only-at-K)
-(run-odd output-dfield-z-only-at-K)
+; Run even and odd bands, outputting fields only at the K point:
+(run-even (output-at-kpoint K output-hfield-z))
+(run-odd (output-at-kpoint K output-dfield-z))
 
 (display-eigensolver-stats)
