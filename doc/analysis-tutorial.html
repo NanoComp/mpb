@@ -224,18 +224,18 @@ course.)
 
 <p>Note that the dataset name is <code>z.r-new</code>, which is the
 real part of the z component of the output of <code>mpb-data</code>.
-The real and imaginary parts of the fields correspond to what the
-fields look like at half-period intervals in time, and in general they
-are different.  However, at K they are redundant, due to the inversion
-symmetry of that k-point (proof left as an exercise for the reader).
-Usually, looking at the real parts alone gives you a pretty good
-picture of the state, especially if you use
-<code>fix-efield-phase</code> (see below), which chooses the phase to
-maximize the field energy in the real part.  Sometimes, though, you
+(Since these are TM fields, the z component is the only non-zero part
+of the electric field.)  The real and imaginary parts of the fields
+correspond to what the fields look like at half-period intervals in
+time, and in general they are different.  However, at K they are
+redundant, due to the inversion symmetry of that k-point (proof left
+as an exercise for the reader).  Usually, looking at the real parts
+alone gives you a pretty good picture of the state, especially if you
+use <code>fix-efield-phase</code> (see below), which chooses the phase
+to maximize the field energy in the real part.  Sometimes, though, you
 have to be careful: if the real part happens to be zero, what you'll
 see is essentially numerical noise and you should switch to the
-imaginary part.  (And, of course, since these are TM fields, the z
-component is the only component of the electric field.)
+imaginary part.
 
 <p>The resulting field images are shown below:
 
