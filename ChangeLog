@@ -1,3 +1,57 @@
+Wed Feb  9 23:14:45 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* NEWS: noted changes
+
+	* NEWS: noted --without-hdf5 fix
+
+	* configure.in: Warn user if -lhdf5 is found but hdf5.h is not
+	(probably an error).
+
+	* src/matrixio/matrixio.c, utils/mpb-data.c: fixed compilation
+	--without-hdf5
+
+Tue Feb  8 06:40:20 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-tutorial.html: slight clarifications
+
+Mon Feb  7 02:30:24 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/analysis-tutorial.html: updated run time for diamond lattice
+
+	* doc/user-ref.html: slight clarification
+
+Sun Feb  6 02:43:38 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* src/matrixio/matrixio.c, src/matrixio/matrixio.h,
+	utils/mpb-data.c: creating a dataset deletes pre-existing ones
+
+Sat Feb  5 22:03:02 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* configure.in: updated to check for ATLAS 3.0 libraries.
+
+Fri Feb  4 01:37:35 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html: document current-k variable
+
+Tue Feb  1 03:30:58 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/analysis-tutorial.html: fixed typo
+
+	* doc/tri-rods-ez8.gif, doc/tri-rods-ez1.gif,
+	doc/tri-rods-ez2.gif, doc/tri-rods-ez3.gif, doc/tri-rods-ez4.gif,
+	doc/tri-rods-ez5.gif, doc/tri-rods-ez6.gif, doc/tri-rods-ez7.gif:
+	updated to use h5topng 1.3.4 images (much nicer contour lines).
+
+	* doc/analysis-tutorial.html: noted random phase
+
+Sat Jan 29 19:34:56 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in: output band range data
+
+	* utils/mpb-data.c: Fixed -d help in -h info.
+
+	* mpb-ctl/mpb.1: small change
+
 Sat Jan 29 02:36:46 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/user-tutorial.html: mentioned data analysis tutorial
