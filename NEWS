@@ -1,9 +1,13 @@
-MPB 1.4.1 (9/13/2002)
+MPB 1.4.1 (9/16/2002)
 
-  * Fixed NaN in field normalization when basis-determinant was negative.
+  * Fixed NaN in field normalization when basis determinant was negative.
+    Thanks to Rumen Iliew for the bug report.
 
   * Fixed compatibility problems with versions of Guile prior to 1.4.
     Thanks to Cazimir G. Bostan for bug reports.
+
+  * Don't resize lattice basis for grid-size == 1 unless no-size was
+    explicitly specified; thanks to Tairan Wang for the suggestion.
 
 MPB 1.4 (9/12/2002)
 

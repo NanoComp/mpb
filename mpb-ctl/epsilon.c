@@ -182,17 +182,23 @@ void init_epsilon(void)
 #if USE_GEOMETRY_TREE
      int tree_depth, tree_nobjects;
 #endif
+     number no_size; 
+
+     no_size = 1.0 / ctl_get_number("infinity");
 
      mpi_one_printf("Mesh size is %d.\n", mesh_size);
      mesh[0] = mesh_size;
      mesh[1] = (dimensions > 1) ? mesh_size : 1;
      mesh[2] = (dimensions > 2) ? mesh_size : 1;
 
-     Rm.c0 = vector3_scale(mdata->nx == 1 ? 1 : geometry_lattice.size.x, 
+     Rm.c0 = vector3_scale(geometry_lattice.size.x == no_size ? 
+			   1 : geometry_lattice.size.x, 
 			   geometry_lattice.basis.c0);
-     Rm.c1 = vector3_scale(mdata->ny == 1 ? 1 : geometry_lattice.size.y,
+     Rm.c1 = vector3_scale(geometry_lattice.size.y == no_size ? 
+			   1 : geometry_lattice.size.y, 
 			   geometry_lattice.basis.c1);
-     Rm.c2 = vector3_scale(mdata->nz == 1 ? 1 : geometry_lattice.size.z,
+     Rm.c2 = vector3_scale(geometry_lattice.size.z == no_size ? 
+			   1 : geometry_lattice.size.z, 
 			   geometry_lattice.basis.c2);
      mpi_one_printf("Lattice vectors:\n");
      mpi_one_printf("     (%g, %g, %g)\n", Rm.c0.x, Rm.c0.y, Rm.c0.z);  
