@@ -1,4 +1,18 @@
+2002-03-08  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.c: use ctl_fix_path on epsilon_input_file in case
+	user is running ctl file from another directory (thanks to Alexey
+	Yamilov for bugging me)
+
 2002-03-07  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.c: fix typo
+
+	* doc/user-ref.html: noted no-size orthogonality
+
+	* doc/user-ref.html: fixed typo
+
+	* ChangeLog, NEWS, configure.ac: updated version
 
 	* COPYRIGHT, mpb-ctl/epsilon_file.c, mpb-ctl/mpb.1, mpb-ctl/mpb.c,
 	mpb-ctl/mpb.h, mpb-ctl/mpb.scm.in, src/matrices/blasglue.c,
@@ -23,17 +37,6 @@
 
 	* mpb-ctl/mpb.scm.in: made usage of define-property consistent
 	with latest rev. of libctl
-
-	* doc/analysis-tutorial.html: used new h5topng syntax
-
-	* doc/analysis-tutorial.html, doc/user-ref.html,
-	doc/user-tutorial.html, mpb-ctl/examples/bragg-sine.ctl,
-	mpb-ctl/examples/bragg.ctl, mpb-ctl/examples/diamond.ctl,
-	mpb-ctl/examples/hole-slab.ctl, mpb-ctl/examples/honey-rods.ctl,
-	mpb-ctl/examples/line-defect.ctl, mpb-ctl/examples/sq-rods.ctl,
-	mpb-ctl/examples/tri-holes.ctl, mpb-ctl/examples/tri-rods.ctl,
-	mpb-ctl/examples/tutorial.ctl: documented grid-size -> resolution
-	and updated output numbers in tutorials
 
 2002-02-27  Steven G. Johnson  <stevenj@ab-initio>
 
