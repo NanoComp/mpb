@@ -9,6 +9,9 @@ LIBS = @LIBS@
 RANLIB = @RANLIB@
 @SET_MAKE@
 
+package = mpb
+distdir = $(package)-@MPB_VERSION@
+
 # Subdirectories to make in:
 
 LIBSUBDIRS = src/util src/matrices src/maxwell src/matrixio
@@ -20,6 +23,13 @@ all: all-recursive
 libs: libs-recursive
 
 install: install-recursive
+
+dist:
+	cvs export -D now -d $(distdir) $(package)
+	pushd $(distdir) && autoconf && popd
+	rm -f $(distdir).tar.gz
+	GZIP="--best" tar chozf $(distdir).tar.gz $(distdir)
+	rm -rf $(distdir)
 
 clean: clean-recursive
 	rm -f core
