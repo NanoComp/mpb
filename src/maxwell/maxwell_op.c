@@ -411,17 +411,6 @@ void maxwell_vectorfield_makefull(maxwell_data *d, scalar_complex *field)
      n_last_stored = d->last_dim_size / 2;
      rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
 
-     /** NOTE: In addition to expanding the field to cover the full
-	 primitive cell, we also complex-conjugate it.  The reason
-	 for this is that FFTW's real-to-complex transform uses
-	 an exponent of -1, but the field output routines expect
-	 the opposite sign convention for the Fourier transform.
-	 (The sign is important to get the right sign of k.) 
-
-         If we ever break time reversal symmetry (which equates k and -k),
-         we need a better fix: we should change everything to use the
-         proper sign convention, or k will be backwards. **/
-
      /* convenience macros to copy vectors, and conjugated vectors: */
 #  define ASSIGN_V(f,k,f2,k2) { f[3*(k)+2] = f2[3*(k2)+2];               \
                                 f[3*(k)+1] = f2[3*(k2)+1];               \
@@ -452,10 +441,10 @@ void maxwell_vectorfield_makefull(maxwell_data *d, scalar_complex *field)
 	  }
 	  for (j = n_last - 1; j >= n_last_stored; --j) {
 	       int jc = (n_last - j) % n_last;
-	       ASSIGN_V(field,i*n_last+j, field,ic*n_last_stored+jc);
+	       ASSIGN_CV(field,i*n_last+j, field,ic*n_last_stored+jc);
 	  }
 	  for (; j >= 0; --j) {
-	       ASSIGN_CV(field,i*n_last+j, field,i*n_last_stored+j);
+	       ASSIGN_V(field,i*n_last+j, field,i*n_last_stored+j);
 	  }
      }
      /* in this loop, ic is in the half already copied above: */
@@ -467,7 +456,7 @@ void maxwell_vectorfield_makefull(maxwell_data *d, scalar_complex *field)
 	      default: ic = 0; break;
 	  }
 	  for (j = n_last_stored - 1; j >= 0; --j) {
-	       ASSIGN_CV(field,i*n_last+j, field,i*n_last_stored+j);
+	       ASSIGN_V(field,i*n_last+j, field,i*n_last_stored+j);
 	  }
 	  for (j = n_last - 1; j >= n_last_stored; --j) {
 	       int jc = (n_last - j) % n_last;

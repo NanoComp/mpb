@@ -78,13 +78,13 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 #  ifdef HAVE_FFTW
 #    ifdef SCALAR_COMPLEX
      d->fft_output_size = fft_data_size = nx * ny * nz;
-     d->plan = fftwnd_create_plan_specific(rank, n, FFTW_FORWARD,
+     d->plan = fftwnd_create_plan_specific(rank, n, FFTW_BACKWARD,
 					   FFTW_ESTIMATE | FFTW_IN_PLACE,
 					   (fftw_complex*) d->fft_data,
 					   3 * d->num_fft_bands,
 					   (fftw_complex*) d->fft_data,
 					   3 * d->num_fft_bands);
-     d->iplan = fftwnd_create_plan_specific(rank, n, FFTW_BACKWARD,
+     d->iplan = fftwnd_create_plan_specific(rank, n, FFTW_FORWARD,
 					    FFTW_ESTIMATE | FFTW_IN_PLACE,
 					    (fftw_complex*) d->fft_data,
 					    3 * d->num_fft_bands,
@@ -117,10 +117,10 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
 #    ifdef SCALAR_COMPLEX
      d->plan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
-				      FFTW_FORWARD,
+				      FFTW_BACKWARD,
 				      FFTW_ESTIMATE | FFTW_IN_PLACE);
      d->iplan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
-				       FFTW_BACKWARD,
+				       FFTW_FORWARD,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
 
      fftwnd_mpi_local_sizes(plan, &d->local_nx, &d->local_x_start,
@@ -252,10 +252,11 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 		    int kzi = (z > cz) ? (z - nz) : z;
 		    real kpGx, kpGy, kpGz, a, b, c, leninv;
 
-		    /* Compute k+G: */
-		    kpGx = kx + G1[0]*kxi + G2[0]*kyi + G3[0]*kzi;
-		    kpGy = ky + G1[1]*kxi + G2[1]*kyi + G3[1]*kzi;
-		    kpGz = kz + G1[2]*kxi + G2[2]*kyi + G3[2]*kzi;
+		    /* Compute k+G (noting that G is negative because
+		       of the choice of sign in the FFTW Fourier transform): */
+		    kpGx = kx - (G1[0]*kxi + G2[0]*kyi + G3[0]*kzi);
+		    kpGy = ky - (G1[1]*kxi + G2[1]*kyi + G3[1]*kzi);
+		    kpGz = kz - (G1[2]*kxi + G2[2]*kyi + G3[2]*kzi);
 
 		    a = kpGx*kpGx + kpGy*kpGy + kpGz*kpGz;
 		    kpG->kmag = sqrt(a);
