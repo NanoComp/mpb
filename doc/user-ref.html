@@ -812,6 +812,13 @@ scalar field:
 electric field from the displacement field.  Only works if a D field
 has been loaded.
 
+<dt><code>(fix-field-phase)</code>
+<dd>Fix the phase of the eigenstate (which is normally random) to a
+canonical value, based on the spatial field (H, D, or E) that has
+currently been loaded.  The phase is fixed to make the real part as
+big as possible (so that you can hopefully visualize just the real
+part of the field), and a canonical sign is chosen.
+
 <p><dt><code>(compute-field-energy)</code>
 <dd>Given the H or D fields, computes the corresponding energy density
 function (normalized by the total energy).  Also prints the fraction
