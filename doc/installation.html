@@ -139,15 +139,19 @@ communication between the program and Guile, converting complicated
 data structures and so on, to make it even easier to use Guile to
 control scientific applications.  Download libctl from the <a
 href="http://ab-initio.mit.edu/libctl/">libctl home site</a>, unpack
-it, and run the included <code>configure</code> script.  You'll also
-want to browse its <a
+it, and run the usual <code>configure</code>, <code>make</code>,
+<code>make install</code> sequence.  You'll also want to browse its <a
 href="http://ab-initio.mit.edu/libctl/doc/">manual</a>, as this will
 give you a general overview of what the user interface will be like.
 
-<p>Currently, the <code>libctl/</code> and
-<code>photonic-bands/</code> directories (the latter being the MIT
-Photonic-Bands package), must both reside within the same parent
-directory.
+<p>If you are not the system administrator of your machine, and/or
+want to install libctl somewhere else (like your home directory), you
+can do so with the standard <code>--prefix=<i>dir</i></code> option to
+<code>configure</code> (the default prefix is
+<code>/usr/local</code>).  In this case, however, you'll need to
+specify the location of the libctl shared files for the Photonic-Bands
+package, using the <code>--with-libctl=<i>dir</i>/share/libctl</code>
+option to the Photonic-Bands <code>configure</code>.
 
 <h2>GNU Autoconf</h2>
 
@@ -187,7 +191,13 @@ well as a number of standard flags that work already
 
 <p>Once compiled, the main program (as opposed to various test
 programs) resides in the <code>photon-ctl/</code> subdirectory, and is
-called <code>photon</code>.
+called <code>photon</code>.  You can install this program under
+</code>/usr/local</code> (or elsewhere, if you used the
+<code>--prefix</code> flag for <code>configure</code>), by running:
+
+<pre>
+make install
+</pre>
 
 <hr>
 Go to the <a href="user-tutorial.html">next</a>, <a
