@@ -738,7 +738,7 @@
 			  (find-root-deriv (rootfun b) tol kmag-min kmag-max
 					   (vector-ref k0s (- b band-min))))
 			(arith-sequence band-max -1 nb)))))
-      (if band-funcs
+      (if (not (null? band-funcs))
 	  (map (lambda (b k)
 		 (set! num-bands b)
 		 (set! k-points (list (vector3-scale k kdir1)))
