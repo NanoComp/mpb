@@ -456,7 +456,7 @@ void fix_field_phase(void)
      double theta;
      scalar phase;
 
-     if (!curfield || !strchr("dhec", curfield_type)) {
+     if (!curfield || !strchr("dhecv", curfield_type)) {
           mpi_one_fprintf(stderr, "The D/H/E field must be loaded first.\n");
           return;
      }
@@ -701,7 +701,7 @@ cvector3 get_bloch_field_point(vector3 p)
      scalar_complex field[3];
      cvector3 F;
 
-     CHECK(curfield && strchr("dhec", curfield_type),
+     CHECK(curfield && strchr("dhecv", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
      field[0] = f_interp_cval(p, mdata, &curfield[0].re, 6);
      field[1] = f_interp_cval(p, mdata, &curfield[1].re, 6);
@@ -715,25 +715,24 @@ cvector3 get_bloch_field_point(vector3 p)
 cvector3 get_field_point(vector3 p)
 {
      scalar_complex field[3], phase;
-     double phase_phi;
      cvector3 F;
-     vector3 kvector = {0,0,0};
 
-     CHECK(curfield && strchr("dhec", curfield_type),
+     CHECK(curfield && strchr("dhecv", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
      field[0] = f_interp_cval(p, mdata, &curfield[0].re, 6);
      field[1] = f_interp_cval(p, mdata, &curfield[1].re, 6);
      field[2] = f_interp_cval(p, mdata, &curfield[2].re, 6);
 
-     if (curfield_type != 'c')
-	  kvector = cur_kvector;
-     phase_phi = TWOPI * (kvector.x * (p.x/geometry_lattice.size.x+0.5) +
-			  kvector.y * (p.y/geometry_lattice.size.y+0.5) +
-			  kvector.z * (p.z/geometry_lattice.size.z+0.5));
-     CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
-     CASSIGN_MULT(field[0], field[0], phase);
-     CASSIGN_MULT(field[1], field[1], phase);
-     CASSIGN_MULT(field[2], field[2], phase);
+     if (curfield_type != 'v') {
+	  double phase_phi = TWOPI * 
+	       (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
+		cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
+		cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+	  CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
+	  CASSIGN_MULT(field[0], field[0], phase);
+	  CASSIGN_MULT(field[1], field[1], phase);
+	  CASSIGN_MULT(field[2], field[2], phase);
+     }
 
      F.x = cscalar2cnumber(field[0]);
      F.y = cscalar2cnumber(field[1]);
@@ -749,7 +748,7 @@ number rscalar_field_get_point(SCM fo, vector3 p)
      return f_interp_val(p, f, f->f.rs, 1, 0);
 }
 
-cvector3 cvector_field_get_point(SCM fo, vector3 p)
+cvector3 cvector_field_get_point_bloch(SCM fo, vector3 p)
 {
      scalar_complex field[3];
      cvector3 F;
@@ -759,6 +758,36 @@ cvector3 cvector_field_get_point(SCM fo, vector3 p)
      field[0] = f_interp_cval(p, f, &f->f.cv[0].re, 6);
      field[1] = f_interp_cval(p, f, &f->f.cv[1].re, 6);
      field[2] = f_interp_cval(p, f, &f->f.cv[2].re, 6);
+     F.x = cscalar2cnumber(field[0]);
+     F.y = cscalar2cnumber(field[1]);
+     F.z = cscalar2cnumber(field[2]);
+     return F;
+}
+
+cvector3 cvector_field_get_point(SCM fo, vector3 p)
+{
+     scalar_complex field[3];
+     cvector3 F;
+     field_smob *f = assert_field_smob(fo);
+     CHECK(f->type == CVECTOR_FIELD_SMOB, 
+	   "invalid argument to cvector-field-get-point");
+
+     field[0] = f_interp_cval(p, f, &f->f.cv[0].re, 6);
+     field[1] = f_interp_cval(p, f, &f->f.cv[1].re, 6);
+     field[2] = f_interp_cval(p, f, &f->f.cv[2].re, 6);
+     
+     if (f->type_char != 'v') { /* v fields have no kvector */
+	  scalar_complex phase;
+	  double phase_phi = TWOPI * 
+	       (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
+		cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
+		cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+	  CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
+	  CASSIGN_MULT(field[0], field[0], phase);
+	  CASSIGN_MULT(field[1], field[1], phase);
+	  CASSIGN_MULT(field[2], field[2], phase);
+     }
+
      F.x = cscalar2cnumber(field[0]);
      F.y = cscalar2cnumber(field[1]);
      F.z = cscalar2cnumber(field[2]);
@@ -998,10 +1027,10 @@ void output_field_to_file(integer which_component, string filename_prefix)
      output_R[2][0]=R[2][0]; output_R[2][1]=R[2][1]; output_R[2][2]=R[2][2];
 #endif /* ! HAVE_MPI */
 
-     if (strchr("Rc", curfield_type)) /* generic scalar/vector field */
+     if (strchr("Rv", curfield_type)) /* generic scalar/vector field */
 	  output_k[0] = output_k[1] = output_k[2] = 0.0; /* don't know k */
      
-     if (strchr("dhec", curfield_type)) { /* outputting vector field */
+     if (strchr("dhecv", curfield_type)) { /* outputting vector field */
 	  matrixio_id data_id[6] = {-1,-1,-1,-1,-1,-1};
 	  int i;
 
@@ -1308,11 +1337,11 @@ cnumber compute_field_integral(function f)
      cnumber integral = {0,0};
      vector3 kvector = {0,0,0};
 
-     if (!curfield || !strchr("dheDHRc", curfield_type)) {
+     if (!curfield || !strchr("dheDHRcv", curfield_type)) {
           mpi_one_fprintf(stderr, "The D or H energy/field must be loaded first.\n");
           return integral;
      }
-     if (curfield_type != 'c')
+     if (curfield_type != 'v')
 	  kvector = cur_kvector;
 
      integrate_energy = strchr("DHR", curfield_type) != NULL;

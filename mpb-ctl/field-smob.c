@@ -123,7 +123,7 @@ field_smob *update_curfield_smob(void)
      curfield_smob.last_dim_size = mdata->last_dim_size;
      curfield_smob.other_dims = mdata->other_dims;
      curfield_smob.type_char = curfield_type;
-     if (strchr("dhec", curfield_type)) { /* complex vector field */
+     if (strchr("dhecv", curfield_type)) { /* complex vector field */
 	  curfield_smob.type = CVECTOR_FIELD_SMOB;
 	  curfield_smob.f.cv = curfield;
      }
@@ -200,6 +200,13 @@ SCM cvector_field_make(SCM f0)
      for (i = 0; i < pf->N * 3; ++i)
 	  CASSIGN_ZERO(pf->f.cv[i]);
      return field2scm(pf);
+}
+
+void cvector_field_nonblochB(SCM f)
+{
+     field_smob *pf = assert_field_smob(f);
+     pf->type_char = 'v';
+     update_curfield(pf);
 }
 
 SCM field_make(SCM f0)

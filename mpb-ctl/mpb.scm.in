@@ -191,6 +191,8 @@
 (define-external-function cur-field? false false 'boolean 'SCM)
 (define-external-function rscalar-field-make false false 'SCM 'SCM)
 (define-external-function cvector-field-make false false 'SCM 'SCM)
+(define-external-function cvector-field-nonbloch! false false
+  no-return-value 'SCM)
 (define-external-function field-make false false 'SCM 'SCM)
 (define-external-function fields-conform? false false 'boolean 'SCM 'SCM)
 (define-external-function field-set! false false no-return-value 'SCM 'SCM)
@@ -206,10 +208,8 @@
   'SCM 'vector3)
 (define-external-function cvector-field-get-point false false 'cvector3 
   'SCM 'vector3)
-(define (field-get-point f p)
-  (if (rscalar-field? f)
-      (rscalar-field-get-point f p)
-      (cvector-field-get-point f p)))
+(define-external-function cvector-field-get-point-bloch false false 'cvector3 
+  'SCM 'vector3)
 
 ; ****************************************************************
 
@@ -587,14 +587,13 @@
   (output-field))
 
 (define (get-poynting which-band)
-  (get-efield which-band)
-  (let ((e (field-copy cur-field))
-	(exh (cvector-field-make cur-field)))
-    (get-hfield which-band)
-    (field-map! exh
+  (get-efield which-band)                      ; put E in cur-field
+  (let ((e (field-copy cur-field)))            ; ... and copy to local var.
+    (get-hfield which-band)                    ; put H in cur-field
+    (field-map! cur-field                      ; write ExH to cur-field
 		(lambda (e h) (vector3-cross (vector3-conj e) h))
 		e cur-field)
-    (field-load exh)))
+    (cvector-field-nonbloch! cur-field)))
 (define (output-poynting which-band)
   (get-poynting which-band)
   (output-field-to-file -1 (string-append filename-prefix "flux.")))

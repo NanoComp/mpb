@@ -960,6 +960,10 @@ determines the sign.
 
 </dl>
 
+<p>See also below for the <code>output-poynting</code> and
+<code>output-tot-pwr</code> functions to output the Poynting vector
+and the total electromagnetic energy density, respectively.
+
 <p>Sometimes, you only want to output certain bands.  For example,
 here is a function that, given an band/output function like the ones
 above, returns a new output function that only calls the first
@@ -1360,7 +1364,7 @@ combining fields into new fields with <code>field-map!</code>
 some function of the fields with <code>integrate-fields</code>
 (e.g. to compute coupling integrals for perturbation theory), and
 getting the field values at arbitrary points with
-<code>field-get-point</code> (e.g. to do a line or surface integral).
+<code>*-field-get-point</code> (e.g. to do a line or surface integral).
 These three functions are described below:
 
 <dl>
@@ -1373,7 +1377,9 @@ value of <code><i>f1</i></code> etcetera.  All the fields must be of
 the same size, and the argument and return types of
 <code><i>func</i></code> must match those of the
 <code><i>f1...</i></code> and <code><i>fdest</i></code> fields,
-respectively.
+respectively.  <code><i>fdest</i></code> may be the same field as one
+of the <code><i>f1...</i></code> arguments.  Note: all fields are
+<em>without</em> Bloch phase factors exp(ikx).
 
 <p><dt><code>(integrate-fields <i>func [f1 f2 ...]</i>)</code>
 <dd>Compute the integral of the function <code>(<i>func r [f1 f2
@@ -1381,18 +1387,21 @@ respectively.
 <code><i>r</i></code> is the position (in the usual lattice basis) and
 <code><i>f1</i></code> etc. are fields (which must all be of the same
 size).  (The integral is computed simply as the sum over the grid
-points times the volume of a grid pixel/voxel.)
+points times the volume of a grid pixel/voxel.) Note: all fields are
+<em>without</em> Bloch phase factors exp(ikx).  See also the note <a
+href="#mult-fields-bloch">below</a>.
 
-<p><dt><code>(field-get-point <i>f r</i>)</code>
+
+<p>
 <dt><code>(cvector-field-get-point <i>f r</i>)</code>
+<dt><code>(cvector-field-get-point-bloch <i>f r</i>)</code>
 <dt><code>(rscalar-field-get-point <i>f r</i>)</code>
 <dd>Given a position vector <code><i>r</i></code> (in lattice
 coordinates), return the interpolated field cvector/rscalar from
-<code><i>f</i></code> at that point.  <code>field-get-point</code> is
-simply a wrapper that calls either
-<code>cvector-field-get-point</code> or
-<code>rscalar-field-get-point</code> according to the type of
-<code><i>f</i></code>.
+<code><i>f</i></code> at that point.
+<code>cvector-field-get-point-bloch</code> returns the field
+<em>without</em> the exp(ikx) Bloch wavevector, in analogue to
+<code>get-bloch-field-point</code>.
 
 </dl>
 
@@ -1443,15 +1452,52 @@ various field functions:
 
 <pre>
 (define (get-poynting which-band)
-  (get-efield which-band) ; E is now in cur-field
-  (let ((e (field-copy cur-field))
-        (exh (cvector-field-make cur-field)))
-    (get-hfield which-band) ; H is now in cur-field
-    (field-map! exh
+  (get-efield which-band)                      ; put E in cur-field
+  (let ((e (field-copy cur-field)))            ; ... and copy to local var.
+    (get-hfield which-band)                    ; put H in cur-field
+    (field-map! cur-field                      ; write ExH to cur-field
                 (lambda (e h) (vector3-cross (vector3-conj e) h))
                 e cur-field)
-    (field-load exh)))
+    (cvector-field-nonbloch! cur-field)))      ; see below
 </pre>
+
+<h4><a name="mult-fields-bloch">Stored fields and Bloch phases</a></h3>
+
+<p>Complex vector fields like <b>E</b> and <b>H</b> as computed by MPB
+are physically of the Bloch form: exp(ikx) times a periodic function.
+What MPB actually stores, however, is just the periodic function, the
+Bloch envelope, and only multiplies by exp(ikx) for when the fields
+are output or passed to the user (e.g. in integration functions).
+This is mostly transparent, with a few exceptions noted above for
+functions that do not include the exp(ikx) Bloch phase (it is somewhat
+faster to operate without including the phase).
+
+<p>On some occasions, however, when you create a field with
+<code>field-map!</code>, the resulting field should <em>not</em> have
+any Bloch phase.  For example, for the Poynting vector
+<b>E</b><sup><small>*</small></sup>x<b>H</b>, the exp(ikx) cancels
+because of the complex conjugation.  After creating this sort of
+field, we must use the special function
+<code>cvector-field-nonbloch!</code> to tell MPB that the field is
+purely periodic:
+
+<dl>
+
+<dt><code>(cvector-field-nonbloch! <i>f</i>)</code>
+<dd>Specify that the field <code><i>f</i></code> is <em>not</em> of
+the Bloch form, but rather that it is purely periodic.
+
+</dl>
+
+<p>Currently, all fields must be either Bloch or non-Bloch (i.e. periodic),
+which covers most physically meaningful possibilities.
+
+<p>There is another wrinkle: even for fields in Bloch form, the
+exp(ikx) phase currently always uses the <em>current</em> k-point,
+even if the field was computed from another k-point.  So, if you are
+performing computations combining fields from different k-points, you
+should take care to always use the periodic envelope of the field,
+putting the Bloch phase in manually if necessary.
 
 <h3><a name="eigen-fields">Manipulating the raw eigenvectors</a></h3>
 
