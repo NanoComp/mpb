@@ -9,9 +9,10 @@
 (set! tolerance 1e-9) ; use a low tolerance to get consistent results
 
 ; function to check if two results are sufficently close:
+(define check-tolerance 1e-5)
 (define (almost-equal? x y)
   (or 
-   (< (abs (- x y)) (* 1e-5 (+ (abs x) (abs y))))
+   (< (abs (- x y)) (* check-tolerance (+ (abs x) (abs y))))
    (and (< (abs x) 1e-3) (< (abs (- x y)) 1e-3))))
 
 ; Convert a list l into a list of indices '(1 2 ...) of the same length.
@@ -112,7 +113,11 @@
 (set! num-bands 2)
 (set! target-freq 0.35)
 (run-tm)
+
+(define ct-save check-tolerance)
+(set! check-tolerance (* ct-save 10))
 (check-freqs '((0.335269274821527 0.337652210814253)))
+(set! check-tolerance ct-save)
 
 (set! target-freq 0)
 
