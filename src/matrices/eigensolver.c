@@ -66,6 +66,11 @@ static int check_converged(real E, real *eigenvals,
    size?) */
 #define CG_RESET_ITERS 100
 
+/* maximum fractional change in trace for conjugate-gradient to be used;
+   we don't want to use cg until we're near the minimum, so that the
+   functional approximates a quadratic form. */
+#define DELAY_CG_THRESH 0.1
+
 /* Preconditioned eigensolver.  Finds the lowest Y.p eigenvectors
    and eigenvalues of the operator A, and returns them in Y and
    eigenvals (which should be an array of length Y.p).  
@@ -288,6 +293,14 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 			 eigenvals[i] = 0.0;
 	  }
 #endif
+
+	  /* disable conjugate-gradient until we are close to the minimum */
+	  if ((flags & EIGS_DELAY_CG) &&
+	      (iteration == 0 ||
+	       fabs(E - prev_E) > DELAY_CG_THRESH * 
+	       0.5 * (fabs(E) + fabs(prev_E)))) {
+	       prev_traceGtX = 0.0;	       
+	  }
 
 	  if ((flags & EIGS_VERBOSE) ||
 	      MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
