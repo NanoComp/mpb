@@ -1,3 +1,8 @@
+Improved mesh: icosohedron vertices for determining normal, and 3^3 mesh
+for averaging?
+
+Recursive geometry inclusion testing to find material_of_point in log time.
+
 Finish tuning maxwell preconditioner.  Implement fancy preconditioner.
 
 Profile--where is the performance going?
