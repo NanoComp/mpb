@@ -203,28 +203,19 @@ AC_TRY_RUN([
 #include <stdio.h>
 #include <stdlib.h>
 #include "$srcdir/src/util/fortranize.h"
-
-typedef struct {
-     double re, im;
-} cmplx;
-
+typedef struct { double re, im; } cmplx;
 #define zdotc FORTRANIZE(zdotc,ZDOTC)
 #ifdef __cplusplus
 extern "C"
 #endif
 extern cmplx zdotc(int *, cmplx *, int *, cmplx *, int *);
-
-int main(void)
-{
+int main(void) {
      cmplx x[2] = { {1,0}, {0,1} }, y[2] = { {1,0}, {1,0} };
      int n = 2, inc1 = 1, inc2 = 1;
      cmplx result = { 0, 0 };
-
      result = zdotc(&n, x, &inc1, y, &inc2);
-     if (result.re != 1 || result.im != -1)
-          return EXIT_FAILURE;
-     else
-          return EXIT_SUCCESS;
+     if (result.re != 1 || result.im != -1) return EXIT_FAILURE;
+     else return EXIT_SUCCESS;
 }
 ], ok="yes", ok="no", ok="no")
 AC_MSG_RESULT($ok)
