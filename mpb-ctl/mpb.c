@@ -388,6 +388,11 @@ void solve_kpoint(vector3 kvector)
      printf("solve_kpoint (%g,%g,%g):\n",
 	    kvector.x, kvector.y, kvector.z);
 
+     if (num_bands == 0) {
+	  printf("  num-bands is zero, not solving for any bands\n");
+	  return;
+     }
+
      if (!mdata) {
 	  fprintf(stderr, "init-params must be called before solve-kpoint!\n");
 	  return;
