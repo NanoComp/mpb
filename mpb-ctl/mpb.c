@@ -1051,7 +1051,7 @@ void get_efield(integer which_band)
 /* get the dielectric function, and compute some statistics */
 void get_epsilon(void)
 {
-     int i, N, last_dim, last_dim_stored;
+     int i, N, last_dim, last_dim_stored, nx, nz, local_y_start;
      real *epsilon;
      real eps_mean = 0, eps_inv_mean = 0, eps_high = -1e20, eps_low = 1e20;
      int fill_count = 0;
@@ -1076,6 +1076,8 @@ void get_epsilon(void)
      last_dim = mdata->last_dim;
      last_dim_stored =
 	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
+
      for (i = 0; i < N; ++i) {
           epsilon[i] = 3.0 / (mdata->eps_inv[i].m00 +
                               mdata->eps_inv[i].m11 +
@@ -1091,7 +1093,15 @@ void get_epsilon(void)
 #ifndef SCALAR_COMPLEX
 	  /* most points need to be counted twice, by rfftw output symmetry: */
 	  {
-	       int last_index = i % last_dim_stored;
+	       int last_index;
+#  ifdef HAVE_MPI
+	       if (nz == 1) /* 2d calculation: 1st dim. is truncated one */
+		    last_index = i / nx + local_y_start;
+	       else
+		    last_index = i % last_dim_stored;
+#  else
+	       last_index = i % last_dim_stored;
+#  endif
 	       if (last_index != 0 && 2*last_index != last_dim) {
 		    eps_mean += epsilon[i];
 		    eps_inv_mean += 1/epsilon[i];
@@ -1132,7 +1142,7 @@ void get_epsilon(void)
    in case the user needs the unnormalized version. */
 number_list compute_field_energy(void)
 {
-     int i, N, last_dim, last_dim_stored;
+     int i, N, last_dim, last_dim_stored, nx, nz, local_y_start;
      real comp_sum2[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, comp_sum[6];
      real energy_sum = 0.0, normalization;
      real *energy_density = (real *) curfield;
@@ -1147,6 +1157,8 @@ number_list compute_field_energy(void)
      last_dim = mdata->last_dim;
      last_dim_stored =
 	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
+
      for (i = 0; i < N; ++i) {
 	  scalar_complex field[3];
 	  real
@@ -1179,7 +1191,15 @@ number_list compute_field_energy(void)
 #ifndef SCALAR_COMPLEX
 	  /* most points need to be counted twice, by rfftw output symmetry: */
 	  {
-	       int last_index = i % last_dim_stored;
+	       int last_index;
+#  ifdef HAVE_MPI
+	       if (nz == 1) /* 2d calculation: 1st dim. is truncated one */
+		    last_index = i / nx + local_y_start;
+	       else
+		    last_index = i % last_dim_stored;
+#  else
+	       last_index = i % last_dim_stored;
+#  endif
 	       if (last_index != 0 && 2*last_index != last_dim) {
 		    energy_sum += energy_density[i];
 		    comp_sum2[0] += comp_sqr0;
@@ -1364,7 +1384,7 @@ void fix_field_phase(void)
    given range of dielectric constants: */
 number compute_energy_in_dielectric(number eps_low, number eps_high)
 {
-     int N, i, last_dim, last_dim_stored;
+     int N, i, last_dim, last_dim_stored, nx, nz, local_y_start;
      real *energy = (real *) curfield;
      real epsilon, energy_sum = 0.0;
 
@@ -1377,6 +1397,8 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
      last_dim = mdata->last_dim;
      last_dim_stored =
 	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
+
      for (i = 0; i < N; ++i) {
 	  epsilon = 3.0 / (mdata->eps_inv[i].m00 +
 			   mdata->eps_inv[i].m11 +
@@ -1384,8 +1406,17 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 	  if (epsilon >= eps_low && epsilon <= eps_high) {
 	       energy_sum += energy[i];
 #ifndef SCALAR_COMPLEX
+	       /* most points are counted twice, by rfftw output symmetry: */
 	       {
-		    int last_index = i % last_dim_stored;
+		    int last_index;
+#  ifdef HAVE_MPI
+		    if (nz == 1) /* 2d: 1st dim. is truncated one */
+			 last_index = i / nx + local_y_start;
+		    else
+			 last_index = i % last_dim_stored;
+#  else
+		    last_index = i % last_dim_stored;
+#  endif
 		    if (last_index != 0 && 2*last_index != last_dim)
 			 energy_sum += energy[i];
 	       }
