@@ -3,7 +3,7 @@ AC_INIT
 AC_CONFIG_SRCDIR([src/matrices/matrices.c])
 AC_CONFIG_HEADER(src/config.h)
 
-MPB_VERSION=1.3beta
+MPB_VERSION=1.3
 AC_SUBST(MPB_VERSION)
 
 AC_MSG_CHECKING([for vendor f77 to be used instead of g77])

@@ -1,3 +1,60 @@
+2002-03-07  Steven G. Johnson  <stevenj@ab-initio>
+
+	* COPYRIGHT, mpb-ctl/epsilon_file.c, mpb-ctl/mpb.1, mpb-ctl/mpb.c,
+	mpb-ctl/mpb.h, mpb-ctl/mpb.scm.in, src/matrices/blasglue.c,
+	src/matrices/blasglue.h, src/matrices/eigensolver.c,
+	src/matrices/eigensolver.h, src/matrices/eigensolver_davidson.c,
+	src/matrices/eigensolver_utils.c, src/matrices/evectmatrix.c,
+	src/matrices/linmin.c, src/matrices/linmin.h,
+	src/matrices/matrices.c, src/matrices/matrices.h,
+	src/matrices/scalar.h, src/matrices/sqmatrix.c,
+	src/matrixio/evectmatrixio.c, src/matrixio/fieldio.c,
+	src/matrixio/matrixio.c, src/matrixio/matrixio.h,
+	src/maxwell/maxwell.c, src/maxwell/maxwell.h,
+	src/maxwell/maxwell_constraints.c, src/maxwell/maxwell_eps.c,
+	src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c,
+	src/util/check.h, src/util/debug_malloc.c, src/util/mpi_utils.c,
+	src/util/mpi_utils.h, src/util/mpiglue.h, tests/blastest.c,
+	tests/eigs_test.c, tests/malloctest.c, tests/maxwell_test.c,
+	utils/mpb-data.1, utils/mpb-data.c: 2002 copyright year update
+
+	* configure.ac, doc/user-ref.html, mpb-ctl/mpb.c,
+	mpb-ctl/mpb.scm.in: use Scheme complex numbers
+
+	* mpb-ctl/mpb.scm.in: made usage of define-property consistent
+	with latest rev. of libctl
+
+	* doc/analysis-tutorial.html: used new h5topng syntax
+
+	* doc/analysis-tutorial.html, doc/user-ref.html,
+	doc/user-tutorial.html, mpb-ctl/examples/bragg-sine.ctl,
+	mpb-ctl/examples/bragg.ctl, mpb-ctl/examples/diamond.ctl,
+	mpb-ctl/examples/hole-slab.ctl, mpb-ctl/examples/honey-rods.ctl,
+	mpb-ctl/examples/line-defect.ctl, mpb-ctl/examples/sq-rods.ctl,
+	mpb-ctl/examples/tri-holes.ctl, mpb-ctl/examples/tri-rods.ctl,
+	mpb-ctl/examples/tutorial.ctl: documented grid-size -> resolution
+	and updated output numbers in tutorials
+
+2002-02-27  Steven G. Johnson  <stevenj@ab-initio>
+
+	* configure.ac: fixed bug in zdotc detection (thanks to Steve
+	Lantz)
+
+	* doc/installation.html: Added "Fun with Fortran" section (thanks
+	to Steve Lantz for the suggestion).
+
+	* src/maxwell/maxwell_eps.c: Fixed bug that would cause compile
+	failure with Fortran compilers using upper case.  (Thanks to Steve
+	Lantz of Corning.)
+
+2002-02-25  Steven G. Johnson  <stevenj@ab-initio>
+
+	* acx_lapack.m4: check for lapack_rs6k library name
+
+2002-02-13  Steven G. Johnson  <stevenj@ab-initio>
+
+	* ChangeLog: updated
+
 2002-02-12  Steven G. Johnson  <stevenj@ab-initio>
 
 	* mpb-ctl/mpb.c: fixed (I think) conjugation in field routines...E

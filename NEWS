@@ -1,4 +1,41 @@
-  * Shortened --hermitian-epsilon configure option to --hermitian-eps.
+MPB 1.3
+
+  * You can now specify the grid size via the resolution input variable,
+    instead of via grid-size.  In this case, you make e.g. a 2d simulation
+    by creating a lattice with size no-size in one dimension.  The
+    old syntax is still supported, but the new style is encouraged
+    (all examples have been updated to the new style).
+
+  * New functions to retrieve fields, dielectric functions, etcetera
+    at any point, interpolated from the grid if necessary; see the
+    get-*-point functions in the reference section.
+
+  * New compute-field-integral function, analogous to compute-energy-integral;
+    thanks to Marin Soljacic for the suggestion.
+
+  * Support Scheme complex numbers where appropriate (e.g. in epsilon-offdiag
+    or in the new field integration functions).
+
+  * Got rid of NaN when computing the (undefined) group velocity
+    for zero-frequency states at the Gamma point; arbitrarily
+    return zero here instead.  Thanks to Dmitry N. Chigrin for
+    reporting floating-point exceptions on Alphas.
+
+  * Fixed compilation failure for Fortran compilers that use all upper case;
+    thanks to Steve Lantz of Corning.
+
+  * Added "Fun with Fortran" section to installation manual describing
+    common Fortran pitfalls; thanks to Steve Lantz for the suggestion.
+
+  * Improved BLAS/LAPACK detection; new --with-blas and --with-lapack
+    options to specify these libraries manually.
+
+  * Shortened --with-hermitian-epsilon configure option to 
+    --with-hermitian-eps.
+
+  * The data-analysis tutorial is now consistent with h5topng 1.7.
+
+  * Use new API from libctl 2.0.
 
 MPB 1.2.2 (12/7/2001)
 
