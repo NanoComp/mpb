@@ -15,7 +15,10 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-/* Debugging versions of malloc & free, to help catch common errors. */
+/* Debugging versions of malloc & free, to help catch common errors.
+   The routines in this file were adapted from similar routines in the
+   FFTW library (www.fftw.org), written by Matteo Frigo and Steven
+   G. Johnson.  FFTW is also GPLed and is also copyrighted by MIT.  */
 
 #include <stdio.h>
 #include <stdlib.h>
