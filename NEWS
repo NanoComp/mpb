@@ -4,6 +4,10 @@ MPB 0.11 (2/12/2000)
 
   * Added band-range-data output variable.
 
+  * Running mpb-data multiple times on the same file now replaces
+    the results of the previous run, instead of appending -new2,
+    -new3, etcetera.
+
   * Fixed bug in run-even/run-odd that could seriously slow or even
     prevent eigensolver convergence.  Thanks to Payam Rabiei for the
     bug report.
