@@ -1,12 +1,8 @@
 Profile--where is the performance going?  Systematic comparisons with old code.
 
-Why does ATLAS BLAS implementation break?
-
 Add ability to solve for only even/odd bands w.r.t. z=0 plane.
 
 Optimize multiplications by diagonal matrices?
-
-Fix linking with -lessl on AIX...what is going on there?
 
 Allow real-complex transforms for structures with inversion symmetry.
 

@@ -28,8 +28,11 @@ AC_MSG_CHECKING([for vendor's f77 to be used instead of g77])
 AC_MSG_RESULT()
 AC_CHECK_PROGS(F77, f77 xlf77 cf77 fort77 f90 xlf90 g77)
 
-# Checks for programs.
+# Get C compiler (default to gcc).
+AC_CHECK_PROGS(CC, xlc) # prefer xlc on AIX in order to link ESSL libs :(
 AC_PROG_CC
+
+# Checks for programs.
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
@@ -113,7 +116,7 @@ if test "$ok" = "no"; then
 	save_LIBS="xxxxxxxx"
 elif test "$ok" != "yes"; then
 	# user specified a BLAS library to try on the command line
-	AC_CHECK_LIB($ok, main)
+	AC_CHECK_LIB($ok, main, LIBS="-l$ok $LIBS",, $FLIBS)
 fi
 
 if test "$save_LIBS" = "$LIBS"; then
@@ -138,7 +141,7 @@ fi
 
 if test "$save_LIBS" = "$LIBS"; then
 	# Checks for BLAS in IBM ESSL library
-	AC_CHECK_LIB(essl, dgemm)
+	AC_CHECK_LIB(essl, dgemm, LIBS="-lessl $LIBS",, $FLIBS)
 fi
 
 if test "$save_LIBS" = "$LIBS"; then
@@ -194,7 +197,7 @@ fi
 ACTIVATE_READLINE=""
 AC_MSG_CHECKING(how to activate readline in Guile)
 ractivate="(use-modules (readline-activator)) (activate-readline)"
-if guile -c "$ractivate" >& /dev/null; then
+if guile -c "$ractivate" > /dev/null 2>&1; then
 	AC_MSG_RESULT(readline-activator)
 	ACTIVATE_READLINE="$ractivate"
 else
