@@ -1,3 +1,7 @@
+MPB 1.2.1
+
+  * Fixed serious crashing bug; thanks to Karl Koch for the bug report.
+
 MPB 1.2 (11/15/00)
 
   * Added new y-parity computation and constraints.  See the new
