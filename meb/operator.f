@@ -720,13 +720,14 @@ ccc      Complex*16 v(ldp,Ni*Nj*Nk*3), w(ldp,Ni*Nj*Nk*3)
       Complex*16 v(Ni*Nj*Nk*3),w(Ni*Nj*Nk*3)
       real*8 vkx,vky,vkz
       real*8 b1x,b1y,b1z,b2x,b2y,b2z,b3x,b3y,b3z
+      real*8 denom
       Complex*16 tempx,tempy,tempz,Ureal,Uimag,hmx,hmy,hmz,h1,h2
       Complex*16 temp1,temp2,temp3,temp4,temp5,temp6,temp7,temp8
       Complex*16 temp9,temp10,temp11,temp12,temp13,temp14,temp15
       Complex*16 temp16,temp17,temp18
       Complex*16 hm1,hm2,hm3,hm4,hm5,hm6,hm7,hm8,hm9,hm10
       Complex*16 hm11,hm12,hm13,hm14,hm15,hm16,hm17,hm18
-      Complex*16 X1,X2,X3,X4,X5,X6,X7,X8,X9
+      real*8 X1,X2,X3,X4,X5,X6,X7,X8,X9
 
       Real*8 Datx(Ni*Nj*Nk*2),Daty(Ni*Nj*Nk*2),Datz(Ni*Nj*Nk*2)
       Real*8 Dat1(Ni*Nj*Nk*2)
@@ -907,7 +908,12 @@ C-------------------------------------------------------------
             X8=Gy*Gz+Gz*Gy
             X9=Gx*Gx+Gy*Gy+3.*Gz*Gz
 
-            h1=-x3*x5*x7+x2*x6*x7+x3*x4*x8-x1*x6*x8-x2*x4*x9+x1*x5*x9 
+            denom=-x3*x5*x7+x2*x6*x7+x3*x4*x8-x1*x6*x8-x2*x4*x9+x1*x5*x9 
+
+c           add small quantity (5e-3) to denom so that we don't divide by zero
+c           for k+G = 0 (only happens for Gamma point, i.e. k=0):
+            denom = 1.0 / (denom + sign(5D-3, denom))
+
 
           tempx=(-X6*X8+X5*X9)*hmx+( X3*X8-X2*X9)*hmy+(-X3*X5+X2*X6)*hmz
           tempy=( X6*X7-X4*X9)*hmx+(-X3*X7+X1*X9)*hmy+( X3*X4-X1*X6)*hmz
@@ -916,9 +922,9 @@ C-------------------------------------------------------------
             
             
 
-            w(3*ip-2)=tempx/h1
-            w(3*ip-1)=tempy/h1
-            w(3*ip  )=tempz/h1
+            w(3*ip-2)=tempx*denom
+            w(3*ip-1)=tempy*denom
+            w(3*ip  )=tempz*denom
 
 
             Dat1 (2*ip-1) = Dble( Gx*hmx )
