@@ -215,6 +215,13 @@ band function (which is called for each band during the execution of
 the <code>run</code> functions when two or more k-points are solved.
 (It is the empty list if no gaps are found.)
 
+<p><dt><code>band-range-data</code> [list of <code>((<i>min . kpoint</i>) . (<i>max . kpoint</i>))</code> pairs (of pairs)]
+<dd>For each band, this list contains the minimum and maximum
+frequencies of the band, and the associated k points where the extrema
+are achieved.  Note that the bands are defined by sorting the
+frequencies in increasing order, so this can be confused if two bands
+cross.
+
 </dl>
 
 <h2><a name="classes">Classes</a></h2>
