@@ -1,4 +1,4 @@
-MPB 0.81
+MPB 0.9 (1/2/1999)
 
   * Added run-even and run-odd functions, so you can now compute only
     even/odd states (with respect to a z=0 mirror plane) in systems with
@@ -17,7 +17,7 @@ MPB 0.81
   * Fixed trailing spaces in sed command, which were breaking 'make install'
     on some systems.  Thanks to Ron Chase for the bug report.
 
-MPB 0.80.1 (11/22/1999)
+MPB 0.8.1 (11/22/1999)
 
   * Added output-hfield-x, output-dfield-y, etcetera, functions for
     outputting only specific field components (see manual reference section).
@@ -27,6 +27,6 @@ MPB 0.80.1 (11/22/1999)
   * Added output-copies variable to set the number of periods output by
     the band output functions (see manual reference section).
 
-MPB 0.80 (11/19/1999)
+MPB 0.8 (11/19/1999)
 
   * Initial public release.
