@@ -39,25 +39,21 @@ void fieldio_write_complex_field(scalar_complex *field,
 				 const int copies[3],
 				 const real kvector[3],
 				 real R[3][3],
-				 const char *fname,
-				 const char *description)
+				 matrixio_id file_id)
 {
      int i, j, k, component, ri_part;
      int cpies[3];
      int total_dims[3], local_dims[3], start[3] = {0,0,0}, localN;
      real s[3]; /* the step size between grid points dotted with k */
-     char *fname2, name[] = "imaginary part of x component";
-     matrixio_id file_ids[3][2], data_ids[3][2];
+     char name[] = "x.i";
+     matrixio_id data_ids[3][2];
      scalar_complex *phasex, *phasey, *phasez;
      real lastphase = 0.0;
-     int attr_dims[2] = {3, 3};
-     real rcopies[3];
 
      for (i = 0; i < 3; ++i) {
 	  cpies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
 	  total_dims[i] = dims[i] * cpies[i];
 	  local_dims[i] = dims[i];
-	  rcopies[i] = cpies[i];
      }
      rank = total_dims[2] == 1 ? (total_dims[1] == 1 ? 1 : 2) : 3;
      local_dims[0] = local_nx;
@@ -70,36 +66,16 @@ void fieldio_write_complex_field(scalar_complex *field,
 	  s[i] *= TWOPI / dims[i];
      }
 
-     /* allocate string for holding fname + ".x.r" or similar */
-     CHK_MALLOC(fname2, char, strlen(fname) + 4 + 1);
-     strcpy(fname2, fname);
-     strcat(fname2, ".x.r");
-
-     /* create output files & data sets for writing */
+     /* create data sets for writing */
      for (component = 0; component < 3; ++component)
 	  if (component == which_component || which_component < 0)
 	       for (ri_part = 0; ri_part < 2; ++ri_part) {
-		    fname2[strlen(fname) + 1] = 'x' + component;
-		    fname2[strlen(fname) + 3] = ri_part ? 'i' : 'r';
-		    sprintf(name, "%s part of %c component",
-		       ri_part ? "imag." : "real", 'x' + component);
-		    file_ids[component][ri_part] =
-			 matrixio_create(fname2);
+		    name[0] = 'x' + component;
+		    name[2] = ri_part ? 'i' : 'r';
 		    data_ids[component][ri_part] =
-			 matrixio_create_dataset(file_ids[component][ri_part],
-						 name, description,
+			 matrixio_create_dataset(file_id, name, NULL,
 						 rank, total_dims);
-		    matrixio_write_data_attr(data_ids[component][ri_part],
-					     "Bloch wavevector",
-					     kvector, 1, attr_dims);
-		    matrixio_write_data_attr(data_ids[component][ri_part],
-					     "lattice vectors",
-					     &R[0][0], 2, attr_dims);
-		    matrixio_write_data_attr(data_ids[component][ri_part],
-					     "lattice size",
-					     rcopies, 1, attr_dims);
 	       }
-     free(fname2);
 
      /* cache exp(ikx) along each of the directions, for speed */
      CHK_MALLOC(phasex, scalar_complex, local_nx);
@@ -211,12 +187,11 @@ void fieldio_write_complex_field(scalar_complex *field,
 					: &field[component].re);
 	       }
 
-     /* close data sets and files */
+     /* close data sets */
      for (component = 0; component < 3; ++component)
 	  if (component == which_component || which_component < 0)
 	       for (ri_part = 0; ri_part < 2; ++ri_part) {
 		    matrixio_close_dataset(data_ids[component][ri_part]);
-		    matrixio_close(file_ids[component][ri_part]);
 	       }
 }
 
@@ -225,33 +200,23 @@ void fieldio_write_real_vals(real *vals,
 			     const int dims[3],
 			     int local_nx, int local_x_start,
 			     const int copies[3],
-			     real R[3][3],
-			     const char *fname,
-			     const char *description)
+			     matrixio_id file_id)
 {
      int i, j, k;
      int cpies[3], total_dims[3], local_dims[3], start[3] = {0,0,0};
-     matrixio_id file_id, data_id;
-     int attr_dims[2] = {3, 3};
-     real rcopies[3];
+     matrixio_id data_id;
 
      for (i = 0; i < 3; ++i) {
 	  cpies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
 	  total_dims[i] = dims[i] * cpies[i];
 	  local_dims[i] = dims[i];
-	  rcopies[i] = cpies[i];
      }
      rank = total_dims[2] == 1 ? (total_dims[1] == 1 ? 1 : 2) : 3;
      local_dims[0] = local_nx;
 
      /* create output file & data set for writing */
-     file_id = matrixio_create(fname);
-     data_id = matrixio_create_dataset(file_id, description, NULL,
+     data_id = matrixio_create_dataset(file_id, "data", NULL,
 				       rank, total_dims);
-     matrixio_write_data_attr(data_id, "lattice vectors",
-			      &R[0][0], 2, attr_dims);
-     matrixio_write_data_attr(data_id, "lattice size",
-			      rcopies, 1, attr_dims);
 
      /* loop over copies, writing out hyperslabs: */
      for (i = 0; i < cpies[0]; ++i)
@@ -266,5 +231,4 @@ void fieldio_write_real_vals(real *vals,
 
      /* close data set and file */
      matrixio_close_dataset(data_id);
-     matrixio_close(file_id);
 }

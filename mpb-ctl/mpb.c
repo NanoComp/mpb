@@ -786,6 +786,8 @@ void output_field_extended(vector3 copiesv, int which_component)
      char fname[100], *fname2, description[100];
      int dims[3], local_nx, local_x_start;
      int copies[3];
+     matrixio_id file_id = -1;
+     int attr_dims[2] = {3, 3};
 
      copies[0] = copiesv.x;
      copies[1] = copiesv.y;
@@ -798,7 +800,7 @@ void output_field_extended(vector3 copiesv, int which_component)
      }
      
      /* this will need to be fixed for MPI, where we transpose the data,
-	and also for real-to-complex calculations: */
+	and also for real-to-complex calculations (sigh): */
 #if defined(HAVE_MPI) || ! defined(SCALAR_COMPLEX)
 #  error broken, please fix
 #endif
@@ -811,16 +813,23 @@ void output_field_extended(vector3 copiesv, int which_component)
      if (strchr("dhe", curfield_type)) { /* outputting vector field */
 	  sprintf(fname, "%c.k%02d.b%02d",
 		  curfield_type, kpoint_index, curfield_band);
+	  if (which_component >= 0) {
+	       char comp_str[] = ".x";
+	       comp_str[1] = 'x' + which_component;
+	       strcat(fname, comp_str);
+	  }
 	  sprintf(description, "%c field, kpoint %d, band %d, freq=%g",
 		  curfield_type, kpoint_index, curfield_band, 
 		  freqs.items[curfield_band - 1]);
 	  fname2 = fix_fname(fname, filename_prefix, mdata->polarization);
 	  printf("Outputting fields to %s...\n", fname2);
+	  file_id = matrixio_create(fname2);
 	  fieldio_write_complex_field(curfield, 3, dims, which_component,
 				      local_nx, local_x_start,
-				      copies, mdata->current_k, R,
-				      fname2, description);
+				      copies, mdata->current_k, R, file_id);
 	  free(fname2);
+	  matrixio_write_data_attr(file_id, "Bloch wavevector",
+				   mdata->current_k, 1, attr_dims);
      }
      else if (strchr("DHn", curfield_type)) { /* scalar field */
 	  if (curfield_type == 'n') {
@@ -840,13 +849,28 @@ void output_field_extended(vector3 copiesv, int which_component)
 			     curfield_type == 'n' ? NO_POLARIZATION :
 			     mdata->polarization);
 	  printf("Outputting %s...\n", fname2);
+	  file_id = matrixio_create(fname2);
 	  fieldio_write_real_vals((real *) curfield, 3, dims,
-				  local_nx, local_x_start, copies, R,
-				  fname2, description);
+				  local_nx, local_x_start, copies, file_id);
 	  free(fname2);
      }
      else
 	  fprintf(stderr, "unknown field type!\n");
+
+     if (file_id >= 0) {
+	  real rcopies[3];
+
+	  matrixio_write_data_attr(file_id, "lattice vectors",
+				   &R[0][0], 2, attr_dims);
+	  rcopies[0] = copies[0] < 1 ? 1 : copies[0];
+	  rcopies[1] = copies[1] < 1 ? 1 : copies[1];
+	  rcopies[2] = copies[2] < 1 ? 1 : copies[2];
+	  matrixio_write_data_attr(file_id, "lattice size",
+				   rcopies, 1, attr_dims);
+	  matrixio_write_string_attr(file_id, "description", description);
+
+	  matrixio_close(file_id);
+     }
 }
 
 /**************************************************************************/

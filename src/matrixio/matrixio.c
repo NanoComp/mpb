@@ -33,13 +33,37 @@
 
 #include "matrixio.h"
 
+/* Wrapper to write out an attribute attached to id.  HDF5 attributes
+   can *not* be attached to files, in which case we'll write it out
+   as an ordinary dataset.  Ugh. */
+static void write_attr(matrixio_id id, hid_t type_id, hid_t space_id,
+		       const char *name, void *val)
+{
+#if defined(HAVE_HDF5)
+     hid_t attr_id;
+
+     if (H5I_FILE==H5I_get_type(id)) {
+          attr_id = H5Dcreate(id, name, type_id, space_id, H5P_DEFAULT);
+          CHECK(id >= 0, "error creating HDF attr");
+          H5Dwrite(attr_id, type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, val);
+          H5Dclose(attr_id);
+     }
+     else {
+	  attr_id = H5Acreate(id, name, type_id, space_id, H5P_DEFAULT);
+	  CHECK(id >= 0, "error creating HDF attr");
+	  H5Awrite(attr_id, type_id, val);
+	  H5Aclose(attr_id);
+     }
+#endif
+}
+
+
 void matrixio_write_string_attr(matrixio_id id, const char *name,
 				const char *val)
 {
 #if defined(HAVE_HDF5)
      hid_t type_id;
      hid_t space_id;
-     hid_t attr_id;
 
      if (!mpi_is_master())
 	  return; /* only one process should add attributes */
@@ -49,15 +73,8 @@ void matrixio_write_string_attr(matrixio_id id, const char *name,
      
      type_id = H5Tcopy(H5T_C_S1);
      H5Tset_size(type_id, strlen(val) + 1);
-
      space_id = H5Screate(H5S_SCALAR);
-
-     attr_id = H5Acreate(id, name, type_id, space_id, H5P_DEFAULT);
-     CHECK(id >= 0, "error creating HDF attr");
-
-     H5Awrite(attr_id, type_id, (void*) val);
-
-     H5Aclose(attr_id);
+     write_attr(id, type_id, space_id, name, (void*) val);
      H5Sclose(space_id);
      H5Tclose(type_id);
 #endif
@@ -69,7 +86,6 @@ void matrixio_write_data_attr(matrixio_id id, const char *name,
 #if defined(HAVE_HDF5)
      hid_t type_id;
      hid_t space_id;
-     hid_t attr_id;
      hsize_t *space_dims;
      int i;
 
@@ -96,12 +112,7 @@ void matrixio_write_data_attr(matrixio_id id, const char *name,
 	  space_id = H5Screate(H5S_SCALAR);
      }
 
-     attr_id = H5Acreate(id, name, type_id, space_id, H5P_DEFAULT);
-     CHECK(id >= 0, "error creating HDF attr");
-
-     H5Awrite(attr_id, type_id, (void*) val);
-
-     H5Aclose(attr_id);
+     write_attr(id, type_id, space_id, name, (void*) val);
      H5Sclose(space_id);
 #endif
 }

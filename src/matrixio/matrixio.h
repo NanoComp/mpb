@@ -68,15 +68,12 @@ extern void fieldio_write_complex_field(scalar_complex *field,
 					const int copies[3],
 					const real kvector[3],
 					real R[3][3],
-					const char *fname,
-					const char *description);
+					matrixio_id file_id);
 void fieldio_write_real_vals(real *vals,
                              int rank,
                              const int dims[3],
                              int local_nx, int local_x_start,
                              const int copies[3],
-                             real R[3][3],
-                             const char *fname,
-                             const char *description);
+			     matrixio_id file_id);
 
 #endif /* MATRIXIO_H */
