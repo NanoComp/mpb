@@ -83,7 +83,7 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 	      real *d_out_re, real *d_out_im, int n_out[3], 
 	      matrix3x3 coord_map,
 	      real *kvector,
-	      short pick_nearest)
+	      short pick_nearest, short transpose)
 {
      int i, j, k;
      real s[3]; /* phase difference per cell in each lattice direction */
@@ -125,7 +125,12 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 		    double xi, yi, zi, xi2, yi2, zi2;
 		    double dx, dy, dz, mdx, mdy, mdz;
 		    int i1, j1, k1, i2, j2, k2;
-		    int ijk = (i * n_out[1] + j) * n_out[2] + k;
+		    int ijk;
+
+		    if (transpose)
+			 ijk = (j * n_out[0] + i) * n_out[2] + k;
+		    else
+			 ijk = (i * n_out[1] + j) * n_out[2] + k;
 		    
 		    /* find the point corresponding to d_out[i,j,k] in
 		       the input array, and also find the next-nearest
@@ -239,10 +244,11 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
 		    const char *name_re, const char *name_im,
 		    matrix3x3 Rout, matrix3x3 coord_map,
 		    real *kvector, int resolution, real multiply_size[3],
-		    int pick_nearest)
+		    int pick_nearest, int transpose)
 {
      real *d_in_re = NULL, *d_in_im = NULL, *d_out_re = NULL, *d_out_im = NULL;
-     int in_dims[3] = {1,1,1}, out_dims[3] = {1,1,1}, rank = 3, i, N;
+     int in_dims[3] = {1,1,1}, out_dims[3] = {1,1,1}, out_dims2[3], rank = 3;
+     int i, N;
      int start[3] = {0,0,0};
      matrixio_id data_id;
      char out_name[1000];
@@ -292,9 +298,20 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      for (N = 1, i = 0; i < 3; ++i)
 	  N *= (out_dims[i] = MAX2(out_dims[i], 1));
 
+     if (transpose) {
+	  out_dims2[0] = out_dims[1];
+	  out_dims2[1] = out_dims[0];
+	  out_dims2[2] = out_dims[2];
+     }
+     else {
+	  out_dims2[0] = out_dims[0];
+	  out_dims2[1] = out_dims[1];
+	  out_dims2[2] = out_dims[2];
+     }
+
      if (verbose)
 	  printf("Output data %dx%dx%d.\n",
-		 out_dims[0], out_dims[1], out_dims[2]);
+		 out_dims2[0], out_dims2[1], out_dims2[2]);
 
      CHK_MALLOC(d_out_re, real, N);
      if (d_in_im) {
@@ -302,15 +319,15 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      }
 
      map_data(d_in_re, d_in_im, in_dims, d_out_re, d_out_im, out_dims,
-	      coord_map, kvector, pick_nearest);
+	      coord_map, kvector, pick_nearest, transpose);
 
      strcpy(out_name, name_re);
      if (out_file == in_file)
 	  strcat(out_name, "-new");
      if (verbose)
 	  printf("Writing dataset to %s...\n", out_name);
-     data_id = matrixio_create_dataset(out_file, out_name,"", rank, out_dims);
-     matrixio_write_real_data(data_id, out_dims, start, 1, d_out_re);
+     data_id = matrixio_create_dataset(out_file, out_name,"", rank, out_dims2);
+     matrixio_write_real_data(data_id, out_dims2, start, 1, d_out_re);
      matrixio_close_dataset(data_id);
 
      if (d_out_im) {
@@ -320,8 +337,8 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
 	  if (verbose)
 	       printf("Writing dataset to %s...\n", out_name);
 	  data_id = matrixio_create_dataset(out_file, out_name, "",
-					    rank, out_dims);
-	  matrixio_write_real_data(data_id, out_dims, start, 1, d_out_im);
+					    rank, out_dims2);
+	  matrixio_write_real_data(data_id, out_dims2, start, 1, d_out_im);
 	  matrixio_close_dataset(data_id);
      }
 
@@ -339,7 +356,7 @@ void handle_file(const char *fname, const char *out_fname,
 		 const char *data_name,
 		 int rectify,  int have_ve, vector3 ve,
 		 int resolution, real multiply_size[3],
-		 int pick_nearest)
+		 int pick_nearest, int transpose)
 {
      matrixio_id in_file, out_file;
      real *R, *kvector, *copies;
@@ -475,13 +492,13 @@ void handle_file(const char *fname, const char *out_fname,
 	  strcpy(name_re, dname);
 	  handle_dataset(in_file, out_file, name_re, NULL,
 			 Rout, coord_map, kvector, resolution,
-			 multiply_size, pick_nearest);
+			 multiply_size, pick_nearest, transpose);
 
 	  sprintf(name_re, "%s.r", dname);
 	  sprintf(name_im, "%s.i", dname);
 	  handle_dataset(in_file, out_file, name_re, name_im,
 			 Rout, coord_map, kvector, resolution,
-			 multiply_size, pick_nearest);
+			 multiply_size, pick_nearest, transpose);
 
 	  if (data_name)
 	       break;
@@ -509,6 +526,7 @@ void usage(FILE *f)
 	     "    -y <my>\n"
 	     "    -z <mx> : output mx/my/mz periods in the x/y/z directions\n"
 	     "     -m <s> : same as -x <s> -y <s> -z <s>\n"
+	     "         -T : transpose first two dimensions (x & y) of data\n"
 	     "         -p : pixellized output (no grid interpolation)\n"
 	     "  -d <name> : use dataset <name> in the input files (default: all mpb datasets)\n"
 	     "           -- you can also specify a dataset via <filename>:<name>\n"
@@ -549,12 +567,12 @@ int main(int argc, char **argv)
      int rectify = 0, resolution = 0, have_ve = 0;
      vector3 ve = {1,0,0};
      real multiply_size[3] = {1,1,1};
-     int pick_nearest = 0;
+     int pick_nearest = 0, transpose = 0;
      int ifile, c;
      extern char *optarg;
      extern int optind;
 
-     while ((c = getopt(argc, argv, "hVvo:x:y:z:m:d:n:pre:")) != -1)
+     while ((c = getopt(argc, argv, "hVvo:x:y:z:m:d:n:prTe:")) != -1)
           switch (c) {
               case 'h':
                    usage(stdout);
@@ -603,6 +621,9 @@ int main(int argc, char **argv)
               case 'p':
                    pick_nearest = 1;
                    break;
+              case 'T':
+                   transpose = 1;
+                   break;
 	      case 'e':
 		   have_ve = 1;
 		   if (3 != sscanf(optarg, "%lf,%lf,%lf", 
@@ -635,7 +656,7 @@ int main(int argc, char **argv)
 
 	  handle_file(h5_fname, out_fname, dname, 
 		      rectify, have_ve, ve, resolution, 
-		      multiply_size, pick_nearest);
+		      multiply_size, pick_nearest, transpose);
 	  
 	  if (out_fname)
                free(out_fname);

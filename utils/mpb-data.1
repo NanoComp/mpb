@@ -107,6 +107,14 @@ Output
 periods in each lattice direction; equivalent to:
 \fB\-x\fR \fIs\fR \fB\-y\fR \fIs\fR \fB\-z\fR \fIs\fR.
 .TP
+.B -T
+The output has the first two dimensions (x and y) transposed.  This
+is useful in conjunction with the parallel (MPI) version of MPB,
+which for performance reasons outputs all arrays with the first two
+dimensions transposed.
+.B -T
+can undo this transposition.
+.TP
 .B -p
 Pixellized output.  Normally, the input data is linearly interpolated to
 the output grid, but the
