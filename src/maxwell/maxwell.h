@@ -147,6 +147,7 @@ extern void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout,
 				    evectmatrix Y, real *eigenvals);
 
 extern void maxwell_constraint(evectmatrix X, void *data);
+extern void maxwell_zero_k_constraint(evectmatrix X, void *data);
 
 typedef struct {
      maxwell_data *d;

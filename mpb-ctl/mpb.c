@@ -411,7 +411,15 @@ void solve_kpoint(vector3 kvector)
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
                                     W[0], W[1]);
      }
-     else
+     else {
+	  real kmag = sqrt(mdata->current_k[0] * mdata->current_k[0] +
+			   mdata->current_k[1] * mdata->current_k[1] +
+			   mdata->current_k[2] * mdata->current_k[2]);
+	  if (kmag <= 1.1e-5 || kmag < tolerance) {
+	       if (verbose)
+		    printf("detected zero k; using special initial fields\n");
+	       maxwell_zero_k_constraint(H, (void *) mdata);
+	  }
 	  eigensolver(H, eigvals,
 		      maxwell_operator, (void *) mdata,
 		      simple_preconditionerp ?
@@ -420,6 +428,7 @@ void solve_kpoint(vector3 kvector)
 		      (void *) mdata, NULL,
 		      evectconstraint_chain_func, (void *) constraints,
 		      W, NWORK, tolerance, &num_iters, flags);
+     }
 
      evect_destroy_constraints(constraints);
 

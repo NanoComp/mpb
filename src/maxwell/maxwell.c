@@ -223,10 +223,8 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
      ky = G1[1]*k[0] + G2[1]*k[1] + G3[1]*k[2];
      kz = G1[2]*k[0] + G2[2]*k[1] + G3[2]*k[2];
 
-     if (kx == 0.0 && ky == 0.0 && kz == 0.0) {
-	  printf("detected zero k\n");
+     if (kx == 0.0 && ky == 0.0 && kz == 0.0)
 	  kx = 1e-5;
-     }
 
      d->current_k[0] = kx;
      d->current_k[1] = ky;

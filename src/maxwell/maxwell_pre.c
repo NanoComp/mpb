@@ -118,6 +118,66 @@ void maxwell_constraint(evectmatrix X, void *data)
 
 /**************************************************************************/
 
+/* to fix problems with slow convergence for k ~ 0, manually "put in"
+   the k = 0 solution: first two bands are constant and higher bands are
+   orthogonal.  Note that in the TE/TM case, only one band is constant. 
+   Also note that, in Fourier space, a constant field corresponds to
+   1 in the DC component and 0 elsewhere. */
+
+void maxwell_zero_k_constraint(evectmatrix X, void *data)
+{
+     maxwell_data *d = (maxwell_data *) data;
+     int i, j, num_const_bands;
+
+     CHECK(d, "null maxwell data pointer!");
+     CHECK(X.c == 2, "fields don't have 2 components!");
+
+     if (X.p < 1)
+	  return;
+
+     if (d->polarization == NO_POLARIZATION)
+	  num_const_bands = 2;
+     else
+	  num_const_bands = 1;
+
+     if (num_const_bands > X.p)
+	  num_const_bands = X.p;
+
+     /* for num_const_bands, all components except for the DC component
+	are zero. */
+     for (i = X.Nstart == 0 ? X.c : 0; i < X.localN * X.c; ++i) 
+	  for (j = 0; j < num_const_bands; ++j) {
+	       ASSIGN_ZERO(X.data[i * X.p + j]);
+	  }
+     
+     if (X.Nstart > 0)
+	  return;  /* DC frequency is not on this process*/
+		      
+     if (d->polarization == TE_POLARIZATION) {
+	  ASSIGN_SCALAR(X.data[0], 1.0, 0.0);
+	  ASSIGN_SCALAR(X.data[X.p], 0.0, 0.0);
+     }
+     else if (d->polarization == TM_POLARIZATION) {
+	  ASSIGN_SCALAR(X.data[0], 0.0, 0.0);
+	  ASSIGN_SCALAR(X.data[X.p], 1.0, 0.0);
+     }
+     else {
+	  ASSIGN_SCALAR(X.data[0], 1.0, 0.0);
+	  ASSIGN_SCALAR(X.data[X.p], 0.0, 0.0);
+	  if (num_const_bands >= 2) {
+	       ASSIGN_SCALAR(X.data[1], 0.0, 0.0);
+	       ASSIGN_SCALAR(X.data[X.p + 1], 1.0, 0.0);
+	  }
+     }
+
+     for (j = num_const_bands; j < X.p; ++j) {
+	  ASSIGN_ZERO(X.data[j]);
+	  ASSIGN_ZERO(X.data[X.p + j]);
+     }
+}
+
+/**************************************************************************/
+
 /* Fancy preconditioners */
 
 /* Compute 'a' where v = k x a (cross product).
