@@ -2,3 +2,9 @@ Photonic Band Structure Computation
 
 A new program for computing photonic band structure, using the libctl
 library for control files.
+
+The eigensolver routines are separated from the rest of the code and
+are designed to be parallel from the start, using LAPACK/BLAS routines
+extensively to provide portable performance.  They use block
+algorithms to solve for multiple eigenvectors simultaneously, and can
+easily be modified to use various iteration schemes.
