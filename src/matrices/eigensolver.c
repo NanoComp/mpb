@@ -8,7 +8,7 @@
 
 #include "eigensolver.h"
 
-#define EIGENSOLVER_MAX_ITERATIONS 1000
+#define EIGENSOLVER_MAX_ITERATIONS 5000
 
 /* Preconditioned eigensolver.  Finds the lowest Y.p eigenvectors
    and eigenvalues of the operator A, and returns them in Y and
@@ -149,16 +149,31 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      CHECK(iteration < EIGENSOLVER_MAX_ITERATIONS, "failure to converge");
 
      /* Now that we've converged, we need to find the actual eigenvectors
-	and eigenvalues.  Recall that X = AY at this point.
-     
-        Y should now span the space of the eigenvectors we want, so it should
-        be sufficient to compute the Ritz eigenvectors of Yt*A*Y: */
+	and eigenvalues. */
 
-     evectmatrix_XtY(U, Y, X);  /* U = Yt*A*Y */
-     sqmatrix_eigensolve(U, eigenvals, YtAYU /* workspace */ );
-     evectmatrix_XeYS(X, Y, U, 1); /* X = Ritz eigenvectors of Yt*A*Y 
-				        = Y * adjoint(U) */
-     evectmatrix_copy(Y,X); /* Y = X */
+     {
+       sqmatrix Usqrt = create_sqmatrix(U.p);
+       int i;
+
+       sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
+       evectmatrix_XeYS(X, Y, Usqrt, 1);
+
+#if 1
+       evectmatrix_XtY(U, X, X);
+       A(X, G);
+       evectmatrix_XtY(U, X, G);
+#else
+       sqmatrix_AeBC(UYtAYU, Usqrt, 0, YtAYU, 0);
+       sqmatrix_invert(Usqrt,1);
+       sqmatrix_AeBC(U, UYtAYU, 0, Usqrt, 1); /* U == 1/sqrt(Yt*Y) * Yt *
+					              A * Y * 1/sqrt(Yt*Y) */
+#endif
+
+       sqmatrix_eigensolve(U, eigenvals, YtAYU);
+       evectmatrix_XeYS(Y, X, U, 1);
+
+       destroy_sqmatrix(Usqrt);
+     }
      
      *num_iterations = iteration;
 

@@ -80,7 +80,7 @@ void sqmatrix_invert(sqmatrix U, short compute_Uinv)
 }
 
 /* U <- eigenvectors of U.  U must be Hermitian. eigenvals <- eigenvalues.
-   W is a work array.  The rows of U' are the eigenvectors, so that
+   W is a work array.  The columns of adjoint(U') are the eigenvectors, so that
    U == adjoint(U') D U', with D = diag(eigenvals). 
 
    The eigenvalues are returned in ascending order. */
@@ -88,13 +88,19 @@ void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W)
 {
      real *work;
 
-     CHECK(W.p * W.p > 2 * U.p - 1, "work array too small");
-
      work = (real*) malloc(sizeof(real) * (3*U.p - 2));
      CHECK(work, "out of memory");
 
-     lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
-		     W.data, W.p * W.p, work);
+     if (W.p * W.p >= 3 * U.p - 1)
+       lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
+		       W.data, W.p * W.p, work);
+     else {
+       scalar *morework = (scalar*) malloc(sizeof(scalar) * (3 * U.p - 1));
+       CHECK(morework, "out of memory");
+       lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
+                       morework, 3 * U.p - 1, work);
+       free(morework);
+     }
 
      free(work);
 }
