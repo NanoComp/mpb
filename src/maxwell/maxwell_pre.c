@@ -18,9 +18,11 @@ void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout, void *data,
 	  for (c = 0; c < Xout.c; ++c) {
 	       for (b = 0; b < Xout.p; ++b) {
 		    int index = (i * Xout.c + c) * Xout.p + b;
-		    real scale = kpGn2[i] * d->eps_inv_mean[b] - eigenvals[b];
+		    real scale = kpGn2[i] * d->eps_inv_mean[b];
+/*         real scale = kpGn2[i] * d->eps_inv_mean[b] - eigenvals[b]; */
 
-		    scale = 1.0 / (scale + copysign(0.01, scale));
+		    scale = 1.0 / (scale + 0.01);
+/*		    scale = 1.0 / (scale + copysign(0.01, scale));  */
 		    ASSIGN_SCALAR(Xout.data[index],
 				  scale * SCALAR_RE(Xin.data[index]),
 				  scale * SCALAR_IM(Xin.data[index]));
