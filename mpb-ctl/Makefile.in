@@ -65,7 +65,8 @@ LDFLAGS = $(MY_LDFLAGS) @LDFLAGS@
 
 INSTALL = @INSTALL@
 prefix = @prefix@
-transform=@program_transform_name@  # c.f. AC_ARG_PROGRAM autoconf docs
+# c.f. AC_ARG_PROGRAM autoconf docs:
+transform=@program_transform_name@
 @SET_MAKE@
 
 ##############################################################################
