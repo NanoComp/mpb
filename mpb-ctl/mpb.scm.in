@@ -65,7 +65,7 @@
 (define-input-var k-points '() (make-list-type 'vector3))
 
 (define-input-var num-bands 1 'integer)
-(define-input-var tolerance 1.0e-4 'number positive?)
+(define-input-var tolerance 1.0e-7 'number positive?)
 (define-input-var target-freq 0.0 'number (lambda (x) (>= x 0)))
 
 (define-input-var grid-size (vector3 16 16 16) 'vector3
