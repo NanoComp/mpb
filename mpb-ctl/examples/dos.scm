@@ -9,9 +9,7 @@
 ; points in the frequency range 0 to 1 you would do:
 ;
 ; (include "dos.scm")
-; (define dos (all-freqs-broaden))
-; (map (lambda (f) (print "dos:, " f ", " (dos f) "\n"))
-;      (interpolate 98 (list 0 1)))
+; (print-dos 0 1 100)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -37,8 +35,14 @@
 (define (broaden freqs)
   (broaden-df freqs (median-diff freqs)))
 
-; return the broaden (dos) function applied to all-freqs, the list of
+; Return the broaden (dos) function applied to all-freqs, the list of
 ; all frequencies computed from the last run.  (Actually, all-freqs
 ; is the list of lists of frequencies at each k-point.)
 (define (all-freqs-broaden)
   (broaden (fold-left append '() all-freqs)))
+
+; Output the DOS from all-freqs, at num-freq points from freq-min to freq-max.
+(define (print-dos freq-min freq-max num-freq)
+  (let ((dos (all-freqs-broaden)))
+    (map (lambda (f) (print "dos:, " f ", " (dos f) "\n"))
+	 (interpolate (- num-freq 2) (list freq-min freq-max)))))
