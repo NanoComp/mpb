@@ -912,14 +912,14 @@ normalizations</a>.
 <dt><code>(output-hfield-y <i>which-band</i>)</code>
 <dt><code>(output-hfield-z <i>which-band</i>)</code>
 <dd>Output the magnetic (H) field for <code>which-band</code>; either
-all or one of the components, respectively.
+all or one of the (Cartesian) components, respectively.
 
 <p><dt><code>(output-dfield <i>which-band</i>)</code>
 <dt><code>(output-dfield-x <i>which-band</i>)</code>
 <dt><code>(output-dfield-y <i>which-band</i>)</code>
 <dt><code>(output-dfield-z <i>which-band</i>)</code>
 <dd>Output the electric displacement (D) field for
-<code>which-band</code>; either all or one of the components,
+<code>which-band</code>; either all or one of the (Cartesian) components,
 respectively.
 
 <p><dt><code>(output-efield <i>which-band</i>)</code>
@@ -927,7 +927,7 @@ respectively.
 <dt><code>(output-efield-y <i>which-band</i>)</code>
 <dt><code>(output-efield-z <i>which-band</i>)</code>
 <dd>Output the electric (E) field for <code>which-band</code>; either
-all or one of the components, respectively.
+all or one of the (Cartesian) components, respectively.
 
 <p><dt><code>(output-hpwr <i>which-band</i>)</code>
 <dd>Output the time-averaged magnetic-field energy density (hpwr =
@@ -1297,7 +1297,7 @@ the brackets) parameters <code>nx</code>, <code>ny</code>, and
 <code>nz</code> indicate the number of periods to be outputted along
 each of the three lattice directions.  Omitted parameters are assumed
 to be 1.  For vector fields, <code>output-field</code> outputs all of
-the components, while the other variants output only one component.
+the (Cartesian) components, while the other variants output only one component.
 
 <p><dt><code>(output-epsilon <i>[ nx [ ny [ nz ] ] ]</i>)</code>
 
@@ -1307,9 +1307,9 @@ number of datasets are outputted in <code>"epsilon.h5"</code>:
 
 <ul>
 <li><code>"data"</code>: 3/trace(1/epsilon)
-<li><code>"epsilon.{xx,xy,xz,yy,yz,zz}"</code>: the components of the
+<li><code>"epsilon.{xx,xy,xz,yy,yz,zz}"</code>: the (Cartesian) components of the
 (symmetric) dielectric tensor.
-<li><code>"epsilon_inverse.{xx,xy,xz,yy,yz,zz}"</code>: the components of the
+<li><code>"epsilon_inverse.{xx,xy,xz,yy,yz,zz}"</code>: the (Cartesian) components of the
 (symmetric) inverse dielectric tensor.
 </ul>
 
@@ -1430,7 +1430,7 @@ part to determine the amplitude and phase of the time-dependent flux).
 <dt><code>(output-poynting-y <i>which-band</i>)</code>
 <dt><code>(output-poynting-z <i>which-band</i>)</code>
 <dd>Output the Poynting vector field for <code>which-band</code>; either
-all or one of the components, respectively.
+all or one of the (Cartesian) components, respectively.
 
 <p><dt><code>(get-tot-pwr <i>which-band</i>)</code>
 <dd>Load the time-averaged electromgnetic-field energy density
