@@ -217,7 +217,7 @@ int main(int argc, char **argv)
      polarization_t polarization = NO_POLARIZATION;
      int nx = NX, ny = NY, nz = NZ;
      int num_bands = NUM_BANDS;
-     real target_freq;
+     real target_freq = 0.0;
      int do_target = 0;
      evectoperator op;
      evectpreconditioner pre_op;
