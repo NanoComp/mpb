@@ -58,10 +58,13 @@
       (caar gap-list))) ; the first element of the first list in gap-list
 
 (set! num-bands 2)
+(set! mesh-size 7) ; increase from default value of 3
 
 (define result (maximize first-tm-gap 0.1 0.1 0.5))
 (display-many "radius at maximum: " (max-arg result) "\n")
 (display-many "gap size at maximum: " (max-val result) "\n")
+
+(set! mesh-size 3) ; reset to default value of 3
 
 ; *** Finding a Point-defect State ***
 
@@ -82,9 +85,12 @@
 (output-efield 25)
 (get-dfield 25)  ; compute the D field for band 25
 (compute-field-energy)  ; compute the energy density from D
-(compute-energy-in-objects (make cylinder (center 0 0 0)
-                                 (radius 1.0) (height infinity)
-                                 (material air)))
+(display-many
+ "energy in cylinder: "
+ (compute-energy-in-objects (make cylinder (center 0 0 0)
+                                  (radius 1.0) (height infinity)
+                                  (material air)))
+ "\n")
 
 (display "********** 5x5 point defect, targeted solver **********\n")
 (set! num-bands 1)  ; only need to compute a single band, now!
@@ -105,6 +111,11 @@
                                      (material (make material-type
                                                  (epsilon eps)))))))
   (run-tm)  ; solve for the mode (using the targeted solver)
+  (display-many "epsilon = " eps " gives freq. = " (list-ref freqs 0) "\n")
   (- (list-ref freqs 0) 0.314159))  ; return 1st band freq. - 0.314159
 
-(find-root rootfun 0.01 1 12)
+(define rooteps (find-root rootfun 0.01 1 12))
+(display-many "root (value of epsilon) is at: " rooteps "\n")
+
+(define rootval (rootfun rooteps))
+(display-many "root function at " rooteps " = " rootval "\n")

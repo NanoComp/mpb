@@ -62,10 +62,13 @@ dimension is 1, the computation is two-dimensional.  Note that the
 computational grid is centered on the origin of the coordinate system.
 
 <p><dt><code>mesh-size</code> [<code>integer</code>]
-
 <dd>At each grid point, the dielectric constant is averaged over a
 "mesh" of points to find an effective dielectric tensor.  This mesh is
-a grid with <code>mesh-size</code> points on a side.  Defaults to 7.
+a grid with <code>mesh-size</code> points on a side.  Defaults to 3.
+Increasing<code>mesh-size</code> makes the the average dielectric
+constant sensitive to smaller structural variations without increasing
+the grid size, but also means that computing the dielectric function
+will take longer.
 
 <p><dt><code>dimensions</code> [<code>integer</code>]
 <dd>Explicitly specifies the dimensionality of the simulation; if the

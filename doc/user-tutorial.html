@@ -212,8 +212,8 @@ to a 32x32 two-dimensional grid:
 <p>Setting the z grid to 1 makes this a two-dimensional calculation.
 For efficient calculation, it is best to make the grid sizes a power
 of two, or factorizable into powers of small primes (such as 2, 3, 5
-and 7).  As a rule of thumb, you shouldn't use less than 8 grid points
-per unit cell.
+and 7).  As a rule of thumb, you should use at least 8 grid points per
+unit cell in order to obtain reasonable accuracy.
 
 <p>Now, we're done setting the parameters--there are other parameters,
 but we're happy with their default values for now.  At this point,
@@ -228,7 +228,7 @@ doing as it runs.  Most of this is self-explanatory, but we should
 point out one output in particular.  Among the output, you should see
 lines like:
 
-<p><code>sumte:, 13, 0.3, 0.3, 0, 0.424264, 0.37259, 0.536956, 0.644908, 0.81068, 0.826345, 0.885016, 1.01102, 1.11012</code>
+<p><code>sumte:, 13, 0.3, 0.3, 0, 0.424264, 0.37257, 0.541992, 0.643548, 0.815214, 0.828954, 0.893648, 1.01423, 1.11392</code>
 
 <p>These lines are designed to allow you to easily extract the
 band-structure information and import it into a spreadsheet for
@@ -251,8 +251,8 @@ bands.  For example the <code>(run-tm)</code> output includes the
 following gap output:
 
 <pre>
-Gap from band 1 (0.281211945358827) to band 2 (0.417423382892753), 38.9935727627207%
-Gap from band 4 (0.71387779696787) to band 5 (0.741742437444753), 3.82855910053049%
+Gap from band 1 (0.282624250282557) to band 2 (0.419338171139314), 38.951920126959%
+Gap from band 4 (0.715678780635625) to band 5 (0.743689685572616), 3.83877075400569%
 </pre>
 
 <p>This data is also stored in the variable <code>gap-list</code>,
@@ -386,10 +386,10 @@ Scheme shorthand <code>(/ 3)</code>, which is the same as <code>(/ 1
 <code>num-bands</code>, and <code>grid-size</code>) can remain the
 same as in the previous subsection, so we can now call
 <code>(run-tm)</code> to compute the bands.  As it turns out, this
-structure has an even larger gap than the square lattice:
+structure has an even larger TM gap than the square lattice:
 
 <pre>
-Gap from band 1 (0.274980022414798) to band 2 (0.445978482897611), 47.436422269189%
+Gap from band 1 (0.275070820455975) to band 2 (0.446291213813384), 47.4714180185077%
 </pre>
 
 <h2>Maximizing the First TM Gap</h2>
@@ -425,6 +425,18 @@ since we only need to compute the first two bands:
 (set! num-bands 2)
 </pre>
 
+<p>In order to distinguish small differences in radius during the
+optimization, it might seem that we have to increase the grid
+resolution, slowing down the computation.  Instead, we can simply
+increase the <i>mesh</i> resolution.  This is the size of the mesh
+over which the dielectric constant is averaged at each grid point, and
+increasing the mesh size means that the average index better reflects
+small changes in the structure.
+
+<pre>
+(set! mesh-size 7) ; increase from default value of 3
+</pre>
+
 <p>Now, we're ready to maximize our function
 <code>first-tm-gap</code>.  We could write a loop to do this
 ourselves, but libctl provides a built-in function <code>(maximize
@@ -444,14 +456,21 @@ After five iterations, the output is:
 
 <pre>
 radius at maximum: 0.176393202250021
-gap size at maximum: 48.6242664930546
+gap size at maximum: 48.6242646890146
 </pre>
 
 <p>The tolerance of 0.1 that we specified means that the true maximum
 is within 0.1 * 0.176393202250021, or about 0.02, of the radius found
 here.  It doesn't make much sense here to specify a lower tolerance,
 since the discretization of the grid means that the code can't
-distinguish small differences in radius.
+accurately distinguish small differences in radius.
+
+<p>Before we continue, let's reset <code>mesh-size</code> to its
+default value:
+
+<pre>
+(set! mesh-size 3) ; reset to default value of 3
+</pre>
 
 <h2>Finding a Point-defect State</h2>
 
@@ -531,10 +550,10 @@ bands to reach the same frequencies:
 TM bands.  It will take several minutes to compute, so be patient.
 Recall that the gap for this structure was for the frequency range
 0.2812 to 0.4174.  The bands of the solution include exactly one state
-in this frequency range: band 25, with a frequency of
-0.377912021774767.  This is exactly what we should expect--the lowest
-band was folded 25 times into the supercell Brillouin zone, but one of
-these states was pushed up into the gap by the defect.
+in this frequency range: band 25, with a frequency of 0.378166.  This
+is exactly what we should expect--the lowest band was folded 25 times
+into the supercell Brillouin zone, but one of these states was pushed
+up into the gap by the defect.
 
 <p>We haven't yet output any of the fields, but we don't have to
 repeat the run to do so.  The fields from the last k-point computation
@@ -554,18 +573,32 @@ cylinder (within a radius 1.0 of the origin):
 <pre>
 (get-dfield 25)  ; compute the D field for band 25
 (compute-field-energy)  ; compute the energy density from D
-(compute-energy-in-objects (make cylinder (center 0 0 0)
-				 (radius 1.0) (height infinity)
-				 (material air)))
+(display-many
+ "energy in cylinder: "
+ (compute-energy-in-objects (make cylinder (center 0 0 0)
+                                  (radius 1.0) (height infinity)
+                                  (material air)))
+ "\n")
 </pre>
 
-<p>The result is <code>0.624649427879962</code>, or over 62% of the
+<p>The result is <code>0.624794534020562</code>, or over 62% of the
 field energy in this localized region; the field decays exponentially
 into the bulk crystal.  The full range of available functions is
 described in the <a href="user-ref.html">reference section</a>, but
 the typical sequence is to first load a field with a <code>get-</code>
 function and then to call other functions to perform computations and
 transformations on it.
+
+<p>Note that the <code>compute-energy-in-objects</code> returns the
+energy fraction, but does not itself print this value.  This is fine
+when you are running interactively, in which case Guile always
+displays the result of the last expression, but when running as part
+of a script you need to explicitely print the result as we have done
+above with the <code>display-many</code> function.
+(<code>display-many</code> is a libctl function that calls Scheme's
+<code>display</code> built-in on each of its arguments.)  The
+<code>"\n"</code> string is newline character (like in C), to put
+subsequent output on a separate line.
 
 <p>Instead of computing all those bands, we can instead take advantage
 of a special feature of the MIT Photonic-Bands software that allows you to
@@ -589,7 +622,7 @@ tolerance and because of the nature of the eigenproblem that is now
 being solved, but only by about 3-4 times in this case.  Since we now
 have to compute only a single band, however, we arrive at an answer
 much more quickly than before.  The result, of course, is again the
-defect band, with a frequency of 0.377912.
+defect band, with a frequency of 0.378166.
 
 <h2>Tuning the Point-defect Mode</h2>
 
@@ -619,6 +652,7 @@ function we'll be finding the root of:
 				     (material (make material-type
 						 (epsilon eps)))))))
   (run-tm)  ; solve for the mode (using the targeted solver)
+  (display-many "epsilon = " eps " gives freq. = " (list-ref freqs 0) "\n")
   (- (list-ref freqs 0) 0.314159))  ; return 1st band freq. - 0.314159
 </pre>
 
@@ -626,7 +660,8 @@ function we'll be finding the root of:
 a fractional tolerance of 0.01) by:
 
 <pre>
-(find-root rootfun 0.01 1 12)
+(define rooteps (find-root rootfun 0.01 1 12))
+(display-many "root (value of epsilon) is at: " rooteps "\n")
 </pre>
 
 <p>The sequence of dielectric constants that it tries, along with the
@@ -634,16 +669,16 @@ corresponding mode frequencies, is:
 
 <table cellspacing=2 cellpadding=1>
 <tr align=center> <th>epsilon</th> <th>frequency</th> </tr>
-<tr align=center> <td>1</td> <td>0.377912</td> </tr>
-<tr align=center> <td>12</td> <td>0.283352</td> </tr>
-<tr align=center> <td>6.5</td> <td>0.302456</td> </tr>
-<tr align=center> <td>5.09573</td> <td>0.317494</td> </tr>
-<tr align=center> <td>5.79787</td> <td>0.309455</td> </tr>
-<tr align=center> <td>5.37554</td> <td>0.31417</td> </tr>
-<tr align=center> <td>5.5867</td> <td>0.311766</td> </tr>
+<tr align=center> <td>1</td> <td>0.378165895344012</td> </tr>
+<tr align=center> <td>12</td> <td>0.283987107275112</td> </tr>
+<tr align=center> <td>6.5</td> <td>0.302998919737647</td> </tr>
+<tr align=center> <td>5.14623225009449</td> <td>0.317371756943676</td> </tr>
+<tr align=center> <td>5.82311612504725</td> <td>0.309702410332985</td> </tr>
+<tr align=center> <td>5.41898009928561</td> <td>0.314169111388137</td> </tr>
+<tr align=center> <td>5.62104811216643</td> <td>0.311893537700187</td> </tr>
 </table>
 
-<p>The final answer that it returns is an epsilon of 5.37649633503845.
+<p>The final answer that it returns is an epsilon of 5.41986138941919.
 Interestingly enough, the algorithm doesn't actually evaluate the
 function at the final point; you have to do so yourself if you want to
 find out how close it is to the root.  (Ridder's method successively
@@ -651,11 +686,11 @@ reduces the interval bracketing the root by alternating bisection and
 interpolation steps.  At the end, it does one last interpolation to
 give you its best guess for the root location within the current
 interval.)  If we go ahead and evaluate the band frequency at this
-dielectric constant (calling <code>(rootfun 5.37649633503845)</code>),
-we find that it is 0.314159008071821, matching our desired frequency
-to nearly eight decimal places after seven function evaluations!  (Of
-course, the computation isn't really this accurate anyway, due to the
-finite discretization.)
+dielectric constant (calling <code>(rootfun rooteps)</code>), we find
+that it is 0.314159007031965, matching our desired frequency to nearly
+eight decimal places after seven function evaluations!  (Of course,
+the computation isn't really this accurate anyway, due to the finite
+discretization.)
 
 <p>A slight improvement can be made to the calculation above.
 Ordinarily, each time you call the <code>(run-tm)</code> function, the
