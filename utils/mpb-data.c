@@ -215,7 +215,7 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
      if (verbose) {
 	  printf("real part range: %g .. %g\n", min_out_re, max_out_re);
 	  if (d_out_im)
-	       printf("imag part range: %g .. %g\n", min_out_re, max_out_re);
+	       printf("imag part range: %g .. %g\n", min_out_im, max_out_im);
      }
 }
 
