@@ -690,6 +690,16 @@ void get_epsilon(void)
 	  if (epsilon[i] > 1.0001)
 	       ++fill_count;
      }
+
+     MPI_Allreduce(&eps_mean, &eps_mean, 1, SCALAR_MPI_TYPE,
+                   MPI_SUM, MPI_COMM_WORLD);
+     MPI_Allreduce(&eps_inv_mean, &eps_inv_mean, 1, SCALAR_MPI_TYPE,
+                   MPI_SUM, MPI_COMM_WORLD);
+     MPI_Allreduce(&eps_low, &eps_low, 1, SCALAR_MPI_TYPE,
+                   MPI_MIN, MPI_COMM_WORLD);
+     MPI_Allreduce(&eps_high, &eps_high, 1, SCALAR_MPI_TYPE,
+                   MPI_MAX, MPI_COMM_WORLD);
+
      printf("eps goes from %g-%g, mean %g, harmonic mean %g, "
 	    "%g%% fill\n", eps_low, eps_high, eps_mean/N, N/eps_inv_mean,
 	    (100.0 * fill_count) / N);
@@ -744,6 +754,11 @@ void compute_field_energy(void)
 	       comp_sqr0+comp_sqr1+comp_sqr2+comp_sqr3+comp_sqr4+comp_sqr5;
      }
 
+     MPI_Allreduce(&energy_sum, &energy_sum, 1, SCALAR_MPI_TYPE,
+                   MPI_SUM, MPI_COMM_WORLD);
+     MPI_Allreduce(comp_sum, comp_sum, 6, SCALAR_MPI_TYPE,
+                   MPI_SUM, MPI_COMM_WORLD);
+
      normalization = 1.0 / energy_sum;
      for (i = 0; i < N; ++i)
 	  energy_density[i] *= normalization;
@@ -784,6 +799,8 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 	  if (epsilon >= eps_low && epsilon <= eps_high)
 	       energy_sum += energy[i];
      }
+     MPI_Allreduce(&energy_sum, &energy_sum, 1, SCALAR_MPI_TYPE,
+                   MPI_SUM, MPI_COMM_WORLD);
      return energy_sum;
 }
 
@@ -962,6 +979,8 @@ number compute_energy_in_object_list(geometric_object_list objects)
 			      break;
 			 }
 	       }
+     MPI_Allreduce(&energy_sum, &energy_sum, 1, SCALAR_MPI_TYPE,
+                   MPI_SUM, MPI_COMM_WORLD);
      return energy_sum;
 }
 
