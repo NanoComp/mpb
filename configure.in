@@ -62,6 +62,7 @@ AC_CHECK_LIB(m, sqrt)
 
 AC_F77_LIBRARY_LDFLAGS
 
+dnl ----------------------------------------------------------------------
 dnl Check for FFTW libraries
 if test "$enable_single" = "yes"; then
 	AC_CHECK_LIB(sfftw, fftw)
@@ -76,7 +77,11 @@ if test -z "`echo $LIBS | grep fftw`"; then
 	AC_CHECK_LIB(rfftw, rfftw)
 fi
 
+dnl ----------------------------------------------------------------------
 dnl Checks for BLAS libraries:
+
+dnl Generic BLAS:
+AC_CHECK_LIB(blas, main)
 
 dnl Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
 AC_CHECK_LIB(dgemm, main)
@@ -101,15 +106,14 @@ AC_CHECK_LIB(M77, __pow_ri)
 dnl Check for BLAS in SGIMATH library:
 AC_CHECK_LIB(complib.sgimath, dgemm)
 
-dnl Generic BLAS:
-AC_CHECK_LIB(blas, main)
+dnl Checks for BLAS in IBM ESSL library
+AC_CHECK_LIB(essl, dgemm)
 
+dnl ----------------------------------------------------------------------
 dnl Checks for LAPACK library
 AC_CHECK_LIB(lapack, main)
 
-dnl Checks for IBM ESSL library: -lessl
-AC_CHECK_LIB(essl, dcft)
-
+dnl ----------------------------------------------------------------------
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h getopt.h)
