@@ -103,8 +103,14 @@ been reached (when the eigenvalues have a fractional change less than
 <code>tolerance</code> between iterations).  Defaults to 1.0e-4.
 
 <p><dt><code>filename-prefix</code> [<code>string</code>]
-<dd>A string prepended to all output filenames.  Defaults to "" (no
-prefix).
+<dd>A string prepended to all output filenames.  Defaults to
+<code>""</code> (no prefix).
+
+<p><dt><code>simple-preconditioner</code> [<code>boolean</code>]
+<dd>Whether or not to use a simplified preconditioner; defaults to
+<code>false</code> (this is fastest most of the time).  (Turning this
+on increases the number of iterations, but decreases the time for each
+iteration.)
 
 </dl>
 

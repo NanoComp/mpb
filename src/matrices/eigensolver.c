@@ -58,11 +58,6 @@ static int check_converged(real E, real *eigenvals,
 #define STRINGIZE(x) STRINGIZEx(x)
 #define EIGENSOLVER_MAX_ITERATIONS 10000
 
-#define NORMALIZE_FIRST_STEP 0
-#define DIAGONALIZE_EACH_STEP 1
-#define PROJECT_PRECONDITIONING 0
-#define CONVERGE_EACH_EIGENVALUE 1
-
 /* Preconditioned eigensolver.  Finds the lowest Y.p eigenvectors
    and eigenvalues of the operator A, and returns them in Y and
    eigenvals (which should be an array of length Y.p).  
@@ -94,6 +89,9 @@ static int check_converged(real E, real *eigenvals,
    tolerance is the convergence parameter.  Upon exit, 
    num_iterations holds the number of iterations that were required.
 
+   flags indicate eigensolver options: different ways to do the
+   iterative solver.  It should normally be EIGS_DEFAULT_FLAGS.
+
    NOTE: A and C are assumed to be linear operators. */
 
 void eigensolver(evectmatrix Y, real *eigenvals,
@@ -102,7 +100,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
  		 evectpreconditioner_data_updater Cdata_update,
 		 evectconstraint constraint, void *constraint_data,
 		 evectmatrix Work[], int nWork,
-		 real tolerance, int *num_iterations)
+		 real tolerance, int *num_iterations,
+		 int flags)
 {
      evectmatrix G, D, X;
      sqmatrix U, Usqrt, YtAYU, UYtAYU;
@@ -117,6 +116,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      G = Work[0];
      X = Work[1];
      
+#ifdef DEBUG
+     flags |= EIGS_VERBOSE;
+#endif
+
      usingConjugateGradient = nWork >= 3;
      if (usingConjugateGradient) {
 	  int i;
@@ -137,28 +140,30 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      Usqrt = create_sqmatrix(Y.p);
      YtAYU = create_sqmatrix(Y.p);
      UYtAYU = create_sqmatrix(Y.p);
-     
-#if DIAGONALIZE_EACH_STEP && CONVERGE_EACH_EIGENVALUE
-     prev_eigenvals = (real*) malloc(sizeof(real) * Y.p);
-     CHECK(prev_eigenvals, "out of memory");
-     for (i = 0; i < Y.p; ++i)
-	  prev_eigenvals[i] = 0.0;
-#endif
+
+     if (flags & EIGS_DIAGONALIZE_EACH_STEP &&
+	 flags & EIGS_CONVERGE_EACH_EIGENVALUE) {
+	  prev_eigenvals = (real*) malloc(sizeof(real) * Y.p);
+	  CHECK(prev_eigenvals, "out of memory");
+	  for (i = 0; i < Y.p; ++i)
+	       prev_eigenvals[i] = 0.0;
+     }
 
      for (i = 0; i < Y.p; ++i)
 	  eigenvals[i] = 0.0;
 
      /* notation: for a matrix Z, Zt denotes adjoint(Z) */
 
-#if NORMALIZE_FIRST_STEP && ! DIAGONALIZE_EACH_STEP
-     if (constraint)
-	  constraint(Y, constraint_data);
-     evectmatrix_XtX(U, Y);
-     sqmatrix_invert(U);
-     sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
-     evectmatrix_XeYS(X, Y, Usqrt, 1);
-     evectmatrix_copy(Y, X);
-#endif
+     if (flags & EIGS_NORMALIZE_FIRST_STEP &&
+         !(flags & EIGS_DIAGONALIZE_EACH_STEP)) {
+	  if (constraint)
+	       constraint(Y, constraint_data);
+	  evectmatrix_XtX(U, Y);
+	  sqmatrix_invert(U);
+	  sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
+	  evectmatrix_XeYS(X, Y, Usqrt, 1);
+	  evectmatrix_copy(Y, X);
+     }
      
      /* The following loop performs an unconstrained minimization of
 	the functional:
@@ -177,50 +182,47 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  evectmatrix_XtX(U, Y);
 	  sqmatrix_invert(U);
 
-#if DIAGONALIZE_EACH_STEP
-	  
-	  /* First, orthonormalize: */
-	  sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
-	  evectmatrix_XeYS(X, Y, Usqrt, 1);
-
-	  /* Now, compute eigenvectors: */
-	  A(X, Y, Adata, 1); /* Y = AX = A (Y/sqrt(U)) */
-	  evectmatrix_XtY(YtAYU, X, Y);
-	  sqmatrix_eigensolve(YtAYU, eigenvals, UYtAYU);
-
-	  /* Compute G, Y, and D in new basis: */
-	  evectmatrix_XeYS(G, Y, YtAYU, 1);
-	  evectmatrix_XeYS(Y, X, YtAYU, 1);
-	  if (usingConjugateGradient) {
-	       /* mult. by Usqrt (not unitary) breaks conjugacy (?) */
-	       sqmatrix_AeBC(UYtAYU, Usqrt, 0, YtAYU, 1);
-	       evectmatrix_copy(X, D);
-	       evectmatrix_XeYS(D, X, UYtAYU, 0);
-	  }  
-
-	  if (Cdata_update)
-	       Cdata_update(Cdata, YtAYU);
-     
-	  /* skip this since YtG should be diag(eigenvals)? */
-	  evectmatrix_XtY(YtAYU, Y, G);
-
-#else
-
-	  A(Y, X, Adata, 1); /* X = AY */
-	  evectmatrix_XeYS(G, X, U, 1); /* note that U = adjoint(U) */
-	  evectmatrix_XtY(YtAYU, Y, G);
-
-#endif
+	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
+	       /* First, orthonormalize: */
+	       sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
+	       evectmatrix_XeYS(X, Y, Usqrt, 1);
+	       
+	       /* Now, compute eigenvectors: */
+	       A(X, Y, Adata, 1); /* Y = AX = A (Y/sqrt(U)) */
+	       evectmatrix_XtY(YtAYU, X, Y);
+	       sqmatrix_eigensolve(YtAYU, eigenvals, UYtAYU);
+	       
+	       /* Compute G, Y, and D in new basis: */
+	       evectmatrix_XeYS(G, Y, YtAYU, 1);
+	       evectmatrix_XeYS(Y, X, YtAYU, 1);
+	       if (usingConjugateGradient) {
+		    /* mult. by Usqrt (not unitary) breaks conjugacy (?) */
+		    sqmatrix_AeBC(UYtAYU, Usqrt, 0, YtAYU, 1);
+		    evectmatrix_copy(X, D);
+		    evectmatrix_XeYS(D, X, UYtAYU, 0);
+	       }  
+	       
+	       if (Cdata_update)
+		    Cdata_update(Cdata, YtAYU);
+	       
+	       /* skip this since YtG should be diag(eigenvals)? */
+	       evectmatrix_XtY(YtAYU, Y, G);
+	  }
+	  else {
+	       A(Y, X, Adata, 1); /* X = AY */
+	       evectmatrix_XeYS(G, X, U, 1); /* note that U = adjoint(U) */
+	       evectmatrix_XtY(YtAYU, Y, G);
+	  }
 
 	  E = SCALAR_RE(sqmatrix_trace(YtAYU));
 
-#if DIAGONALIZE_EACH_STEP
-	  E2 = 0.0;
-	  for (i = 0; i < Y.p; ++i)
-	       E2 += eigenvals[i];
-	  CHECK(fabs(E2 - E) < (fabs(E) + fabs(E2)) * 0.5 * tolerance,
-		"eigenvalue sum does not match trace!");
-#endif
+	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
+	       E2 = 0.0;
+	       for (i = 0; i < Y.p; ++i)
+		    E2 += eigenvals[i];
+	       CHECK(fabs(E2 - E) < (fabs(E) + fabs(E2)) * 0.5 * tolerance,
+		     "eigenvalue sum does not match trace!");
+	  }
 
 	  CHECK(!BADNUM(E), "crazy number detected in trace!!\n");
 
@@ -229,46 +231,50 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 					       tolerance))
 	       break; /* convergence!  hooray! */
 
-#if DIAGONALIZE_EACH_STEP
-	  /* initial eigenvalues are completely bogus and shouldn't be
-	     used in preconditioner; kill them: */
-	  if (iteration == 0 || 
-	      fabs(E - prev_E) > 0.1 * 0.5 * (fabs(E) + fabs(prev_E)))
-	       for (i = 0; i < Y.p; ++i)
-		    eigenvals[i] = 0.0;
-#endif
-	  
-#ifdef DEBUG
-	  if (iteration % 10 == 0)
-	       printf("it. %4d: tr. = %g (%g%% change)\n", iteration, E,
-		      200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
-#endif
+	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
+	       /* initial eigenvalues are completely bogus and shouldn't be
+		  used in preconditioner; kill them: */
+	       if (iteration == 0 || 
+		   fabs(E - prev_E) > 0.1 * 0.5 * (fabs(E) + fabs(prev_E)))
+		    for (i = 0; i < Y.p; ++i)
+			 eigenvals[i] = 0.0;
+	  }
 
-#if DIAGONALIZE_EACH_STEP /* U is the identity matrix */
-	  /* optimize this since YtAYU should be diagonal? */
-	  evectmatrix_XpaYS(G, -1.0, Y, YtAYU); /* G is now the gradient of
-						    the functional */
-#else
-	  sqmatrix_AeBC(UYtAYU, U, 0, YtAYU, 0);
-	  evectmatrix_XpaYS(G, -1.0, Y, UYtAYU); /* G is now the gradient of
-						    the functional */
-#endif
+	  if (flags & EIGS_VERBOSE) {
+	       if (iteration % 10 == 0)
+		    printf("it. %4d: tr. = %g (%g%% change)\n", iteration, E,
+			 200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
+	  }
+
+	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
+	       /* optimize this since YtAYU should be diagonal? */
+	       evectmatrix_XpaYS(G, -1.0, Y, YtAYU); /* G now = gradient of
+							the functional */
+	  }
+	  else {
+	       sqmatrix_AeBC(UYtAYU, U, 0, YtAYU, 0);
+	       evectmatrix_XpaYS(G, -1.0, Y, UYtAYU); /* G now = gradient of
+							 the functional */
+	  }
 	  
 	  if (C)
 	       C(G, X, Cdata, Y, eigenvals);  /* X = precondition(G) */
 	  else
 	       evectmatrix_copy(X, G);  /* X = G if no preconditioner */
 
-#if PROJECT_PRECONDITIONING  /* Operate projection P = (1 - Y U Yt) on X: */
-	  evectmatrix_XtY(Usqrt, Y, X);  /* Usqrt = Yt X */
-	  
-#  if DIAGONALIZE_EACH_STEP /* U is the identity matrix */
-          evectmatrix_XpaYS(X, -1.0, Y, Usqrt);
-#  else
-          sqmatrix_AeBC(UYtAYU, U, 0, Usqrt, 0);
-          evectmatrix_XpaYS(X, -1.0, Y, UYtAYU);
-#  endif
-#endif /* PROJECT_PRECONDITIONING */
+	  if (flags & EIGS_PROJECT_PRECONDITIONING) {
+	       /* Operate projection P = (1 - Y U Yt) on X: */
+	       evectmatrix_XtY(Usqrt, Y, X);  /* Usqrt = Yt X */
+
+	       if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
+		    /* U is the identity matrix */
+		    evectmatrix_XpaYS(X, -1.0, Y, Usqrt);
+	       }
+	       else {
+		    sqmatrix_AeBC(UYtAYU, U, 0, Usqrt, 0);
+		    evectmatrix_XpaYS(X, -1.0, Y, UYtAYU);
+	       }
+	  }
 
 	  traceGtX = 2.0 * SCALAR_RE(evectmatrix_traceXtY(G,X));
 	  
@@ -342,13 +348,13 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	   STRINGIZE(EIGENSOLVER_MAX_ITERATIONS)
 	   " iterations");
 
-#if !DIAGONALIZE_EACH_STEP
-     /* Now that we've converged, we need to find the actual eigenvectors
-	and eigenvalues. */
+     if (!(flags & EIGS_DIAGONALIZE_EACH_STEP)) {
+	  /* Now that we've converged, we need to find the actual eigenvectors
+	     and eigenvalues. */
 
-     eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata,
-				   X, G, U, Usqrt, UYtAYU);
-#endif
+	  eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata,
+					X, G, U, Usqrt, UYtAYU);
+     }
      
      *num_iterations = iteration;
 

@@ -1,6 +1,8 @@
-Finish tuning maxwell preconditioner.  Implement fancy preconditioner.
+Profile--where is the performance going?  Systematic comparisons with old code.
 
-Profile--where is the performance going?
+Why does ATLAS BLAS implementation break?
+
+Add ability to solve for only even/odd bands w.r.t. z=0 plane.
 
 Optimize multiplications by diagonal matrices?
 

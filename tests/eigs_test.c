@@ -154,7 +154,7 @@ int main(int argc, char **argv)
 
      evectmatrix_copy(Y, Ystart);
      eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL, NULL, NULL,
-		 W, NWORK, 1e-10,&num_iters);
+		 W, NWORK, 1e-10,&num_iters, EIGS_DEFAULT_FLAGS);
      printf("\nSolved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
      for (sum = 0.0, i = 0; i < p; ++i) {
@@ -183,7 +183,7 @@ int main(int argc, char **argv)
      printf("\nSolving with exact inverse preconditioner...\n");
      evectmatrix_copy(Y, Ystart);
      eigensolver(Y, eigvals, Aop, NULL, Ainvop, NULL, NULL, NULL, NULL,
-		 W, NWORK, 1e-10, &num_iters);
+		 W, NWORK, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
      for (sum = 0.0, i = 0; i < p; ++i) {
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
      printf("\nSolving without conjugate-gradient...\n");
      evectmatrix_copy(Y, Ystart);
      eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL, NULL, NULL,
-		 W, NWORK - 1, 1e-10, &num_iters);
+		 W, NWORK - 1, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
      for (sum = 0.0, i = 0; i < p; ++i) {
@@ -207,7 +207,7 @@ int main(int argc, char **argv)
      printf("\nSolving without preconditioning...\n");
      evectmatrix_copy(Y, Ystart);
      eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL, NULL, NULL,
-		 W, NWORK, 1e-10, &num_iters);
+		 W, NWORK, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
      for (sum = 0.0, i = 0; i < p; ++i) {
@@ -219,7 +219,7 @@ int main(int argc, char **argv)
      printf("\nSolving without conjugate-gradient or preconditioning...\n");
      evectmatrix_copy(Y, Ystart);
      eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL, NULL, NULL,
-		 W, NWORK - 1, 1e-10, &num_iters);
+		 W, NWORK - 1, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
      for (sum = 0.0, i = 0; i < p; ++i) {

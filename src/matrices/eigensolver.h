@@ -39,10 +39,22 @@ extern void eigensolver(evectmatrix Y, real *eigenvals,
 			evectpreconditioner_data_updater Cdata_update,
 			evectconstraint constraint, void *constraint_data,
 			evectmatrix Work[], int nWork,
-			real tolerance, int *num_iterations);
+			real tolerance, int *num_iterations,
+			int flags);
 
 extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 				      evectoperator A, void *Adata,
 				      evectmatrix Work1, evectmatrix Work2);
+
+/* eigensolver option flags, designed to be combined with a bitwise or ('|');
+   each flag should set exactly one bit. */
+#define EIGS_NORMALIZE_FIRST_STEP (1<<0)
+#define EIGS_DIAGONALIZE_EACH_STEP (1<<1)
+#define EIGS_PROJECT_PRECONDITIONING (1<<2)
+#define EIGS_CONVERGE_EACH_EIGENVALUE (1<<3)
+#define EIGS_VERBOSE (1<<4)
+
+/* default flags: what we think works best most of the time: */
+#define EIGS_DEFAULT_FLAGS (EIGS_DIAGONALIZE_EACH_STEP | EIGS_CONVERGE_EACH_EIGENVALUE)
 
 #endif /* EIGENSOLVER_H */

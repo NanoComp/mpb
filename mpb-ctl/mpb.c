@@ -375,9 +375,12 @@ void solve_kpoint(vector3 kvector)
      if (mtdata) {  /* solving for bands near a target frequency */
 	  eigensolver(H, eigvals,
 		      maxwell_target_operator, (void *) mtdata,
-		      maxwell_target_preconditioner, (void *) mtdata, NULL,
+		      simple_preconditioner ? 
+		      maxwell_target_preconditioner :
+		      maxwell_target_preconditioner2,
+		      (void *) mtdata, NULL,
 		      maxwell_constraint, (void *) mdata,
-		      W, NWORK, tolerance, &num_iters);
+		      W, NWORK, tolerance, &num_iters, EIGS_DEFAULT_FLAGS);
 	  /* now, diagonalize the real Maxwell operator in the
 	     solution subspace to get the true eigenvalues and
 	     eigenvectors: */
@@ -388,9 +391,12 @@ void solve_kpoint(vector3 kvector)
      else
 	  eigensolver(H, eigvals,
 		      maxwell_operator, (void *) mdata,
-		      maxwell_preconditioner, (void *) mdata, NULL,
+		      simple_preconditioner ?
+		      maxwell_preconditioner :
+		      maxwell_preconditioner2,
+		      (void *) mdata, NULL,
 		      maxwell_constraint, (void *) mdata,
-		      W, NWORK, tolerance, &num_iters);
+		      W, NWORK, tolerance, &num_iters, EIGS_DEFAULT_FLAGS);
 
      printf("Finished solving for bands after %d iterations.\n", num_iters);
      

@@ -194,6 +194,7 @@ void usage(void)
 	    "   -c <tol>     Set convergence tolerance [dflt. %e].\n"
 	    "   -g <NMESH>   Set mesh size [dflt. %d].\n"
 	    "   -1           Stop after first computation.\n"
+	    "   -p           Use simple preconditioner.\n"
 	    "   -v           Verbose output.\n",
 	    KX, NUM_BANDS, sqrt(EPS_HIGH), EPS_HIGH_X, NX, NY, NZ,
 	    ERROR_TOL, MESH_SIZE);
@@ -226,6 +227,7 @@ int main(int argc, char **argv)
      epsilon_data ed;
      int stop1 = 0;
      int verbose = 0;
+     int which_preconditioner = 2;
 
      srand(time(NULL));
 
@@ -239,7 +241,8 @@ int main(int argc, char **argv)
           extern int optind;
           int c;
 
-          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:emt:c:g:1v")) != -1)
+          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:emt:c:g:1pv"))
+		 != -1)
 	       switch (c) {
 		   case 'h':
 			usage();
@@ -295,6 +298,9 @@ int main(int argc, char **argv)
 			break;
 		   case '1':
 			stop1 = 1;
+			break;
+		   case 'p':
+			which_preconditioner = 1;
 			break;
 		   case 'v':
 			verbose = 1;
@@ -370,13 +376,19 @@ int main(int argc, char **argv)
 	  printf("\nSolving for eigenvectors close to %f...\n", target_freq);
 	  mtdata = create_maxwell_target_data(mdata, target_freq);
 	  op = maxwell_target_operator;
-	  pre_op = maxwell_target_preconditioner;
+	  if (which_preconditioner == 1)
+	       pre_op = maxwell_target_preconditioner;
+	  else
+	       pre_op = maxwell_target_preconditioner2;
 	  op_data = (void *) mtdata;
 	  pre_op_data = (void *) mtdata;
      }
      else {
 	  op = maxwell_operator;
-	  pre_op = maxwell_preconditioner;
+	  if (which_preconditioner == 1)
+	       pre_op = maxwell_preconditioner;
+	  else
+	       pre_op = maxwell_preconditioner2;
 	  op_data = (void *) mdata;
 	  pre_op_data = (void *) mdata;
      }
@@ -388,7 +400,7 @@ int main(int argc, char **argv)
 		 op, op_data,
 		 pre_op, pre_op_data, NULL,
 		 maxwell_constraint, (void *) mdata,
-		 W, NWORK, error_tol, &num_iters);
+		 W, NWORK, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
      if (do_target)
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
@@ -419,7 +431,7 @@ int main(int argc, char **argv)
 		 op, op_data,
 		 NULL, NULL, NULL,
 		 maxwell_constraint, (void *) mdata,
-		 W, NWORK, error_tol, &num_iters);
+		 W, NWORK, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
      if (do_target)
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
@@ -446,7 +458,7 @@ int main(int argc, char **argv)
 		 op, op_data,
 		 pre_op, pre_op_data, NULL,
 		 maxwell_constraint, (void *) mdata,
-		 W, NWORK - 1, error_tol, &num_iters);
+		 W, NWORK - 1, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
      if (do_target)
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
@@ -472,7 +484,7 @@ int main(int argc, char **argv)
 		 op, op_data,
 		 NULL, NULL, NULL,
 		 maxwell_constraint, (void *) mdata,
-		 W, NWORK - 1, error_tol, &num_iters);
+		 W, NWORK - 1, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
      if (do_target)
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,

@@ -121,6 +121,8 @@ extern void set_maxwell_dielectric(maxwell_data *md,
 				   dielectric_function epsilon,
 				   void *epsilon_data);
 
+extern void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
+				int howmany, int stride, int dist);
 extern void maxwell_compute_dfield(maxwell_data *d, evectmatrix Xin,
 				   scalar_complex *dfield,
 				   int cur_band_start, int cur_num_bands);
@@ -140,6 +142,9 @@ extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 extern void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout,
 				   void *data,
 				   evectmatrix Y, real *eigenvals);
+extern void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout,
+				    void *data,
+				    evectmatrix Y, real *eigenvals);
 
 extern void maxwell_constraint(evectmatrix X, void *data);
 
@@ -158,5 +163,8 @@ extern void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout,
 extern void maxwell_target_preconditioner(evectmatrix Xin, evectmatrix Xout,
 					  void *data,
 					  evectmatrix Y, real *eigenvals);
+extern void maxwell_target_preconditioner2(evectmatrix Xin, evectmatrix Xout,
+					   void *data,
+					   evectmatrix Y, real *eigenvals);
 
 #endif /* MAXWELL_H */

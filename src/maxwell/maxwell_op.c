@@ -117,8 +117,8 @@ static void assign_cross_c2t(scalar *v, int vstride,
 #endif
 }
 
-static void compute_fft(int dir, maxwell_data *d, scalar *array, 
-			int howmany, int stride, int dist)
+void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array, 
+			 int howmany, int stride, int dist)
 {
 #ifdef HAVE_FFTW
 
@@ -231,8 +231,8 @@ void maxwell_compute_dfield(maxwell_data *d, evectmatrix Hin,
 	  }
 
      /* now, convert to position space via FFT: */
-     compute_fft(+1, d, fft_data,
-		 cur_num_bands*3, cur_num_bands*3, 1);
+     maxwell_compute_fft(+1, d, fft_data,
+			 cur_num_bands*3, cur_num_bands*3, 1);
 }
 
 /* Compute E (output in dfield) from D (input in dfield).  dfield
@@ -289,8 +289,8 @@ void maxwell_compute_hfield(maxwell_data *d, evectmatrix Hin,
 	  }
 
      /* now, convert to position space via FFT: */
-     compute_fft(+1, d, fft_data,
-		 cur_num_bands*3, cur_num_bands*3, 1);
+     maxwell_compute_fft(+1, d, fft_data,
+			 cur_num_bands*3, cur_num_bands*3, 1);
 }
 
 
@@ -328,7 +328,8 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 
 	  /********************************************/
 	  /* convert back to Fourier space */
-	  compute_fft(-1, d, fft_data, cur_num_bands*3, cur_num_bands*3, 1);
+	  maxwell_compute_fft(-1, d, fft_data,
+			      cur_num_bands*3, cur_num_bands*3, 1);
 	  
 	  /********************************************/
 	  /* finally, compute Xout = curl(fft_data) (* scale factor): */
