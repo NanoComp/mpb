@@ -89,7 +89,7 @@
  "energy in cylinder: "
  (compute-energy-in-objects (make cylinder (center 0 0 0)
                                   (radius 1.0) (height infinity)
-                                  (material nothing)))
+                                  (material air)))
  "\n")
 
 (display "********** 5x5 point defect, targeted solver **********\n")

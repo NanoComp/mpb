@@ -1503,6 +1503,9 @@ number compute_energy_in_object_list(geometric_object_list objects)
 	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
 	       for (n = objects.num_items - 1; n >= 0; --n)
 		    if (point_in_periodic_fixed_objectp(p, objects.items[n])) {
+			 if (objects.items[n].material.which_subclass
+			     == MATERIAL_TYPE_SELF)
+			      break; /* treat as a "nothing" object */
 			 energy_sum += energy[index];
 #ifndef SCALAR_COMPLEX
 			 if (j != 0 && 2*j != last_dim)
