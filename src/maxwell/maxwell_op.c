@@ -286,3 +286,15 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 	  free(e_field_sums);
 }
 
+void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,
+			     int is_current_eigenvector)
+{
+     maxwell_target_data *d = (maxwell_target_data *) data;
+     real omega_sqr = d->target_frequency * d->target_frequency;
+
+     maxwell_operator(Xin, d->T, d->d, is_current_eigenvector);
+     evectmatrix_aXpbY(1.0, d->T, -omega_sqr, Xin);
+
+     maxwell_operator(d->T, Xout, d->d, 0);
+     evectmatrix_aXpbY(1.0, Xout, -omega_sqr, d->T);
+}

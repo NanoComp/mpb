@@ -7,6 +7,10 @@
 
 #include "maxwell.h"
 
+#define PRECOND_SUBTR_EIGS 0
+
+#define PRECOND_MIN_DENOM 0.01
+
 void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout, void *data,
 			    evectmatrix Y, real *eigenvals)
 {
@@ -19,10 +23,47 @@ void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout, void *data,
 	       for (b = 0; b < Xout.p; ++b) {
 		    int index = (i * Xout.c + c) * Xout.p + b;
 		    real scale = kpGn2[i] * d->eps_inv_mean[b];
-/*         real scale = kpGn2[i] * d->eps_inv_mean[b] - eigenvals[b]; */
 
-		    scale = 1.0 / (scale + 0.01);
-/*		    scale = 1.0 / (scale + copysign(0.01, scale));  */
+#if PRECOND_SUBTR_EIGS
+		    scale -= eigenvals[b];
+		    scale = 1.0 / (scale + copysign(PRECOND_MIN_DENOM, scale));
+#else
+		    scale = 1.0 / (scale + PRECOND_MIN_DENOM);
+#endif
+
+		    ASSIGN_SCALAR(Xout.data[index],
+				  scale * SCALAR_RE(Xin.data[index]),
+				  scale * SCALAR_IM(Xin.data[index]));
+	       }
+	  }
+     }
+}
+
+void maxwell_target_preconditioner(evectmatrix Xin, evectmatrix Xout, 
+				   void *data,
+				   evectmatrix Y, real *eigenvals)
+{
+     maxwell_target_data *td = (maxwell_target_data *) data;
+     maxwell_data *d = td->d;
+     real omega_sqr = td->target_frequency * td->target_frequency;
+     int i, c, b;
+     real *kpGn2 = d->k_plus_G_normsqr;
+
+     for (i = 0; i < Xout.localN; ++i) {
+	  for (c = 0; c < Xout.c; ++c) {
+	       for (b = 0; b < Xout.p; ++b) {
+		    int index = (i * Xout.c + c) * Xout.p + b;
+		    real scale = kpGn2[i] * d->eps_inv_mean[b] - omega_sqr;
+
+		    scale = scale * scale;
+
+#if PRECOND_SUBTR_EIGS
+		    scale -= eigenvals[b];
+		    scale = 1.0 / (scale + copysign(PRECOND_MIN_DENOM, scale));
+#else
+		    scale = 1.0 / (scale + PRECOND_MIN_DENOM);
+#endif
+
 		    ASSIGN_SCALAR(Xout.data[index],
 				  scale * SCALAR_RE(Xin.data[index]),
 				  scale * SCALAR_IM(Xin.data[index]));

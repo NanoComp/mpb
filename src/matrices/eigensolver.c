@@ -9,6 +9,12 @@
 
 #include "eigensolver.h"
 
+static void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
+					  evectoperator A, void *Adata,
+					  evectmatrix Work1, evectmatrix Work2,
+					  sqmatrix U, sqmatrix Usqrt,
+					  sqmatrix Uwork);
+
 /* Check if we have converged yet, by seeing if fractional change
    in eigenvals (or their trace E) does not exceed the tolerance. */
 static int check_converged(real E, real *eigenvals,
@@ -323,14 +329,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      /* Now that we've converged, we need to find the actual eigenvectors
 	and eigenvalues. */
 
-     sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
-     evectmatrix_XeYS(X, Y, Usqrt, 1);
-     
-     A(X, G, Adata, 1);
-     evectmatrix_XtY(U, X, G);
-     
-     sqmatrix_eigensolve(U, eigenvals, YtAYU);
-     evectmatrix_XeYS(Y, X, U, 1);
+     eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata,
+				   X, G, U, Usqrt, UYtAYU);
 #endif
      
      *num_iterations = iteration;
@@ -344,3 +344,40 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  free(prev_eigenvals);
 }
 
+
+static void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
+					  evectoperator A, void *Adata,
+					  evectmatrix Work1, evectmatrix Work2,
+					  sqmatrix U, sqmatrix Usqrt,
+					  sqmatrix Uwork)
+{
+     sqmatrix_sqrt(Usqrt, U, Uwork); /* Usqrt = 1/sqrt(Yt*Y) */
+     evectmatrix_XeYS(Work1, Y, Usqrt, 1);
+
+     A(Work1, Work2, Adata, 1);
+     evectmatrix_XtY(U, Work1, Work2);
+
+     sqmatrix_eigensolve(U, eigenvals, Uwork);
+     evectmatrix_XeYS(Y, Work1, U, 1);
+}
+
+void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
+			       evectoperator A, void *Adata,
+			       evectmatrix Work1, evectmatrix Work2)
+{
+     sqmatrix U, Usqrt, Uwork;
+ 
+     U = create_sqmatrix(Y.p);
+     Usqrt = create_sqmatrix(Y.p);
+     Uwork = create_sqmatrix(Y.p);
+
+     evectmatrix_XtX(U, Y);
+     sqmatrix_invert(U);
+
+     eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata, Work1, Work2,
+				   U, Usqrt, Uwork);
+
+     destroy_sqmatrix(U);
+     destroy_sqmatrix(Usqrt);
+     destroy_sqmatrix(Uwork);
+}

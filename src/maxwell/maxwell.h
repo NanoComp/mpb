@@ -52,6 +52,9 @@ typedef struct {
      int local_x_start, local_y_start;
      int last_dim, other_dims;
 
+     int num_bands;
+     int N, local_N, N_start, alloc_N;
+
      int fft_output_size;
 
      int num_fft_bands;
@@ -100,5 +103,21 @@ extern void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout,
 				   evectmatrix Y, real *eigenvals);
 
 extern void maxwell_constraint(evectmatrix X, void *data);
+
+typedef struct {
+     maxwell_data *d;
+     evectmatrix T;
+     real target_frequency;
+} maxwell_target_data;
+
+extern maxwell_target_data *create_maxwell_target_data(maxwell_data *d,
+						       real target_frequency);
+extern void destroy_maxwell_target_data(maxwell_target_data *d);
+extern void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout,
+				    void *data,
+				    int is_current_eigenvector);
+extern void maxwell_target_preconditioner(evectmatrix Xin, evectmatrix Xout,
+					  void *data,
+					  evectmatrix Y, real *eigenvals);
 
 #endif /* MAXWELL_H */

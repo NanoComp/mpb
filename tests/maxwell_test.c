@@ -26,8 +26,8 @@
 #define NWORK 3
 
 #define KX 0.5
-#define EPS_LOW 2.25
-#define EPS_HIGH 12.25
+#define EPS_LOW 1.00
+#define EPS_HIGH 4.00
 #define EPS_HIGH_X 0.30
 
 #ifdef ENABLE_PROF
@@ -144,7 +144,8 @@ void usage(void)
 	    "   -y <ny>      Use ny points in y direction [dflt. = %d]\n"
 	    "   -z <nz>      Use nz points in z direction [dflt. = %d]\n"
 	    "   -e           Solve for TE polarization only.\n"
-	    "   -m           Solve for TM polarization only.\n",
+	    "   -m           Solve for TM polarization only.\n"
+	    "   -t <freq>    Set target frequency [dflt. none].\n",
 	    KX, NUM_BANDS, sqrt(EPS_HIGH), EPS_HIGH_X, NX, NY, NZ);
 }
 
@@ -153,6 +154,7 @@ void usage(void)
 int main(int argc, char **argv)
 {
      maxwell_data *mdata;
+     maxwell_target_data *mtdata = NULL;
      int local_N, N_start, alloc_N;
      real G1[3] = {1,0,0}, G2[3] = {0,100,0}, G3[3] = {0,0,100};
      real kvector[3] = {KX,0,0};
@@ -165,6 +167,11 @@ int main(int argc, char **argv)
      int num_bands = NUM_BANDS;
      real high_eps = EPS_HIGH;
      real high_index_fill = EPS_HIGH_X;
+     real target_freq;
+     int do_target = 0;
+     evectoperator op;
+     evectpreconditioner pre_op;
+     void *op_data, *pre_op_data;
 
      srand(time(NULL));
 
@@ -174,7 +181,7 @@ int main(int argc, char **argv)
           extern int optind;
           int c;
 
-          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:em")) != -1)
+          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:emt:")) != -1)
 	       switch (c) {
 		   case 'h':
 			usage();
@@ -216,6 +223,10 @@ int main(int argc, char **argv)
 			break;
 		   case 'm':
 			polarization = TM_POLARIZATION;
+			break;
+		   case 't':
+			target_freq = fabs(atof(optarg));
+			do_target = 1;
 			break;
 		   default:
 			usage();
@@ -276,13 +287,33 @@ int main(int argc, char **argv)
           ASSIGN_REAL(Hstart.data[i], rand() * 1.0 / RAND_MAX);
 
      /*****************************************/
+     if (do_target) {
+	  printf("\nSolving for eigenvectors close to %f...\n", target_freq);
+	  mtdata = create_maxwell_target_data(mdata, target_freq);
+	  op = maxwell_target_operator;
+	  pre_op = maxwell_target_preconditioner;
+	  op_data = (void *) mtdata;
+	  pre_op_data = (void *) mtdata;
+     }
+     else {
+	  op = maxwell_operator;
+	  pre_op = maxwell_preconditioner;
+	  op_data = (void *) mdata;
+	  pre_op_data = (void *) mdata;
+     }
+
+     /*****************************************/
      printf("\nSolving for eigenvectors with preconditioning...\n");
      evectmatrix_copy(H, Hstart);
      eigensolver(H, eigvals,
-		 maxwell_operator, (void *) mdata,
-		 maxwell_preconditioner, (void *) mdata, NULL,
+		 op, op_data,
+		 pre_op, pre_op_data, NULL,
 		 maxwell_constraint, (void *) mdata,
 		 W, NWORK, 1e-4, &num_iters);
+
+     if (do_target)
+	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
+				    W[0], W[1]);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("Eigenvalues (sqrt) = \n");
@@ -311,10 +342,14 @@ int main(int argc, char **argv)
      printf("\nSolving for eigenvectors without preconditioning...\n");
      evectmatrix_copy(H, Hstart);
      eigensolver(H, eigvals,
-		 maxwell_operator, (void *) mdata,
+		 op, op_data,
 		 NULL, NULL, NULL,
 		 maxwell_constraint, (void *) mdata,
 		 W, NWORK, 1e-4, &num_iters);
+
+     if (do_target)
+	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
+				    W[0], W[1]);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("Eigenvalues (sqrt) = \n");
@@ -328,10 +363,14 @@ int main(int argc, char **argv)
      printf("\nSolving for eigenvectors without conj. grad...\n");
      evectmatrix_copy(H, Hstart);
      eigensolver(H, eigvals,
-		 maxwell_operator, (void *) mdata,
-		 maxwell_preconditioner, (void *) mdata, NULL,
+		 op, op_data,
+		 pre_op, pre_op_data, NULL,
 		 maxwell_constraint, (void *) mdata,
 		 W, NWORK - 1, 1e-4, &num_iters);
+
+     if (do_target)
+	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
+				    W[0], W[1]);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("Eigenvalues (sqrt) = \n");
@@ -344,10 +383,14 @@ int main(int argc, char **argv)
      printf("\nSolving for eigenvectors without precond. or conj. grad...\n");
      evectmatrix_copy(H, Hstart);
      eigensolver(H, eigvals,
-		 maxwell_operator, (void *) mdata,
+		 op, op_data,
 		 NULL, NULL, NULL,
 		 maxwell_constraint, (void *) mdata,
 		 W, NWORK - 1, 1e-4, &num_iters);
+
+     if (do_target)
+	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
+				    W[0], W[1]);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("Eigenvalues (sqrt) = \n");
@@ -364,6 +407,7 @@ int main(int argc, char **argv)
      for (i = 0; i < NWORK; ++i)
           destroy_evectmatrix(W[i]);
 
+     destroy_maxwell_target_data(mtdata);
      destroy_maxwell_data(mdata);
 
      free(eigvals);

@@ -24,4 +24,8 @@ extern void eigensolver(evectmatrix Y, real *eigenvals,
 			evectmatrix Work[], int nWork,
 			real tolerance, int *num_iterations);
 
+extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
+				      evectoperator A, void *Adata,
+				      evectmatrix Work1, evectmatrix Work2);
+
 #endif /* EIGENSOLVER_H */

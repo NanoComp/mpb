@@ -140,6 +140,12 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      for (i = 0; i < num_bands; ++i)
 	  d->eps_inv_mean[i] = 1.0;
 
+     d->local_N = *local_N;
+     d->N_start = *N_start;
+     d->alloc_N = *alloc_N;
+     d->num_bands = num_bands;
+     d->N = nx * ny * nz;
+
      return d;
 }
 
@@ -282,4 +288,29 @@ void set_maxwell_data_polarization(maxwell_data *d,
      if (d->current_k[2] != 0.0 || d->nz != 1)
 	  polarization = NO_POLARIZATION;
      d->polarization = polarization;
+}
+
+maxwell_target_data *create_maxwell_target_data(maxwell_data *md, 
+						real target_frequency)
+{
+     maxwell_target_data *d;
+
+     d = (maxwell_target_data *) malloc(sizeof(maxwell_target_data));
+     CHECK(d, "out of memory");
+
+     d->d = md;
+     d->target_frequency = target_frequency;
+
+     d->T = create_evectmatrix(md->N, 2, md->num_bands, 
+			       md->local_N, md->N_start, md->alloc_N);
+
+     return d;
+}
+
+void destroy_maxwell_target_data(maxwell_target_data *d)
+{
+     if (d) {
+	  destroy_evectmatrix(d->T);
+	  free(d);
+     }
 }
