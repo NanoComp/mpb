@@ -63,10 +63,13 @@ both real and complex fields.)
 </ul>
 
 <p>For readers with some knowledge of photonic band-structure
-calculations, we should note that this program performs
-"frequency-domain" computations.  That is, it does a direct
-computation of the eigenvectors and eigenvalues of Maxwell's equations
-(using a planewave basis), as opposed to indirect techniques involving
+calculations, we should make a couple of additional comments.  First,
+the Photonic-Bands package does a full vectorial solution of Maxwell's
+equations; the only approximation is the spatial discretization
+(planewave cutoff).  Second, this program performs "frequency-domain"
+computations.  That is, it does a direct computation of the
+eigenvectors and eigenvalues of Maxwell's equations (using a planewave
+basis), as opposed to indirect techniques involving
 e.g. finite-difference time-domain or transfer matrix methods.
 Iterative eigensolver algorithms are employed so that the dense
 Maxwell operator is never explicitly stored, making large
