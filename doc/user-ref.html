@@ -678,18 +678,19 @@ of the principle axes.  If you use <code>run-te</code> or
 with an error.
 
 <p><dt><code>(run-yeven <i>band-func ...</i>), (run-yodd <i>band-func ...</i>)</code>
-<dd>These <code>run</code>-like functions are analogous to
-<code>run-zeven</code> and <code>run-zodd</code>, except that they
-constrain their solutions to have even and odd symmetry with respect
-to the y=0 plane.  You should use these functions <em>only</em> for
-structures that are symmetric through the y=0 mirror plane, where the
-second basis vector is in the y direction (0,1,0), and when the k
-vectors are in the xz plane.
+<dd>These functions are analogous to <code>run-zeven</code> and
+<code>run-zodd</code>, except that they constrain their solutions to
+have even and odd symmetry with respect to the y=0 plane.  You should
+use these functions <em>only</em> for structures that are symmetric
+through the y=0 mirror plane, where the second basis vector is in the
+y direction (0,1,0), and when the k vectors are in the xz plane.
 
 <p><dt><code>run-yeven-zeven</code>, <code>run-yeven-zodd</code>, <code>run-yodd-zeven</code>, <code>run-yodd-zodd</code>, <code>run-te-yeven</code>, <code>run-te-yodd</code>, <code>run-tm-yeven</code>, <code>run-tm-yodd</code>
-<dd>These functions combine the <code>yeven</code>/<code>yodd</code>
-constraints with <code>zeven</code>/<code>zodd</code> or
-<code>te</code>/<code>tm</code>.  See also <code>run-parity</code>, below.
+<dd>These <code>run</code>-like functions combine the
+<code>yeven</code>/<code>yodd</code> constraints with
+<code>zeven</code>/<code>zodd</code> or
+<code>te</code>/<code>tm</code>.  See also <code>run-parity</code>,
+below.
 
 <p><dt><code>(run-parity <i>p reset-fields band-func ...</i>)</code>
 <dd>Like the <code>run</code> function, except that it takes two extra
