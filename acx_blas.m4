@@ -27,7 +27,7 @@ dnl the default action will define HAVE_BLAS.
 dnl
 dnl This macro requires autoconf 2.50 or later.
 dnl
-dnl @version $Id: acx_blas.m4,v 1.1 2001/12/08 20:10:39 stevenj Exp $
+dnl @version $Id: acx_blas.m4,v 1.2 2001/12/08 20:28:02 stevenj Exp $
 dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
 
 AC_DEFUN([ACX_BLAS], [
@@ -40,7 +40,7 @@ AC_ARG_WITH(blas,
 case $with_blas in
 	yes | "") ;;
 	no) acx_blas_ok=disable ;;
-	-* | */* | *.a | *.so | *.o) BLAS_LIBS="$with_blas" ;;
+	-* | */* | *.a | *.so | *.so.* | *.o) BLAS_LIBS="$with_blas" ;;
 	*) BLAS_LIBS="-l$with_blas" ;;
 esac
 
