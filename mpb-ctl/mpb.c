@@ -185,11 +185,15 @@ void set_polarization(int p)
    that we need for the eigenvalue calculation.  When this function
    is called, the input variables (the geometry, etcetera) have already
    been read into the global variables defined in ctl-io.h.  
+   
+   p is the polarization to use for the coming calculation, although
+   this can be changed by calling set-polarization.  p is interpreted
+   in the same way as for set-polarization.
 
    If reset_fields is false, then any fields from a previous run are
    retained if they are of the same dimensions.  Otherwise, new
    fields are allocated and initialized to random numbers. */
-void init_params(boolean reset_fields)
+void init_params(int p, boolean reset_fields)
 {
      int i, local_N, N_start, alloc_N;
      int nx, ny, nz;
@@ -302,10 +306,9 @@ void init_params(boolean reset_fields)
      }
 
      if (!have_old_fields || reset_fields)
-	  set_polarization(0);
+	  set_polarization(p);
      else
-	  set_polarization(-(3+1)); /* make same as prev. call, but
-				       don't reinitialize the fields. */
+	  set_polarization(-(p+1)); /* don't reinitialize the fields */
 }
 
 /**************************************************************************/

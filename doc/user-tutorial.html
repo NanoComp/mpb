@@ -534,9 +534,9 @@ compute the bands closest to a "target" frequency, rather than the
 bands with the lowest frequencies.  One uses this feature by setting
 the <code>target-freq</code> variable to something other than zero
 (e.g. the mid-gap frequency).  In order to get accurate results, it's
-currently also necessary to decrease the <code>tolerance</code>
-variable, which controls when convergence is judged to have occurred,
-from its default value of <code>1e-4</code>:
+currently also recommended that you decrease the
+<code>tolerance</code> variable, which controls when convergence is
+judged to have occurred, from its default value of <code>1e-4</code>:
 
 <pre>
 (set! num-bands 1)  ; only need to compute a single band, now!
@@ -617,6 +617,15 @@ we find that it is 0.314159008071821, matching our desired frequency
 to nearly eight decimal places after seven function evaluations!  (Of
 course, the computation isn't really this accurate anyway, due to the
 finite discretization.)
+
+<p>A slight improvement can be made to the calculation above.
+Ordinarily, each time you call the <code>(run-tm)</code> function, the
+fields are initialized to random values.  It would speed convergence
+somewhat to use the fields of the previous calculation as the starting
+point for the next calculation.  We can do this by instead calling a
+lower-level function, <code>(run-polarization TM false)</code>.  (The
+first parameter is the polarization to solve for, and the second tells
+it not to reset the fields if possible.)
 
 <h2>emacs and ctl</h2>
 

@@ -48,17 +48,19 @@
 
 ; Definitions of external (C) functions:
 
-; (init-params true) initializes the geometry, etcetera, and does everything
-; else that's needed to get ready for an eigenvalue calculation.
-; This should be called after the input variables are changed.
-; If false is passed instead of true, fields from a previous run are
-; retained, if possible, as a starting point for the eigensolver.
-(define-external-function init-params true false no-return-value 'boolean)
+; (init-params p true) initializes the geometry, etcetera, and does
+; everything else that's needed to get ready for an eigenvalue
+; calculation with polarization p (see below).  This should be called
+; after the input variables are changed.  If false is passed instead
+; of true, fields from a previous run are retained, if possible, as a
+; starting point for the eigensolver.
+(define-external-function init-params true false
+  no-return-value 'integer 'boolean)
 
-; (set-polarization p) sets the polarization that is solved for by
-; solve-kpoint, below.  p should be one of the constants NO-POLARIZATION,
-; TE, or TM (the default for solve-kpoint is NO-POLARIZATION).  
-; init-params should already have been called.
+; (set-polarization p) changes the polarization that is solved for by
+; solve-kpoint, below.  p should be one of the constants
+; NO-POLARIZATION, TE, or TM.  init-params should already have been
+; called.
 (define-external-function set-polarization false false 
   no-return-value 'integer)
 (define NO-POLARIZATION 0)
@@ -167,11 +169,10 @@
 ; parameter, the band index, and is called for each band index at
 ; every k point.  These are typically used to output the bands.
 
-(define (run-polarization p . band-functions)
+(define (run-polarization p reset-fields . band-functions)
   (define band-range-data '())
   (set! interactive false)  ; don't be interactive if we call (run)
-  (init-params true)
-  (set-polarization p)
+  (init-params p reset-fields)
   (output-epsilon)          ; output epsilon immediately
   (map (lambda (k)
 	 (solve-kpoint k)
@@ -185,13 +186,14 @@
   (display "done.\n"))
 
 (define (run . band-functions)
-  (apply run-polarization (cons NO-POLARIZATION band-functions)))
+  (apply run-polarization
+	 (append (list NO-POLARIZATION true) band-functions)))
 
 (define (run-te . band-functions)
-  (apply run-polarization (cons TE band-functions)))
+  (apply run-polarization (append (list TE true) band-functions)))
 
 (define (run-tm . band-functions)
-  (apply run-polarization (cons TM band-functions)))
+  (apply run-polarization (append (list TM true) band-functions)))
 
 ; ****************************************************************
 
