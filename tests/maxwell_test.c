@@ -30,6 +30,8 @@
 #define EPS_HIGH 9.00
 #define EPS_HIGH_X 0.25
 
+#define ERROR_TOL 1e-4
+
 #ifdef ENABLE_PROF
 #  define PROF_ITERS 10
 #else
@@ -146,7 +148,9 @@ void usage(void)
 	    "   -e           Solve for TE polarization only.\n"
 	    "   -m           Solve for TM polarization only.\n"
 	    "   -t <freq>    Set target frequency [dflt. none].\n",
-	    KX, NUM_BANDS, sqrt(EPS_HIGH), EPS_HIGH_X, NX, NY, NZ);
+	    "   -c <tol>     Set convergence tolerance [dflt. %e].\n",
+	    KX, NUM_BANDS, sqrt(EPS_HIGH), EPS_HIGH_X, NX, NY, NZ,
+	    ERROR_TOL);
 }
 
 /*************************************************************************/
@@ -172,6 +176,7 @@ int main(int argc, char **argv)
      evectoperator op;
      evectpreconditioner pre_op;
      void *op_data, *pre_op_data;
+     real error_tol = ERROR_TOL;
 
      srand(time(NULL));
 
@@ -181,7 +186,7 @@ int main(int argc, char **argv)
           extern int optind;
           int c;
 
-          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:emt:")) != -1)
+          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:emt:c:")) != -1)
 	       switch (c) {
 		   case 'h':
 			usage();
@@ -227,6 +232,9 @@ int main(int argc, char **argv)
 		   case 't':
 			target_freq = fabs(atof(optarg));
 			do_target = 1;
+			break;
+		   case 'c':
+			error_tol = fabs(atof(optarg));
 			break;
 		   default:
 			usage();
@@ -309,28 +317,22 @@ int main(int argc, char **argv)
 		 op, op_data,
 		 pre_op, pre_op_data, NULL,
 		 maxwell_constraint, (void *) mdata,
-		 W, NWORK, 1e-4, &num_iters);
+		 W, NWORK, error_tol, &num_iters);
 
      if (do_target)
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
 				    W[0], W[1]);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
-     printf("Eigenvalues (sqrt) = \n");
+     printf("%15s%15s%15s%15s\n","eigenval", "frequency", "exact freq.", 
+	    "error");
      for (i = 0; i < num_bands; ++i) {
-	  printf("   %f (%f)\n", eigvals[i], sqrt(eigvals[i]));
-     }
-     printf("\n");
-
-     printf("Corresponding analytic frequencies are:\n");
-     for (i = 0;  i < num_bands; ++i) {
-          printf("   %f\n",  bragg_omega(sqrt(eigvals[i]),
-					 kvector[0],
-					 sqrt(high_eps),
-					 high_index_fill,
-					 sqrt(EPS_LOW),
-					 1.0 - high_index_fill,
-					 1.0e-7));
+	  real freq = sqrt(eigvals[i]);
+	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(high_eps),
+					high_index_fill, sqrt(EPS_LOW),
+					1.0 - high_index_fill, 1.0e-7);
+	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
+		 fabs(freq - exact_freq) / exact_freq);
      }
      printf("\n");
 
@@ -345,16 +347,22 @@ int main(int argc, char **argv)
 		 op, op_data,
 		 NULL, NULL, NULL,
 		 maxwell_constraint, (void *) mdata,
-		 W, NWORK, 1e-4, &num_iters);
+		 W, NWORK, error_tol, &num_iters);
 
      if (do_target)
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
 				    W[0], W[1]);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
-     printf("Eigenvalues (sqrt) = \n");
+     printf("%15s%15s%15s%15s\n","eigenval", "frequency", "exact freq.", 
+	    "error");
      for (i = 0; i < num_bands; ++i) {
-	  printf("   %f (%f)\n", eigvals[i], sqrt(eigvals[i]));
+	  real freq = sqrt(eigvals[i]);
+	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(high_eps),
+					high_index_fill, sqrt(EPS_LOW),
+					1.0 - high_index_fill, 1.0e-7);
+	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
+		 fabs(freq - exact_freq) / exact_freq);
      }
      printf("\n");
 
@@ -366,16 +374,22 @@ int main(int argc, char **argv)
 		 op, op_data,
 		 pre_op, pre_op_data, NULL,
 		 maxwell_constraint, (void *) mdata,
-		 W, NWORK - 1, 1e-4, &num_iters);
+		 W, NWORK - 1, error_tol, &num_iters);
 
      if (do_target)
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
 				    W[0], W[1]);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
-     printf("Eigenvalues (sqrt) = \n");
+     printf("%15s%15s%15s%15s\n","eigenval", "frequency", "exact freq.", 
+	    "error");
      for (i = 0; i < num_bands; ++i) {
-	  printf("   %f (%f)\n", eigvals[i], sqrt(eigvals[i]));
+	  real freq = sqrt(eigvals[i]);
+	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(high_eps),
+					high_index_fill, sqrt(EPS_LOW),
+					1.0 - high_index_fill, 1.0e-7);
+	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
+		 fabs(freq - exact_freq) / exact_freq);
      }
      printf("\n");
 
@@ -386,16 +400,22 @@ int main(int argc, char **argv)
 		 op, op_data,
 		 NULL, NULL, NULL,
 		 maxwell_constraint, (void *) mdata,
-		 W, NWORK - 1, 1e-4, &num_iters);
+		 W, NWORK - 1, error_tol, &num_iters);
 
      if (do_target)
 	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
 				    W[0], W[1]);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
-     printf("Eigenvalues (sqrt) = \n");
+     printf("%15s%15s%15s%15s\n","eigenval", "frequency", "exact freq.", 
+	    "error");
      for (i = 0; i < num_bands; ++i) {
-	  printf("   %f (%f)\n", eigvals[i], sqrt(eigvals[i]));
+	  real freq = sqrt(eigvals[i]);
+	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(high_eps),
+					high_index_fill, sqrt(EPS_LOW),
+					1.0 - high_index_fill, 1.0e-7);
+	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
+		 fabs(freq - exact_freq) / exact_freq);
      }
      printf("\n");
 
