@@ -29,7 +29,8 @@
    num_iterations holds the number of iterations that were required. */
 
 void eigensolver(evectmatrix Y, real *eigenvals,
-		 evectoperator A, evectoperator C,
+		 evectoperator A, void *Adata,
+		 evectoperator C, void *Cdata,
 		 evectmatrix Work[], int nWork,
 		 real tolerance, int *num_iterations)
 {
@@ -70,7 +71,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      do {
 	  evectmatrix_XtX(U, Y);
 	  sqmatrix_invert(U);
-	  A(Y, X); /* X = AY */
+	  A(Y, X, Adata); /* X = AY */
 	  evectmatrix_XeYS(G, X, U, 1); /* note that U = adjoint(U) */
 
 	  evectmatrix_XtY(YtAYU, Y, G);
@@ -83,7 +84,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  evectmatrix_XpaYS(G, -1.0, Y, UYtAYU); /* G is now the gradient of
 						    the functional */
 	  
-	  C(G, X);  /* X = precondition(G) */
+	  C(G, X, Cdata);  /* X = precondition(G) */
 
 	  traceGtX = 2.0 * SCALAR_RE(evectmatrix_traceXtY(G,X));
 	  
@@ -120,7 +121,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  evectmatrix_aXpbY(1.0, Y, prev_lambda*0.5, D);
 	  evectmatrix_XtX(U, Y);
 	  sqmatrix_invert(U);
-	  A(Y, G); /* G = AY */
+	  A(Y, G, Adata); /* G = AY */
 	  evectmatrix_XtY(YtAYU, Y, G);
 	  E2 = SCALAR_RE(sqmatrix_traceAtB(U, YtAYU));
 	  
@@ -165,7 +166,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 #if 1
        evectmatrix_XtY(U, X, X);
-       A(X, G);
+       A(X, G, Adata);
        evectmatrix_XtY(U, X, G);
 #else
        sqmatrix_AeBC(UYtAYU, Usqrt, 0, YtAYU, 0);

@@ -3,10 +3,12 @@
 
 #include <matrices.h>
 
-typedef void (*evectoperator) (evectmatrix Xin, evectmatrix Xout);
+typedef void (*evectoperator) (evectmatrix Xin, evectmatrix Xout,
+			       void *data);
 
 extern void eigensolver(evectmatrix Y, real *eigenvals,
-			evectoperator A, evectoperator C,
+			evectoperator A, void *Adata,
+			evectoperator C, void *Cdata,
 			evectmatrix Work[], int nWork,
 			real tolerance, int *num_iterations);
 

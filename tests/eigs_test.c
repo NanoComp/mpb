@@ -14,8 +14,8 @@ static int usePreconditioner = 1;
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
-extern void Aop(evectmatrix Xin, evectmatrix Xout);
-extern void Cop(evectmatrix Xin, evectmatrix Xout);
+extern void Aop(evectmatrix Xin, evectmatrix Xout, void *data);
+extern void Cop(evectmatrix Xin, evectmatrix Xout, void *data);
 extern void printmat(scalar *A, int m, int n);
 extern void printmat_matlab(scalar *A, int m, int n);
 
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 	  ASSIGN_REAL(Ystart.data[i], rand() * 1.0 / RAND_MAX);
 
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, Cop, W, NWORK, 1e-10, &num_iters);
+     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, W, NWORK, 1e-10, &num_iters);
 
      printf("\nSolved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving without conjugate-gradient...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, Cop, W, NWORK - 1, 1e-10, &num_iters);
+     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, W, NWORK - 1, 1e-10, &num_iters);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
      for (sum = 0.0, i = 0; i < p; ++i) {
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
      printf("\nSolving without preconditioning...\n");
      usePreconditioner = 0;
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, Cop, W, NWORK, 1e-10, &num_iters);
+     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, W, NWORK, 1e-10, &num_iters);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
      for (sum = 0.0, i = 0; i < p; ++i) {
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving without conjugate-gradient or preconditioning...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, Cop, W, NWORK - 1, 1e-10, &num_iters);
+     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, W, NWORK - 1, 1e-10, &num_iters);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
      for (sum = 0.0, i = 0; i < p; ++i) {
@@ -161,7 +161,7 @@ int main(int argc, char **argv)
      return EXIT_SUCCESS;
 }
 
-void Aop(evectmatrix Xin, evectmatrix Xout)
+void Aop(evectmatrix Xin, evectmatrix Xout, void *data)
 {
      CHECK(A.p == Xin.n && A.p == Xout.n && Xin.p == Xout.p,
 	   "matrices not conformant");
@@ -170,7 +170,7 @@ void Aop(evectmatrix Xin, evectmatrix Xout)
 		   1.0, A.data, A.p, Xin.data, Xin.p, 0.0, Xout.data, Xout.p);
 }
 
-void Cop(evectmatrix Xin, evectmatrix Xout)
+void Cop(evectmatrix Xin, evectmatrix Xout, void *data)
 {
      int in, ip;
 
