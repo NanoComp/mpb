@@ -1,5 +1,9 @@
+; Compute the bands at the X point for a quarter-wave stack Bragg
+; mirror (this is the point that defines the band gap edges).
+
+; Using define-param, we can set the x resolution on the command line
+; with e.g. 'mpb nx=32 bragg.ctl'; defaults to 16 grid points.
 (define-param nx 16)
-(define-param target-frequency 0.0)
 
 (set! geometry 
       (list
@@ -9,12 +13,9 @@
 	 (radius infinity) (height 0.25))))
 
 (define X (vector3 0.5 0 0))
-(set! k-points (list (vector3 0.5)))
+(set! k-points (list X))
 
-(set! dimensions 2)
 (set! grid-size (vector3 nx 1 1))
-
 (set! num-bands 8)
-(set! target-freq target-frequency)
 
-(run)
+(run-tm) ; note that TM and TE bands are degenerate, so we only need TM

@@ -1,24 +1,33 @@
-(define-param norun false)
+; Compute band structure for a square lattice of dielectric rods
+; in air.
 
-(define Si (make dielectric (epsilon 12.0)))
+; Define various parameters with define-param so that they are
+; settable from the command-line (with mpb <param>=<value>):
+(define-param r 0.2) ; radius of the rods
+(define-param eps 11.56) ; dielectric constant
+(define-param k-interp 4) ; number of k points to interpolate
+
+(define Si (make dielectric (epsilon eps)))
 
 (set! geometry 
       (list
        (make cylinder 
 	 (material Si) 
 	 (center (vector3 0))
-	 (radius 0.2) (height infinity))))
+	 (radius r) (height infinity))))
       
 (define Gamma (vector3 0 0 0))
 (define X (vector3 0.5 0 0))
 (define M (vector3 0.5 0.5 0))
+(set! k-points (interpolate k-interp (list Gamma X M Gamma)))
 
-(set! k-points (interpolate 4 (list Gamma X M Gamma)))
-
-(set! dimensions 2)  ; causes (run) to solve for TE/TM bands.
 (set! grid-size (vector3 32 32 1))
 
-(set! num-bands 5)
+(set! num-bands 8)
 
-(if (not norun)
-    (run-tm))
+; Compute the TE and TM bands.  Wrap in the (begin-time message ...)
+; construct from libctl so that we report the total elapsed time:
+(begin-time
+ "total time for both TE and TM bands: "
+ (run-te)
+ (run-tm))
