@@ -688,9 +688,9 @@ constraint, and should be one of the predefined variables:
 <p>It is possible to specify more than one symmetry constraint
 simultaneously by adding them, e.g. <code>(+ EVEN-Z ODD-Y)</code>
 requires the fields to be even through z=0 and odd through y=0.  It is
-an error to specify incompatible constraints (e.g. code>(+ EVEN-Z
+an error to specify incompatible constraints (e.g. <code>(+ EVEN-Z
 ODD-Z)</code>).  <b>Important:</b> if you specify the z/y parity, the
-dielectric structure (and the k vector) must be symmetric about the
+dielectric structure (and the k vector) <b>must</b> be symmetric about the
 z/y=0 plane, respectively.
 
 <p>If <code>reset-fields</code> is <code>false</code>, the fields from
