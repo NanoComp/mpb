@@ -16,8 +16,15 @@
 
 ; ****************************************************************
 
-; get the number of arguments to a function p:
-(define (procedure-num-args p) (car (procedure-property p 'arity)))
+; Get the number of arguments to a function p.  However, some
+; older versions of Guile (e.g. 1.2) do not support the 'arity
+; property, and procedure-property just returns false.  In
+; this case, we assume that the procedure returns 1 argument,
+; as this is the most useful default for our purposes.  Sigh.
+
+(define (procedure-num-args p) 
+  (let ((arity (procedure-property p 'arity)))
+    (if arity (car arity) 1)))
 
 ; ****************************************************************
 
