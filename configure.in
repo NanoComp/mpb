@@ -105,29 +105,53 @@ fi
 # Generic BLAS:
 AC_CHECK_LIB(blas, main)
 
-# Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
-AC_CHECK_LIB(dgemm, main)
-AC_CHECK_LIB(sgemm, main)
+# remember current libs, so we can check if any libs were found below.
+save_LIBS="$LIBS"
 
-# Optimized BLAS for Pentium Pro?
-AC_CHECK_LIB(blasppro1,main)
+AC_ARG_WITH(fastblas, [  --without-fastblas      don't use accelerated BLAS], ok=$withval, ok=yes)
+if test "$ok" = "no"; then save_LIBS="xxxxxxxx"; fi
 
-# BLAS in Alpha DXML library?
-AC_CHECK_LIB(dxml, dgemm_)
+if test "$save_LIBS" = "$LIBS"; then
+	# BLAS in Alpha DXML library?
+	AC_CHECK_LIB(dxml, dgemm_)
+fi
 
-# Check for BLAS in Sun Performance library:
-# AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
-AC_CHECK_LIB(sunmath, acosp)
-AC_CHECK_LIB(sunperf, dgemm_,
-        [LIBS="-xlic_lib=sunperf $LIBS"; AC_DEFINE(HAVE_LIBSUNPERF)])
+if test "$save_LIBS" = "$LIBS"; then
+	# Check for BLAS in Sun Performance library:
+	# AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
+	AC_CHECK_LIB(sunmath, acosp)
+	AC_CHECK_LIB(sunperf, dgemm_,
+        	[LIBS="-xlic_lib=sunperf $LIBS"; AC_DEFINE(HAVE_LIBSUNPERF)])
+fi
 
-# Check for BLAS in SCSL and SGIMATH libraries (prefer SCSL):
-AC_CHECK_LIB(scs, dgemm_,
-             LIBS="-lscs $LIBS", 
-	     AC_CHECK_LIB(complib.sgimath, dgemm_))
+if test "$save_LIBS" = "$LIBS"; then
+	# Check for BLAS in SCSL and SGIMATH libraries (prefer SCSL):
+	AC_CHECK_LIB(scs, dgemm_,
+	             LIBS="-lscs $LIBS", 
+		     AC_CHECK_LIB(complib.sgimath, dgemm_))
+fi
 
-# Checks for BLAS in IBM ESSL library
-AC_CHECK_LIB(essl, dgemm)
+if test "$save_LIBS" = "$LIBS"; then
+	# Checks for BLAS in IBM ESSL library
+	AC_CHECK_LIB(essl, dgemm)
+fi
+
+if test "$save_LIBS" = "$LIBS"; then
+	# Optimized BLAS for Pentium Pro (from ASCII Red project):
+	# (see http://www.cs.utk.edu/~ghenry/distrib/)
+	AC_CHECK_LIB(blasppro1.1o,main)
+fi
+
+if test "$save_LIBS" = "$LIBS"; then
+	# Checks for ATLAS BLAS library:
+	AC_CHECK_LIB(atlas, main)
+fi
+
+if test "$save_LIBS" = "$LIBS"; then
+	# Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
+	AC_CHECK_LIB(dgemm, main)
+	AC_CHECK_LIB(sgemm, main)
+fi
 
 # ----------------------------------------------------------------------
 # Checks for LAPACK library
@@ -159,6 +183,26 @@ else
         AC_CHECK_LIB(dl, dlopen)
         AC_CHECK_LIB(guile, gh_eval_str)
 fi
+
+# Check how to activate Guile readline support:
+
+ACTIVATE_READLINE=""
+AC_MSG_CHECKING(how to activate readline in Guile)
+ractivate="(use-modules (readline-activator)) (activate-readline)"
+if guile -c "$ractivate" >& /dev/null; then
+	AC_MSG_RESULT(readline-activator)
+	ACTIVATE_READLINE="$ractivate"
+else
+	ractivate="(use-modules (ice-9 readline)) (activate-readline)"
+	if guile -c "$ractivate" >& /dev/null; then
+	        AC_MSG_RESULT(ice-9 readline)
+	        ACTIVATE_READLINE="$ractivate"
+	else
+		AC_MSG_RESULT(cannot)
+		ACTIVATE_READLINE=""
+	fi
+fi
+AC_SUBST(ACTIVATE_READLINE)
 
 # ----------------------------------------------------------------------
 # Check for libctl library and files

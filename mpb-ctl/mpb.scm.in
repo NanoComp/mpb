@@ -250,3 +250,13 @@
     (map (lambda (f) (f which-band)) band-funcs)))
 
 ; ****************************************************************
+
+; Load GNU Readline support, for easier command-line editing support.
+; This is not loaded in by default in Guile 1.3.2+ because readline
+; is licensed under the GPL, which would have caused Guile to effectively
+; be under the GPL itself.  However, since the MIT Photonic Bands package
+; is under the GPL too, we can load Readline by default with no problems.
+
+@ACTIVATE_READLINE@  ; command to activate readline is determined by configure
+
+; ****************************************************************
