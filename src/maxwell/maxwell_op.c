@@ -244,7 +244,7 @@ void assign_symmatrix_vector(scalar_complex *newv,
      newv[2].im = matrix.m02 * v0.im + matrix.m12 * v1.im + matrix.m22 * v2.im;
 #endif
 
-#if defined(DEBUG)
+#ifdef DEBUG
      {
 	  real dummy;
 	  dummy = CSCALAR_NORMSQR(newv[0]) + CSCALAR_NORMSQR(newv[1])
