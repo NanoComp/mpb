@@ -1,3 +1,298 @@
+2000-07-09  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/check.ctl,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: Added
+	beginnings of a test suite.
+
+	* /home/a/stevenj/Repository/mpb/utils/mpb-data.1,
+	/home/a/stevenj/Repository/mpb/utils/mpb-data.c: added -e option
+	to specify orientation
+
+2000-07-04  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/user-tutorial.html: fixed
+	typo
+
+2000-07-03  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/maxwell/maxwell_eps.c: Use
+	finer mesh in 2d for normal vector computation (so as not to break
+	90-degree rotational symmetries).  I also need to think about the
+	3d mesh, although it seems to be a hard problem there to come up
+	with general spherically "symmetric" distributions of 3d points.
+	Perhaps some sort of weighted quadrature?
+
+2000-06-14  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/matrixio/matrixio.c: Yikes!
+	Fixed crashing bug!
+
+2000-06-01  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	*
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver_davidson.c:
+	added initial try at Davidson eigensolver
+
+2000-05-31  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/installation.html: added
+	sub-headings in installation section, to draw peoples attention to
+	the two issues they need to consider.  Thanks to Maksim for
+	pointing out that this was easily missed.
+
+2000-05-23  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: Added (index
+	n) substitute for epsilon property of dielectrics.
+
+2000-05-16  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/evectmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/sqmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/Makefile.in,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: added
+	experimental (unused) Davidson eigensolver
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/Makefile.in: updated
+	copyright year
+
+2000-05-11  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: make
+	sure linmin tolerance is no larger than eigensolver tolerance
+
+	* /home/a/stevenj/Repository/mpb/doc/license.html: noted
+	inclusion, with permission, of code from MINPACK-2
+
+	* /home/a/stevenj/Repository/mpb/configure.in,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: improved
+	handling of optional Guile sort routine
+
+2000-05-10  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/linmin.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/linmin.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/minpack2-linmin.c,
+	/home/a/stevenj/Repository/mpb/configure.in,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/src/config.h.in,
+	/home/a/stevenj/Repository/mpb/src/matrices/Makefile.in: Many
+	changes.  Switched to line minimization routine from MINPACK-2,
+	thanks to Jorge More.  Added reorthogonalization option to
+	eigensolver, and renormalization of D, to combat numerical
+	problems.  Added option (not on by default) to dynamically reset
+	CG based on convergence history, and also another unused option to
+	orthogonalize the first step.  Checked to see if Guile provides a
+	sort routine (new in 1.3.4, I think), before using it in
+	mpb.scm.in.  (Or should we do this dynamically?)
+
+2000-05-03  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/analysis-tutorial.html: more
+	clarification
+
+	* /home/a/stevenj/Repository/mpb/doc/tri-rods-ez1.gif,
+	/home/a/stevenj/Repository/mpb/doc/tri-rods-ez2.gif,
+	/home/a/stevenj/Repository/mpb/doc/tri-rods-ez3.gif,
+	/home/a/stevenj/Repository/mpb/doc/tri-rods-ez4.gif,
+	/home/a/stevenj/Repository/mpb/doc/tri-rods-ez5.gif,
+	/home/a/stevenj/Repository/mpb/doc/tri-rods-ez6.gif,
+	/home/a/stevenj/Repository/mpb/doc/tri-rods-ez7.gif,
+	/home/a/stevenj/Repository/mpb/doc/tri-rods-ez8.gif,
+	/home/a/stevenj/Repository/mpb/doc/analysis-tutorial.html,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/examples/tri-rods.ctl: Use
+	fix-efield-phase to get deterministic field pictures.
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: fixed typo
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: documented
+	fix-*field-phase band functions
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: added
+	fix-*field-phase band functions
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: invalidate
+	curfield when eigenstates are recomputed.
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: clarification
+	in fix-field-phase
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: documented
+	fix-field-phase
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: fix scaling of
+	energy total returned by compute-field-energy.
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
+	/home/a/stevenj/Repository/mpb/doc/user-ref.html:
+	compute-field-energy returns total unnormalized energy
+
+2000-05-02  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: documented new
+	"cone" geometric object type.
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: Bug fix in epsilon
+	creation for 2d systems: is now xy plane at z=0, rather than at
+	z=-0.5.
+
+2000-04-04  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: clarified
+	meaning of block size
+
+2000-03-19  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c:
+	increased min. denom., and used max(denom,min) instead of (denom +
+	min).
+
+2000-03-18  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/installation.html: minor
+	updates
+
+	* /home/a/stevenj/Repository/mpb/doc/license.html: slight
+	translation tweak to restore parallel structure
+
+	* /home/a/stevenj/Repository/mpb/tests/eigs_test.c: fixed bug
+
+2000-03-17  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: added
+	display-group-velocities band function
+
+	* /home/a/stevenj/Repository/mpb/tests/eigs_test.c: handled case
+	where eigenvals array passed to preconditioner is NULL.
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: added group
+	velocity calc
+
+	* /home/a/stevenj/Repository/mpb/src/maxwell/maxwell.h,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell_op.c: added
+	maxwell_ucross_op for group velocity calculation
+
+2000-03-16  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/maxwell/maxwell.h,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell_op.c: Separated
+	H_from_e computation into its own subroutine, in preparation for
+	group velocity computation.
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html,
+	/home/a/stevenj/Repository/mpb/doc/user-tutorial.html: added
+	cross-refs
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: documented
+	coordinate conversion functions from libgeom in libctl-1.2
+
+2000-03-15  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: slightly simpler
+	phase-fixing algorithm (don't discriminate between components).
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: removed debugging
+	printf
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: Added
+	fix-field-phase function (currently undocumented), based on a
+	suggestion by Doug Allan.
+
+2000-03-14  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: be sure to do
+	sums, etcetera, over all processors
+
+	* /home/a/stevenj/Repository/mpb/utils/mpb-data.c: bug fix in
+	outputing imag. part range (thanks to Doug Allan).
+
+2000-03-08  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/license.html: clarification
+
+	* /home/a/stevenj/Repository/mpb/doc/license.html: added suggested
+	reference
+
+2000-02-28  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/doc/analysis-tutorial.html:
+	addressed FAQ on fcc lattice units
+
+2000-02-22  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: got
+	rid of debugging printf
+
+2000-02-14  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: sum
+	times over processors, and a couple of other cleanups
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: fixed
+	comment
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h:
+	Corrected operation counts when projecting the preconditioning.
+	Changed some flag names and orderings, and added
+	EIGS_FORCE_APPROX_LINMIN.
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: added
+	documentation for linmin
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c: pass
+	correct U to eigensolver_get_eigenvals_aux
+
+2000-02-13  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h: added
+	adaptive algorithm choice
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c: don't precondition
+	when randomizing fields (it doesn't really seem to help).
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h: Added
+	approximate (2-point) line minimization.  Disabled for now, until
+	the runtime self-optimization code is added.
+
+	* /home/a/stevenj/Repository/mpb/tests/eigs_test.c,
+	/home/a/stevenj/Repository/mpb/tests/maxwell_test.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver_utils.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/scalar.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/sqmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell.c,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell.h,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell_op.c,
+	/home/a/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c,
+	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/Makefile.in,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h:
+	rewritten eigensolver
+
+2000-02-12  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/NEWS: noted change in mpb-data
+
+	* /home/a/stevenj/Repository/mpb/ChangeLog,
+	/home/a/stevenj/Repository/mpb/NEWS,
+	/home/a/stevenj/Repository/mpb/configure.in: bumped version
+
+	* /home/a/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c: Yikes!
+	Bug fix in zparity stuff for even nz!!
+
 2000-02-12  stevenj  <stevenj@alum.mit.edu>
 
 	* /home/a/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c: Yikes!

@@ -1,3 +1,43 @@
+MPB 0.12
+
+  * Added fix-*field-phase functions to allow a deterministic phase
+    in the output fields, thanks to a suggestion by Doug Allan.
+
+  * Added group-velocity calculation functions (display-group-velocities,
+    etcetera).
+
+  * Added -e x,y,z option to mpb-data so that you can now specify
+    an orientation of the output cell (e.g. to make the first axis
+    the 111 direction of an fcc crystal).
+
+  * Added (index n) substitute for epsilon property of dielectrics,
+    equivalent to (epsilon (* n n)).
+
+  * Documented new libgeom features: cone geometric object, coordinate
+    conversion functions (reciprocal->lattice, lattice->cartesian, etc.),
+    and vector/matrix rotation.
+
+  * compute-field-energy now returns the total, unnormalized energy
+    in the corresponding field; combined with compute-energy-in-objects,
+    this makes it easy to do some perturbation theory and related
+    calculations.
+
+  * Eigensolver improvements.  Periodic reorthogonalization and
+    renormalization to combat some numerical problems. New 
+    line-minimization code, included with permission from MINPACK-2
+    by Jorge More.
+
+  * Fixed breaking of 90-degree rotational symmetry-breaking by the mesh
+    in 2d; thanks to Jim West and Doug Allan of Corning for the bug
+    report.  (In general, some symmetry-breaking by the discretization
+    seems hard to avoid, however.)
+
+  * Fixed bug in field output routines that could cause crashes
+    for grid sizes not a multiple of 4.
+
+  * Bug fix in dielectric function construction for 2d systems: we
+    now use the xy plane at z=0 as documented, instead of z=-0.5.
+
 MPB 0.11 (2/12/2000)
 
   * configure script can now detect and link ATLAS 3.0 accelerated BLAS.
