@@ -182,16 +182,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
        sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
        evectmatrix_XeYS(X, Y, Usqrt, 1);
 
-#if 1
-       evectmatrix_XtY(U, X, X);
        A(X, G, Adata);
        evectmatrix_XtY(U, X, G);
-#else
-       sqmatrix_AeBC(UYtAYU, Usqrt, 0, YtAYU, 0);
-       sqmatrix_invert(Usqrt);
-       sqmatrix_AeBC(U, UYtAYU, 0, Usqrt, 1); /* U == 1/sqrt(Yt*Y) * Yt *
-					              A * Y * 1/sqrt(Yt*Y) */
-#endif
 
        sqmatrix_eigensolve(U, eigenvals, YtAYU);
        evectmatrix_XeYS(Y, X, U, 1);
