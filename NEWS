@@ -1,3 +1,6 @@
+  * Fixed compilation --without-hdf5, or when HDF5 is not found.  Thanks
+    to Rajesh Rengarajan for the bug report.
+
 MPB 0.10 (1/28/2000)
 
   * Added mpb-data utility for post-processing data (e.g. for unskewing
