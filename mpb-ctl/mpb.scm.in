@@ -334,10 +334,6 @@
 (define (output-field-z)
   (output-field-to-file 2 filename-prefix))
 
-(define (output-charge-density)
-  (get-charge-density)
-  (output-field-to-file -1 filename-prefix))
-
 (define (output-epsilon)
   (get-epsilon)
   (output-field-to-file -1 filename-prefix))
@@ -598,6 +594,10 @@
   (get-dfield which-band)
   (compute-field-energy)
   (output-field))
+
+(define (output-charge-density which-band)
+  (get-charge-density which-band)
+  (output-field-to-file -1 filename-prefix))
 
 (define (get-poynting which-band)
   (get-efield which-band)                      ; put E in cur-field
