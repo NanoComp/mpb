@@ -20,20 +20,19 @@
 #include <time.h>
 #include <math.h>
 
-#ifdef HAVE_GETOPT
-#ifdef HAVE_GETOPT_H
-#include <getopt.h>
-#elif defined(HAVE_UNISTD_H)
-#include <unistd.h>
-#endif
-#endif
-
 #include <config.h>
 #include <check.h>
 #include <blasglue.h>
 #include <matrices.h>
 #include <eigensolver.h>
 #include <maxwell.h>
+
+#if defined(HAVE_GETOPT_H)
+#  include <getopt.h>
+#endif
+#if defined(HAVE_UNISTD_H)
+#  include <unistd.h>
+#endif
 
 #define NX 32
 #define NY 1
@@ -75,8 +74,8 @@ static real epsilon(real r[3], void *edata_v)
 	 || fabs(r[0]-1.0) < 0.5*edata->eps_high_x)
 	  return edata->eps_high;
 #else
-     if (r[0] < edata->eps_high_x && r[0] >= 0.0 ||
-	  r[0] >= 1.0 && r[0] - 1.0 < edata->eps_high_x)
+     if ((r[0] < edata->eps_high_x && r[0] >= 0.0) ||
+	 (r[0] >= 1.0 && r[0] - 1.0 < edata->eps_high_x))
 	  return edata->eps_high;
 #endif
      return edata->eps_low;
@@ -212,7 +211,7 @@ int main(int argc, char **argv)
      real kvector[3] = {KX,0,0};
      evectmatrix H, Hstart, W[NWORK];
      real *eigvals;
-     int i, j, k, iters;
+     int i, iters;
      int num_iters;
      polarization_t polarization = NO_POLARIZATION;
      int nx = NX, ny = NY, nz = NZ;

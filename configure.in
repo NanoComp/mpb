@@ -57,6 +57,12 @@ fi
 # Add path for config.h to include path:
 CFLAGS="$CFLAGS -I`pwd`/src"
 
+# Add lots of compiler warnings to check for if we are using gcc:
+# (The variable $GCC is set to "yes" by AC_PROG_CC if we are using gcc.)
+if test "$GCC" = "yes"; then
+	CFLAGS="$CFLAGS -Wall -W -Wcast-qual -Wpointer-arith -Wcast-align -pedantic"
+fi
+
 dnl Checks for libraries.
 AC_CHECK_LIB(m, sqrt)
 

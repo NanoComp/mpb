@@ -213,7 +213,8 @@ void matrixio_write_real_data(matrixio_id data_id,
      int rank;
      hsize_t *dims, *maxdims;
      hid_t space_id, type_id, mem_space_id;
-     hsize_t *start, *strides, *count;
+     hssize_t *start;
+     hsize_t *strides, *count;
      int i;
 
      /*******************************************************************/
@@ -241,7 +242,7 @@ void matrixio_write_real_data(matrixio_id data_id,
      /* Before we can write the data to the data set, we must define
 	the dimensions and "selections" of the arrays to be read & written: */
 
-     start = (hsize_t *) malloc(sizeof(hsize_t) * rank);
+     start = (hssize_t *) malloc(sizeof(hssize_t) * rank);
      strides = (hsize_t *) malloc(sizeof(hsize_t) * rank);
      count = (hsize_t *) malloc(sizeof(hsize_t) * rank);
      CHECK(start && strides && count, "out of memory!");
@@ -286,7 +287,8 @@ void matrixio_read_real_data(matrixio_id id,
 			     real *data)
 {
      hid_t space_id, type_id, data_id, mem_space_id;
-     hsize_t *dims_copy, *maxdims, *start, *strides, *count;
+     hssize_t *start;
+     hsize_t *dims_copy, *maxdims, *strides, *count;
      int i;
 
      CHECK(rank > 0, "non-positive rank");
@@ -324,7 +326,7 @@ void matrixio_read_real_data(matrixio_id id,
      /* Before we can read the data from the data set, we must define
 	the dimensions and "selections" of the arrays to be read & written: */
 
-     start = (hsize_t *) malloc(sizeof(hsize_t) * rank);
+     start = (hssize_t *) malloc(sizeof(hssize_t) * rank);
      strides = (hsize_t *) malloc(sizeof(hsize_t) * rank);
      count = (hsize_t *) malloc(sizeof(hsize_t) * rank);
      CHECK(start && strides && count, "out of memory!");

@@ -26,8 +26,13 @@
 
 void evectmatrixio_writeall_raw(const char *filename, evectmatrix a)
 {
-     int dims[3] = {a.N, a.c, a.p*SCALAR_NUMVALS}, start[3] = {a.Nstart, 0, 0};
+     int dims[3], start[3] = {0, 0, 0};
      matrixio_id file_id, data_id;
+     
+     dims[0] = a.N;
+     dims[1] = a.c;
+     dims[2] = a.p * SCALAR_NUMVALS;
+     start[0] = a.Nstart;
 
      file_id = matrixio_create(filename);     
      data_id = matrixio_create_dataset(file_id, "rawdata", NULL, 3, dims);
@@ -41,8 +46,12 @@ void evectmatrixio_writeall_raw(const char *filename, evectmatrix a)
 
 void evectmatrixio_readall_raw(const char *filename, evectmatrix a)
 {
-     int dims[3] = {a.N, a.c, a.p*SCALAR_NUMVALS};
+     int dims[3];
      matrixio_id file_id;
+
+     dims[0] = a.N;
+     dims[1] = a.c;
+     dims[2] = a.p * SCALAR_NUMVALS;
 
      file_id = matrixio_open(filename);     
      

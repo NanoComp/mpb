@@ -35,7 +35,7 @@ GEOM_SCM = $(LIBCTL_DIR)/utils/libgeom/geom.scm
 
 CC = @CC@
 CFLAGS = @CFLAGS@ `guile-config compile` \
-         -I../src/util -I../src/matrices -I../src/maxwell
+         -I../src/util -I../src/matrices -I../src/matrixio -I../src/maxwell
 
 ##############################################################################
 

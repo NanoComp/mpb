@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <ctype.h>
 
 /* GNU Guile library header file: */
 #include <guile/gh.h>
@@ -35,6 +36,7 @@
 #include <check.h>
 #include <blasglue.h>
 #include <matrices.h>
+#include <matrixio.h>
 #include <eigensolver.h>
 #include <maxwell.h>
 
@@ -578,7 +580,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 
      if (!curfield || !strchr("DH", curfield_type)) {
           fprintf(stderr, "The D or H energy density must be loaded first.\n");
-          return;
+          return 0.0;
      }
 
      N = mdata->fft_output_size;
@@ -602,7 +604,11 @@ void output_field_extended(vector3 copiesv)
 {
      char fname[100], description[100];
      int dims[3], local_nx, local_x_start;
-     int copies[3] = { copiesv.x, copiesv.y, copiesv.z };
+     int copies[3];
+
+     copies[0] = copiesv.x;
+     copies[1] = copiesv.y;
+     copies[2] = copiesv.z;
 
      if (!curfield) {
 	  fprintf(stderr, 
@@ -613,7 +619,7 @@ void output_field_extended(vector3 copiesv)
      /* this will need to be fixed for MPI, where we transpose the data,
 	and also for real-to-complex calculations: */
 #if defined(HAVE_MPI) || ! defined(SCALAR_COMPLEX)
-#    broken, please fix
+#  error broken, please fix
 #endif
      dims[0] = mdata->nx;
      dims[1] = mdata->ny;
@@ -670,13 +676,13 @@ number compute_energy_in_object_list(geometric_object_list objects)
 
      if (!curfield || !strchr("DH", curfield_type)) {
           fprintf(stderr, "The D or H energy density must be loaded first.\n");
-          return;
+          return 0.0;
      }
 
      /* this will need to be fixed for MPI, where we transpose the data,
 	and also for real-to-complex calculations: */
 #if defined(HAVE_MPI) || ! defined(SCALAR_COMPLEX)
-#    broken, please fix
+#  error broken, please fix
 #endif
      n1 = mdata->nx;
      n2 = mdata->ny;
@@ -688,8 +694,9 @@ number compute_energy_in_object_list(geometric_object_list objects)
      for (i = 0; i < n1; ++i)
 	  for (j = 0; j < n2; ++j)
 	       for (k = 0; k < n3; ++k) {
-		    vector3 p = { i * s1, j * s2, k * s3 };
+		    vector3 p;
 		    int n;
+		    p.x = i * s1; p.y = j * s2; p.z = k * s3;
 		    for (n = objects.num_items - 1; n >= 0; --n)
 			 if (point_in_periodic_objectp(p, objects.items[n])) {
 			      energy_sum += energy[(i*n2 + j)*n3 + k];

@@ -33,9 +33,13 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				  int num_bands,
 				  int num_fft_bands)
 {
-     int n[3] = {nx, ny, nz}, rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3, i;
+     int n[3], rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
      maxwell_data *d = 0;
      int fft_data_size;
+
+     n[0] = nx;
+     n[1] = ny;
+     n[2] = nz;
 
 #ifndef HAVE_FFTW
 #  error Non-FFTW FFTs are not currently supported.
@@ -393,7 +397,10 @@ void set_maxwell_dielectric(maxwell_data *md,
      int i, j, k;
      int mesh_prod = mesh_size[0] * mesh_size[1] * mesh_size[2];
      real eps_inv_total = 0.0;
-     int nx, ny, nz, local_ny, local_y_start, local_x_end;
+     int nx, ny, nz;
+#ifdef HAVE_MPI
+     int local_ny, local_y_start;
+#endif
 
      nx = md->nx; ny = md->ny; nz = md->nz;
 

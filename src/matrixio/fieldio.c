@@ -35,11 +35,12 @@ void fieldio_write_complex_field(scalar_complex *field,
 				 int local_nx, int local_x_start,
 				 const int copies[3],
 				 const real kvector[3],
-				 const real R[3][3],
+				 real R[3][3],
 				 const char *fname,
 				 const char *description)
 {
      int i, j, k, component, ri_part;
+     int cpies[3];
      int total_dims[3], local_dims[3], start[3] = {0,0,0}, localN;
      real s[3]; /* the step size between grid points dotted with k */
      char *fname2, name[] = "imaginary part of x component";
@@ -47,8 +48,8 @@ void fieldio_write_complex_field(scalar_complex *field,
      real lastphase = 0.0;
 
      for (i = 0; i < 3; ++i) {
-	  copies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
-	  total_dims[i] = dims[i] * copies[i];
+	  cpies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
+	  total_dims[i] = dims[i] * cpies[i];
 	  local_dims[i] = dims[i];
      }
      rank = total_dims[2] == 1 ? (total_dims[1] == 1 ? 1 : 2) : 3;
@@ -107,9 +108,9 @@ void fieldio_write_complex_field(scalar_complex *field,
 	       }
 
      /* loop over copies, multiplying by phases and writing out hyperslabs: */
-     for (i = 0; i < copies[0]; ++i)
-	  for (j = 0; j < copies[1]; ++j)
-	       for (k = 0; k < copies[2]; ++k) {
+     for (i = 0; i < cpies[0]; ++i)
+	  for (j = 0; j < cpies[1]; ++j)
+	       for (k = 0; k < cpies[2]; ++k) {
 		    int n;
 		    real phase = 
 			 s[0]*i*dims[0] + s[1]*j*dims[1] + s[2]*k*dims[2];
@@ -174,12 +175,12 @@ void fieldio_write_real_vals(real *vals,
 			     const char *description)
 {
      int i, j, k;
-     int total_dims[3], local_dims[3], start[3] = {0,0,0};
+     int cpies[3], total_dims[3], local_dims[3], start[3] = {0,0,0};
      matrixio_id file_id, data_id;
 
      for (i = 0; i < 3; ++i) {
-	  copies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
-	  total_dims[i] = dims[i] * copies[i];
+	  cpies[i] = MAX2(copies[i], 1); /* make sure copies are non-zero */
+	  total_dims[i] = dims[i] * cpies[i];
 	  local_dims[i] = dims[i];
      }
      rank = total_dims[2] == 1 ? (total_dims[1] == 1 ? 1 : 2) : 3;
@@ -191,9 +192,9 @@ void fieldio_write_real_vals(real *vals,
 				       rank, total_dims);
 
      /* loop over copies, writing out hyperslabs: */
-     for (i = 0; i < copies[0]; ++i)
-	  for (j = 0; j < copies[1]; ++j)
-	       for (k = 0; k < copies[2]; ++k) {
+     for (i = 0; i < cpies[0]; ++i)
+	  for (j = 0; j < cpies[1]; ++j)
+	       for (k = 0; k < cpies[2]; ++k) {
 		    /* start[] is the beginning of this hyperslab: */
 		    start[0] = local_x_start + i * dims[0];
 		    start[1] = j * dims[1];
