@@ -64,6 +64,12 @@
 #  endif
 #endif
 
+#ifdef SCALAR_SINGLE_PREC
+#  define FR(x,X) FORTRANIZE(s##x, S##X)
+#else
+#  define FR(x,X) FORTRANIZE(d##x, D##X)
+#endif
+
 /*************************************************************************/
 
 /* Prototypes for BLAS and LAPACK functions.  Note that we need to
@@ -101,8 +107,8 @@ extern void F(sytri,SYTRI) (char *, int *, scalar *, int *,
 			    int *, scalar *, int *);
 extern void F(heev,HEEV) (char *, char *, int *, scalar *, int *, real *,
 			  scalar *, int *, real *, int *);
-extern void F(syev,SYEV) (char *, char *, int *, scalar *, int *, real *,
-			  scalar *, int *, int *);
+extern void FR(syev,SYEV) (char *, char *, int *, scalar *, int *, real *,
+			   scalar *, int *, int *);
 
 #ifdef __cplusplus
 }                               /* extern "C" */
@@ -266,6 +272,19 @@ void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
 #else
      F(syev,SYEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
 #endif
+
+     CHECK(info >= 0, "invalid argument in heev");
+     CHECK(info <= 0, "failure to converge in heev");
+}
+
+void lapackglue_syev(char jobz, char uplo, int n, real *A, int fdA, 
+		     real *w, real *work, int lwork)
+{
+     int info;
+
+     uplo = uplo == 'U' ? 'L' : 'U';
+
+     F(syev,SYEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
 
      CHECK(info >= 0, "invalid argument in heev");
      CHECK(info <= 0, "failure to converge in heev");
