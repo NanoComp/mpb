@@ -1,3 +1,5 @@
+MPB 0.13 (1/7/2001)
+
   * Can now take advantage of inversion symmetry in the geometry, gaining
     at least a factor of two in speed and a factor of two in memory.
     To use this, you configure MPB with --with-inv-symmetry; the resulting
@@ -11,6 +13,9 @@
   * Improved handling of the singular (zero-frequency) solutions at
     the Gamma (k=0) point.  This k point should no longer converge
     slowly (or cause additional problems in the targeted eigensolver).
+
+  * Manual updates: please see new referencing suggestions; expanded table
+    of contents; we now use more conventional units in diamond/fcc example.
 
   * You can now pass a "thunk" (function of no arguments) to run, and
     it will be evaluated once per k-point (instead of once per band
@@ -34,7 +39,8 @@
 
   * Used improved spherical-quadrature formula in computing the
     effective dielectric tensor in 3d; this should increase accuracy
-    somewhat at lower grid resolutions.
+    somewhat at lower grid resolutions.  Thanks to Doug Allan for
+    helpful discussions.
 
 MPB 0.12 (7/9/2000)
 
