@@ -211,11 +211,11 @@ void init_params(void)
      matrix3x3_to_arr(R, Rm);
      matrix3x3_to_arr(G, Gm);
 
-     printf("\nGeometric objects:\n");
+     printf("Geometric objects:\n");
      for (i = 0; i < geometry.num_items; ++i)
 	  display_object_info(geometry.items[i]);
 
-     printf("\n%d k-points:\n", k_points.num_items);
+     printf("%d k-points:\n", k_points.num_items);
      for (i = 0; i < k_points.num_items; ++i)
 	  printf("     (%g,%g,%g)\n", k_points.items[i].x,
 		 k_points.items[i].y, k_points.items[i].z);
