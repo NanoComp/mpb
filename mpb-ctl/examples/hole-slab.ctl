@@ -36,9 +36,10 @@
 (define K (vector3 (/ -3) (/ 3) 0))
 
 (define-param only-K false) ; run with only-K=true to only do this k-point
+(define-param k-interp 4)   ; the number of k points to interpolate
 (if only-K
     (set! k-points (list K))
-    (set! k-points (interpolate 4 (list Gamma M K Gamma))))
+    (set! k-points (interpolate k-interp (list Gamma M K Gamma))))
 
 (set-param! resolution (vector3 32 32 16))
 (set-param! num-bands 9)
