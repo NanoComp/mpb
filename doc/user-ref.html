@@ -1252,13 +1252,13 @@ perturbation-theory calculations.
 that returns a number (possibly complex) where <code><i>F</i></code>
 is the complex field vector at the given point.
 
-<p><dt><code>(get-epsilon-point <i>r</i>)
+<p><dt><code>(get-epsilon-point <i>r</i>)</code>
 <dd>Given a position vector <code><i>r</i></code> (in lattice
 coordinates), return the interpolated dielectric constant at that
 point.  (Since MPB uses a an effective dielectric tensor internally,
 this actually returns the mean dielectric constant.)
 
-<p><dt><code>(get-epsilon-inverse-tensor-point <i>r</i>)
+<p><dt><code>(get-epsilon-inverse-tensor-point <i>r</i>)</code>
 <dd>Given a position vector <code><i>r</i></code> (in lattice
 coordinates), return the interpolated inverse dielectric tensor (a 3x3
 matrix) at that point.  (Near a dielectric interface, the effective
@@ -1267,15 +1267,15 @@ dielectrics; see the <a href="developer.html#epsilon">epsilon
 overview</a> for more information.)  The returned matrix may be
 complex-Hermetian if you are employing magnetic materials.
 
-<p><dt><code>(get-energy-point <i>r</i>)
+<p><dt><code>(get-energy-point <i>r</i>)</code>
 <dd>Given a position vector <code><i>r</i></code> (in lattice
 coordinates), return the interpolated energy density at that point.
 
-<p><dt><code>(get-field-point <i>r</i>)
+<p><dt><code>(get-field-point <i>r</i>)</code>
 <dd>Given a position vector <code><i>r</i></code> (in lattice
 coordinates), return the interpolated (complex) field vector at that point.
 
-<p><dt><code>(get-bloch-field-point <i>r</i>)
+<p><dt><code>(get-bloch-field-point <i>r</i>)</code>
 <dd>Given a position vector <code><i>r</i></code> (in lattice
 coordinates), return the interpolated (complex) Bloch field vector at that
 point (this is the field without the exp(ikx) envelope).
