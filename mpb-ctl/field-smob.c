@@ -326,7 +326,7 @@ static cvector3 cvector3_conj(cvector3 c)
      return cc;
 }
 
-/* Compute the integral of f({fields}) over the cell. */
+/* Compute the integral of f(r, {fields}) over the cell. */
 cnumber integrate_fieldL(function f, SCM_list fields)
 {
      int i, j, k, n1, n2, n3, n_other, n_last, rank, last_dim;
@@ -465,6 +465,9 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 	  {
 	       list arg_list = SCM_EOL;
 	       cnumber integrand;
+	       vector3 p;
+
+	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
 
 	       for (ifield = fields.num_items - 1; ifield >= 0; --ifield) {
 		    SCM item;
@@ -479,6 +482,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 		    }
 		    arg_list = gh_cons(item, arg_list);
 	       }
+	       arg_list = gh_cons(vector32scm(p), arg_list);
 	       integrand = ctl_convert_cnumber_to_c(gh_apply(f, arg_list));
 	       integral.re += integrand.re;
 	       integral.im += integrand.im;
@@ -496,6 +500,13 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 #  endif
 		    
 		    if (last_index != 0 && 2*last_index != last_dim) {
+			 int i2c, j2c, k2c;
+			 i2c = i2 ? (n1 - i2) : 0;
+                         j2c = j2 ? (n2 - j2) : 0;
+			 k2c = k2 ? (n3 - k2) : 0;
+                         p.x = i2c * s1 - c1;
+                         p.y = j2c * s2 - c2;
+			 p.z = k2c * s3 - c3;
 			 arg_list = SCM_EOL;
 			 for (ifield = fields.num_items - 1; 
 			      ifield >= 0; --ifield) {
@@ -513,6 +524,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 			      }
 			      arg_list = gh_cons(item, arg_list);
 			 }
+			 arg_list = gh_cons(vector32scm(p), arg_list);
 			 integrand = 
 			      ctl_convert_cnumber_to_c(gh_apply(f, arg_list));
 			 integral.re += integrand.re;
