@@ -86,16 +86,16 @@ if test "$GCC" = "yes"; then
 	CFLAGS="$CFLAGS -Wall -W -Wbad-function-cast -Wcast-qual -Wpointer-arith -Wcast-align -pedantic"
 fi
 
-# ----------------------------------------------------------------------
+##############################################################################
 #                       Checks for libraries:
-# ----------------------------------------------------------------------
+##############################################################################
 
 AC_ARG_WITH(efence, [  --with-efence           use ElectricFence library], ok=$withval, ok=no)
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(efence, malloc)
 fi
 
-# ----------------------------------------------------------------------
+##############################################################################
 AC_CHECK_LIB(m, sqrt)
 
 # If we have a Fortran compiler, link to its libraries, since these
@@ -105,12 +105,12 @@ if test x != x"$F77"; then
 	LIBS="$LIBS $FLIBS"
 fi
 
-# ----------------------------------------------------------------------
+##############################################################################
 # In principle, we should abort if some of the following libraries are
 # missing, or perhaps only compile some of the subdirectories.  For now,
 # though, we do nothing (and wait for the compilation errors).
 
-# ----------------------------------------------------------------------
+##############################################################################
 # Check for FFTW libraries
 if test "$enable_single" = "yes"; then
 	AC_CHECK_LIB(sfftw, fftw)
@@ -131,7 +131,7 @@ if test x = x"`echo $LIBS | egrep 'l[[ds]]fftw'`"; then
 	fi
 fi
 
-# ----------------------------------------------------------------------
+##############################################################################
 # Checks for BLAS libraries:
 
 # Generic BLAS:
@@ -140,7 +140,7 @@ AC_CHECK_LIB(blas, main)
 # remember current libs, so we can check if any libs were found below.
 save_LIBS="$LIBS"
 
-AC_ARG_WITH(fastblas, [  --without-fastblas      don't use accelerated BLAS], ok=$withval, ok=yes)
+AC_ARG_WITH(fastblas, [  --without-fastblas      do not use accelerated BLAS], ok=$withval, ok=yes)
 if test "$ok" = "no"; then
 	save_LIBS="xxxxxxxx"
 elif test "$ok" != "yes"; then
@@ -203,7 +203,7 @@ if test "$save_LIBS" = "$LIBS"; then
 	AC_CHECK_LIB(blasppro1.1o,main)
 fi
 
-# ----------------------------------------------------------------------
+##############################################################################
 # Checks for LAPACK library
 AC_CHECK_LIB(lapack, main)
 
@@ -212,7 +212,7 @@ if test x != x"`echo $LIBS | grep atlas`"; then
 	AC_CHECK_LIB(atlaslapack, main)
 fi
 
-# ----------------------------------------------------------------------
+##############################################################################
 # Check for MPI library
 
 AC_ARG_WITH(mpi, [  --with-mpi          enable MPI parallelization], with_mpi=$withval, with_mpi=no)
@@ -228,7 +228,7 @@ if test "x$with_mpi" = "xyes"; then
         fi
 
         if test x = x"$MPILIBS"; then
-                AC_MSG_ERROR(couldn't find mpi library for --with-mpi)
+                AC_MSG_ERROR(could not find mpi library for --with-mpi)
 	fi
 
 	LIBS="$MPILIBS $LIBS"
@@ -269,9 +269,9 @@ if test "x$with_mpi" = "xyes"; then
 	                     # how to run mpb-mpi in general
 fi
 
-# ----------------------------------------------------------------------
+##############################################################################
 # Check for HDF5 library
-AC_ARG_WITH(hdf5, [  --without-hdf5          don't use HDF5 output], ok=$withval, ok=yes)
+AC_ARG_WITH(hdf5, [  --without-hdf5          do not use HDF5 output], ok=$withval, ok=yes)
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(z, deflate)
 	AC_CHECK_LIB(hdf5, H5Pcreate, [
@@ -292,7 +292,7 @@ if test "$ok" = "yes"; then
 	fi
 fi
 
-# ----------------------------------------------------------------------
+##############################################################################
 # Check for Guile library and flags:
 
 AC_CHECK_PROG(HAVE_GUILE_CONFIG, guile-config, yes, no)
@@ -330,7 +330,7 @@ else
 fi
 AC_SUBST(ACTIVATE_READLINE)
 
-# ----------------------------------------------------------------------
+##############################################################################
 # Check for libctl library and files
 
 AC_ARG_WITH(libctl, [  --with-libctl=<dir>     specify libctl directory], ok=$withval, ok=yes)
@@ -367,7 +367,7 @@ AC_SUBST(GEN_CTL_IO)
 # check for -lctl:
 AC_CHECK_LIB(ctl, ctl_get_vector3)
 
-# ----------------------------------------------------------------------
+##############################################################################
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h getopt.h)
@@ -379,7 +379,7 @@ AC_C_INLINE
 # Checks for library functions.
 AC_CHECK_FUNCS(getopt strncmp)
 
-# ----------------------------------------------------------------------
+##############################################################################
 # Check to see if calling Fortran functions (in particular, the BLAS
 # complex dot product functions) works from C:
 
@@ -408,19 +408,19 @@ if test "$ok" = "no"; then
 	AC_DEFINE(NO_FORTRAN_FUNCTIONS)
 fi
 
-# ----------------------------------------------------------------------
+##############################################################################
 
 # grab the various EIGS_ flags from eigensolver.h and substitute them
-# into mpb.scm.in (aren't regular expressions fun?):
+# into mpb.scm.in (are not regular expressions fun?):
 # (note that autoconf gets unhappy if we have newlines; we must delete them)
 EIGS_FLAGS_SCM=`grep '#define EIGS_' $srcdir/src/matrices/eigensolver.h |sed 's/#define \([A-Za-z0-9_]*\) (1<<\([0-9]*\))/(define \1 (pow2 \2))/' |sed 's/#define \([A-Za-z0-9_]*\) (\(.*\))/(define \1 (+ \2))/' |sed 's/ *| */ /g' | tr -d '\n'`
 AC_SUBST(EIGS_FLAGS_SCM)
 
-# ----------------------------------------------------------------------
+##############################################################################
 
 # Find a shell that supports job control, for mpb-split:
 AC_PATH_PROG(SH_JOB, bash ksh ash bsh, sh)
 
-# ----------------------------------------------------------------------
+##############################################################################
 
 AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm mpb-ctl/mpb-split utils/Makefile)
