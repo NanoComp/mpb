@@ -5,11 +5,11 @@ dnl use MPI (Message Passing Interface), a standard API for
 dnl parallel process communication (see http://www-unix.mcs.anl.gov/mpi/)
 dnl
 dnl On success, it sets the MPICC, MPICXX, or MPIF77 output variable to
-dnl the name of the MPI compiler (depending upon the current language).
+dnl the name of the MPI compiler, depending upon the current language.
 dnl (This may just be $CC/$CXX/$F77, but is more often something like
-dnl 'mpicc').  It also sets MPILIBS to any libraries that are needed for
-dnl linking MPI (e.g. -lmpi, if a special MPICC/MPICXX/MPIF77 was not
-dnl found.)
+dnl mpicc/mpiCC/mpif77.)  It also sets MPILIBS to any libraries that are
+dnl needed for linking MPI (e.g. -lmpi, if a special MPICC/MPICXX/MPIF77
+dnl was not found).
 dnl
 dnl If you want to compile everything with MPI, you should set:
 dnl	CC="$MPICC" #OR# CXX="$MPICXX" #OR# F77="$MPIF77"
@@ -23,7 +23,7 @@ dnl library is found, and ACTION-IF-NOT-FOUND is a list of commands
 dnl to run it if it is not found.  If ACTION-IF-FOUND is not specified,
 dnl the default action will define HAVE_MPI.
 dnl
-dnl @version $Id: acx_mpi.m4,v 1.1 2002/09/24 19:46:18 stevenj Exp $
+dnl @version $Id: acx_mpi.m4,v 1.2 2002/09/24 19:48:10 stevenj Exp $
 dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
 
 AC_DEFUN([ACX_MPI], [
