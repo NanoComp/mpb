@@ -116,6 +116,49 @@
   (compute-energy-in-object-list objects))
 
 ; ****************************************************************
+; Functions to compute and output gaps, given the lists of frequencies
+; computed at each k point.
+
+; The band-range-data is a list if (min . max) pairs, with each pair
+; describing the frequency range of a band.  Here, we update this data
+; with a new list of band frequencies, and return the new data.  If
+; band-range-data is null or too short, the needed entries will be
+; created.
+(define (update-band-range-data band-range-data freqs)
+  (if (null? freqs)
+      '()
+      (let ((br (if (null? band-range-data)
+		    (cons infinity (- infinity))
+		    (car band-range-data)))
+	    (br-rest (if (null? band-range-data) '() (cdr band-range-data))))
+	(cons (cons (min (car freqs) (car br))
+		    (max (car freqs) (cdr br)))
+	      (update-band-range-data br-rest (cdr freqs))))))
+
+; Output any gaps in the given band ranges, and return a list
+; of the gaps as a list of (percent freq-min freq-max) lists.
+(define (output-gaps band-range-data)
+  (define (ogaps br-cur br-rest i)
+    (if (null? br-rest)
+	'()
+	(if (>= (cdr br-cur) (caar br-rest))
+	    (ogaps (car br-rest) (cdr br-rest) (+ i 1))
+	    (let ((gap-size (/ (* 200 (- (caar br-rest) (cdr br-cur)))
+			       (+ (caar br-rest) (cdr br-cur)))))
+	      (display-many "Gap from band " i " (" (cdr br-cur)
+			    ") to band " (+ i 1) " (" (caar br-rest) "), "
+			    gap-size "%\n")
+	      (cons (list gap-size (cdr br-cur) (caar br-rest))
+		    (ogaps (car br-rest) (cdr br-rest) (+ i 1)))))))
+  (if (null? band-range-data)
+      '()
+      (ogaps (car band-range-data) (cdr band-range-data) 1)))
+
+; variable holding the current list of gaps, in the format returned
+; by output-gaps, above
+(define gap-list '())
+
+; ****************************************************************
 
 ; (run) functions, to do vanilla calculations.  They all take zero or
 ; more "band functions."  Each function should take a single
@@ -123,16 +166,19 @@
 ; every k point.  These are typically used to output the bands.
 
 (define (run-polarization p . band-functions)
+  (define band-range-data '())
   (set! interactive false)  ; don't be interactive if we call (run)
   (init-params true)
   (set-polarization p)
   (output-epsilon)          ; output epsilon immediately
   (map (lambda (k)
 	 (solve-kpoint k)
+	 (set! band-range-data (update-band-range-data band-range-data freqs))
 	 (map (lambda (f)
 		(do ((band 0 (+ band 1))) ((= band num-bands)) (f band)))
 	      band-functions))
        k-points)
+  (set! gap-list (output-gaps band-range-data))
   (display "done.\n"))
 
 (define (run . band-functions)
