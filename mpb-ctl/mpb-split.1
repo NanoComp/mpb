@@ -1,0 +1,80 @@
+.\" Copyright (C) 1999, 2000, 2001, 2002, Massachusetts Institute of Technology.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+.\"
+.TH MPB 1 "March 13, 2002" "MPB" "MIT Photonic-Bands Package"
+.SH NAME
+mpb-split \- compute eigenmodes with MPB using multiple processes
+.SH SYNOPSIS
+.B mpb-split
+\fINUM-SPLIT\fR [\fIDEFINITION\fR]... [\fICTLFILE\fR]...
+.SH DESCRIPTION
+.PP
+." Add any additional description here
+mpb-split is a parallelizing front-end to MIT Photonic Bands (MPB).
+For a computation with several k points, it splits the list of k
+points over multiple processes.  Of course, this will only benefit you
+on a system where different processes will run on different
+processors, such as an SMP or a cluster with automatic process
+migration (e.g. MOSIX). mpb-split is actually a trivial shell script,
+though, so you can easily modify it if you need to use a special
+command to launch processes on other processors/machines.
+
+MIT Photonic Bands (MPB) is a free program to compute the band
+structures (dispersion relations) and electromagnetic modes of
+periodic dielectric structures, and is applicable both to photonic
+crystals (photonic band-gap materials) and a wide range of other
+optical problems.
+.PP
+More information on MPB, including a detailed manual, can be found
+online at the MPB home page:
+.I http://ab-initio.mit.edu/mpb/
+.PP
+A typical invocation of
+.I mpb-split
+looks like:
+.PP
+.Vb 1
+\&    mpb-split num-split foo.ctl >& foo.out
+.Ve
+.PP
+This causes
+.I mpb-split
+to process the control file foo.ctl, divide the k points into
+. B num-split
+equal chunks, run each list in a separate process with MPB, and
+redirect the output (in order) to foo.out.  (One typically redirects
+output to a file, as the output is verbose and contains a number of
+comma-delimited datasets that one can extract by grepping.)
+.PP
+Overall, the behavior and arguments are the same as for
+.I mpb
+except that the first argument must be the integer \fBnum-split\fR.
+.PP
+What 
+.I mpb-split
+technically does is to set the MPB variable k-split-num to 
+.B num-split
+and k-split-index to the index (starting with 0) of the chunk for each
+process. If you want, you can use these variables to divide the
+problem in some other way and then reset them to 1 and 0,
+respectively.
+.SH BUGS
+Send bug reports to S. G. Johnson, stevenj@alum.mit.edu.
+.SH AUTHORS
+Written by Steven G. Johnson.  Copyright (c) 1999, 2000, 2001, 2002 by
+the Massachusetts Institute of Technology.
+.SH "SEE ALSO"
+mpb(1), mpb-data(1)
