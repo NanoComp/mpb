@@ -1,3 +1,9 @@
+  * Can now take advantage of inversion symmetry in the geometry, gaining
+    at least a factor of two in speed and a factor of two in memory.
+    To use this, you configure MPB with --with-inv-symmetry; the resulting
+    executable is installed as "mpbi" and only supports inversion symmetry,
+    so you will usually want to install the ordinary MPB as well.
+
   * Added new eigensolver-block-size input variable, so that MPB can
     optionally solve for only a few bands at a time instead of all
     at once, reducing memory requirements and often increasing speed.
