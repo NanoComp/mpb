@@ -597,6 +597,7 @@
     (field-load exh)))
 (define (output-poynting which-band)
   (get-poynting which-band)
+  (output-field-to-file -1 (string-append filename-prefix "flux.")))
 (define (output-poynting-x which-band)
   (get-poynting which-band)
   (output-field-to-file 0 (string-append filename-prefix "flux.")))
