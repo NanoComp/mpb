@@ -39,7 +39,7 @@ MY_LIBS = ../src/maxwell/maxwell.a \
 MY_LDFLAGS =         # extra -L flags go here
 MY_CPPFLAGS = -I. -I../src/util -I../src/matrices -I../src/matrixio \
               -I../src/maxwell
-MY_DEFS =            # extra -D define flags go here
+MY_DEFS = -DHAVE_CTL_HOOKS=1 # so that main() calls our ctl_{start,stop}_hook()
 
 # The following variables should be detected and set by autoconf:
 
