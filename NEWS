@@ -1,3 +1,7 @@
+MPB 1.4.1 (9/13/2002)
+
+  * Fixed compatibility problems with versions of Guile prior to 1.4.
+
 MPB 1.4 (9/12/2002)
 
   * New find-k routine to find k as a function of frequency, instead of

@@ -1,3 +1,52 @@
+2002-09-13  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/field-smob.c: whoops
+
+	* configure.ac, mpb-ctl/my-smob.h: guile-1.3.4 has
+	scm_make_smob_type but not SCM_SMOB_PREDICATE (sigh)
+
+	* mpb-ctl/field-smob.c, mpb-ctl/matrix-smob.c: whoops, fix guile
+	1.3 smob support
+
+	* NEWS: dated release
+
+	* mpb-ctl/mpb.scm.in: whoops
+
+2002-09-11  Steven G. Johnson  <stevenj@ab-initio>
+
+	* doc/user-ref.html: whoops
+
+	* doc/user-ref.html, mpb-ctl/field-smob.c, mpb-ctl/fields.c,
+	mpb-ctl/mpb.scm.in: made Bloch phase handling more sane,
+	maybe...maybe I should just bite the bullet and include the phase
+	in the loaded fields, at some point?
+
+	* mpb-ctl/fields.c: whoops, no kvector for c fields
+
+	* mpb-ctl/mpb.scm.in, mpb-ctl/my-smob.h: whoops
+
+	* configure.ac: bumped version
+
+	* configure.ac, mpb-ctl/Makefile.in, mpb-ctl/field-smob.c,
+	mpb-ctl/field-smob.h, mpb-ctl/matrix-smob.c,
+	mpb-ctl/matrix-smob.h, mpb-ctl/my-smob.h, mpb-ctl/smob.h: use new
+	Guile smob functions
+
+	* mpb-ctl/mpb.scm.in: whoops
+
+	* NEWS, TODO, doc/index.html, doc/user-ref.html,
+	mpb-ctl/matrix-smob.c, mpb-ctl/mpb.scm.in: documented and cleaned
+	up new interfaces
+
+2002-09-10  Steven G. Johnson  <stevenj@ab-initio>
+
+	* src/matrixio/evectmatrixio.c: include SCALAR_NUMVALS in c
+	dimension, not p dimension
+
+2002-09-06  Steven G. Johnson  <stevenj@ab-initio>
+
+	* ChangeLog: updated
+
 2002-08-27  Steven G. Johnson  <stevenj@ab-initio>
 
 	* mpb-ctl/examples/dos.scm: comment
