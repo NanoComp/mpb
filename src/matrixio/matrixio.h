@@ -57,6 +57,7 @@ extern void evectmatrixio_readall_raw(const char *filename, evectmatrix a);
 extern void fieldio_write_complex_field(scalar_complex *field,
 					int rank,
 					const int dims[3],
+					int which_component,
 					int local_nx, int local_x_start,
 					const int copies[3],
 					const real kvector[3],

@@ -703,8 +703,9 @@ static char *strcat_new(const char *s1, const char *s2)
 /* given the field in curfield, store it to HDF (or whatever) using
    the matrixio (fieldio) routines.  Allow the user to specify that
    the fields be periodically extended, so that several lattice cells
-   are stored. */
-void output_field_extended(vector3 copiesv)
+   are stored.  Also allow the component to be specified
+   (which_component 0/1/2 = x/y/z, -1 = all) for vector fields. */
+void output_field_extended(vector3 copiesv, int which_component)
 {
      char fname[100], *fname2, description[100];
      int dims[3], local_nx, local_x_start;
@@ -739,7 +740,7 @@ void output_field_extended(vector3 copiesv)
 		  freqs.items[curfield_band - 1]);
 	  fname2 = strcat_new(filename_prefix, fname);
 	  printf("Outputting fields to %s...\n", fname2);
-	  fieldio_write_complex_field(curfield, 3, dims,
+	  fieldio_write_complex_field(curfield, 3, dims, which_component,
 				      local_nx, local_x_start,
 				      copies, mdata->current_k, R,
 				      fname2, description);

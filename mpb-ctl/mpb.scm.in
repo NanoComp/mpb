@@ -89,7 +89,7 @@
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
 (define-external-function output-field-extended false false
-  no-return-value 'vector3)  
+  no-return-value 'vector3 'integer)  
 (define-external-function compute-energy-in-object-list false false
   'number (make-list-type 'geometric-object))
 
@@ -118,7 +118,7 @@
   (get-efield-from-dfield))
 
 (define (output-field . copies)
-  (output-field-extended (apply vector3 copies)))
+  (output-field-extended (apply vector3 copies) -1))
 
 (define (output-epsilon . copies)
   (get-epsilon)

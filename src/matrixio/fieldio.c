@@ -34,6 +34,7 @@
 void fieldio_write_complex_field(scalar_complex *field,
 				 int rank,
 				 const int dims[3],
+				 int which_component,
 				 int local_nx, int local_x_start,
 				 const int copies[3],
 				 const real kvector[3],
@@ -47,6 +48,7 @@ void fieldio_write_complex_field(scalar_complex *field,
      real s[3]; /* the step size between grid points dotted with k */
      char *fname2, name[] = "imaginary part of x component";
      matrixio_id file_ids[3][2], data_ids[3][2];
+     scalar_complex *phasex, *phasey, *phasez;
      real lastphase = 0.0;
 
      for (i = 0; i < 3; ++i) {
@@ -73,41 +75,78 @@ void fieldio_write_complex_field(scalar_complex *field,
 
      /* create output files & data sets for writing */
      for (component = 0; component < 3; ++component)
-	  for (ri_part = 0; ri_part < 2; ++ri_part) {
-	       fname2[strlen(fname) + 1] = 'x' + component;
-	       fname2[strlen(fname) + 3] = ri_part ? 'i' : 'r';
-	       sprintf(name, "%s part of %c component",
+	  if (component == which_component || which_component < 0)
+	       for (ri_part = 0; ri_part < 2; ++ri_part) {
+		    fname2[strlen(fname) + 1] = 'x' + component;
+		    fname2[strlen(fname) + 3] = ri_part ? 'i' : 'r';
+		    sprintf(name, "%s part of %c component",
 		       ri_part ? "imag." : "real", 'x' + component);
-	       file_ids[component][ri_part] =
-		    matrixio_create(fname2);
-	       data_ids[component][ri_part] =
-		    matrixio_create_dataset(file_ids[component][ri_part],
-					    name, description,
-					    rank, total_dims);
-	  }
+		    file_ids[component][ri_part] =
+			 matrixio_create(fname2);
+		    data_ids[component][ri_part] =
+			 matrixio_create_dataset(file_ids[component][ri_part],
+						 name, description,
+						 rank, total_dims);
+	       }
      free(fname2);
 
+     /* cache exp(ikx) along each of the directions, for speed */
+     phasex = (scalar_complex *) malloc(sizeof(scalar_complex) * local_nx);
+     phasey = (scalar_complex *) malloc(sizeof(scalar_complex) * dims[1]);
+     phasez = (scalar_complex *) malloc(sizeof(scalar_complex) * dims[2]);
+     CHECK(phasex && phasey && phasez, "out of memory!");
+     for (i = 0; i < local_nx; ++i) {
+	  real phase = s[0] * (i + local_x_start);
+	  phasex[i].re = cos(phase);
+	  phasex[i].im = sin(phase);
+     }
+     for (j = 0; j < dims[1]; ++j) {
+	  real phase = s[1] * j;
+	  phasey[j].re = cos(phase);
+	  phasey[j].im = sin(phase);
+     }
+     for (k = 0; k < dims[2]; ++k) {
+	  real phase = s[2] * k;
+	  phasez[k].re = cos(phase);
+	  phasez[k].im = sin(phase);
+     }
+
      /* Now, multiply field by exp(i k*r): */
-     for (i = 0; i < local_nx; ++i)
-	  for (j = 0; j < dims[1]; ++j) 
+     for (i = 0; i < local_nx; ++i) {
+	  scalar_complex px = phasex[i];
+
+	  for (j = 0; j < dims[1]; ++j) {
+	       scalar_complex py;
+	       real re = phasey[j].re, im = phasey[j].im;
+	       py.re = px.re * re - px.im * im;
+	       py.im = px.re * im + px.im * re;
+	       
 	       for (k = 0; k < dims[2]; ++k) {
 		    int ijk = ((i * dims[1] + j) * dims[2] + k) * 3;
-		    real phase = s[0]*(i+local_x_start) + s[1]*j + s[2]*k;
-		    double c = cos(phase), s = sin(phase);
-		    real re, im;
+		    real p_re, p_im;
+		    real re = phasez[k].re, im = phasez[k].im;
+
+		    p_re = py.re * re - py.im * im;
+		    p_im = py.re * im + py.im * re;
 		    
 		    re = field[ijk].re; im = field[ijk].im;
-		    field[ijk].re = re * c - im * s;
-		    field[ijk].im = im * c + re * s;
+		    field[ijk].re = re * p_re - im * p_im;
+		    field[ijk].im = im * p_re + re * p_im;
 
 		    re = field[ijk+1].re; im = field[ijk+1].im;
-		    field[ijk+1].re = re * c - im * s;
-		    field[ijk+1].im = im * c + re * s;
+		    field[ijk+1].re = re * p_re - im * p_im;
+		    field[ijk+1].im = im * p_re + re * p_im;
 
 		    re = field[ijk+2].re; im = field[ijk+2].im;
-		    field[ijk+2].re = re * c - im * s;
-		    field[ijk+2].im = im * c + re * s;
+		    field[ijk+2].re = re * p_re - im * p_im;
+		    field[ijk+2].im = im * p_re + re * p_im;
 	       }
+	  }
+     }
+
+     free(phasez);
+     free(phasey);
+     free(phasex);
 
      /* loop over copies, multiplying by phases and writing out hyperslabs: */
      for (i = 0; i < cpies[0]; ++i)
@@ -152,20 +191,23 @@ void fieldio_write_complex_field(scalar_complex *field,
 		    /* now, write out the hyperslab for each component
 		       and for both the real and imaginary parts: */
 		    for (component = 0; component < 3; ++component)
-			 for (ri_part = 0; ri_part < 2; ++ri_part)
-			      matrixio_write_real_data(
-				   data_ids[component][ri_part],
-				   local_dims, start, 6,
-				   ri_part ? &field[component].im
-				   : &field[component].re);
+			 if (component == which_component ||
+			     which_component < 0)
+			      for (ri_part = 0; ri_part < 2; ++ri_part)
+				   matrixio_write_real_data(
+					data_ids[component][ri_part],
+					local_dims, start, 6,
+					ri_part ? &field[component].im
+					: &field[component].re);
 	       }
 
      /* close data sets and files */
      for (component = 0; component < 3; ++component)
-	  for (ri_part = 0; ri_part < 2; ++ri_part) {
-	       matrixio_close_dataset(data_ids[component][ri_part]);
-	       matrixio_close(file_ids[component][ri_part]);
-	  }
+	  if (component == which_component || which_component < 0)
+	       for (ri_part = 0; ri_part < 2; ++ri_part) {
+		    matrixio_close_dataset(data_ids[component][ri_part]);
+		    matrixio_close(file_ids[component][ri_part]);
+	       }
 }
 
 void fieldio_write_real_vals(real *vals,
