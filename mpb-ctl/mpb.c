@@ -48,6 +48,10 @@
 /* Routines from libctl/utils/geom.c: */
 #include <ctlgeom.h>
 
+/* this integer flag is defined by main.c from libctl, and is
+   set when the user runs the program with --verbose */
+extern int verbose;
+
 /**************************************************************************/
 
 /* a couple of utilities to convert libctl data types to the data
@@ -350,6 +354,7 @@ void solve_kpoint(vector3 kvector)
      int i, num_iters;
      real *eigvals;
      real k[3];
+     int flags;
 
      printf("solve_kpoint (%g,%g,%g):\n",
 	    kvector.x, kvector.y, kvector.z);
@@ -381,6 +386,10 @@ void solve_kpoint(vector3 kvector)
 
      printf("Solving for bands...\n");
 
+     flags = EIGS_DEFAULT_FLAGS;
+     if (verbose)
+	  flags |= EIGS_VERBOSE;
+
      if (mtdata) {  /* solving for bands near a target frequency */
 	  eigensolver(H, eigvals,
 		      maxwell_target_operator, (void *) mtdata,
@@ -389,7 +398,7 @@ void solve_kpoint(vector3 kvector)
 		      maxwell_target_preconditioner2,
 		      (void *) mtdata, NULL,
 		      maxwell_constraint, (void *) mdata,
-		      W, NWORK, tolerance, &num_iters, EIGS_DEFAULT_FLAGS);
+		      W, NWORK, tolerance, &num_iters, flags);
 	  /* now, diagonalize the real Maxwell operator in the
 	     solution subspace to get the true eigenvalues and
 	     eigenvectors: */
@@ -405,7 +414,7 @@ void solve_kpoint(vector3 kvector)
 		      maxwell_preconditioner2,
 		      (void *) mdata, NULL,
 		      maxwell_constraint, (void *) mdata,
-		      W, NWORK, tolerance, &num_iters, EIGS_DEFAULT_FLAGS);
+		      W, NWORK, tolerance, &num_iters, flags);
 
      printf("Finished solving for bands after %d iterations.\n", num_iters);
      
