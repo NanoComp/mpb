@@ -160,8 +160,10 @@ void randomize_fields(void)
 	  return;
      }
      printf("Initializing fields to random numbers...\n");
-     for (i = 0; i < H.n * H.p; ++i)
-	  ASSIGN_REAL(H.data[i], rand() * 1.0 / RAND_MAX);     
+     for (i = 0; i < H.n * H.p; ++i) {
+	  ASSIGN_SCALAR(H.data[i], rand() * 1.0 / RAND_MAX,
+			rand() * 1.0 / RAND_MAX);
+     }
 }
 
 /**************************************************************************/
