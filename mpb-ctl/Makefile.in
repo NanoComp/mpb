@@ -23,7 +23,7 @@ SPECIFICATION_FILE = mpb.scm
 PROGRAM_NAME = mpb
 
 # what is printed out when invoking your program with --version:
-VERSION_STRING = "MIT Photonic Bands @MPB_VERSION@, Copyright (C) 1999-2000 by MIT."
+VERSION_STRING = "MIT Photonic Bands @MPB_VERSION@, Copyright (C) 1999-2001 by MIT."
 
 # objects for program sources:
 OBJECTS = mpb.o epsilon_file.o \
