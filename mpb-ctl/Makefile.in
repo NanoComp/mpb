@@ -83,7 +83,7 @@ CTL_DEFS = -DCTL_SCM='"'$(LIBCTL_DIR)/base/ctl.scm'"' \
 
 ALL_OBJECTS = main.o ctl-io.o $(OBJECTS)
 
-all: $(PROGRAM_NAME)
+all: $(PROGRAM_NAME) mpb-split-tmp
 
 main.o: main.c ctl-io.h
 
@@ -135,16 +135,18 @@ install-mpb: $(PROGRAM_NAME)
 	$(INSTALL) -d $(mandir)/man1
 	$(INSTALL) -m 0644 $(PROGRAM_NAME).1 $(mandir)/man1
 
-install-mpb-split:
+mpb-split-tmp:
 	rm -f mpb-split-tmp
 	mpb_name=`echo mpb | sed '$(transform)'`; \
-	sed "s%\./mpb%$$mpb_name%g" mpb-split > mpb-split-tmp; \
+	sed "s%\./mpb%$$mpb_name%g" mpb-split > mpb-split-tmp;
+
+install-mpb-split: mpb-split-tmp
 	$(INSTALL) -m 0755 mpb-split-tmp $(prefix)/bin/$${mpb_name}-split
-	rm -f mpb-split-tmp
 
 clean:
 	rm -f $(ALL_OBJECTS) ctl-io.c ctl-io.h main.c geom.c \
-              .$(PROGRAM_NAME) $(PROGRAM_NAME) core
+              .$(PROGRAM_NAME) $(PROGRAM_NAME) core mpb-split-tmp
+
 
 ##############################################################################
 
