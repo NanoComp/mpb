@@ -1,3 +1,30 @@
+MPB 1.2
+
+  * Added new y-parity computation and constraints.  See the new
+    run-parity function, which allows you to simultaneously specify
+    the parity through the y=0 and z=0 planes, for symmetric structures.
+    See also the display-yparities function.
+
+  * z parity is no longer computed by default; see the new
+    display-yparities and display-zparities functions to pass to (run).
+
+  * Return more-accurate average epsilon, fill factor, and scalar
+    epsilon values (eigenfrequencies are not affected).  Thanks
+    to Mischa Megens for bugging me.
+
+  * Now outputs D and H in consistent units (previously, D was multiplied
+    by a factor of i/frequency).
+
+  * epsilon.h5 file now includes datasets for the full effective
+    dielectric tensor.  (This doesn't work quite right yet, though,
+    if you configure --with-inv-symmetry and --with-hermitian-epsilon.)
+
+  * Group velocity computation no longer silently invalidates fields
+    that have been loaded with get-dfield, etcetera.  Thanks to Marin
+    Soljacic for the bug report.
+
+  * configure script now makes sure guile is in the $PATH.
+
 MPB 1.1.1 (7/4/2001)
 
   * Fixed bug in H-field output that caused subtly incorrect H-field

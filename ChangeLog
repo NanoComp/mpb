@@ -1,3 +1,60 @@
+2001-10-09  Steven G. Johnson  <stevenj@ab-initio>
+
+	* TODO: add more example files
+
+2001-10-08  Steven G. Johnson  <stevenj@ab-initio>
+
+	* doc/user-ref.html: output-copies is no longer supported
+
+2001-10-05  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.c, src/maxwell/maxwell.h, src/maxwell/maxwell_eps.c:
+	return better scalar epsilon value
+
+2001-09-30  Steven G. Johnson  <stevenj@ab-initio>
+
+	* doc/user-ref.html: slight improvement & fix
+
+	* doc/user-ref.html: spiffed up parity discussion
+
+	* doc/user-ref.html: another fix
+
+	* doc/user-ref.html: whoops, another fix
+
+	* doc/user-ref.html: slight fix
+
+	* TODO, doc/user-ref.html, mpb-ctl/examples/hole-slab.ctl,
+	mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, src/maxwell/Makefile.in,
+	src/maxwell/maxwell.c, src/maxwell/maxwell.h,
+	src/maxwell/maxwell_constraints.c, src/maxwell/maxwell_eps.c,
+	src/maxwell/maxwell_pre.c, tests/maxwell_test.c: added y-parity,
+	reorganized polarization constraints
+
+2001-09-19  Steven G. Johnson  <stevenj@ab-initio>
+
+	* doc/installation.html: updated ATLAS link
+
+2001-08-08  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.c: group-v computation blows away curfield; thanks
+	to Marin for noting this
+
+2001-07-24  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/mpb.c, src/maxwell/maxwell_op.c: use units for D that
+	are consistent with H
+
+2001-07-23  Steven G. Johnson  <stevenj@ab-initio>
+
+	* src/matrixio/matrixio.h, utils/mpb-data.c, doc/user-ref.html,
+	mpb-ctl/mpb.c, src/matrixio/fieldio.c: added full epsilon tensor
+	output (some problems still for hermitian epsilon with inversion
+	symmetry)
+
+2001-07-10  Steven G. Johnson  <stevenj@ab-initio>
+
+	* configure.ac: make sure guile is in PATH
+
 2001-07-05  Steven G. Johnson  <stevenj@ab-initio>
 
 	* NEWS: updated
