@@ -26,6 +26,9 @@ all: all-recursive
 libs: libs-recursive
 
 check: check-recursive
+	@echo "**********************************************************"
+	@echo "                   MPB PASSED all tests."
+	@echo "**********************************************************"
 
 install: install-recursive
 
