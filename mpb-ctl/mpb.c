@@ -1504,6 +1504,8 @@ static real get_val(int ix, int iy, int iz,
 	       iz = iz ? nz - iz : iz;
 	       conjugate = conjugate ? 1 : 0;
 	  }
+	  else
+	       conjugate = 0;
 	  if (nz > 1) nz = nlast; else if (ny > 1) ny = nlast; else nx = nlast;
      }
 #else
@@ -1561,12 +1563,11 @@ static real interp_val(vector3 p, real *data, int stride, int conjugate)
 #undef D
 }
 
-static scalar_complex interp_cval(vector3 p, real *data, int stride,
-				  int conjugate)
+static scalar_complex interp_cval(vector3 p, real *data, int stride)
 {
      scalar_complex cval;
-     cval.re = interp_val(p, data, stride, conjugate);
-     cval.im = interp_val(p, data + 1, stride, !conjugate);
+     cval.re = interp_val(p, data, stride, 0);
+     cval.im = interp_val(p, data + 1, stride, 1);
      return cval;
 }
 
@@ -1579,9 +1580,9 @@ static symmetric_matrix interp_eps_inv(vector3 p)
      eps_inv.m11 = interp_val(p, &mdata->eps_inv->m11, stride, 0);
      eps_inv.m22 = interp_val(p, &mdata->eps_inv->m22, stride, 0);
 #ifdef WITH_HERMITIAN_EPSILON
-     eps_inv.m01 = interp_cval(p, &mdata->eps_inv->m01.re, stride, 0);
-     eps_inv.m02 = interp_cval(p, &mdata->eps_inv->m02.re, stride, 0);
-     eps_inv.m12 = interp_cval(p, &mdata->eps_inv->m12.re, stride, 0);
+     eps_inv.m01 = interp_cval(p, &mdata->eps_inv->m01.re, stride);
+     eps_inv.m02 = interp_cval(p, &mdata->eps_inv->m02.re, stride);
+     eps_inv.m12 = interp_cval(p, &mdata->eps_inv->m12.re, stride);
 #else
      eps_inv.m01 = interp_val(p, &mdata->eps_inv->m01, stride, 0);
      eps_inv.m02 = interp_val(p, &mdata->eps_inv->m02, stride, 0);
@@ -1642,15 +1643,13 @@ number get_energy_point(vector3 p)
 vector3 get_bloch_field_re_point(vector3 p)
 {
      scalar_complex field[3];
-     int conjugate;
      vector3 F;
 
      CHECK(curfield && strchr("dhe", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
-     conjugate = curfield_type != 'h'; /* non pseudo-vectors flip */
-     field[0] = interp_cval(p, &curfield[0].re, 6, conjugate);
-     field[1] = interp_cval(p, &curfield[1].re, 6, conjugate);
-     field[2] = interp_cval(p, &curfield[2].re, 6, conjugate);
+     field[0] = interp_cval(p, &curfield[0].re, 6);
+     field[1] = interp_cval(p, &curfield[1].re, 6);
+     field[2] = interp_cval(p, &curfield[2].re, 6);
      F.x = field[0].re; F.y = field[1].re; F.z = field[2].re;
      return F;
 }
@@ -1658,15 +1657,13 @@ vector3 get_bloch_field_re_point(vector3 p)
 vector3 get_bloch_field_im_point(vector3 p)
 {
      scalar_complex field[3];
-     int conjugate;
      vector3 F;
 
      CHECK(curfield && strchr("dhe", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
-     conjugate = curfield_type != 'h'; /* non pseudo-vectors flip */
-     field[0] = interp_cval(p, &curfield[0].re, 6, conjugate);
-     field[1] = interp_cval(p, &curfield[1].re, 6, conjugate);
-     field[2] = interp_cval(p, &curfield[2].re, 6, conjugate);
+     field[0] = interp_cval(p, &curfield[0].re, 6);
+     field[1] = interp_cval(p, &curfield[1].re, 6);
+     field[2] = interp_cval(p, &curfield[2].re, 6);
      F.x = field[0].im; F.y = field[1].im; F.z = field[2].im;
      return F;
 }
@@ -1675,14 +1672,12 @@ static void get_field_point_reim(vector3 p, vector3 *re, vector3 *im)
 {
      scalar_complex field[3], phase;
      double phase_phi;
-     int conjugate;
 
      CHECK(curfield && strchr("dhe", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
-     conjugate = curfield_type != 'h'; /* non pseudo-vectors flip */
-     field[0] = interp_cval(p, &curfield[0].re, 6, conjugate);
-     field[1] = interp_cval(p, &curfield[1].re, 6, conjugate);
-     field[2] = interp_cval(p, &curfield[2].re, 6, conjugate);
+     field[0] = interp_cval(p, &curfield[0].re, 6);
+     field[1] = interp_cval(p, &curfield[1].re, 6);
+     field[2] = interp_cval(p, &curfield[2].re, 6);
 
      phase_phi = TWOPI * (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
 			  cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
@@ -2253,7 +2248,7 @@ number compute_field_integral(function f)
      int local_n2, local_y_start, local_n3;
 #endif
      real s1, s2, s3, c1, c2, c3;
-     int integrate_energy, hfield;
+     int integrate_energy;
      real *energy = (real *) curfield;
      real integral = 0;
 
@@ -2263,7 +2258,6 @@ number compute_field_integral(function f)
      }
 
      integrate_energy = strchr("DH", curfield_type) != NULL;
-     hfield = strchr("h", curfield_type) != NULL;
 
      n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
      n_other = mdata->other_dims;
@@ -2430,13 +2424,7 @@ number compute_field_integral(function f)
 			      Fx = curfield[3*index+0];
 			      Fy = curfield[3*index+1];
 			      Fz = curfield[3*index+2];
-			      /* conjugate and flip field */
-			      if (hfield) { /* pseudo-vectors aren't flipped */
-				   Fx.im= -Fx.im; Fy.im= -Fy.im; Fz.im= -Fz.im;
-			      }
-			      else {
-				   Fx.re= -Fx.re; Fy.re= -Fy.re; Fz.re= -Fz.re;
-			      }
+			      Fx.im= -Fx.im; Fy.im= -Fy.im; Fz.im= -Fz.im;
 
 			      phase_phi = TWOPI * 
 				   (cur_kvector.x 
