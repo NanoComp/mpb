@@ -44,8 +44,8 @@
    generated from photon.scm */
 #include <ctl-io.h>
 
-/* Routines from libctl/utils/libgeom: */
-#include <geom.h>
+/* Routines from libctl/utils/geom.c: */
+#include <ctlgeom.h>
 
 /**************************************************************************/
 

@@ -13,82 +13,117 @@
 
 ##############################################################################
 
+# Makefile.in for programs using libctl (assumes that autoconf is
+# being used, of course).  You should only need to change the definitions
+# in this section of the file.
+
 SPECIFICATION_FILE = photon.scm
 PROGRAM_NAME = photon
-LIBCTL_DIR = ../../libctl
 
-MYLIBS = ../src/maxwell/maxwell.a \
-         ../src/matrixio/matrixio.a \
-         ../src/matrices/matrices.a \
-         ../src/util/util.a
+# what is printed out when invoking your program with --version:
+VERSION_STRING = "MIT Photonic Bands @MPB_VERSION@, Copyright (C) 1999 by MIT."
 
-MY_OBJECTS = photon.o \
-             $(LIBCTL_DIR)/utils/libgeom/geom.o \
-             main.o
-MY_HEADERS = 
-MY_INCLUDE_FLAGS = -I. -I$(LIBCTL_DIR)/utils/libgeom/
-MY_DEFINE_FLAGS = 
+# objects for program sources:
+OBJECTS = photon.o \
+	  geom.o     # since we use the geom.scm utilities
 
-GEOM_SCM = $(LIBCTL_DIR)/utils/libgeom/geom.scm
+HEADERS =            # any extra header files you are dependent on
 
+MY_LIBS = ../src/maxwell/maxwell.a \
+          ../src/matrixio/matrixio.a \
+          ../src/matrices/matrices.a \
+          ../src/util/util.a
+
+MY_LDFLAGS =         # extra -L flags go here
+MY_INCLUDES = -I. -I../src/util -I../src/matrices -I../src/matrixio \
+              -I../src/maxwell
+MY_DEFS =            # extra -D define flags go here
+
+# The following variables should be detected and set by autoconf:
+
+# libctl install. dir., e.g. /usr/local/share/libctl
+LIBCTL_DIR = @LIBCTL_DIR@
+
+# gen-ctl-io program
+GEN_CTL_IO = @GEN_CTL_IO@
+
+##############################################################################
+#                  don't (normally) edit past here                           #
 ##############################################################################
 
 CC = @CC@
-CFLAGS = @CFLAGS@ `guile-config compile` \
-         -I../src/util -I../src/matrices -I../src/matrixio -I../src/maxwell
+CFLAGS = @CFLAGS@
+INCLUDES = @INCLUDES@ -I. $(MY_INCLUDES)
+DEFS = @DEFS@ $(CTL_DEFS) $(MY_DEFS)
 
 ##############################################################################
 
-LIBS = $(MYLIBS) @LIBS@ @FLIBS@ `guile-config link`
-LDFLAGS = @LDFLAGS@
+LIBS = $(MY_LIBS) @LIBS@ @FLIBS@
+LDFLAGS = $(MY_LDFLAGS) @LDFLAGS@
 
 ##############################################################################
 
-LIBCTL_SCM_INCLUDE_SRC = $(LIBCTL_DIR)/src/include.scm
-LIBCTL_SCM_SRC = $(LIBCTL_DIR)/src/ctl.scm
-LIBCTL_C_SRC = $(LIBCTL_DIR)/src/ctl.c
-LIBCTL_OBJ = $(LIBCTL_C_SRC:.c=.o)
-LIBCTL_HEADERS = $(LIBCTL_DIR)/src/ctl.h $(LIBCTL_DIR)/src/ctl-config.h
-
-CTL_IO_GEN_SRC = $(LIBCTL_DIR)/utils/ctl-io.scm
-CTL_IO_GEN = $(LIBCTL_DIR)/utils/gen-ctl-io
-
-INCLUDE_FLAGS = -I$(LIBCTL_DIR)/src -I`dirname $(SPECIFICATION_FILE)` \
-	        $(MY_INCLUDE_FLAGS)
-
-DEFINE_FLAGS = -DCTL_SCM='"'`pwd`/$(LIBCTL_SCM_SRC)'"' \
-               -DINCLUDE_SCM='"'`pwd`/$(LIBCTL_SCM_INCLUDE_SRC)'"' \
-               -DSPEC_SCM='"'`pwd`/$(SPECIFICATION_FILE)'"' \
-	       -DHAVE_GUILE_1_2 \
-	       $(MY_DEFINE_FLAGS)
-
-OBJECTS = $(MY_OBJECTS) $(LIBCTL_OBJ) ctl-io.o
-HEADERS = $(MY_HEADERS) $(LIBCTL_HEADERS) ctl-io.h
+INSTALL = @INSTALL@
+prefix = @prefix@
+@SET_MAKE@
 
 ##############################################################################
+
+CTL_DEFS = -DCTL_SCM='"'$(LIBCTL_DIR)/base/ctl.scm'"' \
+       -DINCLUDE_SCM='"'$(LIBCTL_DIR)/base/include.scm'"' \
+          -DSPEC_SCM='"'$(prefix)/share/libctl/specs/$(SPECIFICATION_FILE)'"' \
+    -DVERSION_STRING='"'$(VERSION_STRING)'"'
+
+##############################################################################
+
+ALL_OBJECTS = main.o ctl-io.o $(OBJECTS)
 
 all: $(PROGRAM_NAME)
 
-ctl-io.c: $(SPECIFICATION_FILE) $(GEOM_SCM) \
-          $(CTL_IO_GEN_SRC) $(CTL_IO_GEN)
-	$(CTL_IO_GEN) $(SPECIFICATION_FILE)
+ctl-io.c ctl-io.h: $(SPECIFICATION_FILE)
+	$(GEN_CTL_IO) $(SPECIFICATION_FILE) $(LIBCTL_DIR)
 
-ctl-io.h: $(SPECIFICATION_FILE) $(GEOM_SCM) \
-          $(CTL_IO_GEN_SRC) $(CTL_IO_GEN)
-	$(CTL_IO_GEN) $(SPECIFICATION_FILE)
+# Some hackery follows.  The program executable needs to have the
+# location of the spec file hard-coded into it.  However, we have to
+# hard-code the location that the spec file *will* be in when it is
+# installed...but we would still like to be able to run the program
+# before installing it.  So, the actual executable is named
+# .$(PROGRAM_NAME) (notice the leading dot), and $(PROGRAM_NAME) is a
+# shell script that calls the executable, specifying the uninstalled
+# spec file location via the --spec-file command-line argument.  'make
+# install' copies the real executable and spec files into their final
+# locations.
 
-$(PROGRAM_NAME): $(HEADERS) $(OBJECTS) $(MYLIBS)
-	$(CC) $(LDFLAGS) $(CFLAGS) $(OBJECTS) $(LIBS) -o $@
+$(PROGRAM_NAME): ctl-io.h $(ALL_OBJECTS)
+	$(CC) $(LDFLAGS) $(CFLAGS) $(ALL_OBJECTS) $(LIBS) -o .$@
+	rm -f $@
+	echo '#!/bin/sh' > $@
+	echo `pwd`/.$@ --spec-file=`pwd`/$(SPECIFICATION_FILE) '$$*' >> $@
+	chmod u+x $@
 
-main.c: $(LIBCTL_DIR)/src/main.c
-	cp -f $(LIBCTL_DIR)/src/main.c $@
+main.c: $(LIBCTL_DIR)/base/main.c
+	cp -f $(LIBCTL_DIR)/base/main.c $@
 
-.c.o: $(HEADERS)
-	$(CC) -c $(DEFINE_FLAGS) $(INCLUDE_FLAGS) $(CFLAGS) $< -o $@
+geom.c: $(LIBCTL_DIR)/utils/geom.c
+	cp -f $(LIBCTL_DIR)/utils/geom.c $@
+
+.c.o: $(HEADERS) ctl-io.h
+	$(CC) -c $(DEFS) $(INCLUDES) $(CFLAGS) $< -o $@
+
+# 'make install' target.  This is supplied here so that you can easily
+# copy this Makefile into your own program, but it should not be
+# called for the example program included with libctl (and is not, at
+# least by the top-level Makefile).  Two reasons: first, you don't
+# really want to install the example program; and second, it won't
+# work because LIBCTL_DIR is not set to the global (post-install)
+# location of libctl.
+
+install: $(PROGRAM_NAME)
+	$(INSTALL) -d $(prefix)/bin
+	$(INSTALL) -m 0755 -s .$(PROGRAM_NAME) $(prefix)/bin/$(PROGRAM_NAME)
+	$(INSTALL) -d $(prefix)/share/libctl/specs
+	$(INSTALL) -m 0644 $(SPECIFICATION_FILE) $(prefix)/share/libctl/specs
 
 clean:
-	rm -f $(MY_OBJECTS) ctl-io.o ctl-io.c ctl-io.h main.c \
-              $(PROGRAM_NAME) core
-
-realclean: clean
-	rm -f $(LIBCTL_OBJ)
+	rm -f $(ALL_OBJECTS) ctl-io.c ctl-io.h main.c geom.c \
+              .$(PROGRAM_NAME) $(PROGRAM_NAME) core

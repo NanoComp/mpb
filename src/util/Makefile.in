@@ -1,7 +1,9 @@
 # Variables substituted by the autoconf configure script:
 
 CC = @CC@
-CFLAGS = @CFLAGS@ -I.
+CFLAGS = @CFLAGS@
+INCLUDES = @INCLUDES@ -I.
+DEFS = @DEFS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
@@ -22,7 +24,7 @@ util.a: $(OBJECTS)
 	$(RANLIB) $@
 
 .c.o:
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) $(DEFS) $(INCLUDES) -c $(CFLAGS) $< -o $@
 
 clean: 
 	rm -f $(OBJECTS) core $(LIBNAME)

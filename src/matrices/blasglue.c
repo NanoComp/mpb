@@ -171,20 +171,21 @@ void blasglue_herk(char uplo, char trans, int n, int k,
 		   real b, scalar *C, int fdC)
 {
      scalar alpha, beta;
+     char uplo_s[] = "x", trans_s[] = "x";
      
      CHECK(A != C, "herk output array must be distinct");
      
      ASSIGN_REAL(alpha,a);
      ASSIGN_REAL(beta,b);
 
-     uplo = uplo == 'U' ? 'L' : 'U';
-     trans = (trans == 'C' || trans == 'T') ? 'N' : 'C';
+     uplo_s[0] = uplo == 'U' ? 'L' : 'U';
+     trans_s[0] = (trans == 'C' || trans == 'T') ? 'N' : 'C';
 
 #ifdef SCALAR_COMPLEX
-     F(herk,HERK) (&uplo, &trans, &n, &k,
+     F(herk,HERK) (uplo_s, trans_s, &n, &k,
 		   &alpha, A, &fdA, &beta, C, &fdC);
 #else
-     F(syrk,SYRK) (&uplo, &trans, &n, &k,
+     F(syrk,SYRK) (uplo_s, trans_s, &n, &k,
 		   &alpha, A, &fdA, &beta, C, &fdC);
 #endif
 }
@@ -196,10 +197,11 @@ void blasglue_herk(char uplo, char trans, int n, int k,
 void lapackglue_potrf(char uplo, int n, scalar *A, int fdA)
 {
      int info;
+     char uplo_s[] = "x";
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+     uplo_s[0] = uplo == 'U' ? 'L' : 'U';
 
-     F(potrf,POTRF) (&uplo, &n, A, &fdA, &info);
+     F(potrf,POTRF) (uplo_s, &n, A, &fdA, &info);
 
      CHECK(info >= 0, "invalid argument in potrf");
      CHECK(info <= 0, "non positive-definite matrix in potrf");
@@ -208,10 +210,11 @@ void lapackglue_potrf(char uplo, int n, scalar *A, int fdA)
 void lapackglue_potri(char uplo, int n, scalar *A, int fdA)
 {
      int info;
+     char uplo_s[] = "x";
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+     uplo_s[0] = uplo == 'U' ? 'L' : 'U';
 
-     F(potri,POTRI) (&uplo, &n, A, &fdA, &info);
+     F(potri,POTRI) (uplo_s, &n, A, &fdA, &info);
 
      CHECK(info >= 0, "invalid argument in potri");
      CHECK(info <= 0, "zero diagonal element (singular matrix) in potri");
@@ -221,13 +224,14 @@ void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
 		     real *w, scalar *work, int lwork, real *rwork)
 {
      int info;
+     char uplo_s[] = "x";
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+     uplo_s[0] = uplo == 'U' ? 'L' : 'U';
 
 #ifdef SCALAR_COMPLEX
-     F(heev,HEEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, rwork, &info);
+     F(heev,HEEV) (&jobz, uplo_s, &n, A, &fdA, w, work, &lwork, rwork, &info);
 #else
-     F(syev,SYEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
+     F(syev,SYEV) (&jobz, uplo_s, &n, A, &fdA, w, work, &lwork, &info);
 #endif
 
      CHECK(info >= 0, "invalid argument in heev");

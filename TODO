@@ -9,6 +9,8 @@ Profile--where is the performance going?
 
 Optimize multiplications by diagonal matrices?
 
+Use new LAPACK 3.0 eigensolver routines.
+
 Check which order to link in -lblas and -ldgemm.
 
 Fix linking with -lessl on AIX...what is going on there?

@@ -2,6 +2,8 @@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
+INCLUDES = @INCLUDES@
+DEFS = @DEFS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
@@ -10,11 +12,14 @@ RANLIB = @RANLIB@
 # Subdirectories to make in:
 
 LIBSUBDIRS = src/util src/matrices src/maxwell src/matrixio
-SUBDIRS = $(LIBSUBDIRS) tests photon-ctl
+INSTALLSUBDIRS = photon-ctl
+SUBDIRS = $(LIBSUBDIRS) tests $(INSTALLSUBDIRS)
 
 all: all-recursive
 
 libs: libs-recursive
+
+install: install-recursive
 
 clean: clean-recursive
 	rm -f core
@@ -22,7 +27,8 @@ clean: clean-recursive
 distclean: clean
 	@list='$(SUBDIRS)'; for subdir in $$list; do \
 	  echo "rm -f $$subdir/Makefile"; rm -f $$subdir/Makefile; done
-	rm -f config.cache Makefile src/config.h config.log config.status
+	rm -f config.cache Makefile src/config.h config.log config.status \
+              photon-ctl/photon.scm
 
 maintainer-clean: distclean
 	rm -f configure
@@ -42,6 +48,15 @@ all-recursive clean-recursive:
 libs-recursive:
 	@set fnord $(MAKEFLAGS); amf=$$2; \
 	list='$(LIBSUBDIRS)'; for subdir in $$list; do \
+          target=`echo $@ | sed s/-recursive//`; \
+          echo "Making $$target in $$subdir"; \
+          (cd $$subdir && $(MAKE) $$target) \
+           || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+        done && test -z "$$fail"
+
+install-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	list='$(INSTALLSUBDIRS)'; for subdir in $$list; do \
           target=`echo $@ | sed s/-recursive//`; \
           echo "Making $$target in $$subdir"; \
           (cd $$subdir && $(MAKE) $$target) \
