@@ -7,7 +7,7 @@ if test "$enable_single" = "yes"; then
         AC_DEFINE(SCALAR_SINGLE_PREC)
 fi
 
-AC_ARG_ENABLE(complex, [  --enable-complex        use complex numbers (don't require inv. sym.)], ok=$enableval, ok=yes)
+AC_ARG_ENABLE(complex, [  --disable-complex       don't use complex numbers (require inv. sym.)], ok=$enableval, ok=yes)
 if test "$ok" = "yes"; then
         AC_DEFINE(SCALAR_COMPLEX)
 fi
