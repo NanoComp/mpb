@@ -1672,9 +1672,9 @@ static void get_field_point_reim(vector3 p, vector3 *re, vector3 *im)
 	  CASSIGN_CONJ(field[1], field[1]);
 	  CASSIGN_CONJ(field[2], field[2]);
      }
-     phase_phi = TWOPI * (cur_kvector.x * p.x  / geometry_lattice.size.x +
-			  cur_kvector.y * p.y  / geometry_lattice.size.y +
-			  cur_kvector.z * p.z  / geometry_lattice.size.z);
+     phase_phi = TWOPI * (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
+			  cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
+			  cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
      CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
      CASSIGN_MULT(field[0], field[0], phase);
      CASSIGN_MULT(field[1], field[1], phase);
