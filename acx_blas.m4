@@ -27,7 +27,7 @@ dnl the default action will define HAVE_BLAS.
 dnl
 dnl This macro requires autoconf 2.50 or later.
 dnl
-dnl @version $Id: acx_blas.m4,v 1.3 2001/12/12 19:54:10 stevenj Exp $
+dnl @version $Id: acx_blas.m4,v 1.4 2004/11/11 19:30:47 stevenj Exp $
 dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
 
 AC_DEFUN([ACX_BLAS], [
@@ -88,6 +88,11 @@ if test $acx_blas_ok = no; then
 			[acx_blas_ok=yes; BLAS_LIBS="-lsgemm -ldgemm -lblas"],
 			[], [-lblas])],
 			[], [-lblas])])
+fi
+
+# BLAS in Intel MKL library?
+if test $acx_blas_ok = no; then
+	AC_CHECK_LIB(mkl, $sgemm, [acx_blas_ok=yes;BLAS_LIBS="-lmkl"])
 fi
 
 # BLAS in Alpha CXML library?
