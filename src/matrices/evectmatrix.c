@@ -77,11 +77,12 @@ void evectmatrix_XeYS(evectmatrix X, evectmatrix Y, sqmatrix S, short sherm)
      evectmatrix_aXpbYS_sub(0.0, X, 1.0, Y, S, 0, sherm);
 }
 
-/* compute X += a Y * S. */
-void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y, sqmatrix S)
+/* compute X += a Y * S.  If sdagger != 0, then St is used instead of S. */
+void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y,
+		       sqmatrix S, short sdagger)
 {
      CHECK(S.p == 0 || S.p == Y.p, "arrays not conformant");
-     evectmatrix_aXpbYS_sub(1.0, X, a, Y, S, 0, 0);
+     evectmatrix_aXpbYS_sub(1.0, X, a, Y, S, 0, sdagger);
 }
 
 /* compute U = adjoint(X) * X */

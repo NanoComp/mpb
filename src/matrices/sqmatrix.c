@@ -165,31 +165,49 @@ void sqmatrix_aApbB(real a, sqmatrix A, real b, sqmatrix B)
      blasglue_axpy(A.p * A.p, b, B.data, 1, A.data, 1);
 }
 
-/* U <- 1/U.
-   U must be Hermitian and positive-definite (e.g. U = Yt*Y). */
-void sqmatrix_invert(sqmatrix U)
+/* U <- 1/U.  U must be Hermitian and, if positive_definite != 0,
+   positive-definite (e.g. U = Yt*Y).  Work is a scratch matrix. */
+void sqmatrix_invert(sqmatrix U, short positive_definite,
+		     sqmatrix Work)
 {
      int i, j;
 
-     /* factorize U: */
-     lapackglue_potrf('U', U.p, U.data, U.p);
+     if (positive_definite) {
+	  /* factorize U: */
+	  lapackglue_potrf('U', U.p, U.data, U.p);
+	  
+	  /* QUESTION: would it be more efficient to stop here,
+	     returning the Cholesky factorization of U?  This
+	     could then be used to multiply by 1/U without
+	     ever calculating the inverse explicitely.  It
+	     would probably be more numerically stable, but
+	     how do the computational costs compare? */
+	  
+	  /* Compute 1/U (upper half only) */
+	  lapackglue_potri('U', U.p, U.data, U.p);
+     }
+     else {
+	  int *ipiv;
+	  CHK_MALLOC(ipiv, int, U.p);
 
-     /* QUESTION: would it be more efficient to stop here,
-	returning the Cholesky factorization of U?  This
-	could then be used to multiply by 1/U without
-	ever calculating the inverse explicitely.  It
-	would probably be more numerically stable, but
-	how do the computational costs compare? */
+	  CHECK(Work.p * Work.p >= U.p, "scratch matrix is too small");
 
-     /* Compute 1/U (upper half only) */
-     lapackglue_potri('U', U.p, U.data, U.p);
-     
+	  /* factorize U: */
+	  lapackglue_hetrf('U', U.p, U.data, U.p,
+			   ipiv, Work.data, Work.p * Work.p);
+
+	  /* Compute 1/U (upper half only) */
+	  lapackglue_hetri('U', U.p, U.data, U.p, ipiv, Work.data);
+	  
+	  free(ipiv);
+     }
+	  
      /* Now, copy the conjugate of the upper half
 	onto the lower half of U */
      for (i = 0; i < U.p; ++i)
-       for (j = i + 1; j < U.p; ++j) {
-	 ASSIGN_CONJ(U.data[j * U.p + i], U.data[i * U.p + j]);
-       }
+	  for (j = i + 1; j < U.p; ++j) {
+	       ASSIGN_CONJ(U.data[j * U.p + i], U.data[i * U.p + j]);
+	  }
 }
 
 /* U <- eigenvectors of U.  U must be Hermitian. eigenvals <- eigenvalues.

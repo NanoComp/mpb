@@ -66,7 +66,8 @@ extern void evectmatrix_aXpbYS_sub(real a, evectmatrix X,
 				   sqmatrix S, int Soffset, short sdagger);
 extern void evectmatrix_XeYS(evectmatrix X, evectmatrix Y,
 			     sqmatrix S, short sherm);
-extern void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y,sqmatrix S);
+extern void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y,
+			      sqmatrix S, short sdagger);
 extern void evectmatrix_XtX(sqmatrix U, evectmatrix X);
 extern void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y);
 extern void evectmatrixXtY_sub(sqmatrix U, int Uoffset,
@@ -91,7 +92,8 @@ extern void sqmatrix_ApaBC(sqmatrix A, real a, sqmatrix B, short bdagger,
 			   sqmatrix C, short cdagger);
 extern void sqmatrix_ApaB(sqmatrix A, real a, sqmatrix B);
 extern void sqmatrix_aApbB(real a, sqmatrix A, real b, sqmatrix B);
-extern void sqmatrix_invert(sqmatrix U);
+extern void sqmatrix_invert(sqmatrix U, short positive_definite,
+			    sqmatrix Work);
 extern void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W);
 extern void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W);
 

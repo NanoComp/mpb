@@ -63,6 +63,7 @@ extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 #define EIGS_ORTHONORMALIZE_FIRST_STEP (1<<5)
 #define EIGS_REORTHOGONALIZE (1<<6)
 #define EIGS_DYNAMIC_RESET_CG (1<<7)
+#define EIGS_ORTHOGONAL_PRECONDITIONER (1<<8)
 
 /* default flags: what we think works best most of the time: */
 #define EIGS_DEFAULT_FLAGS (EIGS_RESET_CG | EIGS_REORTHOGONALIZE)

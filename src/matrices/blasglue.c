@@ -91,6 +91,14 @@ extern void F(syrk,SYRK) (char *, char *, int *, int *,
 			  real *, scalar *, int *);
 extern void F(potrf,POTRF) (char *, int *, scalar *, int *, int *);
 extern void F(potri,POTRI) (char *, int *, scalar *, int *, int *);
+extern void F(hetrf,HETRF) (char *, int *, scalar *, int *,
+			    int *, scalar *, int *, int *);
+extern void F(hetri,HETRI) (char *, int *, scalar *, int *,
+			    int *, scalar *, int *);
+extern void F(sytrf,SYTRF) (char *, int *, scalar *, int *,
+			    int *, scalar *, int *, int *);
+extern void F(sytri,SYTRI) (char *, int *, scalar *, int *,
+			    int *, scalar *, int *);
 extern void F(heev,HEEV) (char *, char *, int *, scalar *, int *, real *,
 			  scalar *, int *, real *, int *);
 extern void F(syev,SYEV) (char *, char *, int *, scalar *, int *, real *,
@@ -210,6 +218,40 @@ void lapackglue_potri(char uplo, int n, scalar *A, int fdA)
 
      CHECK(info >= 0, "invalid argument in potri");
      CHECK(info <= 0, "zero diagonal element (singular matrix) in potri");
+}
+
+void lapackglue_hetrf(char uplo, int n, scalar *A, int fdA,
+		      int *ipiv, scalar *work, int lwork)
+{
+     int info;
+
+     uplo = uplo == 'U' ? 'L' : 'U';
+
+#ifdef SCALAR_COMPLEX
+     F(hetrf,HETRF) (&uplo, &n, A, &fdA, ipiv, work, &lwork, &info);
+#else
+     F(sytrf,SYTRF) (&uplo, &n, A, &fdA, ipiv, work, &lwork, &info);
+#endif
+
+     CHECK(info >= 0, "invalid argument in hetrf");
+     CHECK(info <= 0, "singular matrix in hetrf");
+}
+
+void lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
+		      int *ipiv, scalar *work)
+{
+     int info;
+
+     uplo = uplo == 'U' ? 'L' : 'U';
+
+#ifdef SCALAR_COMPLEX
+     F(hetri,HETRI) (&uplo, &n, A, &fdA, ipiv, work, &info);
+#else
+     F(sytri,SYTRI) (&uplo, &n, A, &fdA, ipiv, work, &info);
+#endif
+
+     CHECK(info >= 0, "invalid argument in hetri");
+     CHECK(info <= 0, "zero diagonal element (singular matrix) in hetri");
 }
 
 void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA, 

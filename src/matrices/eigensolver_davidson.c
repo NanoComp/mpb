@@ -99,7 +99,7 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 	  constraint(Y, constraint_data);
 
      evectmatrix_XtX(U, Y);
-     sqmatrix_invert(U);
+     sqmatrix_invert(U, 1, S3);
      sqmatrix_sqrt(S2, U, S3); /* S2 = 1/sqrt(Yt*Y) */
      evectmatrix_XeYS(V[0], Y, S2, 1); /* V[0] = orthonormalize Y */
 
@@ -193,12 +193,12 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 	       /* orthogonalize against previous V: */
 	       for (i = 0; i < ibasis2; ++i) {
 		    evectmatrix_XtY(U, V[i], AV[ibasis2]);
-		    evectmatrix_XpaYS(AV[ibasis2], -1.0, V[i], U);
+		    evectmatrix_XpaYS(AV[ibasis2], -1.0, V[i], U, 0);
 	       }
 
 	       /* orthonormalize within itself: */
 	       evectmatrix_XtX(U, AV[ibasis2]);
-	       sqmatrix_invert(U);
+	       sqmatrix_invert(U, 1, S3);
 	       sqmatrix_sqrt(S2, U, S3);
 	       evectmatrix_XeYS(V[ibasis2], AV[ibasis2], S2, 1);
 
@@ -214,7 +214,7 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
            " iterations");
 
      evectmatrix_XtX(U, Y);
-     sqmatrix_invert(U);
+     sqmatrix_invert(U, 1, S3);
      eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata,
 				   V[0], AV[0], U, S3, S2);
 

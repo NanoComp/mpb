@@ -107,7 +107,7 @@ static double trace_func(double theta, double *trace_deriv, void *data)
 	  sqmatrix_copy(d->S1, d->YtY);
 	  sqmatrix_aApbB(c*c, d->S1, s*s, d->DtD);
 	  sqmatrix_ApaB(d->S1, 2*s*c, d->symYtD);
-	  sqmatrix_invert(d->S1);
+	  sqmatrix_invert(d->S1, 1, d->S2);
 	  
 	  sqmatrix_copy(d->S2, d->YtAY);
 	  sqmatrix_aApbB(c*c, d->S2, s*s, d->DtAD);
@@ -190,6 +190,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
           prev_G = Work[3];
           for (i = 0; i < Y.n * Y.p; ++i)
                ASSIGN_ZERO(prev_G.data[i]);
+	  if (flags & EIGS_ORTHOGONAL_PRECONDITIONER)  /* see below */
+	       fprintf(stderr, "WARNING: Polak-Ribiere may not work with the "
+		       "orthogonal-preconditioner option.\n");
      }
      else
           prev_G = G;
@@ -216,7 +219,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
      if (flags & EIGS_ORTHONORMALIZE_FIRST_STEP) {
 	  evectmatrix_XtX(U, Y);
-	  sqmatrix_invert(U);
+	  sqmatrix_invert(U, 1, S2);
 	  sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
 	  evectmatrix_XeYS(G, Y, S1, 1); /* G = orthonormalize Y */
 	  evectmatrix_copy(Y, G);
@@ -232,7 +235,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  constraint(Y, constraint_data);
 
      do {
-	  real y_norm;
+	  real y_norm, gamma_numerator = 0;
 
 	  if (flags & EIGS_FORCE_APPROX_LINMIN)
 	       use_linmin = 0;
@@ -244,7 +247,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  blasglue_scal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
 
 	  sqmatrix_copy(U, YtY);
-	  sqmatrix_invert(U);
+	  sqmatrix_invert(U, 1, S2);
 
 	  /* If trace(1/YtY) gets big, it means that the columns
 	     of Y are becoming nearly parallel.  This sometimes happens,
@@ -267,7 +270,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    blasglue_scal(Y.p * Y.n, 1/y_norm, Y.data, 1);
 		    blasglue_scal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
 		    sqmatrix_copy(U, YtY);
-		    sqmatrix_invert(U);
+		    sqmatrix_invert(U, 1, S2);
 	       }
 	  }
 
@@ -299,7 +302,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  /* Compute gradient of functional: G = (1 - Y U Yt) A Y U */
 	  sqmatrix_AeBC(S1, U, 0, YtAYU, 0);
-	  evectmatrix_XpaYS(G, -1.0, Y, S1);
+	  evectmatrix_XpaYS(G, -1.0, Y, S1, 1);
 
 	  /* set X = precondition(G): */
 	  if (K != NULL) {
@@ -314,17 +317,17 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                /* Operate projection P = (1 - Y U Yt) on X: */
                evectmatrix_XtY(symYtD, Y, X);  /* symYtD = Yt X */
 	       sqmatrix_AeBC(S1, U, 0, symYtD, 0);
-	       evectmatrix_XpaYS(X, -1.0, Y, S1);
+	       evectmatrix_XpaYS(X, -1.0, Y, S1, 0);
           }
 
-	  /* In conjugate-gradient, the minimization direction D is
-             a combination of X with the previous search directions.
-             Otherwise, we just have D = X. */
+	  /* Now, for the case of EIGS_ORTHOGONAL_PRECONDITIONER, we
+	     need to use G as scratch space in order to avoid the need
+	     for an extra column bundle.  Before that, we need to do
+	     any computations that we need with G.  (Yes, we're
+	     playing tricksy games here, but isn't it fun?) */
 
 	  traceGtX = SCALAR_RE(evectmatrix_traceXtY(G, X));
 	  if (usingConjugateGradient) {
-               real gamma, gamma_numerator;
-
                if (use_polak_ribiere) {
                     /* assign G = G - prev_G and copy prev_G = G in the
                        same loop.  We can't use the BLAS routines because
@@ -338,6 +341,54 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                }
                else /* otherwise, use Fletcher-Reeves (ignore prev_G) */
                     gamma_numerator = traceGtX;
+	  }
+
+	  /* The motivation for the following code came from a trick I
+	     noticed in Sleijpen and Van der Vorst, "A Jacobi-Davidson
+	     iteration method for linear eigenvalue problems," SIAM
+	     J. Matrix Anal. Appl. 17, 401-425 (April 1996).  (The
+	     motivation in our case comes from the fact that if you
+	     look at the Hessian matrix of the problem, it has a
+	     projection operator just as in the above reference, and
+	     so we should the same technique to invert it.)  So far,
+	     though, the hoped-for savings haven't materialized; maybe
+	     we need a better preconditioner first. */
+	  if (flags & EIGS_ORTHOGONAL_PRECONDITIONER) {
+	       real traceGtX_delta; /* change in traceGtX when we update X */
+
+	       /* set G = precondition(Y): */
+	       if (K != NULL)
+		    K(Y, G, Kdata, Y, NULL, YtY);
+	       else
+		    evectmatrix_copy(G, Y);  /* preconditioner is identity */
+
+	       /* let X = KG - KY S3t, where S3 is chosen so that YtX = 0:
+		  S3 = (YtKG)t / (YtKY).  Recall that, at this point,
+		  X holds KG and G holds KY.  K is assumed Hermitian. */
+	       evectmatrix_XtY(S1, Y, G);
+	       sqmatrix_invert(S1, 0, S2);  /* S1 = 1 / (YtKY) */
+	       evectmatrix_XtY(S2, X, Y);  /* S2 = GtKY = (YtKG)t */
+	       sqmatrix_AeBC(S3, S2, 0 , S1, 1);
+	       evectmatrix_XpaYS(X, -1.0, G, S3, 1);
+
+	       /* Update traceGtX and gamma_numerator.  The update
+		  for gamma_numerator isn't really right in the case
+		  of Polak-Ribiere; it amounts to doing a weird combination
+		  of P-R and Fletcher-Reeves...what will happen?  (To
+		  do the right thing, I think we would need an extra
+		  column bundle.)  */
+	       traceGtX_delta = -SCALAR_RE(sqmatrix_traceAtB(S3, S2));
+	       traceGtX += traceGtX_delta;
+	       if (usingConjugateGradient)
+		    gamma_numerator += traceGtX_delta;
+	  }
+
+	  /* In conjugate-gradient, the minimization direction D is
+             a combination of X with the previous search directions.
+             Otherwise, we just have D = X. */
+
+	  if (usingConjugateGradient) {
+               real gamma;
 
                if (prev_traceGtX == 0.0)
                     gamma = 0.0;
@@ -393,7 +444,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       evectmatrix_aXpbY(1.0, Y, t / d_norm, D);
 
 	       evectmatrix_XtX(U, Y);
-	       sqmatrix_invert(U);  /* U = 1 / (Yt Y) */
+	       sqmatrix_invert(U, 1, S2);  /* U = 1 / (Yt Y) */
 	       A(Y, G, Adata, 1, X); /* G = AY; X is scratch */
 	       evectmatrix_XtY(S1, Y, G);  /* S1 = Yt A Y */
 	       
@@ -555,7 +606,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
            " iterations");
 
      evectmatrix_XtX(U, Y);
-     sqmatrix_invert(U);
+     sqmatrix_invert(U, 1, S2);
      eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata,
 				   X, G, U, S1, S2);
 

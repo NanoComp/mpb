@@ -56,7 +56,7 @@ void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
      Uwork = create_sqmatrix(Y.p);
 
      evectmatrix_XtX(U, Y);
-     sqmatrix_invert(U);
+     sqmatrix_invert(U, 1, Uwork);
 
      eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata, Work1, Work2,
 				   U, Usqrt, Uwork);
