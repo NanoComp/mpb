@@ -43,12 +43,51 @@ typedef struct {
      real *data;
 } epsilon_file_data;
 
+/* Linearly interpolate a given point in a 3d grid of data.  The point
+   coordinates should be in the range [0,1). */
+real linear_interpolate(real rx, real ry, real rz,
+			real *data, int nx, int ny, int nz, int stride)
+{
+     int x, y, z, x2, y2, z2;
+     real dx, dy, dz;
+
+     /* get the point corresponding to r in the epsilon array grid: */
+     x = rx * nx;
+     y = ry * ny;
+     z = rz * nz;
+
+     /* get the difference between (x,y,z) and the actual point */
+     dx = rx * nx - x;
+     dy = ry * ny - y;
+     dz = rz * nz - z;
+
+     /* get the other closest point in the grid, with periodic boundaries: */
+     x2 = (nx + (dx >= 0.0 ? x + 1 : x - 1)) % nx;
+     y2 = (ny + (dy >= 0.0 ? y + 1 : y - 1)) % ny;
+     z2 = (nz + (dz >= 0.0 ? z + 1 : z - 1)) % nz;
+
+     /* take abs(d{xyz}) to get weights for {xyz} and {xyz}2: */
+     dx = fabs(dx);
+     dy = fabs(dy);
+     dz = fabs(dz);
+
+     /* define a macro to give us data(x,y,z) on the grid,
+	in row-major order (the order used by HDF5): */
+#define D(x,y,z) (data[(((x)*ny + (y))*nz + (z)) * stride])
+
+     return(((D(x,y,z)*(1.0-dx) + D(x2,y,z)*dx) * (1.0-dy) +
+	     (D(x,y2,z)*(1.0-dx) + D(x2,y2,z)*dx) * dy) * (1.0-dz) +
+	    ((D(x,y,z2)*(1.0-dx) + D(x2,y,z2)*dx) * (1.0-dy) +
+	     (D(x,y2,z2)*(1.0-dx) + D(x2,y2,z2)*dx) * dy) * dz);
+
+#undef D
+}
+
 static void epsilon_file_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 			      real r[3], void *edata)
 {
      epsilon_file_data *d = (epsilon_file_data *) edata;
-     real rx, ry, rz, dx, dy, dz;
-     int x, y, z, x2, y2, z2;
+     real rx, ry, rz;
      real eps_val;
 
      /* make sure r is positive: */
@@ -61,38 +100,7 @@ static void epsilon_file_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      ry = ry < 1.0 ? ry : ry - ((int) ry);
      rz = rz < 1.0 ? rz : rz - ((int) rz);
 
-     /* get the point corresponding to r in the epsilon array grid: */
-     x = rx * d->nx;
-     y = ry * d->ny;
-     z = rz * d->nz;
-
-     /* get the difference between (x,y,z) and the actual point */
-     dx = rx * d->nx - x;
-     dy = ry * d->ny - y;
-     dz = rz * d->nz - z;
-     
-     /* get the other closest point in the grid, with periodic boundaries: */
-     x2 = (d->nx + (dx >= 0.0 ? x + 1 : x - 1)) % d->nx;
-     y2 = (d->ny + (dy >= 0.0 ? y + 1 : y - 1)) % d->ny;
-     z2 = (d->nz + (dz >= 0.0 ? z + 1 : z - 1)) % d->nz;
-
-     /* take abs(d{xyz}) to get weights for {xyz} and {xyz}2: */
-     dx = fabs(dx);
-     dy = fabs(dy);
-     dz = fabs(dz);
-
-     /* define a macro to give us epsilon(x,y,z) on the grid,
-	in row-major order (the order used by HDF5): */
-#define EPS(x,y,z) (d->data[((x)*d->ny + (y))*d->nz + (z)])
-
-     /* compute the effective epsilon by linear interpolation: */
-     eps_val = (((EPS(x,y,z)*(1.0-dx) + EPS(x2,y,z)*dx) * (1.0-dy) +
-		 (EPS(x,y2,z)*(1.0-dx) + EPS(x2,y2,z)*dx) * dy) * (1.0-dz) +
-		((EPS(x,y,z2)*(1.0-dx) + EPS(x2,y,z2)*dx) * (1.0-dy) +
-		 (EPS(x,y2,z2)*(1.0-dx) + EPS(x2,y2,z2)*dx) * dy) * dz);
-
-#undef EPS
-
+     eps_val = linear_interpolate(rx,ry,rz, d->data, d->nx,d->ny,d->nz, 1);
      eps->m00 = eps->m11 = eps->m22 = eps_val;
      eps_inv->m00 = eps_inv->m11 = eps_inv->m22 = 1.0 / eps_val;
 #ifdef WITH_HERMITIAN_EPSILON

@@ -139,14 +139,29 @@
 (define-external-function fix-field-phase false false no-return-value)
 (define-external-function compute-field-energy false false 
 	(make-list-type 'number))
+
+(define-external-function get-epsilon-point false false 'number 'vector3)
+(define-external-function get-epsilon-inverse-tensor-point false false 
+  'matrix3x3 'vector3)
+(define-external-function get-epsilon-inverse-tensor-im-point false false 
+  'matrix3x3 'vector3)
+(define-external-function get-energy-point false false 'number 'vector3)
+(define-external-function get-bloch-field-re-point false false 
+  'vector3 'vector3)
+(define-external-function get-bloch-field-im-point false false 
+  'vector3 'vector3)
+(define-external-function get-field-re-point false false 'vector3 'vector3)
+(define-external-function get-field-im-point false false 'vector3 'vector3)
+
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
 (define-external-function compute-energy-integral false false
   'number 'function)
-(define-external-function output-field-to-file false false
-  no-return-value 'integer 'string)  
 (define-external-function compute-energy-in-object-list false false
   'number (make-list-type 'geometric-object))
+
+(define-external-function output-field-to-file false false
+  no-return-value 'integer 'string)  
 
 (define-external-function mpi-is-master? false false 'boolean)
 (define-external-function using-mpi? false false 'boolean)

@@ -27,4 +27,7 @@ extern void get_epsilon_file_func(const char *fname,
 				  void **func_data);
 extern void destroy_epsilon_file_func_data(void *func_data);
 
+extern real linear_interpolate(real rx, real ry, real rz,
+			       real *data, int nx, int ny, int nz, int stride);
+
 #endif /* MPB_H */
