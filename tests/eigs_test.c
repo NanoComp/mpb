@@ -34,7 +34,7 @@ static sqmatrix A, Ainv;
 extern void Aop(evectmatrix Xin, evectmatrix Xout, void *data,
 		int is_current_eigenvector, evectmatrix Work);
 extern void Ainvop(evectmatrix Xin, evectmatrix Xout, void *data,
-		   evectmatrix Y, real *eigenvals);
+		   evectmatrix Y, real *eigenvals, sqmatrix YtY);
 extern void Cop(evectmatrix Xin, evectmatrix Xout, void *data,
 		evectmatrix Y, real *eigenvals, sqmatrix YtY);
 extern void printmat(scalar *A, int m, int n, int ldn);
@@ -146,7 +146,7 @@ int main(int argc, char **argv)
 
      /* Check inverse Ainvop: */
      Aop(Ystart, Y, NULL, 0, Y2);
-     Ainvop(Y, Y2, NULL, Ystart, NULL);
+     Ainvop(Y, Y2, NULL, Ystart, NULL, U);
      printf("\nDifference |Y - (1/A)*A*Y| / |Y| = %g\n",
 	    norm_diff(Ystart.data, Y2.data, Y.n * Y.p));
 
@@ -256,7 +256,7 @@ void Aop(evectmatrix Xin, evectmatrix Xout, void *data,
 }
 
 void Ainvop(evectmatrix Xin, evectmatrix Xout, void *data,
-	    evectmatrix Y, real *eigenvals)
+	    evectmatrix Y, real *eigenvals, sqmatrix YtY)
 {
      CHECK(Ainv.p == Xin.n && Ainv.p == Xout.n && Xin.p == Xout.p,
 	   "matrices not conformant");
