@@ -1,0 +1,459 @@
+Thu Sep  9 18:07:15 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* README: Mentioned contact addresses in manual.
+
+	* README: Refer readers to the manual.
+
+	* doc/user-ref.html, doc/user-tutorial.html,
+	doc/installation.html, doc/introduction.html, doc/license.html,
+	doc/acknowledgments.html, doc/index.html: Made changes suggested
+	by John.  In particular, we are now the "MIT Photonic-Bands"
+	package.
+
+	* doc/user-tutorial.html: Discussed units.
+
+	* doc/introduction.html: Made a stab at an introduction.
+
+Wed Sep  8 22:12:05 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* TODO: Added a couple more items.
+
+	* doc/acknowledgments.html, doc/developer.html, doc/index.html:
+	Added acknowledgments section.
+
+	* doc/user-ref.html: Wrote "Field manipulation functions" section.
+
+Tue Sep  7 23:28:42 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/user-ref.html: put types in <code> font
+
+	* doc/user-ref.html: Added output functions section.
+
+	* photon-ctl/photon.scm: Added combine-band-functions.
+
+	* photon-ctl/photon.scm: Set gap-list to '() if there are 1 or
+	fewer k-points in the run function.
+
+	* doc/user-ref.html: added more sections.
+
+Mon Sep  6 06:26:22 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/user-tutorial.html: bug fix
+
+	* doc/user-tutorial.html: Fixed lie.
+
+	* doc/user-tutorial.html: grammar fix
+
+	* doc/user-ref.html: fixed another tag
+
+	* doc/user-ref.html: fixed tag
+
+	* doc/user-ref.html: added another link
+
+	* doc/user-ref.html: small correction
+
+	* doc/developer.html, doc/user-ref.html: More useful additions.
+	Started on the reference section.
+
+	* photon-ctl/photon.scm, photon-ctl/photon.c: Split
+	randomize-fields into a separate function; less hackery this way.
+
+	* photon-ctl/photon.scm, doc/user-tutorial.html,
+	photon-ctl/photon.c: Made it easier to re-run without
+	reinitializing fields.
+
+Sun Sep  5 23:48:29 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/user-tutorial.html: Added mode-tuning tutorial.
+
+	* configure.in: Don't prefer vendor cc to gcc (since
+	performance-critical code is in libs).
+
+	* src/config.h.in, src/matrices/blasglue.c, configure.in:
+	configure now checks to see if function return value from zdotc is
+	okay.
+
+	* photon-ctl/photon.c: Small fix: hdf output description now
+	includes frequency of correct band.
+
+	* photon-ctl/photon.c, photon-ctl/photon.scm, TODO: Implemented
+	items on TODO list:
+
+	dimensions < true_rank should make grid sizes 1 in extra
+	dimensions.
+
+	Prevent sumte/sumtm/sumfrq header lines from being output when not
+	needed (put in solve-kpoint, when called with kpoint_index == 0,
+	instead of in init_params).
+
+	Add "filename-prefix" input variable for adding a prefix to all
+	output filenames.
+
+	Prepend "k" and "b" to k-point and band indices in output
+	filenames.
+
+	Start band indices with one.
+
+	* doc/user-tutorial.html: another small change
+
+	* doc/user-tutorial.html: another small fix
+
+	* doc/user-tutorial.html: small change
+
+	* doc/user-tutorial.html: Added point-defect example.
+
+	* photon-ctl/photon.c: Perform center-shifting correctly now (I
+	hope).
+
+	* photon-ctl/photon.scm: Only output gaps if there is more than
+	one k point.
+
+Sat Sep  4 23:25:59 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* TODO, doc/user-tutorial.html, photon-ctl/photon.c: Fixed bug for
+	non-square lattices (G was transposed).
+
+	* src/util/mpiglue.h, tests/maxwell_test.c,
+	src/matrixio/matrixio.c, src/matrixio/matrixio.h,
+	src/maxwell/maxwell.c, src/matrixio/evectmatrixio.c,
+	src/matrixio/fieldio.c, configure.in, photon-ctl/Makefile.in,
+	photon-ctl/photon.c: Turned on all gcc warnings and eliminated
+	them whereever practical.
+
+	* doc/user-tutorial.html: Added more subsections.
+
+	* TODO: updated list
+
+	* photon-ctl/photon.c: Shifted origin to the center of the grid
+	(this does not affect inversion symmetry).
+
+	* photon-ctl/photon.scm: Added gap-list computation.
+
+Fri Sep  3 05:30:10 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/installation.html, doc/user-tutorial.html, doc/index.html:
+	Slowly building the manual...
+
+Thu Sep  2 22:50:20 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/user-tutorial.html, doc/installation.html,
+	doc/introduction.html: Added more to the manual.
+
+	* photon-ctl/examples/sq-rods.ctl, photon-ctl/examples/bragg.ctl,
+	photon-ctl/photon.scm: Added alias, "dielectric", for
+	"material-type".
+
+	* doc/installation.html: Wrote installation section.
+
+Wed Sep  1 23:44:39 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* doc/user-tutorial.html, doc/index.html, doc/installation.html,
+	doc/introduction.html, doc/license.html, doc/user-ref.html,
+	doc/developer.html: Added documentation outline.
+
+	* photon-ctl/photon.scm: revamped (run) functions; they're
+	actually useful now.
+
+	* photon-ctl/photon.c: Moved display_object_info to libgeom.
+
+	* photon-ctl/Makefile.in: Added dependency rule for geom.scm.
+
+	* photon-ctl/photon.scm, photon-ctl/photon.c: Added
+	compute-energy-in-objects, plus ability to let init-params not
+	reinitialize the fields.
+
+	* photon-ctl/photon.c: note breakage under mpi of field output.
+
+	* src/matrixio/matrixio.h, src/maxwell/maxwell.h,
+	src/maxwell/maxwell_op.c, src/matrixio/Makefile.in,
+	src/matrixio/evectmatrixio.c, src/matrixio/fieldio.c,
+	src/matrixio/matrixio.c, photon-ctl/Makefile.in,
+	photon-ctl/photon.c, photon-ctl/photon.scm, Makefile.in,
+	configure.in: Added matrixio (HDF5 output capability).
+
+Tue Aug 31 22:07:52 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/maxwell/maxwell.h, src/maxwell/maxwell.c: k vector is passed
+	to maxwell function in the basis of the reciprocal lattice
+	vectors!
+
+	* src/maxwell/maxwell_op.c: Compute transform with correct sign
+	(makes a difference for field output in structures lacking
+	inversion symmetry).
+
+	* src/maxwell/maxwell_op.c: fixed comment.
+
+	* src/maxwell/maxwell_op.c: Broke out E/H computations into
+	subroutines, to prepare for HDF output and position-space
+	calculations.
+
+	* configure.in: Cleaned up a little, and fixed (I think?) order of
+	linking BLAS libs.
+
+Mon Aug 30 20:31:20 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* photon-ctl/examples/bragg.ctl, photon-ctl/examples/sq-rods.ctl:
+	Added a couple of examples (very half-baked at this point).
+
+	* configure.in: Added (untested) checks for BLAS in
+	vendor-specific libraries (which, I *think*, include an optimized
+	BLAS).
+
+	* configure.in: Fixed --help output to reflect fact that
+	--enable-complex is the default.
+
+	* photon-ctl/photon.c: Print out radius for cylinders.
+
+	* photon-ctl/photon.c, photon-ctl/photon.scm: Allow polarization
+	of solution to be set.
+
+	* photon-ctl/photon.c: removed newlines.
+
+	* README, TODO: Updated info.
+
+	* tests/maxwell_test.c, src/util/mpiglue.h, tests/blastest.c,
+	tests/eigs_test.c, src/util/debug_malloc.c, src/util/fortranize.h,
+	src/util/mpi_utils.c, src/util/mpi_utils.h,
+	src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c,
+	src/util/check.h, src/matrices/sqmatrix.c, src/maxwell/maxwell.c,
+	src/maxwell/maxwell.h, src/matrices/matrices.c,
+	src/matrices/matrices.h, src/matrices/scalar.h,
+	src/matrices/blasglue.h, src/matrices/eigensolver.c,
+	src/matrices/eigensolver.h, src/matrices/evectmatrix.c,
+	photon-ctl/photon.c, photon-ctl/photon.scm,
+	src/matrices/blasglue.c, COPYING, COPYRIGHT: GPL-ed everything.
+
+	* Makefile.in: 'make distclean' should remove config.status.
+
+	* src/maxwell/maxwell.h, src/maxwell/maxwell_op.c,
+	tests/maxwell_test.c, photon-ctl/photon.c, photon-ctl/photon.scm,
+	src/maxwell/maxwell.c, Makefile.in, configure.in,
+	photon-ctl/Makefile.in: Added first pass at a user interface
+	(photon-ctl).
+
+Sat Jul 17 17:58:07 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/maxwell_test.c, src/maxwell/maxwell.c,
+	src/maxwell/maxwell_op.c: Implemented num_fft_bands != num_bands.
+
+Fri Jul 16 22:20:28 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/maxwell_test.c, src/maxwell/maxwell.h,
+	src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c,
+	src/maxwell/maxwell.c: Added in epsilon tensor initialization
+	routine, and got rid of eps_inv_mean[band] mess from maxwell_op
+	since it wasn't doing any good in the preconditioner.
+
+Thu Jun 10 22:04:23 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/maxwell_test.c: Fixed -h help string.
+
+	* configure.in: Checked for ASCII project optimized Pentium Pro
+	BLAS library (libblasppro1).
+
+Sat Jun  5 00:22:20 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/maxwell_test.c: Changed maxwell output format slightly;
+	added tolerance parameter.
+
+	* tests/maxwell_test.c: Whoops!  TWOPI is a double, not
+	(implicitly) and int!
+
+Fri Jun  4 23:14:43 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/maxwell_test.c: Default to quarter-wave stack.
+
+	* tests/maxwell_test.c, src/maxwell/maxwell.h,
+	src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c,
+	src/matrices/eigensolver.c, src/matrices/eigensolver.h,
+	src/maxwell/maxwell.c: Added code to find maxwell eigenvals
+	"targeted" around a particular frequency.  The convergence is
+	slower than I would like, though.
+
+	* src/maxwell/maxwell_pre.c: For now, don't subtract eigenvals
+	from the preconditioner, as least not until I understand the
+	effects better.  (Right now, seems to make convergence worse in
+	many cases, and also seems to mess up the convergence criteria for
+	the higher bands.)
+
+Tue Jun  1 19:59:38 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/config.h.in, src/maxwell/maxwell.h, configure.in: Updated to
+	work with [ds]?r?fftw libraries (aren't regular expressions
+	wonderful?).
+
+	* tests/maxwell_test.c, src/util/mpi_utils.c,
+	src/util/mpi_utils.h, src/util/mpiglue.h, src/matrices/scalar.h:
+	Misc. changes.
+
+	* src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c: Separated
+	op and preconditioner into their own files.
+
+Thu Feb  4 02:51:19 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/maxwell/maxwell.c, TODO: Check for k == 0 in when setting k
+	vector.
+
+	* TODO, src/matrices/eigensolver.c: Added stricter convergence
+	(convergence of each eigenvalue separately).
+
+	* tests/maxwell_test.c: Small fixes.
+
+	* tests/eigs_test.c, tests/maxwell_test.c, src/maxwell/maxwell.c,
+	src/maxwell/maxwell.h, src/matrices/eigensolver.c,
+	src/matrices/eigensolver.h, src/maxwell/Makefile.in, Makefile.in,
+	TODO, configure.in, src/config.h.in: Allowed discrimination
+	between TE and TM modes.
+
+Wed Feb  3 22:55:15 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* configure.in: Added profiling flags to existing flags, instead
+	of replacing.
+
+	* configure.in: Fixed ordering of checks...
+
+	* src/config.h.in, tests/maxwell_test.c, configure.in: Added
+	--enable-prof.
+
+	* tests/maxwell_test.c, src/maxwell/maxwell.c,
+	src/maxwell/maxwell.h, tests/eigs_test.c,
+	src/matrices/eigensolver.h, src/matrices/eigensolver.c, TODO: Lots
+	of changes to eigensolver routine and preconditioners, yielding
+	dramatic improvements in convergence.  The most important thing
+	new is that we now diagonalize the subspace on each iteration of
+	eigensolver.  This makes the preconditioner much more sensible,
+	and also allows us to subtract the eigenval from the
+	preconditioner (a better approximation, hopefully, to the correct
+	Hessian).
+
+Sun Jan 31 07:49:01 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/maxwell/maxwell.c, src/maxwell/maxwell.h: No need to store
+	k+G in k_data since we don't use this information.
+
+	* tests/maxwell_test.c, TODO, src/maxwell/maxwell.c: Maxwell seems
+	like it might be working!
+
+Sat Jan 30 22:17:11 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/matrices/scalar.h, tests/eigs_test.c: Made complex
+	eigenvector output in eigs_test more uniform.
+
+	* tests/Makefile.in: Whoops!  make clean should delete
+	eigs_test.o.
+
+	* src/matrices/eigensolver.c: Removed unused lines.
+
+	* tests/maxwell_test.c, src/maxwell/maxwell.h, src/util/check.h,
+	src/util/debug_malloc.c, tests/Makefile.in,
+	src/matrices/eigensolver.c, src/maxwell/maxwell.c, Makefile.in,
+	TODO, configure.in, src/config.h.in: Fixed uninitialized D bug in
+	eigensolver.c (doh!).  Added test for maxwell operator code, and
+	got maxwell closer to working (I hope).
+
+Fri Jan 29 20:52:08 1999  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/Attic/Makefile, tests/Makefile.in, tests/blastest.c,
+	tests/eigs_test.c, src/util/Makefile.in, src/util/debug_malloc.c,
+	src/util/mpi_utils.c, src/maxwell/Makefile.in,
+	src/maxwell/maxwell.c, src/maxwell/maxwell.h,
+	src/matrices/eigensolver.c, src/matrices/evectmatrix.c,
+	src/matrices/matrices.c, src/matrices/sqmatrix.c, src/config.h.in,
+	src/matrices/Makefile.in, src/matrices/blasglue.c, config.guess,
+	config.sub, configure.in, install-sh, Makefile.in:
+	"Autoconfiscated" everything (i.e. adapted for use with GNU
+	autoconf portability tools).
+
+	* src/matrices/scalar.h: Separate scalar_complex type that is
+	always defined.
+
+	* src/maxwell/maxwell.c, src/maxwell/maxwell.h,
+	src/maxwell/README: Initial version of Maxwell operator code.
+
+Mon Aug 10 23:32:35 1998  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/matrices/eigensolver.c: Noted that A and C are assumed to be
+	linear.
+
+	* tests/eigs_test.c, src/matrices/eigensolver.c,
+	src/matrices/eigensolver.h: Added callback data pointer to
+	eigensolver.
+
+Sat Aug  8 19:18:06 1998  Steven G. Johnson  <stevenj@superjdj>
+
+	* tests/blastest.c, tests/eigs_test.c: Made sure that solving for
+	complex eigenvectors works. (Hooray!)
+
+	* src/util/fortranize.h, src/matrices/blasglue.c: Worked around
+	problems accessing Fortran function return values on the RS/6000.
+
+	* tests/eigs_test.c: For complex scalars, create complex matrix.
+
+	* src/matrices/scalar.h: Bug fix in ASSIGN_SCALAR for complex.
+
+	* src/matrices/README: Columns, not rows, of Y are the
+	eigenvectors.
+
+	* src/matrices/evectmatrix.c, src/matrices/matrices.h,
+	src/matrices/sqmatrix.c, src/matrices/eigensolver.c: Some minor
+	cleanup in function interfaces.
+
+	* src/matrices/eigensolver.c: Changed confusing use of "X" in
+	comment.
+
+	* src/matrices/README: Noted eigensolver.c.
+
+	* README: Updated to note eigensolvers.
+
+	* src/util/fortranize.h: "Cray" is not an acronym.
+
+	* src/util/fortranize.h, src/matrices/Attic/fortranize.h: Moved
+	fortranize.h to util directory.
+
+	* tests/Attic/Makefile: Makefile for test programs.  This will
+	probably get replaced by something autoconf'y later, but it will
+	do for now.
+
+	* tests/blastest.c: Check for memory leaks at end.
+
+	* tests/eigs_test.c: Only print out A for n <= 10 instead of 20.
+
+	* src/matrices/eigensolver.c: Increased iteration limit and
+	included it in the failure message.
+
+	* tests/eigs_test.c: Added comparison of multiple tests (w/o CG,
+	w/o preconditioning, etcetera).
+
+	* src/matrices/matrices.h, src/matrices/sqmatrix.c: Added
+	sqmatrix_copy.
+
+	* tests/eigs_test.c: Got things working.
+
+	* src/util/check.h: Modified to enable debug_malloc/free when
+	DEBUG is defined.  Does it work?
+
+	* src/matrices/eigensolver.c, src/matrices/sqmatrix.c: Eigensolver
+	now computes correct eigenvectors/values at the end.  Fixed
+	problem with not enough memory being allocated for dense real
+	eigensolver of small sizes (U.p < 3).
+
+Fri Aug  7 22:35:16 1998  Steven G. Johnson  <stevenj@superjdj>
+
+	* src/util/mpi_utils.h: Fixed missing semicolon when not using
+	gcc.
+
+	* tests/eigs_test.c, tests/blastest.c, src/util/debug_malloc.c,
+	src/util/mpi_utils.c, src/util/mpi_utils.h, src/util/mpiglue.h,
+	src/util/check.h, src/matrices/Attic/fortranize.h,
+	src/matrices/matrices.c, src/matrices/matrices.h,
+	src/matrices/scalar.h, src/matrices/sqmatrix.c,
+	src/matrices/blasglue.h, src/matrices/eigensolver.c,
+	src/matrices/eigensolver.h, src/matrices/evectmatrix.c,
+	src/matrices/README, src/matrices/blasglue.c: Added starting code.
+
+Wed May 20 01:18:50 1998  Steven G. Johnson  <stevenj@superjdj>
+
+	* README: Created photonic-bands repository.
+
+	* README: Initial revision
+
