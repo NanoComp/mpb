@@ -68,6 +68,7 @@ static size_t free_evectmatrix(SCM obj)
 {
      evectmatrix *pm = EVECTMATRIX(obj);
      destroy_evectmatrix(*pm);
+     free(pm);
      return 0;
 }
 
