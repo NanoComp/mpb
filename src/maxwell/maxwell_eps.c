@@ -475,12 +475,11 @@ void set_maxwell_dielectric(maxwell_data *md,
 #ifdef HAVE_MPI
      int local_n2, local_y_start;
 #endif
+#ifndef SCALAR_COMPLEX
      int n_other, n_last, rank;
+#endif
 
      n1 = md->nx; n2 = md->ny; n3 = md->nz;
-     n_other = md->other_dims;
-     n_last = md->last_dim_size / (sizeof(scalar_complex) / sizeof(scalar));
-     rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
 
      get_mesh(n1, n2, n3, mesh_size, R, G, 
 	      mesh_center, &mesh_prod, moment_mesh, moment_mesh_weights,
@@ -542,6 +541,10 @@ void set_maxwell_dielectric(maxwell_data *md,
 #else /* not SCALAR_COMPLEX */
 
 #  ifndef HAVE_MPI
+
+     n_other = md->other_dims;
+     n_last = md->last_dim_size / (sizeof(scalar_complex) / sizeof(scalar));
+     rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
 
      for (i = 0; i < n_other; ++i)
 	  for (j = 0; j < n_last; ++j)
@@ -806,6 +809,10 @@ void set_maxwell_dielectric(maxwell_data *md,
 			    md->eps_inv[eps_index].m11 + 
 			    md->eps_inv[eps_index].m22);
      }}  /* end of loop body */
-     
-     md->eps_inv_mean = eps_inv_total / (3 * md->fft_output_size);
+
+     MPI_Allreduce(&eps_inv_total, &eps_inv_total, 1, SCALAR_MPI_TYPE,
+		   MPI_SUM, MPI_COMM_WORLD);
+     n1 = md->fft_output_size;
+     MPI_Allreduce(&n1, &n1, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+     md->eps_inv_mean = eps_inv_total / (3 * n1);
 }
