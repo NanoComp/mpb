@@ -165,8 +165,6 @@ extern void elastic_compute_fft(int dir, elastic_data *d, scalar *array,
 
 extern void elastic_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 			     int is_current_eigenvector, evectmatrix Work);
-extern void elastic_simple_precondition(evectmatrix X,
-					void *data, real *eigenvals);
 extern void elastic_preconditioner(evectmatrix Xin, evectmatrix Xout,
 				   void *data,
 				   evectmatrix Y, real *eigenvals,

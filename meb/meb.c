@@ -552,14 +552,14 @@ void solve_kpoint(vector3 kvector)
 	       eigensolver_davidson(
 		    Vblock, eigvals + ib,
 		    elastic_operator, (void *) edata,
-		    NULL, (void *) edata,
+		    elastic_preconditioner, (void *) edata,
 		    evectconstraint_chain_func,
 		    (void *) constraints,
 		    W, nwork_alloc, tolerance, &num_iters, flags, 0.0);
 	  else
 	       eigensolver(Vblock, eigvals + ib,
 			   elastic_operator, (void *) edata,
-			   NULL, (void *) edata,
+			   elastic_preconditioner, (void *) edata,
 			   evectconstraint_chain_func,
 			   (void *) constraints,
 			   W, nwork_alloc, tolerance, &num_iters, flags);

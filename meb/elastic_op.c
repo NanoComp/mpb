@@ -609,10 +609,10 @@ void elastic_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 	     d,
 	     d->sqrt_rhoinv, d->rhoct2, d->rhocl2,
 	     &d->current_k[0], &d->current_k[1], &d->current_k[1],
-	     &d->nz, &d->ny, &d->nx,
-	     &d->G[2][0], &d->G[2][1], &d->G[2][2],
-	     &d->G[1][0], &d->G[1][1], &d->G[1][2],
+	     &d->nx, &d->ny, &d->nz,
 	     &d->G[0][0], &d->G[0][1], &d->G[0][2],
+	     &d->G[1][0], &d->G[1][1], &d->G[1][2],
+	     &d->G[2][0], &d->G[2][1], &d->G[2][2],
 
 	     /* FIXME: in the future, it should be possible to just
 		use the Work array and the fft_data array, and to
@@ -640,3 +640,98 @@ void elastic_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 	     d->crap + Xin.N * 20);
      }
 }
+
+/**************************************************************************/
+
+#define PRECOND F77_FUNC(precond,PRECOND)
+extern void PRECOND(int *p, int *ldp,
+	       scalar *v, scalar *Av,
+	       elastic_data *edata,
+	       real *sqrtrhoinv, real *rhoct2, real *rhocl2,
+	       real *vkx, real *vky, real *vkz,
+	       int *Ni, int *Nj, int *Nk,
+	       real *b1x, real *b1y, real *b1z,
+	       real *b2x, real *b2y, real *b2z,
+	       real *b3x, real *b3y, real *b3z,
+	       scalar_complex *Datax,
+	       scalar_complex *Datay,
+	       scalar_complex *Dataz,
+	       scalar_complex *Data1,
+	       scalar_complex *Data2,
+	       scalar_complex *Data3,
+	       scalar_complex *Data4,
+	       scalar_complex *Data5,
+	       scalar_complex *Data6,
+	       scalar_complex *Data7,
+	       scalar_complex *Data8,
+	       scalar_complex *Data9,
+	       scalar_complex *Data10,
+	       scalar_complex *Data11,
+	       scalar_complex *Data12,
+	       scalar_complex *Data13,
+	       scalar_complex *Data14,
+	       scalar_complex *Data15,
+	       scalar_complex *Data16,
+	       scalar_complex *Data17,
+	       scalar_complex *Data18);
+
+/* Compute Xout = OP * Xin, where OP is the elastic-band eigen-operator preconditioner
+   defined in operator.f. */
+void elastic_preconditioner(evectmatrix Xin, evectmatrix Xout, void *data,
+			    evectmatrix Y, real *eigenvals,
+			    sqmatrix YtY)
+{
+     elastic_data *d = (elastic_data *) data;
+     int cur_band_start;
+     scalar_complex *cdata;
+     
+     CHECK(d, "null elastic data pointer!");
+     CHECK(Xin.c == 3, "fields don't have 3 components!");
+
+     (void) Y; /* unused */
+     (void) eigenvals;
+     (void) YtY;
+     cdata = (scalar_complex *) d->fft_data;
+
+     /* compute the operator, num_fft_bands at a time: */
+     for (cur_band_start = 0; cur_band_start < Xin.p; 
+	  cur_band_start += d->num_fft_bands) {
+	  int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
+
+	  PRECOND(&cur_num_bands, &Xin.p,
+		  Xin.data + cur_band_start, Xout.data + cur_band_start,
+		  d,
+		  d->sqrt_rhoinv, d->rhoct2, d->rhocl2,
+		  &d->current_k[0], &d->current_k[1], &d->current_k[1],
+		  &d->nx, &d->ny, &d->nz,
+		  &d->G[0][0], &d->G[0][1], &d->G[0][2],
+		  &d->G[1][0], &d->G[1][1], &d->G[1][2],
+		  &d->G[2][0], &d->G[2][1], &d->G[2][2],
+		  
+		  /* FIXME: in the future, it should be possible to just
+		     use the Work array and the fft_data array, and to
+		     also use the FFTW plans (and above compute_v_from_V etc) */
+		  d->crap + Xin.N * 0,
+		  d->crap + Xin.N * 1,
+		  d->crap + Xin.N * 2,
+		  d->crap + Xin.N * 3,
+		  d->crap + Xin.N * 4,
+		  d->crap + Xin.N * 5,
+		  d->crap + Xin.N * 6,
+		  d->crap + Xin.N * 7,
+		  d->crap + Xin.N * 8,
+		  d->crap + Xin.N * 9,
+		  d->crap + Xin.N * 10,
+		  d->crap + Xin.N * 11,
+		  d->crap + Xin.N * 12,
+		  d->crap + Xin.N * 13,
+		  d->crap + Xin.N * 14,
+		  d->crap + Xin.N * 15,
+		  d->crap + Xin.N * 16,
+		  d->crap + Xin.N * 17,
+		  d->crap + Xin.N * 18,
+		  d->crap + Xin.N * 19,
+		  d->crap + Xin.N * 20);
+     }
+}
+
