@@ -18,8 +18,8 @@
 
 (set! geometry
       (list (make block (material (make dielectric (epsilon loweps)))
-		  (center 0 0 (* 0.5 supercell-h))
-		  (size 1 1 supercell-h))
+		  (center 0 0 (* 0.25 supercell-h))
+		  (size 1 1 (* 0.5 supercell-h)))
 	    (make block (material (make dielectric (epsilon eps)))
 		  (center 0) (size 1 1 h))
 	    (make cylinder (material air)
