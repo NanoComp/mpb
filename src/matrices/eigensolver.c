@@ -162,7 +162,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      int i, iteration = 0;
      mpiglue_clock_t prev_feedback_time;
      real time_AZ, time_KZ=0, time_ZtZ, time_ZtW, time_ZS, time_linmin=0;
-     real linmin_improvement;
+     real linmin_improvement = 0;
      sqmatrix YtAYU, DtAD, symYtAD, YtY, U, DtD, symYtD, S1, S2, S3;
      trace_func_data tfd;
 

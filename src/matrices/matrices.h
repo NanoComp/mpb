@@ -28,7 +28,7 @@ typedef struct {
 } evectmatrix;
 
 typedef struct {
-     int p;
+     int p, alloc_p;
      scalar *data;
 } sqmatrix;
 
@@ -61,11 +61,16 @@ extern real matrix_diag_real_trace(real *diag, int p);
 
 extern void evectmatrix_copy(evectmatrix X, evectmatrix Y);
 extern void evectmatrix_aXpbY(real a, evectmatrix X, real b, evectmatrix Y);
+extern void evectmatrix_aXpbYS_sub(real a, evectmatrix X, 
+				   real b, evectmatrix Y,
+				   sqmatrix S, int Soffset, short sdagger);
 extern void evectmatrix_XeYS(evectmatrix X, evectmatrix Y,
 			     sqmatrix S, short sherm);
 extern void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y,sqmatrix S);
 extern void evectmatrix_XtX(sqmatrix U, evectmatrix X);
 extern void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y);
+extern void evectmatrixXtY_sub(sqmatrix U, int Uoffset,
+			       evectmatrix X, evectmatrix Y);
 extern void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag);
 extern void evectmatrix_XtY_diag_real(evectmatrix X, evectmatrix Y,
 				      real *diag);
@@ -75,6 +80,8 @@ extern scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y);
 /* sqmatrix operations, defined in sqmatrix.c: */
 
 extern void sqmatrix_copy(sqmatrix A, sqmatrix B);
+extern void sqmatrix_resize(sqmatrix *A, int p, short preserve_data);
+extern void sqmatrix_copy_upper2full(sqmatrix F, sqmatrix U);
 extern void sqmatrix_symmetrize(sqmatrix Asym, sqmatrix A);
 extern scalar sqmatrix_trace(sqmatrix U);
 extern scalar sqmatrix_traceAtB(sqmatrix A, sqmatrix B);

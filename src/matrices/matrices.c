@@ -60,8 +60,12 @@ sqmatrix create_sqmatrix(int p)
 {
      sqmatrix X;
 
-     X.p = p;
-     CHK_MALLOC(X.data, scalar, p * p);
+     X.alloc_p = X.p = p;
+     if (p > 0) {
+	  CHK_MALLOC(X.data, scalar, p * p);
+     }
+     else
+	  X.data = (scalar*) NULL;
      return X;
 }
 

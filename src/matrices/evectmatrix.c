@@ -49,23 +49,39 @@ void evectmatrix_aXpbY(real a, evectmatrix X, real b, evectmatrix Y)
      blasglue_axpy(X.n * X.p, b, Y.data, 1, X.data, 1);
 }
 
+/* Compute X = a*X + b*Y*S.  Instead of using the entire S matrix, however,
+   we use only a Y.p x Y.p submatrix, beginning at the element indexed
+   by Soffset.  If sdagger != 0, then the adjoint of the submatrix is
+   used instead of the submatrix. */
+void evectmatrix_aXpbYS_sub(real a, evectmatrix X, real b, evectmatrix Y,
+			    sqmatrix S, int Soffset, short sdagger)
+{
+     if (S.p == 0)  /* we treat the S.p == 0 case as if S were the identity */
+	  evectmatrix_aXpbY(a, X, b, Y);
+     else {
+	  CHECK(X.n == Y.n && X.p == Y.p && X.p <= S.p,
+		"arrays not conformant");
+	  CHECK(Soffset + (Y.p-1)*S.p + Y.p <= S.p*S.p,
+		"submatrix exceeds matrix bounds");
+	  blasglue_gemm('N', sdagger ? 'C' : 'N', X.n, X.p, X.p,
+			b, Y.data, Y.p, S.data + Soffset, S.p,
+			a, X.data, X.p);
+     }
+}
+
 /* compute X = YS.  If sherm != 0, then S is assumed to be Hermitian.
    This can be used to make the multiplication more efficient. */
 void evectmatrix_XeYS(evectmatrix X, evectmatrix Y, sqmatrix S, short sherm)
 {
-     CHECK(X.p == Y.p && X.n == Y.n && X.p == S.p, "arrays not conformant");
-
-     blasglue_gemm('N', sherm ? 'C' : 'N', X.n, X.p, X.p,
-		   1.0, Y.data, Y.p, S.data, S.p, 0.0, X.data, X.p);
+     CHECK(S.p == 0 || S.p == Y.p, "arrays not conformant");
+     evectmatrix_aXpbYS_sub(0.0, X, 1.0, Y, S, 0, sherm);
 }
 
 /* compute X += a Y * S. */
 void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y, sqmatrix S)
 {
-     CHECK(X.n == Y.n && X.p == Y.p && X.p == S.p, "arrays not conformant");
-
-     blasglue_gemm('N', 'N', X.n, X.p, X.p,
-		   a, Y.data, Y.p, S.data, S.p, 1.0, X.data, X.p);
+     CHECK(S.p == 0 || S.p == Y.p, "arrays not conformant");
+     evectmatrix_aXpbYS_sub(1.0, X, a, Y, S, 0, 0);
 }
 
 /* compute U = adjoint(X) * X */
@@ -106,6 +122,26 @@ void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y)
 
      MPI_Allreduce(U.data, U.data, U.p * U.p * SCALAR_NUMVALS,
 		   SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+}
+
+/* Compute adjoint(X) * Y, storing the result in U at an offset Uoffset
+   with the matrix (i.e. as a submatrix within U). */
+void evectmatrixXtY_sub(sqmatrix U, int Uoffset, evectmatrix X, evectmatrix Y)
+{
+     int i;
+
+     CHECK(X.p == Y.p && X.n == Y.n && U.p >= Y.p, "matrices not conformant");
+     CHECK(Uoffset + (Y.p-1)*U.p + Y.p <= U.p*U.p,
+	   "submatrix exceeds matrix bounds");
+
+     blasglue_gemm('C', 'N', X.p, X.p, X.n,
+                   1.0, X.data, X.p, Y.data, Y.p, 0.0, U.data + Uoffset, U.p);
+
+     for (i = 0; i < Y.p; ++i) {
+	  MPI_Allreduce(U.data + Uoffset + i*U.p, U.data + Uoffset + i*U.p,
+			Y.p * SCALAR_NUMVALS,
+			SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+     }
 }
 
 /* compute only the diagonal elements of XtY */

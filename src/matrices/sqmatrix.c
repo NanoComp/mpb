@@ -36,6 +36,49 @@ void sqmatrix_copy(sqmatrix A, sqmatrix B)
      blasglue_copy(A.p * A.p, B.data, 1, A.data, 1);
 }
 
+/* Resize A from its current size to a pxp matrix, assuming that
+   A was initially allocated to hold at least this big a matrix.
+   If preserve_data is nonzero, copies the existing data in A (or
+   a subset of it, if the matrix is shrinking) to the corresponding
+   entries of the resized matrix. */
+void sqmatrix_resize(sqmatrix *A, int p, short preserve_data)
+{
+     CHECK(p <= A->alloc_p, "tried to resize beyond allocated limit");
+
+     if (preserve_data) {
+	  int i, j;
+	  
+	  if (p < A->p) {
+	       for (i = 0; i < p; ++i)
+		    for (j = 0; j < p; ++j)
+			 A->data[i*p + j] = A->data[i*A->p + j];
+	  }
+	  else {
+	       for (i = A->p-1; i >= 0; --i)
+		    for (j = A->p-1; j >= 0; --j)
+			 A->data[i*p + j] = A->data[i*A->p + j];
+	  }
+     }
+
+     A->p = p;
+}
+
+/* U contains the upper triangle of a Hermitian matrix; we copy this 
+   to F and also fill in the lower triangle with the adjoint of the upper. */
+void sqmatrix_copy_upper2full(sqmatrix F, sqmatrix U)
+{
+     int i, j;
+
+     CHECK(F.p == U.p, "arrays not conformant");
+     for (i = 0; i < U.p; ++i) {
+	  for (j = 0; j < i; ++j) {
+	       ASSIGN_CONJ(F.data[i*U.p + j], U.data[j*U.p + i]);
+	  }
+	  for (; j < U.p; ++j)
+	       F.data[i*U.p + j] = U.data[i*U.p + j];
+     }
+}
+
 /* Asym = (A + adjoint(A)) / 2.  Asym is thus Hermitian. */
 void sqmatrix_symmetrize(sqmatrix Asym, sqmatrix A)
 {

@@ -31,13 +31,23 @@ typedef void (*evectpreconditioner) (evectmatrix Xin, evectmatrix Xout,
 
 typedef void (*evectconstraint) (evectmatrix X, void *data);
 
-void eigensolver(evectmatrix Y, real *eigenvals,
-                 evectoperator A, void *Adata,
-                 evectpreconditioner K, void *Kdata,
-                 evectconstraint constraint, void *constraint_data,
-                 evectmatrix Work[], int nWork,
-                 real tolerance, int *num_iterations,
-                 int flags);
+extern void eigensolver(evectmatrix Y, real *eigenvals,
+			evectoperator A, void *Adata,
+			evectpreconditioner K, void *Kdata,
+			evectconstraint constraint, void *constraint_data,
+			evectmatrix Work[], int nWork,
+			real tolerance, int *num_iterations,
+			int flags);
+
+extern void eigensolver_davidson(evectmatrix Y, real *eigenvals,
+				 evectoperator A, void *Adata,
+				 evectpreconditioner K, void *Kdata,
+				 evectconstraint constraint,
+				 void *constraint_data,
+				 evectmatrix Work[], int nWork,
+				 real tolerance, int *num_iterations,
+				 int flags,
+				 real target);
 
 extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 				      evectoperator A, void *Adata,
