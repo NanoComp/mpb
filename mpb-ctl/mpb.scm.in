@@ -133,6 +133,8 @@
 	(make-list-type 'number))
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
+(define-external-function compute-energy-integral false false
+  'number 'function)
 (define-external-function output-field-to-file false false
   no-return-value 'integer 'string)  
 (define-external-function compute-energy-in-object-list false false

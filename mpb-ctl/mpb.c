@@ -1432,6 +1432,62 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 
 /**************************************************************************/
 
+/* Compute the integral of f(energy, epsilon) over the cell. */
+number compute_energy_integral(function f)
+{
+     int N, i, last_dim, last_dim_stored, nx, nz, local_y_start;
+     real *energy = (real *) curfield;
+     real energy_integral = 0.0;
+
+     if (!curfield || !strchr("DH", curfield_type)) {
+          mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
+          return 0.0;
+     }
+
+     N = mdata->fft_output_size;
+     last_dim = mdata->last_dim;
+     last_dim_stored =
+	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
+
+     for (i = 0; i < N; ++i) {
+	  real epsilon, integrand;
+
+	  epsilon = 3.0 / (mdata->eps_inv[i].m00 +
+			   mdata->eps_inv[i].m11 +
+			   mdata->eps_inv[i].m22);
+
+	  integrand =
+	       ctl_convert_number_to_c(
+		    gh_call2(f,
+			     ctl_convert_number_to_scm(energy[i]),
+			     ctl_convert_number_to_scm(epsilon)));
+	  energy_integral += integrand;
+	  
+#ifndef SCALAR_COMPLEX
+	  /* most points are counted twice, by rfftw output symmetry: */
+	  {
+	       int last_index;
+#  ifdef HAVE_MPI
+	       if (nz == 1) /* 2d: 1st dim. is truncated one */
+		    last_index = i / nx + local_y_start;
+	       else
+		    last_index = i % last_dim_stored;
+#  else
+	       last_index = i % last_dim_stored;
+#  endif
+	       if (last_index != 0 && 2*last_index != last_dim)
+		    energy_integral += integrand;
+	  }
+#endif
+     }
+     mpi_allreduce_1(&energy_integral, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
+     return energy_integral;
+}
+
+/**************************************************************************/
+
 /* Prepend the prefix to the fname, and append a polarization
    specifier (if any) (e.g. ".te"), returning a new string, which
    should be deallocated with free().   fname or prefix may be NULL,
