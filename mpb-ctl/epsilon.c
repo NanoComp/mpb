@@ -151,7 +151,7 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 		   eps->m02 = d->epsilon_offdiag.y.re;
 		   eps->m12 = d->epsilon_offdiag.z.re;
 		   CHECK(vector3_norm(vector3_plus(
-			     cvector3_re(d->epsilon_offdiag),
+			     cvector3_im(d->epsilon_offdiag),
 			     d->epsilon_offdiag_imag)) == 0.0,
 			 "imaginary epsilon-offdiag is only supported when MPB is configured --with-hermitian-epsilon");
 #endif
