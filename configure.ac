@@ -157,19 +157,9 @@ LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
 AC_ARG_WITH(mpi, [AC_HELP_STRING([--with-mpi],[enable MPI parallelization])], with_mpi=$withval, with_mpi=no)
 
 if test "x$with_mpi" = "xyes"; then
-	AC_CHECK_PROGS(MPICC, mpicc hcc mpcc mpcc_r, $CC)
+	sinclude(acx_mpi.m4)
+	ACX_MPI([], [AC_MSG_ERROR(could not find mpi library for --with-mpi)])
         CC="$MPICC"
-        if test x = x"$MPILIBS"; then
-                AC_CHECK_FUNC(MPI_Init, [MPILIBS=" "])
-        fi
-        if test x = x"$MPILIBS"; then
-                AC_CHECK_LIB(mpi, MPI_Init, [MPILIBS="-lmpi"])
-        fi
-
-        if test x = x"$MPILIBS"; then
-                AC_MSG_ERROR(could not find mpi library for --with-mpi)
-	fi
-
 	LIBS="$MPILIBS $LIBS"
 
 	# Make installed program mpb_mpi instead of mpb
