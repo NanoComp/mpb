@@ -26,7 +26,7 @@
 (run-tm output-efield-z)
 
 (display "********** Square lattice of rods: TE, w/hfield & dpwr **********\n")
-(run-te output-hfield-z output-dpwr)
+(run-te (output-at-kpoint (vector3 0.5 0 0) output-hfield-z output-dpwr))
 
 ; *** Bands of a Triangular Lattice ***
 
