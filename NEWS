@@ -1,3 +1,14 @@
+MPB 1.1
+
+  * Added compute-energy-integral function to make it easier to compute
+    arbitrary field-energy integrals for perturbation theory; thanks to
+    Marin Soljacic for the suggestion.
+
+  * Fixed bug in output-field routines for the case of a nonzero kz
+    component, that caused the fields to be multiplied by an exp(ikx)
+    phase with a k in the wrong direction.  Thanks to Jesper Riishede
+    for the bug report.
+
 MPB 1.0 (2/23/2001)
 
   * At long last, support for distributed-memory parallel machines

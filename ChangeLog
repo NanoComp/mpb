@@ -1,3 +1,79 @@
+2001-04-30  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.c: Fixed bug in field output for kz != 0.  Thanks to
+	Jesper Riishede for the bug report.
+
+2001-04-29  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html: note limitations of fix-*field-phase
+
+2001-04-26  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/installation.html: updated LAM URL
+
+2001-04-20  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb-split.in: Use
+
+	#! /bin/bash
+
+	instead of
+
+	#!/bin/bash
+
+	for portability on some systems.
+
+	* doc/user-ref.html, mpb-ctl/mpb.c: compute_energy_integral should
+	also pass position to integrand
+
+2001-04-14  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb-split.in: Whoops, add first job (0th k-point chunk)
+	to list of subprocesses, so that it gets killed properly if we
+	kill the script.
+
+2001-04-11  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, doc/user-ref.html: Added
+	compute-energy-integral function, suggested by Marin Soljacic.
+
+2001-04-03  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/acknowledgments.html, doc/introduction.html: acknowledged
+	Bob Meade
+
+2001-03-07  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in: minor cleanup
+
+2001-03-06  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html: magnetic material -> gyrotropic
+	(magneto-optic) material
+
+2001-03-04  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in: display-eigensolver-stats outputs mean time
+	per iteration
+
+	* doc/installation.html: photonic-bands -> MPB
+
+	* doc/installation.html: link to MPICH and LAM from MPI section
+
+	* utils/mpb-data.c: check to make sure -n argument is > 0 (thanks
+	to Niclas Carlsson for a bug report).
+
+2001-03-02  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-tutorial.html: linked to units section
+
+	* doc/user-tutorial.html: ./mpb -> mpb (why did I have it this
+	way?)
+
+2001-02-24  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html: fix hyphenation
+
 2001-02-23  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* configure.in, src/config.h.in, src/matrixio/matrixio.c:

@@ -2,7 +2,7 @@
 AC_INIT(src/matrices/matrices.c)
 AC_CONFIG_HEADER(src/config.h)
 
-MPB_VERSION=1.0
+MPB_VERSION=1.1
 AC_SUBST(MPB_VERSION)
 
 # set CFLAGS to -O3, unless the user has set the CFLAGS env. variable:
