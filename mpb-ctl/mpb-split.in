@@ -1,4 +1,4 @@
-#!@SH_JOB@
+#! @SH_JOB@
 if test x"`echo $1 | egrep '^[0-9]*$'`" = x; then
     echo "Syntax: $0 <num-split> [mpb arguments...]" 1>&2
     exit 1
