@@ -42,11 +42,12 @@ interface.  (Note that you will need implementations of BLAS levels 1-3.)
 
 <p>You can find more BLAS information, as well as a basic
 implementation, on the <a href="http://www.netlib.org/blas/">BLAS
-Homepage</a>.  It is a good idea to try and find a more optimized BLAS
-code for your hardware, though.  Vendor-optimized BLAS implementations
-are available as part of the Compaq CXML, IBM ESSL, SGI sgimath, and
-other libraries.  Recently, there has also been work on
-self-optimizing BLAS implementations that can achieve performance
+Homepage</a>.  Once you get things working with the basic BLAS
+implementation, it might be a good idea to try and find a more
+optimized BLAS code for your hardware.  Vendor-optimized BLAS
+implementations are available as part of the Compaq CXML, IBM ESSL,
+SGI sgimath, and other libraries.  Recently, there has also been work
+on self-optimizing BLAS implementations that can achieve performance
 competitive with vendor-tuned codes; see the <a
 href="http://www.cs.berkeley.edu/~siyer/">PhiPACK</a> and <a
 href="http://www.netlib.org/atlas/">ATLAS</a> homepages (these only
@@ -54,6 +55,30 @@ implement some BLAS operations, however, so you will still need a
 generic BLAS).  Links to more BLAS implementations can be found on <a
 href="http://SAL.KachinaTech.COM/B/0/BLAS.html" title="Scientific
 Applications on Linux (SAL) BLAS page">SAL</a>.
+
+<p>Note that the generic BLAS does not come with a
+<code>Makefile</code>; compile it with something like:
+
+<pre>
+mkdir blas && cd blas # the BLAS archive does not create its own directory
+<i>get http://www.netlib.org/blas/blas.tgz</i>
+gunzip blas.tgz
+tar xf blas.tar
+f77 -c -O3 *.f   # compile all of the .f files to produce .o files
+ar rv libblas.a *.o    #  combine the .o files into a library
+su -c "cp libblas.a /usr/local/lib"   # switch to root and install
+</pre>
+
+<p>(Replace <code>-O3</code> with your favorite optimization options.
+On Linux, I use <code>g77 -O3 -fomit-frame-pointer
+-funroll-loops</code>, with <code>-malign-double -mcpu=i686</code> on
+a Pentium II.)  Note that MPB looks for the standard BLAS library with
+<code>-lblas</code>, so the library file should be called
+<code>libblas.a</code> and reside in a standard directory like
+<code>/usr/local/lib</code>.  (See also below for the
+<code>--with-fastblas=<i>lib</i></code> option to MPB's
+<code>configure</code> script and the <code>LDFLAGS</code> environment
+variable.)
 
 <h2>LAPACK</h2>
 
@@ -65,6 +90,13 @@ href="http://www.netlib.org/lapack/">LAPACK Home Page</a>.  More
 LAPACK links can be found on <a
 href="http://SAL.KachinaTech.COM/B/0/LAPACK.html" title="Scientific
 Applications on Linux (SAL) LAPACK page">SAL</a>.
+
+<p>Note that MPB looks for LAPACK by linking with
+<code>-llapack</code>.  This means that the library must be called
+<code>liblapack.a</code> and be installed in a standard directory like
+<code>/usr/local/lib</code> (alternatively, you can specify another
+directory via the <code>LDFLAGS</code> environment variable; see
+below).
 
 <h2>MPI</h2>
 
