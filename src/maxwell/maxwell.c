@@ -120,7 +120,8 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				       FFTW_FORWARD,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
      {
-	  int nt[3] = { n[1], n[0], n[2] }; /* transposed for reverse FFT */
+	  int nt[3]; /* transposed dimensions for reverse FFT */
+	  nt[0] = n[1]; nt[1] = n[0]; nt[2] = n[2]; 
 	  d->plan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, nt,
 					   FFTW_BACKWARD,
 					   FFTW_ESTIMATE | FFTW_IN_PLACE);
