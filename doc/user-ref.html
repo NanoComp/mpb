@@ -1035,27 +1035,29 @@ from the <code>band-range-data</code> of the previous run.)
 <h4><a name="parity">Parity</a></h4>
 
 <p>Given a set of eigenstates at a k-point, MPB can compute their
-<i>parity</i> with respect to the z=0 or y=0 plane.  The z/y parity of
-a state is defined as the expectation value of the mirror-flip
-operation through z/y=0, respectively.  For true even and odd
-eigenstates (see e.g.  <code>run-zeven</code> and
-<code>run-zodd</code>), this will be +1 and -1, respectively; for other
-states it will be something in between.  This is useful when you have
-a nearly symmetric structure, such as a waveguide with a substrate
-underneath, and you want to tell which bands are even-like (parity
-&gt; 0) and odd-like (parity &lt; 0).  (In fact, a state can be
-decomposed into purely even and odd functions, with amplitudes
-(1+parity)/2 and (1-parity)/2, respectively.)
+<i>parities</i> with respect to the z=0 or y=0 plane.  The z/y parity
+of a state is defined as the expectation value (under the usual inner
+product) of the mirror-flip operation through z/y=0, respectively.
+For true even and odd eigenstates (see e.g.  <code>run-zeven</code>
+and <code>run-zodd</code>), this will be +1 and -1, respectively; for
+other states it will be something in between.
+
+<p>This is useful e.g. when you have a nearly symmetric structure, such
+as a waveguide with a substrate underneath, and you want to tell which
+bands are even-like (parity &gt; 0) and odd-like (parity &lt; 0).
+Indeed, any state can be decomposed into purely even and odd
+functions, with absolute-value-squared amplitudes of (1+parity)/2 and
+(1-parity)/2, respectively.
 
 <dl>
 
 <p><dt><code>(compute-zparities)</code>
-<dd>Returns a list of the parities about the z=0 plane, one for each
-band computed at the last k-point.
+<dd>Returns a list of the parities about the z=0 plane, one number for
+each band computed at the last k-point.
 
 <p><dt><code>(compute-yparities)</code>
-<dd>Returns a list of the parities about the y=0 plane, one for each
-band computed at the last k-point.
+<dd>Returns a list of the parities about the y=0 plane, one number for
+each band computed at the last k-point.
 
 <p><dt><code>display-zparities</code>, <code>display-yparities</code>
 <dd>This are band functions, designed to be passed to
@@ -1065,6 +1067,10 @@ grepping).
 
 </dl>
 
+<p>(The reader should recall that the magnetic field is only a
+pseudo-vector, and is therefore multiplied by -1 under mirror-flip
+operations.  For this reason, the magnetic field <i>appears<i> to have
+opposite symmetry from the electric field, but is really the same.)
 
 <h4><a name="group-vel">Group velocities</a></h4>
 
