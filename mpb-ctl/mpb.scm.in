@@ -21,6 +21,8 @@
 (define-class dielectric material-type
   (define-property epsilon 'number no-default positive?))
 
+(define (index n) (epsilon (* n n))) ; convenient substitute for epsilon
+
 (define-class dielectric-anisotropic material-type
   (define-property epsilon-diag 'vector3 no-default)
   (define-property epsilon-offdiag 'vector3 (make-default (vector3 0 0 0))))
