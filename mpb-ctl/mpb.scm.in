@@ -667,12 +667,11 @@
 		  (print "find-k " b " at " k ": " fun "\n")
 		  (cons fun (car (reverse v)))))))))
     (randomize-fields) ; don't let previous computations interfere
-    (let ((ks 
-	   (map
-	    (lambda (b)
-	      (find-root-deriv (rootfun b) tol kmag-min kmag-max
-			       (vector-ref k0s (- b band-min))))
-	    (arith-sequence band-max -1 nb))))
+    (let ((ks (reverse (map
+			(lambda (b)
+			  (find-root-deriv (rootfun b) tol kmag-min kmag-max
+					   (vector-ref k0s (- b band-min))))
+			(arith-sequence band-max -1 nb)))))
       (set! num-bands num-bands-save)
       (set! k-points k-points-save)
       (print parity "kvals:, " omega ", " band-min ", " band-max)
