@@ -1,3 +1,5 @@
+  * Shortened --hermitian-epsilon configure option to --hermitian-eps.
+
 MPB 1.2.2 (12/7/2001)
 
   * Fixed bug that caused erroneous/failed convergence when EVEN-Y/ODD-Y

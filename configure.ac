@@ -25,29 +25,29 @@ AC_PROG_MAKE_SET
 # check how to transform the name of the installed program:
 AC_ARG_PROGRAM
 
-AC_ARG_ENABLE(single, [  --enable-single         compile for single precision], enable_single=$enableval, enable_single=no)
+AC_ARG_ENABLE(single, [AC_HELP_STRING([--enable-single],[compile for single precision])], enable_single=$enableval, enable_single=no)
 if test "$enable_single" = "yes"; then
         AC_DEFINE(SCALAR_SINGLE_PREC,1,[Define to use single precision])
 fi
 
-AC_ARG_ENABLE(debug, [  --enable-debug          compile for debugging], ok=$enableval, ok=no)
+AC_ARG_ENABLE(debug, [AC_HELP_STRING([--enable-debug],[compile for debugging])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
 	CFLAGS="-g"
 	AC_DEFINE(DEBUG,1,[Define to turn on debugging checks])
 fi
 
-AC_ARG_ENABLE(debug-malloc, [  --enable-debug-malloc   use debug malloc/free], ok=$enableval, ok=no)
+AC_ARG_ENABLE(debug-malloc, [AC_HELP_STRING([--enable-debug-malloc],[use debug malloc/free])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
 	AC_DEFINE(DEBUG_MALLOC,1,[Define to use debugging malloc/free])
 fi
 
-AC_ARG_ENABLE(prof, [  --enable-prof           compile for profiling], ok=$enableval, ok=no)
+AC_ARG_ENABLE(prof, [AC_HELP_STRING([--enable-prof],[compile for profiling])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
 	CFLAGS="$CFLAGS -pg"
 	AC_DEFINE(ENABLE_PROF,1,[Define when using the profiler tool])
 fi
 
-AC_ARG_ENABLE(checks, [  --disable-checks        disable runtime checks], ok=$enableval, ok=yes)
+AC_ARG_ENABLE(checks, [AC_HELP_STRING([--disable-checks],[disable runtime checks])], ok=$enableval, ok=yes)
 if test "$ok" = "no"; then
 	AC_DEFINE(CHECK_DISABLE,1,[Define to disable sanity checks in code])
 fi
@@ -58,7 +58,7 @@ AC_SUBST(BUILD_MPB_DATA)
 INSTALL_MPB_SPLIT=install-mpb-split  # mpb-split target to install, if any
 AC_SUBST(INSTALL_MPB_SPLIT)
 
-AC_ARG_WITH(inv-symmetry,[  --with-inv-symmetry     take advantage of (and require) inv. sym.], inv_sym=$withval, inv_sym=no)
+AC_ARG_WITH(inv-symmetry,[AC_HELP_STRING([--with-inv-symmetry],[take advantage of (and require) inv. sym.])], inv_sym=$withval, inv_sym=no)
 if test "$inv_sym" = "no"; then
         AC_DEFINE(SCALAR_COMPLEX,1,[Define to use complex fields and
 	                            not to require inversion symmetry])
@@ -70,7 +70,7 @@ else
 fi
 AC_SUBST(SCALAR_TYPE)
 
-AC_ARG_WITH(hermitian-epsilon,[  --with-hermitian-epsilon     allow complex-Hermitian dielectric tensors], hermitian_epsilon=$withval, hermitian_epsilon=no)
+AC_ARG_WITH(hermitian-eps,[AC_HELP_STRING([--with-hermitian-eps],[allow complex-Hermitian dielectric tensors])], hermitian_epsilon=$withval, hermitian_epsilon=no)
 if test "$hermitian_epsilon" = "yes"; then
         AC_DEFINE(WITH_HERMITIAN_EPSILON,1,[Define to support Hermitian/complex
                                             dielectric tensors.])
@@ -86,7 +86,7 @@ fi
 #                       Checks for libraries:
 ##############################################################################
 
-AC_ARG_WITH(efence, [  --with-efence           use ElectricFence library], ok=$withval, ok=no)
+AC_ARG_WITH(efence, [AC_HELP_STRING([--with-efence],[use ElectricFence library])], ok=$withval, ok=no)
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(efence, malloc)
 fi
@@ -151,7 +151,7 @@ LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
 ##############################################################################
 # Check for MPI library
 
-AC_ARG_WITH(mpi, [  --with-mpi          enable MPI parallelization], with_mpi=$withval, with_mpi=no)
+AC_ARG_WITH(mpi, [AC_HELP_STRING([--with-mpi],[enable MPI parallelization])], with_mpi=$withval, with_mpi=no)
 
 if test "x$with_mpi" = "xyes"; then
 	AC_CHECK_PROGS(MPICC, mpicc hcc mpcc mpcc_r, $CC)
@@ -212,7 +212,7 @@ fi
 
 ##############################################################################
 # Check for HDF5 library
-AC_ARG_WITH(hdf5, [  --without-hdf5          do not use HDF5 output], ok=$withval, ok=yes)
+AC_ARG_WITH(hdf5, [AC_HELP_STRING([--without-hdf5],[do not use HDF5 output])], ok=$withval, ok=yes)
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(z, deflate)
 
@@ -282,7 +282,7 @@ AC_SUBST(ACTIVATE_READLINE)
 
 save_LIBS_0="$LIBS" # save, to check later if we found any library
 
-AC_ARG_WITH(libctl, [  --with-libctl=<dir>     specify libctl directory], ok=$withval, ok=yes)
+AC_ARG_WITH(libctl, [AC_HELP_STRING([--with-libctl=<dir>],[specify libctl directory])], ok=$withval, ok=yes)
 if test "$ok" = "no"; then
         AC_MSG_ERROR([libctl is required and you may not disable it])
 elif test "$ok" != "yes"; then
