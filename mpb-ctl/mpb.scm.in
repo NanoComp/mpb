@@ -169,26 +169,53 @@
 
 ; ****************************************************************
 
+; timing functions
+
+; Display the message followed by the time t in minutes and seconds,
+; returning t in seconds.
+(define (display-time message t)
+  (let ((minutes (quotient t 60)) (seconds (remainder t 60)))
+    (display message)
+    (if (> minutes 1)
+	(display-many minutes " minutes, ")
+	(if (> minutes 0)
+	    (display-many minutes " minute, ")))
+    (display-many seconds " seconds.\n"))
+  t)
+
+; (begin-time message ...statements...) works just like (begin
+; ...statements...) except that it also displays 'message' followed by
+; the elapsed time to execute the statements.  Additionally, it returns
+; the elapsed time in seconds, rather than the value of the last statement.
+(defmacro-public begin-time (message . statements)
+  `(begin
+     (let ((begin-time-start-t (current-time)))
+       ,@statements
+       (display-time ,message (- (current-time) begin-time-start-t)))))
+
+; ****************************************************************
+
 ; (run) functions, to do vanilla calculations.  They all take zero or
 ; more "band functions."  Each function should take a single
 ; parameter, the band index, and is called for each band index at
 ; every k point.  These are typically used to output the bands.
 
 (define (run-polarization p reset-fields . band-functions)
-  (define band-range-data '())
-  (set! interactive false)  ; don't be interactive if we call (run)
-  (init-params p reset-fields)
-  (output-epsilon)          ; output epsilon immediately
-  (map (lambda (k)
-	 (solve-kpoint k)
-	 (set! band-range-data (update-band-range-data band-range-data freqs))
-	 (map (lambda (f)
-		(do ((band 1 (+ band 1))) ((> band num-bands)) (f band)))
-	      band-functions))
-       k-points)
-  (if (> (length k-points) 1)
-      (set! gap-list (output-gaps band-range-data))
-      (set! gap-list '()))
+  (begin-time "total elapsed time for run: "
+   (define band-range-data '())
+   (set! interactive false)  ; don't be interactive if we call (run)
+   (init-params p reset-fields)
+   (output-epsilon)          ; output epsilon immediately
+   (map (lambda (k)
+	  (begin-time "elapsed time for k point: " (solve-kpoint k))
+	  (set! band-range-data (update-band-range-data band-range-data freqs))
+	  (map (lambda (f)
+		 (do ((band 1 (+ band 1))) ((> band num-bands)) (f band)))
+	       band-functions))
+	k-points)
+   (if (> (length k-points) 1)
+       (set! gap-list (output-gaps band-range-data))
+       (set! gap-list '())))
   (display "done.\n"))
 
 (define (run . band-functions)
