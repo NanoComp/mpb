@@ -132,7 +132,18 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      flags |= EIGS_VERBOSE;
 #endif
 
-     usingConjugateGradient = nWork >= 3;
+     /* analytic-multimin only works when we are diagonalizing each step: */
+     if ((flags & EIGS_ANALYTIC_MULTIMIN) &&
+	 !(flags & EIGS_DIAGONALIZE_EACH_STEP) &&
+	  (flags & EIGS_VERBOSE))
+	  fprintf(stderr, "eigensolver: "
+		  "must use diagonalize-each-step with analytic-multimin\n");
+	  
+     /* Only use CG when we have enough workspace.  Also, don't use it
+	with EIGS_ANALYTIC_MULTIMIN since that screws up the CG condition */
+     usingConjugateGradient = nWork >= 3 &&
+	  !((flags & EIGS_ANALYTIC_MULTIMIN) &&
+	    (flags & EIGS_DIAGONALIZE_EACH_STEP));
      if (usingConjugateGradient) {
 	  int i;
 	  D = Work[2];
