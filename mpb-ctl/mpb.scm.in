@@ -159,6 +159,21 @@
 
 ; ****************************************************************
 
+; Function to convert a k-point k into an equivalent point in the
+; first Brillouin zone (not necessarily the irreducible Brillouin zone):
+(define (first-brillouin-zone k)
+  (define (n k) (vector3-norm (reciprocal->cartesian k)))
+  (define (try+ k v)
+    (if (< (n (vector3+ k v)) (n k)) (try+ (vector3+ k v) v) k))
+  (define (try k v) (try+ (try+ k v) (vector3- (vector3 0) v)))
+  (define (try-all k)
+    (try (try (try k (vector3 1 0 0)) (vector3 0 1 0)) (vector3 0 0 1)))
+  (define (try-all&repeat k)
+    (let ((knew (try-all k)))
+      (if (< (n knew) (n k)) (try-all&repeat knew) k)))
+  (let ((k0 (vector3- k (vector-map inexact->exact k))))
+    (if (< (n k0) (n k)) (try-all&repeat k0) (try-all&repeat k))))
+
 ; functions to manipulate the fields; these are mainly convenient
 ; wrappers for the external functions defined previously.
 
