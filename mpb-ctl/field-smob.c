@@ -343,10 +343,20 @@ cnumber integrate_fieldL(function f, SCM_list fields)
                 "fields for integrate-fields must conform");
      }
 
-     n1 = pf[0]->nx; n2 = pf[0]->ny; n3 = pf[0]->nz;
-     n_other = pf[0]->other_dims;
-     n_last = pf[0]->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
-     last_dim = pf[0]->last_dim;
+     if (fields.num_items > 0) {
+	  n1 = pf[0]->nx; n2 = pf[0]->ny; n3 = pf[0]->nz;
+	  n_other = pf[0]->other_dims;
+	  n_last = pf[0]->last_dim_size 
+	       / (sizeof(scalar_complex)/sizeof(scalar));
+	  last_dim = pf[0]->last_dim;
+     }
+     else {
+	  n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
+	  n_other = mdata->other_dims;
+	  n_last = mdata->last_dim_size 
+	       / (sizeof(scalar_complex)/sizeof(scalar));
+	  last_dim = mdata->last_dim;
+     }
      rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
 
      s1 = geometry_lattice.size.x / n1;
@@ -379,8 +389,14 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 
 #  else /* HAVE_MPI */
 
-     local_n2 = pf[0]->local_ny;
-     local_y_start = pf[0]->local_y_start;
+     if (fields.num_items > 0) {
+	  local_n2 = pf[0]->local_ny;
+	  local_y_start = pf[0]->local_y_start;
+     }
+     else {
+	  local_n2 = mdata->local_ny;
+	  local_y_start = mdata->local_y_start;
+     }
 
      /* first two dimensions are transposed in MPI output: */
      for (j = 0; j < local_n2; ++j)
@@ -409,14 +425,24 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 
 #  else /* HAVE_MPI */
 
-     local_n2 = pf[0]->local_ny;
-     local_y_start = pf[0]->local_y_start;
+     if (fields.num_items > 0) {
+	  local_n2 = pf[0]->local_ny;
+	  local_y_start = pf[0]->local_y_start;
+     }
+     else {
+	  local_n2 = mdata->local_ny;
+	  local_y_start = mdata->local_y_start;
+     }
 
      /* For a real->complex transform, the last dimension is cut in
 	half.  For a 2d transform, this is taken into account in local_ny
 	already, but for a 3d transform we must compute the new n3: */
-     if (n3 > 1)
-	  local_n3 = pf[0]->last_dim_size / 2;
+     if (n3 > 1) {
+	  if (fields.num_items > 0)
+	       local_n3 = pf[0]->last_dim_size / 2;
+	  else
+	       local_n3 = mdata->last_dim_size / 2;
+     }
      else
 	  local_n3 = 1;
      
@@ -497,6 +523,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 
      free(pf);
 
+     integral *= matrix3x3_determinant(Rm) / (n1 * n2 * n3);
      {
 	  cnumber integral_sum;
 	  mpi_allreduce(&integral, &integral_sum, 2, number, 
