@@ -622,7 +622,10 @@ void output_field_extended(vector3 copiesv)
 	  return;
      }
      
-     /* this will need to be fixed for MPI, which transposes the data: */
+     /* this will need to be fixed for MPI, where we transpose the data: */
+#ifdef HAVE_MPI
+#    broken, please fix
+#endif
      dims[0] = mdata->nx;
      dims[1] = mdata->ny;
      dims[2] = mdata->nz;
