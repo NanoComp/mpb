@@ -27,7 +27,7 @@ void identity_op(evectmatrix Xin, evectmatrix Xout, void *data)
      evectmatrix_copy(Xout, Xin);
 }
 
-int main(void)
+int main(int argc, char **argv)
 {
      maxwell_data *mdata;
      int local_N, N_start, alloc_N;
@@ -38,14 +38,20 @@ int main(void)
      int i, j, k;
      int num_iters;
 
-     srand(time(NULL));
+     printf("Syntax: maxwell_test [<kx>] [<seed>]\n");
+
+     if (argc > 1)
+	  kvector[0] = atof(argv[1]);
+
+     srand(argc > 2 ? atoi(argv[2]) : time(NULL));
      
      printf("Creating Maxwell data...\n");
      mdata = create_maxwell_data(NX, NY, NZ, &local_N, &N_start, &alloc_N,
 				 NUM_BANDS, NUM_BANDS);
      CHECK(mdata, "NULL mdata");
 
-     printf("Setting k vector...\n");
+     printf("Setting k vector to (%g, %g, %g)...\n",
+	    kvector[0], kvector[1], kvector[2]);
      update_maxwell_data_k(mdata, kvector, G1, G2, G3);
 
      printf("Initializing dielectric...\n");
@@ -92,9 +98,21 @@ int main(void)
      printf("\nSolved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues (sqrt) = \n");
      for (i = 0; i < NUM_BANDS; ++i) {
-	  printf("   %f (%f)", eigvals[i], sqrt(eigvals[i]));
+	  printf("   %f (%f)\n", eigvals[i], sqrt(eigvals[i]));
      }
+     printf("\n");
 
+#if 0
+     printf("Eigenvectors:\n");
+     for (i = 0; i < (local_N > 8 ? 8 : local_N); ++i) {
+	  for (j = 0; j < (H.p > 2 ? 2 : H.p); ++j)
+	       printf("   [ (%g,%g) (%g,%g) ]",
+		      H.data[(i*2) * H.p + j].re, H.data[(i*2) * H.p + j].im,
+		      H.data[(i*2+1)*H.p + j].re, H.data[(i*2+1)*H.p + j].im);
+	  printf("\n");
+     }
+#endif
+     
      destroy_evectmatrix(H);
      destroy_evectmatrix(Hstart);
      for (i = 0; i < NWORK; ++i)

@@ -46,6 +46,8 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      *N_start = 0;
      d->other_dims = *local_N / d->last_dim;
 
+     d->fft_data = 0;  /* initialize it here for use in specific planner? */
+
 #  ifdef HAVE_FFTW
 #    ifdef SCALAR_COMPLEX
      d->fft_output_size = fft_data_size = nx * ny * nz;
@@ -227,6 +229,29 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 		    kpG->mx = a * leninv;
 		    kpG->my = b * leninv;
 		    kpG->mz = c * leninv;
+
+#ifdef DEBUG
+#define DOT(u0,u1,u2,v0,v1,v2) ((u0)*(v0) + (u1)*(v1) + (u2)*(v2))
+
+		    /* check orthogonality */
+		    CHECK(fabs(DOT(kpG->kx, kpG->ky, kpG->kz,
+				   kpG->nx, kpG->ny, kpG->nz)) < 1e-6,
+			  "vectors not orthogonal!");
+		    CHECK(fabs(DOT(kpG->kx, kpG->ky, kpG->kz,
+				   kpG->mx, kpG->my, kpG->mz)) < 1e-6,
+			  "vectors not orthogonal!");
+		    CHECK(fabs(DOT(kpG->mx, kpG->my, kpG->mz,
+				   kpG->nx, kpG->ny, kpG->nz)) < 1e-6,
+			  "vectors not orthogonal!");
+
+		    /* check normalization */
+		    CHECK(fabs(DOT(kpG->nx, kpG->ny, kpG->nz,
+				   kpG->nx, kpG->ny, kpG->nz) - 1.0) < 1e-6,
+			  "vectors not unit vectors!");
+		    CHECK(fabs(DOT(kpG->mx, kpG->my, kpG->mz,
+				   kpG->mx, kpG->my, kpG->mz) - 1.0) < 1e-6,
+			  "vectors not unit vectors!");
+#endif
 	       }
 	  }
      }
@@ -236,12 +261,13 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
    cartesian coordinates.
   
    Here, a = (a[0],a[1],a[2]) and k = (k.kx,k.ky,k.kz) are in
-   cartesian coordinates.  (v[0],v[1]) is in the transverse basis of
+   cartesian coordinates.  (v[0],v[vstride]) is in the transverse basis of
    k.m and k.n. */
-static void assign_cross_t2c(scalar *a, const k_data k, const scalar *v,
+static void assign_cross_t2c(scalar *a, const k_data k,
+			     const scalar *v, int vstride,
 			     real scale)
 {
-     scalar v0 = v[0], v1 = v[1];
+     scalar v0 = v[0], v1 = v[vstride];
 
      /* Note that k x m = |k| n, k x n = - |k| m.  Therefore,
         k x v = k x (v0 m + v1 n) = (v0 n - v1 m) * |k|. */
@@ -268,9 +294,10 @@ static void assign_cross_t2c(scalar *a, const k_data k, const scalar *v,
    transverse coordinates.
   
    Here, a = (a[0],a[1],a[2]) and k = (k.kx,k.ky,k.kz) are in
-   cartesian coordinates.  (v[0],v[1]) is in the transverse basis of
+   cartesian coordinates.  (v[0],v[vstride]) is in the transverse basis of
    k.m and k.n. */
-static void assign_cross_c2t(scalar *v, const k_data k, const scalar *a)
+static void assign_cross_c2t(scalar *v, int vstride,
+			     const k_data k, const scalar *a)
 {
      scalar a0 = a[0], a1 = a[1], a2 = a[2];
      scalar at0, at1;
@@ -290,13 +317,13 @@ static void assign_cross_c2t(scalar *v, const k_data k, const scalar *a)
      ASSIGN_SCALAR(v[0],
 		   - k.kmag * SCALAR_RE(at1),
 		   - k.kmag * SCALAR_IM(at1));
-     ASSIGN_SCALAR(v[1],
+     ASSIGN_SCALAR(v[vstride],
 		   k.kmag * SCALAR_RE(at0),
 		   k.kmag * SCALAR_IM(at0));
 
 #ifdef DEBUG
      {
-	  real dummy = SCALAR_NORMSQR(v[0]) + SCALAR_NORMSQR(v[1]);
+	  real dummy = SCALAR_NORMSQR(v[0]) + SCALAR_NORMSQR(v[vstride]);
 	  CHECK(!BADNUM(dummy), "yikes, crazy number!");
      }
 #endif
@@ -410,7 +437,7 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
 	  k_data cur_k = d->k_plus_G[i];
 	  for (b = 0; b < Xin.p; ++b)
 	       assign_cross_t2c(&fft_data[3 * (i * d->num_fft_bands + b)], 
-				cur_k, &Xin.data[2 * (i * Xin.p + b)],
+				cur_k, &Xin.data[i * 2 * Xin.p + b], Xin.p,
 				scale);
      }
 
@@ -422,9 +449,9 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
      for (i = 0; i < d->fft_output_size; ++i) {
 	  symmetric_matrix eps_inv = d->eps_inv[i];
 	  for (b = 0; b < d->num_fft_bands; ++b)
-	       assign_matrix_vector(&cdata[3 * (i * Xout.p + b)],
+	       assign_matrix_vector(&cdata[3 * (i * d->num_fft_bands + b)],
 				    eps_inv,
-				    &cdata[3 * (i * Xout.p + b)]);
+				    &cdata[3 * (i * d->num_fft_bands + b)]);
      }
 
      compute_fft(-1, d, fft_data, d->num_fft_bands*3, d->num_fft_bands*3, 1);
@@ -433,7 +460,7 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data)
      for (i = 0; i < Xout.localN; ++i) {
 	  k_data cur_k = d->k_plus_G[i];
 	  for (b = 0; b < Xout.p; ++b)
-	       assign_cross_c2t(&Xout.data[2 * (i * Xout.p + b)], 
+	       assign_cross_c2t(&Xout.data[i * 2 * Xout.p + b], Xout.p,
 				cur_k, &fft_data[3 * (i * Xout.p + b)]);
      }
 
