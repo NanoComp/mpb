@@ -165,13 +165,14 @@ in the new list:
 #(0.1 0.1 0.0) #(0 0 0))</code>
 
 <p>All spatial vectors in the program are specified in the basis of
-the unit vectors in the lattice directions, while the k points are
-specified in the basis of the reciprocal lattice vectors.  In this
-case, we don't have to specify the lattice directions, because we are
-happy with the defaults--the lattice vectors default to the cartesian
-unit axes (i.e. the most common case, a square/cubic lattice).  (The
-reciprocal lattice vectors in this case are also the unit axes.)
-We'll see how to change the lattice vectors in later subsections.
+the unit-normalized lattice directions, while the k points are
+specified in the basis of the (unnormalized) reciprocal lattice
+vectors.  In this case, we don't have to specify the lattice
+directions, because we are happy with the defaults--the lattice
+vectors default to the cartesian unit axes (i.e. the most common case,
+a square/cubic lattice).  (The reciprocal lattice vectors in this case
+are also the unit axes.)  We'll see how to change the lattice vectors
+in later subsections.
 
 <p>Now, we want to set the geometry of the system--we need to specify
 which objects are in the primitive cell of the lattice, centered on
@@ -349,8 +350,8 @@ practice, however.
 the solution scales are simply multiplied by 10 likewise (while the
 frequencies are divided by 10).  So, you can solve a problem once and
 apply that solution to all length-scales.  For this reason, we usually
-pick some fundamental lengthscale of a structure, such as its lattice
-constant (unit of periodicity) <i>a</i>, and write all distances in
+pick some fundamental lengthscale <i>a</i> of a structure, such as its
+lattice constant (unit of periodicity), and write all distances in
 terms of that.  That is, we choose units so that <i>a</i> is unity.
 Then, to apply to any physical system, one simply scales all distances
 by <i>a</i>.  This is what we have done in the preceding and following
@@ -359,12 +360,12 @@ lattice constant is one, and all coordinates are scaled accordingly.
 
 <p>As has been mentioned already, all 3-vectors in the program are
 specified in the <em>basis</em> of the unit vectors in the lattice
-directions.  That is, each component is multiplied by the
-corresponding basis vector and summed to compute the corresponding
-cartesian vector.  It is worth noting that a basis is not meaningful
-for scalar distances (such as the cylinder radius), however: these are
-just the ordinary cartesian distances in your chosen units of
-<i>a</i>.
+directions, i.e. the <em>unit-normalized</em> lattice vectors.  That
+is, each component is multiplied by the corresponding basis vector and
+summed to compute the corresponding cartesian vector.  It is worth
+noting that a basis is not meaningful for scalar distances (such as
+the cylinder radius), however: these are just the ordinary cartesian
+distances in your chosen units of <i>a</i>.
 
 <p>The frequency eigenvalues returned by the program are in units of
 <i>c/a</i>, where <i>c</i> is the speed of light and <i>a</i> is the
