@@ -1,3 +1,5 @@
+MPB 0.8.1 (11/22/1999)
+
   * Added output-hfield-x, output-dfield-y, etcetera, functions for
     outputting only specific field components (see manual reference section).
 
