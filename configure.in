@@ -146,11 +146,14 @@ AC_CHECK_PROG(HAVE_GUILE_CONFIG, guile-config, yes, no)
 if test "$HAVE_GUILE_CONFIG" = "yes"; then
         INCLUDES="$INCLUDES `guile-config compile`"
         LIBS="`guile-config link` $LIBS"
+	save_CFLAGS="$CFLAGS"
+	CFLAGS="$CFLAGS $INCLUDES"
 	AC_MSG_CHECKING([if linking to guile works])
 	AC_TRY_LINK_FUNC(gh_enter, AC_MSG_RESULT(yes), [
 	AC_MSG_RESULT(no)
 	AC_MSG_ERROR(guile-config is broken)
 	])
+	CFLAGS="$save_CFLAGS"
 else
         AC_CHECK_LIB(readline, readline)
         AC_CHECK_LIB(dl, dlopen)
