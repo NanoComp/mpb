@@ -53,8 +53,9 @@ extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 #define EIGS_PROJECT_PRECONDITIONING (1<<2)
 #define EIGS_CONVERGE_EACH_EIGENVALUE (1<<3)
 #define EIGS_VERBOSE (1<<4)
+#define EIGS_RESET_CG (1<<5)
 
 /* default flags: what we think works best most of the time: */
-#define EIGS_DEFAULT_FLAGS (EIGS_DIAGONALIZE_EACH_STEP | EIGS_CONVERGE_EACH_EIGENVALUE)
+#define EIGS_DEFAULT_FLAGS (EIGS_DIAGONALIZE_EACH_STEP | EIGS_CONVERGE_EACH_EIGENVALUE | EIGS_RESET_CG)
 
 #endif /* EIGENSOLVER_H */

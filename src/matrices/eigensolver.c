@@ -20,6 +20,7 @@
 #include <math.h>
 
 #include "../config.h"
+#include <mpiglue.h>
 #include <check.h>
 #include <scalar.h>
 #include <matrices.h>
@@ -57,6 +58,13 @@ static int check_converged(real E, real *eigenvals,
 #define STRINGIZEx(x) #x /* a hack so that we can stringize macro values */
 #define STRINGIZE(x) STRINGIZEx(x)
 #define EIGENSOLVER_MAX_ITERATIONS 10000
+#define FEEDBACK_TIME 4.0 /* elapsed time before we print progress feedback */
+
+/* Number of iterations after which to reset conjugate gradient
+   direction to steepest descent.  (Picked after some experimentation.
+   Is there a better basis?  Should this change with the problem
+   size?) */
+#define CG_RESET_ITERS 100
 
 /* Preconditioned eigensolver.  Finds the lowest Y.p eigenvectors
    and eigenvalues of the operator A, and returns them in Y and
@@ -111,7 +119,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      real dE = 0.0, d2E, traceGtX, prev_traceGtX = 0.0;
      real lambda, prev_lambda = 0.001;
      int i, iteration = 0;
+     double pref_feedback_time;
      
+     pref_feedback_time = MPI_Wtime();
+
      CHECK(nWork >= 2, "not enough workspace");
      G = Work[0];
      X = Work[1];
@@ -240,10 +251,12 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 			 eigenvals[i] = 0.0;
 	  }
 
-	  if (flags & EIGS_VERBOSE) {
-	       if (iteration % 10 == 0)
-		    printf("it. %4d: tr. = %g (%g%% change)\n", iteration, E,
-			 200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
+	  if (((flags & EIGS_VERBOSE) && iteration % 10 == 0) ||
+	      MPI_Wtime() - pref_feedback_time > FEEDBACK_TIME) {
+	       printf("    iteration %4d: "
+		      "trace = %g (%g%% change)\n", iteration, E,
+		      200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
+	       pref_feedback_time = MPI_Wtime(); /* reset feedback clock */
 	  }
 
 	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
@@ -292,6 +305,15 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    gamma = 0.0;
 	       else
 		    gamma = traceGtX / prev_traceGtX;
+
+	       if ((flags & EIGS_RESET_CG) &&
+		   (iteration + 1) % CG_RESET_ITERS == 0) {
+		    /* periodically forget previous search directions,
+		       and just juse D = X */
+		    gamma = 0.0;
+		    if (flags & EIGS_VERBOSE)
+			 printf("    resetting CG direction...\n");
+	       }
 	       
 	       evectmatrix_aXpbY(gamma, D, 1.0, X);
 	       
