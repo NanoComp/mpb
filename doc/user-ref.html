@@ -661,12 +661,13 @@ previous calculation.
 
 </dl>
 
-<h3>Band output functions</h3>
+<h3>Band/output functions</h3>
 
 <p>All of these are functions that, given a band index, output the
-corresponding field or some function thereof (in the primitive cell of
-the lattice).  They are designed to be passed as band functions to the
-<code>run</code> routines, although they can also be called directly.
+corresponding field or compute some function thereof (in the primitive
+cell of the lattice).  They are designed to be passed as band
+functions to the <code>run</code> routines, although they can also be
+called directly.
 
 <dl>
 
@@ -678,17 +679,17 @@ the lattice).  They are designed to be passed as band functions to the
 all or one of the components, respectively.
 
 <p><dt><code>(output-dfield <i>which-band</i>)</code>
-<p><dt><code>(output-dfield-x <i>which-band</i>)</code>
-<p><dt><code>(output-dfield-y <i>which-band</i>)</code>
-<p><dt><code>(output-dfield-z <i>which-band</i>)</code>
+<dt><code>(output-dfield-x <i>which-band</i>)</code>
+<dt><code>(output-dfield-y <i>which-band</i>)</code>
+<dt><code>(output-dfield-z <i>which-band</i>)</code>
 <dd>Output the electric displacement (D) field for
 <code>which-band</code>; either all or one of the components,
 respectively.
 
 <p><dt><code>(output-efield <i>which-band</i>)</code>
-<p><dt><code>(output-efield-x <i>which-band</i>)</code>
-<p><dt><code>(output-efield-y <i>which-band</i>)</code>
-<p><dt><code>(output-efield-z <i>which-band</i>)</code>
+<dt><code>(output-efield-x <i>which-band</i>)</code>
+<dt><code>(output-efield-y <i>which-band</i>)</code>
+<dt><code>(output-efield-z <i>which-band</i>)</code>
 <dd>Output the electric (E) field for <code>which-band</code>; either
 all or one of the components, respectively.
 
@@ -699,6 +700,17 @@ all or one of the components, respectively.
 <p><dt><code>(output-dpwr <i>which-band</i>)</code>
 <dd>Output the time-averaged electric-field energy density (hpwr) for
 <code>which-band</code>.
+
+<p><dt><code>(fix-hfield-phase <i>which-band</i>)</code>
+<dt><code>(fix-dfield-phase <i>which-band</i>)</code>
+<dt><code>(fix-efield-phase <i>which-band</i>)</code>
+<dd>Fix the phase of the given eigenstate in a canonical way based on
+the given spatial field (see also <code>fix-field-phase</code>,
+below).  Otherwise, the phase is random; these functions also maximize
+the real part of the given field so that one can hopefully just
+visualize the real part.  To fix the phase for output, pass one of
+these functions to <code>run</code> before the corresponding output
+function, e.g. <code>(run-tm fix-dfield-phase output-dfield-z)</code>
 
 </dl>
 
@@ -812,13 +824,15 @@ scalar field:
 electric field from the displacement field.  Only works if a D field
 has been loaded.
 
-<dt><code>(fix-field-phase)</code>
+<p><dt><code>(fix-field-phase)</code>
 <dd>Fix the currently-loaded eigenstate's phase (which is normally
 random) in a canonical way, based on the spatial field (H, D, or E)
 that has currently been loaded.  The phase is fixed to make the real
 part of the spatial field as big as possible (so that you can
 hopefully visualize just the real part of the field), and a canonical
-sign is chosen.
+sign is chosen.  See also the <code>fix-*field-phase</code> band
+functions, above, which are convenient wrappers around
+<code>fix-field-phase</code>
 
 <p><dt><code>(compute-field-energy)</code>
 <dd>Given the H or D fields, computes the corresponding energy density
