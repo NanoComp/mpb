@@ -3,7 +3,7 @@ AC_INIT
 AC_CONFIG_SRCDIR([src/matrices/matrices.c])
 AC_CONFIG_HEADER(src/config.h)
 
-MPB_VERSION=1.4
+MPB_VERSION=1.4.1
 AC_SUBST(MPB_VERSION)
 
 AC_MSG_CHECKING([for vendor f77 to be used instead of g77])
@@ -261,6 +261,14 @@ else
 fi
 
 AC_CHECK_FUNCS(scm_make_smob_type)
+AC_MSG_CHECKING([for SCM_SMOB_PREDICATE])
+AC_TRY_LINK([#include <libguile/smob.h>],
+                    [int x; SCM_SMOB_PREDICATE(1,x);],
+                    ok=yes, ok=no)
+AC_MSG_RESULT($ok)
+if test $ok = yes; then
+	AC_DEFINE(HAVE_SCM_SMOB_PREDICATE, 1, [define if we have SCM_SMOB_PREDICATE])
+fi
 
 # Check how to activate Guile readline support:
 

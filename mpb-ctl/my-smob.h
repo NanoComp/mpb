@@ -27,7 +27,12 @@
      SCM_NEWSMOB(ANSWER, scm_tc16_smob_ ## T, PSMOB)
 
 /* T_SMOB_P(T, X) is true iff X is an instance of the T SMOB type */
-#define T_SMOB_P(T, X) SCM_SMOB_PREDICATE(scm_tc16_smob_ ## T, X)
+#ifdef HAVE_SCM_SMOB_PREDICATE
+#  define T_SMOB_P(T, X) SCM_SMOB_PREDICATE(scm_tc16_smob_ ## T, X)
+#else
+#  define T_SMOB_P(T, X) (SCM_NIMP (X) \
+                          && SCM_TYP16 (X) == (scm_tc16_smob_ ## T))
+#endif
 
 /* T_SMOB(T, X) returns the T * with the guts of the X instance; it
    assumes X is a T SMOB instance, and could crash if it is not */
