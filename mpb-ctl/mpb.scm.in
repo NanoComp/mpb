@@ -685,7 +685,7 @@
   (define (ncdr n lst) (if (> n 0) (ncdr (- n 1) (cdr lst)) lst))
   (let ((num-bands-save num-bands) (k-points-save k-points)
 	(nb (- band-max band-min -1)) 
-	(kdir1 (unit-vector3 kdir))
+	(kdir1 (cartesian->reciprocal (unit-vector3 (reciprocal->cartesian kdir))))
 	; k0s is an array caching the best k value found for each band:
 	(k0s (if (list? kmag-guess) (list->vector kmag-guess)
 		 (make-vector (- band-max band-min -1) kmag-guess)))
