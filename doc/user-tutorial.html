@@ -552,6 +552,72 @@ have to compute only a single band, however, we arrive at an answer
 much more quickly than before.  The result, of course, is again the
 defect band, with a frequency of 0.377912.
 
+<h2>Tuning the Point-defect Mode</h2>
+
+<p>As another example utilizing the programming power of Scheme, we
+will write a script to "tune" the defect mode to a particular
+frequency.  Instead of forming a defect by simply removing a rod, we
+can decrease the radius or the dielectric constant of the defect rod,
+thereby changing the corresponding mode frequency.  In this case,
+we'll vary the dielectric constant, and try to find a mode with a
+frequency of, say, 0.314159 (a random number).
+
+<p>We could write a loop to search for this epsilon, but instead we'll
+use a root-finding function provided by libctl, <code>(find-root
+<i>tolerance arg-min arg-max</i>)</code>, that will solve the problem
+for us using a quadratically-convergent algorithm (Ridder's method).
+First, we need to define a function that takes an epsilon for the
+center rod and returns the mode frequency minus 0.314159; this is the
+function we'll be finding the root of:
+
+<pre>
+(define old-geometry geometry) ; save the 5x5 grid with a missing rod
+(define (rootfun eps)
+  ; add the cylinder of epsilon = eps to the old geometry:
+  (set! geometry (append old-geometry
+			 (list (make cylinder (center 0 0 0)
+				     (radius 0.2) (height infinity)
+				     (material (make material-type
+						 (epsilon eps)))))))
+  (run-tm)  ; solve for the mode (using the targeted solver)
+  (- (list-ref freqs 0) 0.314159))  ; return 1st band freq. - 0.314159
+</pre>
+
+<p>Now, we can solve for epsilon (searching in the range 1 to 12, with
+a fractional tolerance of 0.01) by:
+
+<pre>
+(find-root rootfun 0.01 1 12)
+</pre>
+
+<p>The sequence of dielectric constants that it tries, along with the
+corresponding mode frequencies, is:
+
+<table cellspacing=2 cellpadding=1>
+<tr align=center> <th>epsilon</th> <th>frequency</th> </tr>
+<tr align=center> <td>1</td> <td>0.377912</td> </tr>
+<tr align=center> <td>12</td> <td>0.283352</td> </tr>
+<tr align=center> <td>6.5</td> <td>0.302456</td> </tr>
+<tr align=center> <td>5.09573</td> <td>0.317494</td> </tr>
+<tr align=center> <td>5.79787</td> <td>0.309455</td> </tr>
+<tr align=center> <td>5.37554</td> <td>0.31417</td> </tr>
+<tr align=center> <td>5.5867</td> <td>0.311766</td> </tr>
+</table>
+
+<p>The final answer that it returns is an epsilon of 5.37649633503845.
+Interestingly enough, the algorithm doesn't actually evaluate the
+function at the final point; you have to do so yourself if you want to
+find out how close it is to the root.  (Ridder's method successively
+reduces the interval bracketing the root by alternating bisection and
+interpolation steps.  At the end, it does one last interpolation to
+give you its best guess for the root location within the current
+interval.)  If we go ahead and evaluate the band frequency at this
+dielectric constant (calling <code>(rootfun 5.37649633503845)</code>),
+we find that it is 0.314159008071821, matching our desired frequency
+to nearly eight decimal places after seven function evaluations!  (Of
+course, the computation isn't really this accurate anyway, due to the
+finite discretization.)
+
 <h2>emacs and ctl</h2>
 
 <p>It is useful to have <code>emacs</code> use its
