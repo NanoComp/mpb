@@ -1422,13 +1422,10 @@ static char *fix_fname(const char *fname, const char *prefix,
 }
 
 /* given the field in curfield, store it to HDF (or whatever) using
-   the matrixio (fieldio) routines.  Allow the user to specify that
-   the fields be periodically extended, so that several lattice cells
-   are stored.  Also allow the component to be specified
+   the matrixio (fieldio) routines.  Allow the component to be specified
    (which_component 0/1/2 = x/y/z, -1 = all) for vector fields. 
    Also allow the user to specify a prefix string for the filename. */
-void output_field_extended(integer which_component,
-			   string filename_prefix)
+void output_field_to_file(integer which_component, string filename_prefix)
 {
      char fname[100], *fname2, description[100];
      int dims[3], local_dims[3], start[3] = {0,0,0};
@@ -1436,7 +1433,7 @@ void output_field_extended(integer which_component,
      int attr_dims[2] = {3, 3};
      real output_k[3]; /* kvector in reciprocal lattice basis */
      real output_R[3][3];
-     scalar_complex total_phase = {1.0, 0.0};
+     int last_dim_index;
 
      if (!curfield) {
 	  mpi_one_fprintf(stderr, 
@@ -1451,6 +1448,9 @@ void output_field_extended(integer which_component,
      local_dims[1] = dims[1] = mdata->nx;
      local_dims[2] = dims[2] = mdata->nz;
      local_dims[0] = mdata->local_ny;
+#  ifndef SCALAR_COMPLEX
+#    error not yet implemented!
+#  endif
      start[0] = mdata->local_y_start;
      output_k[0] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
 	  + R[1][0]*mdata->current_k[2];
@@ -1466,6 +1466,10 @@ void output_field_extended(integer which_component,
      local_dims[1] = dims[1] = mdata->ny;
      local_dims[2] = dims[2] = mdata->nz;
      local_dims[0] = mdata->local_nx;
+#  ifndef SCALAR_COMPLEX
+     last_dim_index = dims[2] == 1 ? (dims[1] == 1 ? 0 : 1) : 2;
+     local_dims[last_dim_index] = mdata->last_dim_size / 2;
+#  endif
      start[0] = mdata->local_x_start;
      output_k[0] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
 	  + R[0][0]*mdata->current_k[2];
@@ -1479,7 +1483,8 @@ void output_field_extended(integer which_component,
 #endif /* ! HAVE_MPI */
      
      if (strchr("dhe", curfield_type)) { /* outputting vector field */
-	  maxwell_vectorfield_makefull(mdata, curfield);
+	  matrixio_id data_id[6] = {-1,-1,-1,-1,-1,-1};
+	  int i;
 
 	  sprintf(fname, "%c.k%02d.b%02d",
 		  curfield_type, kpoint_index, curfield_band);
@@ -1494,15 +1499,51 @@ void output_field_extended(integer which_component,
 	  fname2 = fix_fname(fname, filename_prefix, mdata->polarization);
 	  mpi_one_printf("Outputting fields to %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
-	  fieldio_write_complex_field(curfield, 3, dims, local_dims, start,
-				      which_component, output_k, total_phase,
-				      file_id, 0);
 	  free(fname2);
+	  fieldio_write_complex_field(curfield, 3, dims, local_dims, start,
+				      which_component, output_k,
+				      file_id, 0, data_id);
+
+#ifndef SCALAR_COMPLEX
+	  /* Here's where it gets hairy. */
+	  maxwell_vectorfield_otherhalf(mdata, curfield,
+					output_k[0], output_k[1], output_k[2]);
+	  start[last_dim_index] += local_dims[last_dim_index];
+	  local_dims[last_dim_index] =
+	       dims[last_dim_index] - start[last_dim_index];
+	  if (start[0] == 0) {
+	       /* The conjugated array half may be discontiguous.
+		  First, write the part not containing start[0], and
+		  then write the start[0] slab. */
+	       local_dims[0] -= 1;
+	       start[0] = dims[0] - local_dims[0];
+	       fieldio_write_complex_field(curfield + 
+					   3 * local_dims[1] * local_dims[2],
+					   3, dims, local_dims, start,
+					   which_component, NULL, 
+					   file_id, 1, data_id);
+	       local_dims[0] = 1;
+	       start[0] = 0;
+	       fieldio_write_complex_field(curfield, 3, dims,local_dims,start,
+					   which_component, NULL,
+					   file_id, 1, data_id);
+	  }
+	  else {
+	       start[0] = dims[0] - (start[0] + local_dims[0] - 1);
+	       fieldio_write_complex_field(curfield, 3, dims,local_dims,start,
+					   which_component, NULL,
+					   file_id, 1, data_id);
+	  }
+#endif
+
+	  for (i = 0; i < 6; ++i)
+	       if (data_id[i] >= 0)
+		    matrixio_close_dataset(data_id[i]);
 	  matrixio_write_data_attr(file_id, "Bloch wavevector",
 				   output_k, 1, attr_dims);
      }
      else if (strchr("DHn", curfield_type)) { /* scalar field */
-	  maxwell_scalarfield_makefull(mdata, (real*) curfield);
+	  matrixio_id data_id = -1;
 
 	  if (curfield_type == 'n') {
 	       sprintf(fname, "epsilon");
@@ -1522,9 +1563,41 @@ void output_field_extended(integer which_component,
 			     mdata->polarization);
 	  mpi_one_printf("Outputting %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
-	  fieldio_write_real_vals((real *) curfield, 3, dims, 
-				  local_dims, start, file_id, 0);
 	  free(fname2);
+	  fieldio_write_real_vals((real *) curfield, 3, dims, 
+				  local_dims, start, file_id, 0, &data_id);
+
+#ifndef SCALAR_COMPLEX
+	  maxwell_scalarfield_otherhalf(mdata, (real *) curfield);
+	  start[last_dim_index] += local_dims[last_dim_index];
+	  local_dims[last_dim_index] =
+	       dims[last_dim_index] - start[last_dim_index];
+	  if (start[0] == 0) {
+	       /* The conjugated array half may be discontiguous.
+		  First, write the part not containing start[0], and
+		  then write the start[0] slab. */
+	       local_dims[0] -= 1;
+	       start[0] = dims[0] - local_dims[0];
+	       fieldio_write_real_vals(((real *) curfield) +
+				       local_dims[1] * local_dims[2],
+				       3, dims, local_dims, start, 
+				       file_id, 1, &data_id);
+	       local_dims[0] = 1;
+	       start[0] = 0;
+	       fieldio_write_real_vals((real *) curfield, 3, dims, 
+				       local_dims, start,
+				       file_id, 1, &data_id);
+	  }
+	  else {
+	       start[0] = dims[0] - (start[0] + local_dims[0] - 1);
+	       fieldio_write_real_vals((real *) curfield, 3, dims, 
+				       local_dims, start, 
+				       file_id, 1, &data_id);
+	  }
+#endif
+
+	  if (data_id >= 0)
+	       matrixio_close_dataset(data_id);
      }
      else
 	  mpi_one_fprintf(stderr, "unknown field type!\n");
@@ -1537,13 +1610,10 @@ void output_field_extended(integer which_component,
 	  matrixio_close(file_id);
      }
 
-#ifndef SCALAR_COMPLEX
-     /* If we are using real-amplituded fields, then change curfield_type
-	to reflect the fact that we have destroyed curfield.  (Or changed
-	its format, anyway, with maxwell_*_makefull above.)  If people
-	complain about this, we can always convert curfield back. */
+     /* Change curfield_type to reflect the fact that we have
+	destroyed curfield (by multiplying it by phases, and/or
+	reorganizing in the case of real-amplitude fields). */
      curfield_type = '-';
-#endif
 }
 
 /**************************************************************************/

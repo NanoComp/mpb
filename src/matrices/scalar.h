@@ -42,23 +42,27 @@ typedef struct {
 #define CACCUMULATE_SCALAR(a, real, imag) { (a).re +=(real); (a).im +=(imag); }
 #define CACCUMULATE_DIFF_SCALAR(a, real, imag) { (a).re -=(real); (a).im -=(imag); }
 
+#define CASSIGN_ZERO(a) CASSIGN_SCALAR(a, 0.0, 0.0);
+#define CASSIGN_REAL(a, c) CASSIGN_SCALAR(a, c, 0.0)
+#define CASSIGN_CONJ(a, b) CASSIGN_SCALAR(a, CSCALAR_RE(b), -CSCALAR_IM(b))
+
 #define CSCALAR_NORMSQR(a) ((a).re * (a).re + (a).im * (a).im)
 
 /* a = b * c */
 #define CASSIGN_MULT(a, b, c) { \
      real bbbb_re = (b).re, bbbb_im = (b).im; \
      real cccc_re = (c).re, cccc_im = (c).im; \
-     ASSIGN_SCALAR(a, bbbb_re * cccc_re - bbbb_im * cccc_im, \
-		   bbbb_re * cccc_im + bbbb_im * cccc_re); \
+     CASSIGN_SCALAR(a, bbbb_re * cccc_re - bbbb_im * cccc_im, \
+		    bbbb_re * cccc_im + bbbb_im * cccc_re); \
 }
 
 /* a = b / c = b * conj(c) / |c|^2 */
 #define CASSIGN_DIV(a, b, c) { \
-     scalar aaaa_tmp; real aaaa_tmp_norm; \
-     ASSIGN_CONJ(aaaa_tmp, c); \
-     aaaa_tmp_norm = 1.0 / SCALAR_NORMSQR(aaaa_tmp); \
-     ASSIGN_MULT(aaaa_tmp, b, aaaa_tmp); \
-     ASSIGN_SCALAR(a, aaaa_tmp.re*aaaa_tmp_norm, aaaa_tmp.im*aaaa_tmp_norm); \
+     scalar_complex aaaa_tmp; real aaaa_tmp_norm; \
+     CASSIGN_CONJ(aaaa_tmp, c); \
+     aaaa_tmp_norm = 1.0 / CSCALAR_NORMSQR(aaaa_tmp); \
+     CASSIGN_MULT(aaaa_tmp, b, aaaa_tmp); \
+     CASSIGN_SCALAR(a, aaaa_tmp.re*aaaa_tmp_norm, aaaa_tmp.im*aaaa_tmp_norm); \
 }
 
 /* a = Re (b * c) */
@@ -79,7 +83,7 @@ typedef struct {
 #define CACCUMULATE_SUM_MULT(a, b, c) { \
      real bbbb_re = (b).re, bbbb_im = (b).im; \
      real cccc_re = (c).re, cccc_im = (c).im; \
-     ACCUMULATE_SCALAR(a, bbbb_re * cccc_re - bbbb_im * cccc_im, \
+     CACCUMULATE_SCALAR(a, bbbb_re * cccc_re - bbbb_im * cccc_im, \
 		       bbbb_re * cccc_im + bbbb_im * cccc_re); \
 }
 
@@ -87,7 +91,7 @@ typedef struct {
 #define CACCUMULATE_SUM_CONJ_MULT(a, b, c) { \
      real bbbb_re = (b).re, bbbb_im = (b).im; \
      real cccc_re = (c).re, cccc_im = (c).im; \
-     ACCUMULATE_SCALAR(a, bbbb_re * cccc_re + bbbb_im * cccc_im, \
+     CACCUMULATE_SCALAR(a, bbbb_re * cccc_re + bbbb_im * cccc_im, \
 		       bbbb_re * cccc_im - bbbb_im * cccc_re); \
 }
 
@@ -97,11 +101,8 @@ typedef struct {
      (a) += bbbb_re * bbbb_re + bbbb_im * bbbb_im; \
 }
 
-#define CASSIGN_ZERO(a) CASSIGN_SCALAR(a, 0.0, 0.0);
-#define CASSIGN_REAL(a, c) CASSIGN_SCALAR(a, c, 0.0)
-#define CASSIGN_CONJ(a, b) CASSIGN_SCALAR(a, SCALAR_RE(b), -SCALAR_IM(b))
-#define CACCUMULATE_SUM(sum, a) CACCUMULATE_SCALAR(sum,SCALAR_RE(a),SCALAR_IM(a))
-#define CACCUMULATE_DIFF(sum, a) CACCUMULATE_DIFF_SCALAR(sum,SCALAR_RE(a),SCALAR_IM(a))
+#define CACCUMULATE_SUM(sum, a) CACCUMULATE_SCALAR(sum,CSCALAR_RE(a),CSCALAR_IM(a))
+#define CACCUMULATE_DIFF(sum, a) CACCUMULATE_DIFF_SCALAR(sum,CSCALAR_RE(a),CSCALAR_IM(a))
 
 /************************** scalars are complex **************************/
 #ifdef SCALAR_COMPLEX

@@ -396,142 +396,222 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 
 /**************************************************************************/
 
-/* The following function takes a complex vector field and expands it
-   so that all (nx,ny,nz) elements are stored.  This is necessary when
-   real-to-complex transforms are used, as they (rfftw) store their
-   complex output in a packed format to eliminate redundancies. */
-void maxwell_vectorfield_makefull(maxwell_data *d, scalar_complex *field)
+/* The following functions take a complex or real vector field
+   in position space, as output by rfftwnd (or rfftwnd_mpi), and
+   compute the "other half" of the array.
+
+   That is, rfftwnd outputs only half of the logical FFT output,
+   since the other half is redundant (see the FFTW manual).  This
+   is fine for computation, but for visualization/output we
+   want the whole array, redundant or not.  So, we output the array
+   in two stages, first outputting the array we are given, then
+   using the functions below to compute the other half and ouputting
+   that.
+
+   Given an array A(i,j,k), the redundant half is given by the
+   following identity for transforms of real data:
+
+          A(nx-i,ny-j,nz-k) = A(i,j,k)*
+
+   where nx-i/ny-j/nz-k are interpreted modulo nx/ny/nz.  (This
+   means that zero coordinates are handled specially: nx-0 = 0.)
+
+   Note that actually, the other "half" is actually slightly less
+   than half of the array.  Note also that the other half, in the
+   case of distributed MPI transforms, is not necessarily contiguous,
+   due to special handling of zero coordinates.
+
+   There is an additional complication.  The array with the symmetry
+   above may have been multiplied by exp(ikx) phases to get its Bloch
+   state.  In this case, we must use the identity:
+
+          A(R-x)*exp(ik(R-x)) = ( A(x) exp(ikx) exp(-ikR) )*
+
+   where R is a lattice vector.  That is, we not only must conjugate
+   and reverse the order, but we also may need to multiply by exp(-ikR)
+   before conjugating.  Unfortunately, R depends upon where we are
+   in the array, because of the fact that the indices are interpreted
+   modulo n (i.e. the zero indices aren't reordered).  e.g. for
+   the point (nx-i,ny-j,nz-k), R = Rx*(i!=0) + Ry*(j!=0) + Rz*(k!=0).
+
+   This code is a little too subtle for my tastes; real FFTs are a pain. */
+
+#define TWOPI 6.2831853071795864769252867665590057683943388
+
+/* This function takes a complex vector field and replaces it with
+   its other "half."  phase{x,y,z} is the phase k*R{x,y,z}, in "units"
+   of 2*pi.  */
+void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
+				   real phasex, real phasey, real phasez)
 {
 #ifndef SCALAR_COMPLEX
      int i, j;
-     int rank, n_other, n_last, n_last_stored, nx, ny, nz;
+     int rank, n_other, n_last, n_last_stored, n_last_new, nx, ny, nz;
+     scalar_complex pz, pxz, pyz, pxyz;
 
 #ifdef HAVE_MPI
 #  error not yet implemented!
-#endif
-     
+#else /* ! HAVE_MPI */
      nx = d->nx; ny = d->ny; nz = d->nz;
      n_other = d->other_dims;
      n_last = d->last_dim;
      n_last_stored = d->last_dim_size / 2;
+     n_last_new = n_last - n_last_stored; /* < n_last_stored always */
      rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
+#endif /* ! HAVE_MPI */
 
-     /* convenience macros to copy vectors, and conjugated vectors: */
-#  define ASSIGN_V(f,k,f2,k2) { f[3*(k)+2] = f2[3*(k2)+2];               \
+     /* compute p = exp(i*phase) factors: */
+     phasex *= -TWOPI; phasey *= -TWOPI; phasez *= -TWOPI;
+     switch (rank) { /* treat z as the last dimension always */
+	 case 3: break;
+	 case 2: phasez = phasey; phasey = 0; break;
+	 case 1: phasez = phasex; phasex = phasey = 0; break;
+     }
+     CASSIGN_SCALAR(pz, cos(phasez), sin(phasez));
+     phasex += phasez;
+     CASSIGN_SCALAR(pxz, cos(phasex), sin(phasex));
+     phasex += phasey;
+     CASSIGN_SCALAR(pxyz, cos(phasex), sin(phasex));
+     phasey += phasez;
+     CASSIGN_SCALAR(pyz, cos(phasey), sin(phasey));
+
+/* convenience macros to copy vectors, vectors times phases, 
+   and conjugated vectors: */
+#  define ASSIGN_V(f,k,f2,k2) { f[3*(k)+0] = f2[3*(k2)+0];               \
                                 f[3*(k)+1] = f2[3*(k2)+1];               \
-                                f[3*(k)] = f2[3*(k2)]; }
-#  define ASSIGN_CV(f,k,f2,k2) { f[3*(k)+2].im = -f2[3*(k2)+2].im;       \
-                                 f[3*(k)+2].re = f2[3*(k2)+2].re;        \
-                                 f[3*(k)+1].im = -f2[3*(k2)+1].im;       \
-                                 f[3*(k)+1].re = f2[3*(k2)+1].re;        \
-                                 f[3*(k)].im = -f2[3*(k2)].im;           \
-                                 f[3*(k)].re = f2[3*(k2)].re; }
+                                f[3*(k)+2] = f2[3*(k2)+2]; }
+#  define ASSIGN_VP(f,k,f2,k2,p) { CASSIGN_MULT(f[3*(k)+0], f2[3*(k2)+0], p); \
+                                   CASSIGN_MULT(f[3*(k)+1], f2[3*(k2)+1], p); \
+                                   CASSIGN_MULT(f[3*(k)+2], f2[3*(k2)+2], p); }
+#  define ASSIGN_CV(f,k,f2,k2) { CASSIGN_CONJ(f[3*(k)+0], f2[3*(k2)+0]); \
+                                 CASSIGN_CONJ(f[3*(k)+1], f2[3*(k2)+1]); \
+                                 CASSIGN_CONJ(f[3*(k)+2], f2[3*(k2)+2]); }
 
-     /* The field stores n_other x n_last_stored elements, and we want
-	to expand this to n_other x n_last.  So, we loop through it
-	in backwards order, using the following identity to reconstruct
-	the missing half:
-	
-	    A(i,j,k) = A(nx-i,ny-j,nz-k)*
- 
-        where * is conjugation, and the indices are interpreted modulo
-	the sizes (e.g. nx-0=0). */
-
-     for (i = n_other - 1; i > n_other/2; --i) {
-	  int ic;  /* conjugated index to i */
-	  switch (rank) {  /* is there a cleaner way to get ic? */
-	      case 2: ic = (nx - i) % nx; break;
-	      case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
-	      default: ic = 0; break;
-	  }
-	  for (j = n_last - 1; j >= n_last_stored; --j) {
-	       int jc = (n_last - j) % n_last;
-	       ASSIGN_CV(field,i*n_last+j, field,ic*n_last_stored+jc);
-	  }
-	  for (; j >= 0; --j) {
-	       ASSIGN_V(field,i*n_last+j, field,i*n_last_stored+j);
+     /* First, swap the order of elements and multiply by exp(ikR)
+        phase factors.  We have to be careful here not to double-swap
+        any element pair; this is prevented by never swapping with a
+        "conjugated" point that is earlier in the array.  Note that
+        the i loop doesn't need to run all the way to n_other, but it
+        not worth it to compute the exact limit. */
+     for (i = 0; i < n_other; ++i) {
+          int ic;  /* conjugated index to i */
+	  int xdiff = 0, ydiff = 0;
+	  int jmax;
+          switch (rank) {  /* is there a cleaner way to get ic? */
+              case 2: ic = (nx - i) % nx; xdiff = i != 0; break;
+              case 3:
+		   ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny;
+		   xdiff = i/ny != 0; ydiff = i%ny != 0;
+		   break;
+              default: ic = 0; break;
+          }
+	  if (ic < i)
+	       continue;
+	  jmax = n_last_new;
+	  if (ic == i)
+	       jmax = (jmax + 1) / 2;
+	  for (j = 1; j <= jmax; ++j) {
+               int jc = n_last_new + 1 - j;
+	       scalar_complex f_tmp[3];
+	       switch (xdiff*2 + ydiff) {
+		   case 3: /* xdiff && ydiff */
+		    ASSIGN_VP(f_tmp, 0, field, ic*n_last_stored + jc, pxyz);
+		    ASSIGN_VP(field, ic*n_last_stored + jc,
+			      field, i*n_last_stored + j, pxyz);
+		    ASSIGN_V(field, i*n_last_stored + j, f_tmp, 0);
+		    break;
+		   case 2: /* xdiff && !ydiff */
+		    ASSIGN_VP(f_tmp, 0, field, ic*n_last_stored + jc, pxz);
+		    ASSIGN_VP(field, ic*n_last_stored + jc,
+			      field, i*n_last_stored + j, pxz);
+		    ASSIGN_V(field, i*n_last_stored + j, f_tmp, 0);
+		    break;
+		   case 1: /* !xdiff && ydiff */
+		    ASSIGN_VP(f_tmp, 0, field, ic*n_last_stored + jc, pyz);
+		    ASSIGN_VP(field, ic*n_last_stored + jc,
+			      field, i*n_last_stored + j, pyz);
+		    ASSIGN_V(field, i*n_last_stored + j, f_tmp, 0);
+		    break;
+		   case 0: /* !xdiff && !ydiff */
+		    ASSIGN_VP(f_tmp, 0, field, ic*n_last_stored + jc, pz);
+		    ASSIGN_VP(field, ic*n_last_stored + jc,
+			      field, i*n_last_stored + j, pz);
+		    ASSIGN_V(field, i*n_last_stored + j, f_tmp, 0);
+		    break;
+	       }
 	  }
      }
-     /* in this loop, ic is in the half already copied above: */
-     for (; i >= 0; --i) {
-	  int ic;  /* conjugated index to i */
-	  switch (rank) {
-	      case 2: ic = (nx - i) % nx; break;
-	      case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
-	      default: ic = 0; break;
-	  }
-	  for (j = n_last_stored - 1; j >= 0; --j) {
-	       ASSIGN_V(field,i*n_last+j, field,i*n_last_stored+j);
-	  }
-	  for (j = n_last - 1; j >= n_last_stored; --j) {
-	       int jc = (n_last - j) % n_last;
-	       ASSIGN_CV(field,i*n_last+j, field,ic*n_last+jc);
-	  }
-     }
+
+     /* Next, conjugate, and remove the holes from the array
+	corresponding to the DC and Nyquist frequencies (which were in
+	the first half already): */
+     for (i = 0; i < n_other; ++i)
+	  for (j = 1; j < n_last_new + 1; ++j)
+	       ASSIGN_CV(field, i*n_last_new + j-1, 
+			 field, i*n_last_stored + j);
 
 #  undef ASSIGN_V
+#  undef ASSIGN_VP
 #  undef ASSIGN_CV
 
 #endif /* ! SCALAR_COMPLEX */
 }
 
-/* Similar to vectorfield_makefull, above, except that it operates on
+/* Similar to vectorfield_otherhalf, above, except that it operates on
    a real scalar field, which is assumed to have come from the real
    parts, or the absolute values, of a complex field. */
-void maxwell_scalarfield_makefull(maxwell_data *d, real *field)
+void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field)
 {
 #ifndef SCALAR_COMPLEX
      int i, j;
-     int rank, n_other, n_last, n_last_stored, nx, ny, nz;
-     
+     int rank, n_other, n_last, n_last_stored, n_last_new, nx, ny, nz;
+
 #ifdef HAVE_MPI
 #  error not yet implemented!
-#endif
-     
+#else /* ! HAVE_MPI */
      nx = d->nx; ny = d->ny; nz = d->nz;
      n_other = d->other_dims;
      n_last = d->last_dim;
      n_last_stored = d->last_dim_size / 2;
+     n_last_new = n_last - n_last_stored; /* < n_last_stored always */
      rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
+#endif /* ! HAVE_MPI */
 
-     for (i = n_other - 1; i > n_other/2; --i) {
-	  int ic;  /* conjugated index to i */
-	  switch (rank) {  /* is there a cleaner way to get ic? */
-	      case 2: ic = (nx - i) % nx; break;
-	      case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
-	      default: ic = 0; break;
-	  }
-	  for (j = n_last - 1; j >= n_last_stored; --j) {
-	       int jc = (n_last - j) % n_last;
-	       field[i*n_last+j] = field[ic*n_last_stored+jc];
-	  }
-	  for (; j >= 0; --j) {
-	       field[i*n_last+j] = field[i*n_last_stored+j];
-	  }
-     }
-     /* in this loop, ic is in the half already copied above: */
-     for (; i >= 0; --i) {
-	  int ic;  /* conjugated index to i */
-	  switch (rank) {
-	      case 2: ic = (nx - i) % nx; break;
-	      case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
-	      default: ic = 0; break;
-	  }
-	  for (j = n_last_stored - 1; j >= 0; --j) {
-	       field[i*n_last+j] = field[i*n_last_stored+j];
-	  }
-	  for (j = n_last - 1; j >= n_last_stored; --j) {
-	       int jc = (n_last - j) % n_last;
-	       field[i*n_last+j] = field[ic*n_last+jc];
+     /* First, swap the order of elements.  We have to be careful here
+        not to double-swap any element pair; this is prevented by never
+        swapping with a "conjugated" point that is earlier in the array. 
+        Note that the i loop doesn't need to run all the way to n_other,
+        but it not worth it to compute the exact limit. */
+     for (i = 0; i < n_other; ++i) {
+          int ic;  /* conjugated index to i */
+	  int jmax;
+          switch (rank) {  /* is there a cleaner way to get ic? */
+              case 2: ic = (nx - i) % nx; break;
+              case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
+              default: ic = 0; break;
+          }
+	  if (ic < i)
+	       continue;
+	  jmax = n_last_new;
+	  if (ic == i)
+	       jmax = (jmax + 1) / 2;
+	  for (j = 1; j <= jmax; ++j) {
+               int jc = n_last_new + 1 - j;
+	       real f_tmp;
+	       f_tmp = field[ic*n_last_stored + jc];
+	       field[ic*n_last_stored + jc] = field[i*n_last_stored + j];
+	       field[i*n_last_stored + j] = f_tmp;
 	  }
      }
 
-#  undef ASSIGN_V
-#  undef ASSIGN_CV
+     /* Next, remove the holes from the array corresponding to the DC
+	and Nyquist frequencies (which are in the other half already): */
+     for (i = 0; i < n_other; ++i)
+	  for (j = 1; j < n_last_new + 1; ++j)
+	       field[i*n_last_new + j-1] = field[i*n_last_stored + j];
 
 #endif /* ! SCALAR_COMPLEX */
 }
-
 
 /**************************************************************************/
 
@@ -548,6 +628,9 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
      
      CHECK(d, "null maxwell data pointer!");
      CHECK(Xin.c == 2, "fields don't have 2 components!");
+
+     (void) is_current_eigenvector;  /* unused */
+     (void) Work;
 
      cdata = (scalar_complex *) d->fft_data;
      scale = -1.0 / Xout.N;  /* scale factor to normalize FFT; 

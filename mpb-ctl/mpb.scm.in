@@ -133,7 +133,7 @@
 	(make-list-type 'number))
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
-(define-external-function output-field-extended false false
+(define-external-function output-field-to-file false false
   no-return-value 'integer 'string)  
 (define-external-function compute-energy-in-object-list false false
   'number (make-list-type 'geometric-object))
@@ -224,20 +224,20 @@
 (define-param filename-prefix "")
 
 (define (output-field)
-  (output-field-extended -1 filename-prefix))
+  (output-field-to-file -1 filename-prefix))
 
 (define (output-field-x)
-  (output-field-extended 0 filename-prefix))
+  (output-field-to-file 0 filename-prefix))
 
 (define (output-field-y)
-  (output-field-extended 1 filename-prefix))
+  (output-field-to-file 1 filename-prefix))
 
 (define (output-field-z)
-  (output-field-extended 2 filename-prefix))
+  (output-field-to-file 2 filename-prefix))
 
 (define (output-epsilon)
   (get-epsilon)
-  (output-field-extended -1 filename-prefix))
+  (output-field-to-file -1 filename-prefix))
 
 (define (compute-energy-in-objects . objects)
   (compute-energy-in-object-list objects))

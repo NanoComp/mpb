@@ -390,7 +390,7 @@ matrixio_id matrixio_open(const char *fname, int read_only)
 void matrixio_close(matrixio_id id)
 {
 #if defined(HAVE_HDF5)
-     H5Fclose(id);
+     CHECK(H5Fclose(id) >= 0, "error closing HDF file");
      IF_EXCLUSIVE(mpi_end_critical_section(matrixio_critical_section_tag++),0);
 #endif
 }
@@ -431,7 +431,7 @@ matrixio_id matrixio_create_sub(matrixio_id id,
 void matrixio_close_sub(matrixio_id id)
 {
 #if defined(HAVE_HDF5)
-     H5Gclose(id);
+     CHECK(H5Gclose(id) >= 0, "error closing HDF group");
 #endif
 }
 
@@ -533,7 +533,7 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
 void matrixio_close_dataset(matrixio_id data_id)
 {
 #if defined(HAVE_HDF5)
-     H5Dclose(data_id);
+     CHECK(H5Dclose(data_id) >= 0, "error closing HDF dataset");
 #endif
 }
 

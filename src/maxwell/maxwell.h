@@ -159,9 +159,10 @@ extern void maxwell_compute_e_from_d(maxwell_data *d,
 				     scalar_complex *dfield,
 				     int cur_num_bands);
 
-extern void maxwell_vectorfield_makefull(maxwell_data *d,
-					 scalar_complex *field);
-extern void maxwell_scalarfield_makefull(maxwell_data *d, real *field);
+extern void maxwell_vectorfield_otherhalf(maxwell_data *d,
+					  scalar_complex *field,
+					  real phasex,real phasey,real phasez);
+extern void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field);
 
 void assign_symmatrix_vector(scalar_complex *newv,
                              const symmetric_matrix matrix,
