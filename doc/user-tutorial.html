@@ -34,10 +34,12 @@ specific to your calculation.  Rather than a flat, inflexible file
 format, however, the ctl file is actually written in a scripting
 language.  This means that it can be everything from a simple sequence
 of commands setting the geometry, etcetera, to a full-fledged program
-with user input, loops, and anything else that you need.  Don't worry,
-though--simple things are simple (you don't need to be a <a
+with user input, loops, and anything else that you might need.
+
+<p>Don't worry, though--simple things are simple (you don't need to be
+a <a
 href="http://www.tuxedo.org/~esr/jargon/html/entry/Real-Programmer.html">Real
-Programmer</a>), and even then you will appreciate the flexibility
+Programmer</a>), and even there you will appreciate the flexibility
 that a scripting language gives you.  (e.g. you can input things in
 any order, without regard for whitespace, insert comments where you
 please, omit things when reasonable defaults are available...)
@@ -60,13 +62,13 @@ about it from these <a
 href="http://ab-initio.mit.edu/libctl/doc/guile-links.html">Guile and
 Scheme links</a>.
 
-<li>libctl, a library that we built on top of Guile to simplify
+<p><li>libctl, a library that we built on top of Guile to simplify
 communication between Scheme and scientific computation software.
 libctl sets the basic tone of the user interface and defines a number
 of useful functions.  See the <a
 href="http://ab-initio.mit.edu/libctl/">libctl home page</a>.
 
-<li>The Photonic-Bands package, which defines all the interface
+<p><li>The Photonic-Bands package, which defines all the interface
 features that are specific to photonic band structure calculations.
 This manual is primarily focused on documenting these features.
 
@@ -78,23 +80,211 @@ particularly the <a
 href="http://ab-initio.mit.edu/libctl/doc/basic-user.html">Basic User
 Experience</a> section, which will give you an overview of what the
 user interface is like, provides a crash course in the Scheme features
-that are most useful here, and describes some useful general features.
+that are most useful here, and describe some useful general features.
+We're not going to repeat this material (much), so learn it now!
 
 <p>Okay, let's continue with our tutorial.  The Photonic-Bands program
-is normally invoked by running:
+is normally invoked by running something like:
 
 <pre>
-./photon <i>foo.ctl</i>
+./photon <i>foo.ctl</i> &gt; <i>foo.out</i>
 </pre>
 
-<p>which reads the ctl file <code>foo.ctl</code> and executes it.
-However, as you already know (since you obediently read the libctl
-manual, right?), if you invoke <code>./photon</code> with no
-arguments, you are dropped into an <em>interactive</em> mode in which
-you can type commands and see their results immediately.  Why don't
-you do that right now, in your terminal window?  Then, you can paste
-in the commands from the tutorial as you follow it and see what they
-do.  Isn't this fun?
+<p>which reads the ctl file <code>foo.ctl</code> and executes it,
+saving the output to the file <code>foo.out</code>.  However, as you
+already know (since you obediently read the libctl manual, right?), if
+you invoke <code>./photon</code> with no arguments, you are dropped
+into an <em>interactive</em> mode in which you can type commands and
+see their results immediately.  Why don't you do that right now, in
+your terminal window?  Then, you can paste in the commands from the
+tutorial as you follow it and see what they do.  Isn't this fun?
+
+<h2>Our First Band Structure</h2>
+
+<p>As our beginning example, we'll compute the band structure of a
+two-dimensional square lattice of dielectric rods in air.  In our
+control file, we'll first specify the parameters and geometry of the
+simulation, and then tell it to run and give us the output.
+
+<p>All of the parameters (each of which corresponds to a Scheme
+variable) have default setting, so we only need to specify the ones we
+need to change.  (For a complete listing of the parameter variables
+and their current values, along with some other info, type
+<code>(help)</code> at the <code>guile&gt;</code> prompt.)  One of the
+parameters, <code>num-bands</code>, controls how many bands
+(eigenstates) are computed at each k point.  If you type
+<code>num-bands</code> at the prompt, it will return the current
+value, <code>1</code>--this is too small; let's set it to a larger
+value:
+
+<pre>
+(set! num-bands 8)
+</pre>
+
+<p>This is how we change the value of variables in Scheme (if you type
+<code>num-bands</code> now, it will return <code>8</code>).  The next
+thing we want to set (although the order really doesn't matter), is
+the set of k points (Bloch wavevectors) we want to compute the bands
+at.  This is controlled by the variable <code>k-points</code>, a list
+of 3-vectors (which is initially empty).  We'll set it to the corners
+of the Brillouin zone of a square lattice, Gamma, X, M, and Gamma again:
+
+<pre>
+(set! k-points (list (vector3 0 0 0)     ; Gamma
+                     (vector3 0.5 0 0)   ; X
+                     (vector3 0.5 0.5 0) ; M
+                     (vector3 0 0 0)))   ; Gamma
+</pre>
+
+<p>Notice how we construct a list, and how we make 3-vectors; notice
+also how we can break things into multiple lines if we want, and that
+a semicolon ('<code>;</code>') marks the start of a comment.
+Typically, we'll want to also compute the bands at a lot of
+intermediate k points, so that we see the continuous band structure.
+Instead of manually specifying all of these intermediate points,
+however, we can just call one of the functions provided by libctl to
+interpolate them for us:
+
+<pre>
+(set! k-points (interpolate 4 k-points))
+</pre>
+
+<p>This takes the <code>k-points</code> and linearly interpolates four
+new points between each pair of consecutive points; if we type
+<code>k-points</code> now at the prompt, it will show us all 16 points
+in the new list:
+
+<p><code>(#(0 0 0) #(0.1 0.0 0.0) #(0.2 0.0 0.0) #(0.3 0.0 0.0) #(0.4
+0.0 0.0) #(0.5 0 0) #(0.5 0.1 0.0) #(0.5 0.2 0.0) #(0.5 0.3 0.0) #(0.5
+0.4 0.0) #(0.5 0.5 0) #(0.4 0.4 0.0) #(0.3 0.3 0.0) #(0.2 0.2 0.0)
+#(0.1 0.1 0.0) #(0 0 0))</code>
+
+<p>The k points, and all vectors in this program, are specified in the
+basis of the unit vectors in the lattice directions.  In this case, we
+don't have to specify the lattice directions, because we are happy
+with the defaults--the lattice vectors default to the Cartesian unit
+axes (i.e. the most common case, a square/cubic lattice).
+
+<p>Now, we want to set the geometry of the system--we need to specify
+which objects are in the primitive cell of the lattice, centered on
+the origin.  This is controlled by the variable <code>geometry</code>,
+which is a list of geometric objects.  As you know from reading the
+libctl documentation, objects (more complicated, structured data
+types), are created by statements of the form <code>(make <i>type</i>
+(<i>property1 value1</i>) (<i>property2 value2</i>) ...)</code>.
+There are various kinds (sub-classes) of geometric object: cylinders,
+spheres, blocks, ellipsoids, and perhaps others in the future.  Right
+now, we want a square lattice of rods, so we put a single dielectric
+cylinder at the origin:
+
+<pre>
+(set! geometry (list (make cylinder 
+                       (center 0 0 0) (radius 0.2) (height infinity)
+                       (material (make dielectric (epsilon 12))))))
+</pre>
+
+<p>Here, we've set several properties of the cylinder: the
+<code>center</code> is the origin, its <code>radius</code> is 0.2, and
+its <code>height</code> (the length along its axis) is
+<code>infinity</code>.  Another property, the <code>material</code>,
+it itself an object--we made it a dielectric with the property that
+its <code>epsilon</code> is 12.  There is another property of the
+cylinder that we can set, the direction of its axis, but we're happy
+with the default value of pointing in the z direction.
+
+<p>All of the geometric objects are ostensibly three-dimensional, but
+since we're doing a two-dimensional simulation the only thing that
+matters is their intersection with the xy plane (z=0).  Speaking of
+which, let us set the dimensionality of the system.  Normally, we do
+this when we set the discretization grid of the system (the primitive
+cell is divided into a discrete grid for computation).  The grid is
+controlled by the 3-vector variable <code>grid-size</code>, which
+defaults to a 16x16x16 three-dimensional grid. Instead, let's set it
+to a 32x32 two-dimensional grid:
+
+<pre>
+(set! grid-size (vector3 32 32 1))
+</pre>
+
+<p>Setting the z grid to 1 makes this a two-dimensional calculation.
+For efficient calculation, it is best to make the grid sizes a power
+of two, or factorizable into powers of small primes (such as 2, 3, 5
+and 7).  As a rule of thumb, you shouldn't use less than 8 grid points
+per unit cell.
+
+<p>Now, we're done setting the parameters--there are other parameters,
+but we're happy with their default values for now.  At this point,
+we're ready to go ahead and compute the band structure.  The simplest
+way to do this is to type <code>(run)</code>. Since this is a
+two-dimensional calculation, however, we would like to split the bands
+up into TE- and TM-polarized modes, and we do this by invoking
+<code>(run-te)</code> and <code>(run-tm)</code>.
+
+<p>These produce a lot of output, showing you exactly what the code is
+doing as it runs.  Most of this is self-explanatory, but we should
+point out one output in particular.  Among the output, you should see
+lines like:
+
+<p><code>sumte:, 13, 0.3, 0.3, 0, 0.424264, 0.37259, 0.536956, 0.644908, 0.81068, 0.826345, 0.885016, 1.01102, 1.11012</code>
+
+<p>These lines are designed to allow you to easily extract the
+band-structure information and import it into a spreadsheet for
+graphing.  They comprise the k point index, the k components and
+magnitude, and the frequencies of the bands, in comma-delimited
+format.  Each line is prefixed by "sumte" for TE bands, "sumtm" for TM
+bands, and "sumfrq" for ordinary bands (produced by
+<code>(run)</code>), and using this prefix you can extract the data
+you want from the output by passing it through a program like
+<code>grep</code>.  For example, if you had redirected the output to a
+file <code>foo.out</code> (as described earlier), you could extract
+the TM bands by running <code>grep sumtm foo.out</code> at the Unix
+prompt.  Note that the output includes a header line, like:
+
+<p><code>sumte:, k index, kx, ky, kz, kmag/2pi, band 1, band 2, band 3, band 4, band 5, band 6, band 7, band 8</code>
+
+<p>explaining each column of data.
+
+<p>You've computed the band structure, and extracted the
+eigenfrequencies for each k point.  But what if you want to see what
+the fields look like, or check that the dielectric function is what
+you think?  To do this, you need to output <a
+href="http://hdf.ncsa.uiuc.edu/" title="HDF Home Page">HDF files</a>
+for these functions (HDF is a binary format for multi-dimensional
+scientific data, and can be read by many visualization programs).  (We
+output files in HDF5 format, where the filenames are suffixed by
+"<code>.h5</code>".)
+
+<p>When you invoke one of the <code>run</code> functions, the
+dielectric function in the unit cell is automatically written to the
+file "<code>epsilon.h5</code>".  To output the fields or other
+information, you need to pass one or more arguments to the
+<code>run</code> function.  For example:
+
+<pre>
+(run-tm output-efield)
+(run-te output-hfield output-dpwr)
+</pre>
+
+<p>This will output the electric (E) fields for the TM bands; and the
+magnetic (H) fields and electric field energy densities (D power) for
+the TE bands.  The output filenames will be things like
+"<code>e.k12.b3.z.r.h5</code>", which stands for the real part
+(<code>.r</code>) of the z component (<code>.z</code>) of the electric
+field (<code>e</code>) for the third band (<code>.b3</code>) of the
+twelfth k point (<code>.k12</code>).
+
+<p>There are several other output functions you can pass, described in
+the <a href="user-ref.html">user reference section</a>, like
+<code>output-dfield</code>, <code>output-hpwr</code>, and
+<code>output-dpwr-in-objects</code>.  Actually, though, you can pass
+in arbitrary functions which can do much more than just output the
+fields--you can perform arbitrary analyses of the bands (using
+functions that we will describe later).
+
+<p>Instead of calling one of the <code>run</code> functions, it is
+also possible to call lower-level functions of the code directly, to
+have a finer control of the computation; such functions are described
+in the reference section.
 
 <hr>
 Go to the <a href="user-ref.html">next</a>, <a

@@ -109,12 +109,21 @@ download FFTW and find out more about it from the <a
 href="http://www.fftw.org">FFTW Home Page</a>.  If you want to use
 Photonic-Bands on a parallel machine with MPI, you will also need to
 install the <a href="">MPI FFTW</a> libraries (this just means
-including <code>--enable-mpi</mpi> in the FFTW <code>configure</code>
+including <code>--enable-mpi</code> in the FFTW <code>configure</code>
 flags).
+
+<h2>GNU Readline</h2>
+
+<p>GNU Readline is a library to provide command-line history,
+tab-completion, emacs keybindings, and other shell-like niceties to
+command-line programs.  This is an <em>optional</em> package, but one
+that can be used by Guile (see below) if it is installed; we recommend
+getting it.  You can <a href="ftp://ftp.gnu.org/gnu/readline">download
+Readline from the GNU ftp site</a>.
 
 <h2>GNU Guile</h2>
 
-GNU Guile is an extension/scripting language implementation based on
+<p>GNU Guile is an extension/scripting language implementation based on
 Scheme, and we use it to provide a rich, fully-programmable
 user-interface with minimal effort.  It's free, of course, and you can
 download it from the <a
@@ -123,7 +132,7 @@ Page</a>.
 
 <h2>libctl</h2>
 
-Instead of using Guile directly, we separated much of the user
+<p>Instead of using Guile directly, we separated much of the user
 interface code into a package called libctl, in the hope that this
 might be more generally useful.  libctl automatically handles the
 communication between the program and Guile, converting complicated
@@ -142,10 +151,11 @@ reside within the same parent directory.
 <h2>GNU Autoconf</h2>
 
 <p>If you want to be a developer of the Photonic-Bands package (as
-opposed to a user), you will also need the GNU Autoconf program.
-Autoconf is a portability tool that generates <code>configure</code>
-scripts to automatically detect the capabilities of a system and
-configure a package accordingly.  You can find out more at the <a
+opposed to merely a user), you will also need the GNU Autoconf
+program.  Autoconf is a portability tool that generates
+<code>configure</code> scripts to automatically detect the
+capabilities of a system and configure a package accordingly.  You can
+find out more at the <a
 href="http://sourceware.cygnus.com/autoconf/">Autoconf Home Page</a>
 (autoconf is typically installed by default on Linux systems).
 
