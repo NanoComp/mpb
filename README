@@ -1,0 +1,4 @@
+Photonic Band Structure Computation
+
+A new program for computing photonic band structure, using the libctl
+library for control files.
