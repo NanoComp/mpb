@@ -510,7 +510,7 @@
   (let ((band-func (apply combine-band-functions band-funcs)))
     (lambda (which-band)
       (if (vector3= current-k kpoint)
-	  (apply-band-func band-func which-band)))))
+	  (band-func which-band)))))
 
 ; Band functions to pick a canonical phase for the eigenstate of the
 ; given band based upon the spatial representation of the given field:
