@@ -612,7 +612,6 @@
     (let ((phases (map (lambda (d) (conj (make-polar 1 (angle d))))
 		       (sqmatrix-diag dots))))
       (map (lambda (i phase) 
-	     (print "scaling band " i " by " phase "\n")
 	     (scale-eigenvector i phase)
 	     (conj phase))
 	   (arith-sequence first-band 1 (length phases)) phases))))
