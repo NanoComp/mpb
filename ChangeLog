@@ -1,3 +1,85 @@
+Sat Jan 29 02:36:46 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-tutorial.html: mentioned data analysis tutorial
+
+	* doc/analysis-tutorial.html: grammar fix
+
+	* doc/analysis-tutorial.html: slight change
+
+	* src/matrixio/matrixio.c, src/matrixio/matrixio.h,
+	utils/mpb-data.c: Handle case of trying to create dataset where
+	one already exists.
+
+	* mpb-ctl/examples/diamond.ctl, mpb-ctl/examples/tri-rods.ctl:
+	updated for data analysis tutorial
+
+	* doc/user-tutorial.html, doc/tri-rods-eps-2.gif,
+	doc/tri-rods-ez1.gif, doc/tri-rods-ez2.gif, doc/tri-rods-ez3.gif,
+	doc/tri-rods-ez4.gif, doc/tri-rods-ez5.gif, doc/tri-rods-ez6.gif,
+	doc/tri-rods-ez7.gif, doc/tri-rods-ez8.gif, doc/user-ref.html,
+	doc/diamond-b3-eps.gif, doc/diamond-b3.gif, doc/diamond-bands.gif,
+	doc/diamond-eps.gif, doc/index.html, doc/tri-rods-bands.gif,
+	doc/tri-rods-eps-1.gif, doc/analysis-tutorial.html,
+	doc/diamond-b1-eps.gif, doc/diamond-b1.gif: added data analysis
+	tutorial
+
+Fri Jan 28 20:11:25 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-tutorial.html: minor change
+
+	* doc/installation.html: noted that PATH may need to be updated,
+	and some other small changes
+
+	* doc/installation.html: noted make distclean
+
+	* doc/installation.html: slight formatting fix
+
+	* doc/installation.html: Added section reviewing how to set up
+	installation paths, etcetera.
+
+	* mpb-ctl/examples/diamond.ctl: added diamond (fcc) lattice
+	example
+
+	* mpb-ctl/mpb.scm.in: report elapsed time for initialization
+
+	* mpb-ctl/mpb.scm.in: fixed display-eigensolver-stats for
+	num-runs=0
+
+	* mpb-ctl/examples/tutorial.ctl, doc/user-tutorial.html: use
+	output-at-kpoint in tutorial
+
+	* doc/user-ref.html: Documented output-at-kpoint.
+
+Thu Jan 27 23:57:50 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/examples/hole-slab.ctl, mpb-ctl/mpb.scm.in: Added
+	output-at-kpoint function.
+
+	* mpb-ctl/mpb.1, utils/mpb-data.1, mpb-ctl/Makefile.in: added mpb
+	man page
+
+	* mpb-ctl/mpb.c, src/matrixio/evectmatrixio.c,
+	src/matrixio/matrixio.c, src/matrixio/matrixio.h,
+	utils/Makefile.in, utils/mpb-data.1, utils/mpb-data.c,
+	Makefile.in, TODO, configure.in, mpb-ctl/epsilon_file.c: Added
+	mpb-data utility, so we can finally unskew datasets (and more).
+
+	* src/matrixio/matrixio.c: Suppress HDF5 error messages if we try
+	to read a nonexistent dataset; just return NULL.
+
+	* mpb-ctl/mpb.c: write out Bloch wavevector in reciprocal, not
+	cartesian, basis.
+
+	* mpb-ctl/Makefile.in, tests/Makefile.in,
+	src/matrices/Makefile.in, src/matrixio/Makefile.in,
+	src/maxwell/Makefile.in, src/util/Makefile.in: set SHELL
+
+	* mpb-ctl/epsilon_file.c, src/matrixio/evectmatrixio.c,
+	src/matrixio/matrixio.c, src/matrixio/matrixio.h: Added
+	attribute-reading code, and made it possible to check at runtime
+	if a dataset exists in a file (by returning an NULL instead of
+	dying if the dataset doesn't exist when we try to read it).
+
 Wed Jan 26 17:40:56 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/maxwell/maxwell_pre.c: zparity and run-even/odd now work

@@ -1,13 +1,32 @@
+MPB 0.10 (1/28/2000)
+
+  * Added mpb-data utility for post-processing data (e.g. for unskewing
+    non-orthogonal lattices).  See the data analysis tutorial or
+    man mpb-data for more information.
+
+  * Added new data analysis tutorial to the manual, describing how to
+    analyze and visualize the results of two sample calculations.
+
   * Added support for a new material type, dielectric-anisotropic, so
     that you can specify arbitrary real/symmetric dielectric tensors.
+
+  * Added new output-at-kpoint function to make it easier to output
+    fields only at a single k-point in a band-structure calculation.
 
   * When outputting fields, output all field components (x, y, z, and
     real and imaginary parts) to a single HDF5 file.  Also include info
     on the lattice and k-point vectors to facilitate post-processing.
 
+  * Added new subsection to the installation manual describing some
+    generic installation path issues on Unix that were confusing people.
+
   * Use CPPFLAGS environment variable instead of the less-standard
     INCLUDES to pass -I flags to the configure script (for header files
     in non-standard locations).
+
+  * Added diamond.ctl example file for a 3d diamond (fcc) lattice of spheres.
+
+  * Added (brief) mpb man page.
 
   * Fixed z-parity output and run-even/odd functions for 2d grids.
 
