@@ -88,7 +88,7 @@ static evectmatrix H, W[NWORK];
 
 static scalar_complex *curfield = NULL;
 static int curfield_band;
-static char curfield_type;
+static char curfield_type = '-';
 
 /* R[i]/G[i] are lattice/reciprocal-lattice vectors */
 static real R[3][3], G[3][3];
@@ -440,6 +440,8 @@ void solve_kpoint(vector3 kvector)
 
      printf("solve_kpoint (%g,%g,%g):\n",
 	    kvector.x, kvector.y, kvector.z);
+
+     curfield_type = '-'; /* reset curfield, invalidating stored fields */
 
      if (num_bands == 0) {
 	  printf("  num-bands is zero, not solving for any bands\n");
