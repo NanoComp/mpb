@@ -324,6 +324,11 @@ fi
 ##############################################################################
 # Check for Guile library and flags:
 
+AC_CHECK_PROG(guile_ok, guile, yes, no)
+if test x"$guile_ok" = xno; then
+	AC_MSG_ERROR([could not find guile program; check your PATH])
+fi
+
 AC_CHECK_PROG(HAVE_GUILE_CONFIG, guile-config, yes, no)
 if test "$HAVE_GUILE_CONFIG" = "yes"; then
         CPPFLAGS="$CPPFLAGS `guile-config compile`"
