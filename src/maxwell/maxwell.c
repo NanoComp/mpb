@@ -203,6 +203,8 @@ static void compute_cross(real *a0, real *a1, real *a2,
      *a2 = b0 * c1 - b1 * c0;
 }
 
+/* Set the current k point for the Maxwell solver.  k is given in the
+   basis of the reciprocal lattice vectors, G1, G2, and G3. */
 void update_maxwell_data_k(maxwell_data *d, real k[3],
 			   real G1[3], real G2[3], real G3[3])
 {
@@ -211,7 +213,11 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
      k_data *kpG = d->k_plus_G;
      real *kpGn2 = d->k_plus_G_normsqr;
      int x, y, z;
-     real kx = k[0], ky = k[1], kz = k[2];
+     real kx, ky, kz;
+
+     kx = G1[0]*k[0] + G2[0]*k[1] + G3[0]*k[2];
+     ky = G1[1]*k[0] + G2[1]*k[1] + G3[1]*k[2];
+     kz = G1[2]*k[0] + G2[2]*k[1] + G3[2]*k[2];
 
      if (kx == 0.0 && ky == 0.0 && kz == 0.0) {
 	  printf("detected zero k\n");

@@ -76,7 +76,7 @@ typedef struct {
 
      int num_fft_bands;
 
-     real current_k[3];
+     real current_k[3];  /* (in cartesian basis) */
      polarization_t polarization;
 
 #ifdef HAVE_FFTW
@@ -120,6 +120,13 @@ extern void set_maxwell_dielectric(maxwell_data *md,
 				   real R[3][3],
 				   dielectric_function epsilon,
 				   void *epsilon_data);
+
+extern void maxwell_compute_dfield(maxwell_data *d, evectmatrix Xin,
+				   scalar_complex *dfield,
+				   int cur_band_start, int cur_num_bands);
+extern void maxwell_compute_hfield(maxwell_data *d, evectmatrix Hin,
+				   scalar_complex *hfield,
+				   int cur_band_start, int cur_num_bands);
 
 extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 			     int is_current_eigenvector);
