@@ -155,6 +155,9 @@
 (if (not (defined? 'output-source)) ; (a function defined by gen-ctl-io)
     (set! print-ok? (mpi-is-master?)))
 
+(if (using-mpi?)
+    (set! interactive? false)) ; MPI doesn't support interactive mode
+
 ; ****************************************************************
 
 ; Computing group velocities:
@@ -329,6 +332,31 @@
 
 ; ****************************************************************
 
+; Define an easy way for the user to split the k-points list over multiple
+; processes.  k-split-num is the number of chunks to split the k-points into,
+; and k-split-index is the index of the current chunk (0 to k-split-num - 1).
+(define-param k-split-num 1)
+(define-param k-split-index 0)
+
+; Split a list L into num more-or-less equal pieces, returning the piece
+; given by index (in 0..num-1), along with the index in L of the first
+; element of the piece, as a car pair: (first-index . piece-of-L).
+(define (list-split L num index)
+  (define (list-sub L start len index rest)
+    (if (null? L)
+	(reverse rest)
+	(if (and (>= index start) (< index (+ start len)))
+	    (list-sub (cdr L) start len (+ index 1) (cons (car L) rest))
+	    (list-sub (cdr L) start len (+ index 1) rest))))
+  (if (or (>= index num) (negative? index))
+      (cons (length L) '())
+      (let ((block-size (quotient (+ (length L) num -1) num)))
+	(let ((start (* index block-size))
+	      (len (min block-size (- (length L) (* index block-size)))))
+	  (cons start (list-sub L start len 0 '()))))))
+
+; ****************************************************************
+
 (define current-k (vector3 0)) ; current k point in the run function
 (define all-freqs '()) ; list of all freqs computed in a run
 
@@ -344,30 +372,33 @@
    (set! interactive? false)  ; don't be interactive if we call (run)
    (begin-time "elapsed time for initialization: "
 	       (init-params p reset-fields))
-   (output-epsilon) ; output epsilon immediately
-   (if (> num-bands 0)
-       (begin
-	 (map (lambda (k)
-		(set! current-k k)
-		(begin-time "elapsed time for k point: " (solve-kpoint k))
-		(set! all-freqs (cons freqs all-freqs))
-		(set! band-range-data 
-		      (update-band-range-data band-range-data freqs k))
-		(set! eigensolver-iters
-		      (append eigensolver-iters
-			      (list (/ iterations num-bands))))
-		(map (lambda (f)
-		       (if (zero? (procedure-num-args f))
-			   (f) ; f is a thunk: evaluate once per k-point
-			   (do ((band 1 (+ band 1))) ((> band num-bands))
-			     (f band))))
-		     band-functions))
-	      k-points)
-	 (if (> (length k-points) 1)
-	     (begin
-	       (output-band-range-data band-range-data)
-	       (set! gap-list (output-gaps band-range-data)))
-	     (set! gap-list '())))))
+   (let ((k-split (list-split k-points k-split-num k-split-index)))
+     (set-kpoint-index (car k-split))
+     (if (zero? (car k-split))
+	 (output-epsilon)) ; output epsilon immediately for 1st k block
+     (if (> num-bands 0)
+	 (begin
+	   (map (lambda (k)
+		  (set! current-k k)
+		  (begin-time "elapsed time for k point: " (solve-kpoint k))
+		  (set! all-freqs (cons freqs all-freqs))
+		  (set! band-range-data 
+			(update-band-range-data band-range-data freqs k))
+		  (set! eigensolver-iters
+			(append eigensolver-iters
+				(list (/ iterations num-bands))))
+		  (map (lambda (f)
+			 (if (zero? (procedure-num-args f))
+			     (f) ; f is a thunk: evaluate once per k-point
+			     (do ((band 1 (+ band 1))) ((> band num-bands))
+			       (f band))))
+		       band-functions))
+		(cdr k-split))
+	   (if (> (length (cdr k-split)) 1)
+	       (begin
+		 (output-band-range-data band-range-data)
+		 (set! gap-list (output-gaps band-range-data)))
+	       (set! gap-list '()))))))
   (set! all-freqs (reverse all-freqs)) ; put them in the right order
   (print "done.\n"))
 

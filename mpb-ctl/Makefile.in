@@ -124,13 +124,21 @@ geom.c: $(LIBCTL_DIR)/utils/geom.c
 # work because LIBCTL_DIR is not set to the global (post-install)
 # location of libctl.
 
-install: $(PROGRAM_NAME)
+install: install-mpb @INSTALL_MPB_SPLIT@
+
+install-mpb: $(PROGRAM_NAME)
 	$(INSTALL) -d $(prefix)/bin
 	$(INSTALL) -m 0755 -s .$(PROGRAM_NAME) $(prefix)/bin/`echo $(PROGRAM_NAME)|sed '$(transform)'`
 	$(INSTALL) -d $(prefix)/share/libctl/specs
 	$(INSTALL) -m 0644 $(SPECIFICATION_FILE) $(prefix)/share/libctl/specs
 	$(INSTALL) -d $(prefix)/man/man1
 	$(INSTALL) -m 0644 $(PROGRAM_NAME).1 $(prefix)/man/man1
+
+install-mpb-split:
+	mpb_name=`echo mpb | sed '$(transform)'`
+	rm -f mpb-split-tmp
+	sed "s%\./mpb%$$mpb_name%g" mpb-split > mpb-split-tmp
+	$(INSTALL) -m 0755 -s mpb-split-tmp $(prefix)/bin/$${mpb_name}-split
 
 clean:
 	rm -f $(ALL_OBJECTS) ctl-io.c ctl-io.h main.c geom.c \

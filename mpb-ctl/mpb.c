@@ -869,9 +869,11 @@ void solve_kpoint(vector3 kvector)
      freqs.num_items = num_bands;
      CHK_MALLOC(freqs.items, number, freqs.num_items);
      
+     set_kpoint_index(kpoint_index + 1);
+
      mpi_one_printf("%sfreqs:, %d, %g, %g, %g, %g",
 		    polarization_strings[mdata->polarization],
-		    ++kpoint_index, k[0], k[1], k[2],
+		    kpoint_index, k[0], k[1], k[2],
 		    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
      for (i = 0; i < num_bands; ++i) {
 	  freqs.items[i] = sqrt(eigvals[i]);

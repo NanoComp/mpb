@@ -3,6 +3,10 @@
     nearly linearly with the number of processors.  Thanks to
     Clarendon Photonics for funding this work.
 
+  * Also added mpb-split script to parallelize in a simpler way, without
+    MPI, on e.g. SMP machines, by dividing up the list of k-points
+    among a number of serial mpb processes.
+
   * Fixed bug in mpbi where artifacts could be introduced in 3d field
     and dielectric-function output files.  (This only affected the
     output files, not the frequency eigenvalues, etcetera.)  Thanks

@@ -1111,16 +1111,55 @@ problems, the speedup is also nearly linear.
 <p>MPI support in MPB is thanks to generous support from <a
 href="http://www.clarendonphotonics.com/">Clarendon Photonics</a>.
 
-<h3>Alternative parallelization</h3>
+<h3><a name="mpb-split">Alternative parallelization</a></h3>
 
 <p>There is an alternative method of parallelization when you have
 multiple k points: do each k-point on a different processor.  This
 does not provide any memory benefits, and does not allow one k-point
 to benefit by starting with the fields of the previous k-point, but is
 easy and may be the only effective way to parallelize calculations for
-small problems.  This method, however, can utilize the ordinary
-<code>mpb</code> program unmodified, and it is easy to write a script
-to parcel up the k-points between processors.
+small problems.  This method also does not require MPI: it can utilize
+the unmodified serial <code>mpb</code> program.  To make it even
+easier, we supply a simple script called <code>mpb-split</code> (or
+<code>mpbi-split</code>) to break the <code>k-points</code> list into
+chunks for you.  Running:
+
+<pre>
+unix% mpb-split <i>num-split</i> foo.ctl
+</pre>
+
+<p>will break the <code>k-points</code> list in <code>foo.ctl</code>
+into <code><i>num-split</i></code> more-or-less equal chunks, launch
+<code><i>num-split</i></code> processes of <code>mpb</code> in
+parallel to process each chunk, and output the results of each in
+order.  (Each process is an ordinary <code>mpb</code> execution,
+except that it numbers its <code>k-points</code> depending upon which
+chunk it is in, so that output files will not overwrite one another
+and you can still <code>grep</code> for frequencies as usual.)
+
+<p>Of course, this will only benefit you on a system where different
+processes will run on different processors, such as an SMP or a
+cluster with automatic process migration (e.g. <a
+href="http://www.mosix.org/">MOSIX</a>).  <code>mpb-split</code> is
+actually a trivial shell script, though, so you can easily modify it
+if you need to use a special command to launch processes on other
+processors/machines (e.g. via <a
+href="http://www.gnuqueue.org/home.html">GNU Queue</a>).
+
+<p>The general syntax for <code>mpb-split</code> is:
+
+<pre>
+unix% mpb-split <i>num-split mpb-arguments...</i>
+</pre>
+
+<p>where all of the arguments following <code><i>num-split</i></code>
+are passed along to <code>mpb</code>.  What <code>mpb-split</code>
+technically does is to set the MPB variable <code>k-split-num</code>
+to <code><i>num-split</i></code> and <code>k-split-index</code> to the
+index (starting with 0) of the chunk for each process.  If you want,
+you can use these variables to divide the problem in some other way
+and then reset them to <code>1</code> and <code>0</code>,
+respectively.
 
 <hr>
 Go to the <a href="developer.html">next</a>, <a
