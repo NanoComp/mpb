@@ -198,11 +198,13 @@ described earlier).
 
 <p>Optionally, MPB is able to run on a distributed-memory parallel
 machine, and to do this we use the standard MPI message-passing
-interface.  You can download and learn about MPI from the <a
+interface.  You can learn about MPI from the <a
 href="http://www-unix.mcs.anl.gov/mpi/index.html">MPI Home Page</a>.
 Most commercial supercomputers already have an MPI implementation
-installed.  MPI is <i>not required</i> to compile the ordinary,
-uniprocessor version of Photonic-Bands.
+installed; two free MPI implementations that you can install yourself
+are <a href="http://www-unix.mcs.anl.gov/mpi/mpich/">MPICH</a> and <a
+href="http://www.mpi.nd.edu/lam/">LAM</a>.  MPI is <i>not required</i>
+to compile the ordinary, uniprocessor version of Photonic-Bands.
 
 <p>In order for the MPI version of MPB to run successfully, we have a
 slightly nonstandard requirement: each process must be able to read
