@@ -1,4 +1,4 @@
-MPB 1.3
+MPB 1.3 (3/10/2002)
 
   * You can now specify the grid size via the resolution input variable,
     instead of via grid-size.  In this case, you make e.g. a 2d simulation
