@@ -1,0 +1,12 @@
+This directory contains code for operating the Maxwell operator on
+a vector field:
+
+	MaxwellOp(V) = curl(1/eps * curl(V))
+
+We store V in a Fourier basis, so that the curl operation is diagonal.
+To multiply by epsilon-inverse, we use a pair of FFTs to transform to
+and from position space.
+
+Also included are initialization routines for the auxiliary data and
+storage required by MaxwellOp, as well as subsidiary routines to
+compute things like the curl and the energy density.
