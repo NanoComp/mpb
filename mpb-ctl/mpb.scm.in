@@ -184,7 +184,7 @@
    (define band-range-data '())
    (set! interactive? false)  ; don't be interactive if we call (run)
    (init-params p reset-fields)
-   (output-epsilon)          ; output epsilon immediately
+   (apply output-epsilon output-copies) ; output epsilon immediately
    (map (lambda (k)
 	  (set! current-k k)
 	  (begin-time "elapsed time for k point: " (solve-kpoint k))
@@ -213,27 +213,30 @@
 ; Some predefined output functions (functions of the band index),
 ; for passing to (run).
 
+; a global for the number of copies these band functions output
+(define-param output-copies '(1 1 1))
+
 (define (output-hfield which-band)
   (get-hfield which-band)
-  (output-field))
+  (apply output-field output-copies))
 
 (define (output-dfield which-band)
   (get-dfield which-band)
-  (output-field))
+  (apply output-field output-copies))
 
 (define (output-efield which-band)
   (get-efield which-band)
-  (output-field))
+  (apply output-field output-copies))
 
 (define (output-hpwr which-band)
   (get-hfield which-band)
   (compute-field-energy)
-  (output-field))
+  (apply output-field output-copies))
 
 (define (output-dpwr which-band)
   (get-dfield which-band)
   (compute-field-energy)
-  (output-field))
+  (apply output-field output-copies))
 
 ; The following function returns an output function that calls
 ; output-func for bands with D energy in objects > min-energy.

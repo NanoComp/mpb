@@ -1,3 +1,6 @@
+  * Added "output-copies" variable to set number of periods output by
+    the band output functions (see the reference section of the manual).
+
 MPB 0.8 (11/19/1999)
 
   * Initial public release.
