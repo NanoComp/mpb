@@ -51,11 +51,9 @@ option.
 .PP
 Note also that, by default, the output datasets are identical to the
 input datasets; you must use one or more of the options below to
-specify a transformation (the
-.B -r
-and
+specify a transformation (e.g. the \fB\-r\fR/\fB\-e\fR and
 .B -n
-options are perhaps the most useful).
+options are very useful).
 .SH OPTIONS
 .TP
 .B -h
@@ -74,10 +72,17 @@ Write output datasets to
 the input file(s) (the default).
 .TP
 .B -r
-Output a rectangular cell with the same volume as the cell of the input data.
-This option is particularly useful for visualizing data from non-orthogonal
-unit cells (e.g. a triangular lattice), as otherwise the data will appear
-skewed or warped in most graphics programs.
+Output a rectangular cell with the same volume as the cell of the
+input data.  This option is particularly useful for visualizing data
+from non-orthogonal unit cells (e.g. a triangular lattice), as
+otherwise the data will appear skewed or warped in most graphics
+programs.  This option should almost always be accompanied by the
+\fB\-n\fR option to ensure a uniform resolution.
+.TP
+\fB\-e\fR \fIx,y,z\fR
+As the \fB\-r\fR option, but also make the first axis of the output along
+the \fIx,y,z\fR direction (in Cartesian coordinates) instead of along
+the first lattice vector as for \fB\-r\fR.
 .TP
 \fB\-n\fR \fIn\fR
 Output

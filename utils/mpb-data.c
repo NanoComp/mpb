@@ -194,7 +194,7 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 					       xi2, yi2, zi2, s,
 					       dx * dy * dz);
 			 min_out_im = MIN2(min_out_im, d_out_im[ijk]);
-			 max_out_im = MAX2(min_out_im, d_out_im[ijk]);
+			 max_out_im = MAX2(max_out_im, d_out_im[ijk]);
 		    }
 		    else {
 			 d_out_re[ijk] =
@@ -208,7 +208,7 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 			      d_in_re[IN_INDEX(i2,j2,k2)] * dx * dy * dz;
 		    }
 		    min_out_re = MIN2(min_out_re, d_out_re[ijk]);
-		    max_out_re = MAX2(min_out_re, d_out_re[ijk]);
+		    max_out_re = MAX2(max_out_re, d_out_re[ijk]);
 #undef IN_INDEX
 	       }
 
@@ -321,7 +321,8 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
 
 void handle_file(const char *fname, const char *out_fname,
 		 const char *data_name,
-		 int rectify, int resolution, real multiply_size[3],
+		 int rectify,  int have_ve, vector3 ve,
+		 int resolution, real multiply_size[3],
 		 int pick_nearest)
 {
      matrixio_id in_file, out_file;
@@ -389,16 +390,37 @@ void handle_file(const char *fname, const char *out_fname,
      Rout.c1 = vector3_scale(multiply_size[1], Rin.c1);
      Rout.c2 = vector3_scale(multiply_size[2], Rin.c2);
      if (rectify) {
-	  /* orthogonalize the output lattice vectors; note that this
-	     preserves the volume of the output cell. */
+	  double V;
+
+	  /* Orthogonalize the output lattice vectors.  If have_ve
+	     is true, then the first new lattice vector should be in
+	     the direction of the ve unit vector; otherwise, the first
+	     new lattice vector is the first original lattice vector.
+	     Note that we do this in such a way as to preserve the
+	     volume of the unit cell, and so that our first vector
+	     (in the direction of ve) smoothly interpolates between
+	     the original lattice vectors. */
+
+	  if (have_ve)
+	       ve = unit_vector3(ve);
+	  else
+	       ve = unit_vector3(Rout.c0);
+
+	  /* First, compute c0 in the direction of ve by smoothly
+	     interpolating the old c0/c1/c2 (formula is slightly tricky): */
+	  V = vector3_dot(vector3_cross(Rout.c0, Rout.c1), Rout.c2);
+	  Rout.c1 = vector3_minus(Rout.c1,Rout.c0);
+	  Rout.c2 = vector3_minus(Rout.c2,Rout.c0);
+	  Rout.c0 = vector3_scale(V / vector3_dot(vector3_cross(Rout.c1,
+								Rout.c2),
+						  ve),
+				  ve);
+	  
+	  /* Now, orthogonalize c1 and c2: */
 	  Rout.c1 = vector3_minus(Rout.c1, 
-				vector3_scale(vector3_dot(Rout.c0, Rout.c1) /
-					      vector3_dot(Rout.c0, Rout.c0),
-					      Rout.c0));
+				  vector3_scale(vector3_dot(ve, Rout.c1), ve));
 	  Rout.c2 = vector3_minus(Rout.c2, 
-				vector3_scale(vector3_dot(Rout.c0, Rout.c2) /
-					      vector3_dot(Rout.c0, Rout.c0),
-					      Rout.c0));
+				  vector3_scale(vector3_dot(ve, Rout.c2), ve));
 	  Rout.c2 = vector3_minus(Rout.c2, 
 				vector3_scale(vector3_dot(Rout.c1, Rout.c2) /
 					      vector3_dot(Rout.c1, Rout.c1),
@@ -462,6 +484,7 @@ void usage(FILE *f)
              "         -v : verbose output\n"
 	     "  -o <file> : output to <file> (first input file only)\n"
 	     "         -r : output rectangular cell\n"
+	     " -e <x,y,z> : as -r, but first axis of cell is along <x,y,z>\n"
 	     "     -n <n> : output resolution of n grid points per a\n"
 	     "    -x <mx>\n"
 	     "    -y <my>\n"
@@ -504,14 +527,15 @@ else { /* treat as if ":" were at the end of fname */
 int main(int argc, char **argv)
 {
      char *out_fname = NULL, *data_name = NULL;
-     int rectify = 0, resolution = 0;
+     int rectify = 0, resolution = 0, have_ve = 0;
+     vector3 ve = {1,0,0};
      real multiply_size[3] = {1,1,1};
      int pick_nearest = 0;
      int ifile, c;
      extern char *optarg;
      extern int optind;
 
-     while ((c = getopt(argc, argv, "hVvo:x:y:z:m:d:n:pr")) != -1)
+     while ((c = getopt(argc, argv, "hVvo:x:y:z:m:d:n:pre:")) != -1)
           switch (c) {
               case 'h':
                    usage(stdout);
@@ -560,6 +584,17 @@ int main(int argc, char **argv)
               case 'p':
                    pick_nearest = 1;
                    break;
+	      case 'e':
+		   have_ve = 1;
+		   if (3 != sscanf(optarg, "%lf,%lf,%lf", 
+				   &ve.x, &ve.y, &ve.z)) {
+			fprintf(stderr,
+				"Invalid -e argument \"%s\"\n", optarg);
+			usage(stderr);
+			return EXIT_FAILURE;
+		   }
+                   rectify = 1;
+                   break;
               case 'r':
                    rectify = 1;
                    break;
@@ -579,7 +614,8 @@ int main(int argc, char **argv)
 	  if (!dname[0])
                dname = data_name;
 
-	  handle_file(h5_fname, out_fname, dname, rectify, resolution, 
+	  handle_file(h5_fname, out_fname, dname, 
+		      rectify, have_ve, ve, resolution, 
 		      multiply_size, pick_nearest);
 	  
 	  if (out_fname)
