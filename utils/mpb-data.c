@@ -89,6 +89,7 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
      real s[3]; /* phase difference per cell in each lattice direction */
      real min_out_re = 1e20, max_out_re = -1e20, 
 	  min_out_im = 1e20, max_out_im = -1e20;
+     real shiftx, shifty, shiftz;
 
      CHECK(d_in_re && d_out_re, "invalid arguments");
      CHECK((d_out_im && d_in_im) || (!d_out_im && !d_in_im),
@@ -105,6 +106,18 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 	       s[i] = 0;
      }
 
+     /* Compute shift so that the origin of the output cell
+	is mapped to the origin of the original primitive cell: */
+     shiftx = 0.5 - (coord_map.c0.x*0.5*n_out[0] +
+		     coord_map.c1.x*0.5*n_out[1] +
+		     coord_map.c2.x*0.5*n_out[2]);
+     shifty = 0.5 - (coord_map.c0.y*0.5*n_out[0] +
+		     coord_map.c1.y*0.5*n_out[1] +
+		     coord_map.c2.y*0.5*n_out[2]);
+     shiftz = 0.5 - (coord_map.c0.z*0.5*n_out[0] +
+		     coord_map.c1.z*0.5*n_out[1] +
+		     coord_map.c2.z*0.5*n_out[2]);
+
      for (i = 0; i < n_out[0]; ++i)
 	  for (j = 0; j < n_out[1]; ++j)
 	       for (k = 0; k < n_out[2]; ++k) {
@@ -117,9 +130,12 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 		    /* find the point corresponding to d_out[i,j,k] in
 		       the input array, and also find the next-nearest
 		       points. */
-		    x = coord_map.c0.x*i + coord_map.c1.x*j + coord_map.c2.x*k;
-		    y = coord_map.c0.y*i + coord_map.c1.y*j + coord_map.c2.y*k;
-		    z = coord_map.c0.z*i + coord_map.c1.z*j + coord_map.c2.z*k;
+		    x = coord_map.c0.x*i + coord_map.c1.x*j + coord_map.c2.x*k
+			 + shiftx;
+		    y = coord_map.c0.y*i + coord_map.c1.y*j + coord_map.c2.y*k
+			 + shifty;
+		    z = coord_map.c0.z*i + coord_map.c1.z*j + coord_map.c2.z*k
+			 + shiftz;
 		    MODF_POSITIVE(x, xi);
 		    MODF_POSITIVE(y, yi);
 		    MODF_POSITIVE(z, zi);
@@ -386,9 +402,8 @@ void handle_file(const char *fname, const char *out_fname,
 		 Rin.c1.x, Rin.c1.y, Rin.c1.z,
 		 Rin.c2.x, Rin.c2.y, Rin.c2.z);
 
-     Rout.c0 = vector3_scale(multiply_size[0], Rin.c0);
-     Rout.c1 = vector3_scale(multiply_size[1], Rin.c1);
-     Rout.c2 = vector3_scale(multiply_size[2], Rin.c2);
+     Rout = Rin;
+
      if (rectify) {
 	  double V;
 
@@ -426,6 +441,10 @@ void handle_file(const char *fname, const char *out_fname,
 					      vector3_dot(Rout.c1, Rout.c1),
 					      Rout.c1));
      }
+
+     Rout.c0 = vector3_scale(multiply_size[0], Rout.c0);
+     Rout.c1 = vector3_scale(multiply_size[1], Rout.c1);
+     Rout.c2 = vector3_scale(multiply_size[2], Rout.c2);
 
      if (verbose)
 	  printf("Output lattice = (%g,%g,%g), (%g,%g,%g), (%g,%g,%g)\n",
