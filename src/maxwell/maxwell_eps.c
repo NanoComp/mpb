@@ -31,10 +31,10 @@
 /* Lapack eigenvalue functions */
 #ifdef SCALAR_SINGLE_PREC
 #  define HEEV F77_FUNC(cheev,CHEEV)
-#  define SYEV F77_FUNC(ssyev,ssyev)
+#  define SYEV F77_FUNC(ssyev,SSYEV)
 #else
 #  define HEEV F77_FUNC(zheev,ZHEEV)
-#  define SYEV F77_FUNC(dsyev,dsyev)
+#  define SYEV F77_FUNC(dsyev,DSYEV)
 #endif
 extern void HEEV(char *, char *, int *, scalar *, int *, real *,
 		 scalar *, int *, real *, int *);
