@@ -460,10 +460,17 @@ that were computed.
 <p><dt><code>(run-te <i>band-func ...</i>), (run-tm <i>band-func ...</i>)</code>
 <dd>These are the same as the <code>run</code> function except that
 they constrain their solutions to be TE- and TM-polarized,
-respectively, in two dimensions.  For a three-dimensional structure
-(<code>grid-size</code>) or when a k point has a z component, the
-eigenstates are no longer completely polarized, and these functions
-behave identically to <code>run</code>.
+respectively, in two dimensions.  The TE and TM polarizations are
+defined has having electric and magnetic fields in the xy plane,
+respectively.  Equivalently, the H/E field of TE/TM light has only a z
+component (making it easier to visualize).
+
+<p>For a three-dimensional structure (<code>grid-size</code>) or when
+a k point has a nonzero z component, the eigenstates are no longer
+completely polarized, and these functions behave identically to
+<code>run</code>.  (2d systems oriented in the yz or xz directions
+don't work; you have to orient your coordinates to be in the xy
+plane.)
 
 <p><dt><code>(run-even <i>band-func ...</i>), (run-odd <i>band-func ...</i>)</code>
 <dd>These are the same as the <code>run</code> function except that
