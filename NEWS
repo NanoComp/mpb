@@ -1,6 +1,9 @@
 MPB 1.4.1 (9/13/2002)
 
+  * Fixed NaN in field normalization when basis-determinant was negative.
+
   * Fixed compatibility problems with versions of Guile prior to 1.4.
+    Thanks to Cazimir G. Bostan for bug reports.
 
 MPB 1.4 (9/12/2002)
 
