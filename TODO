@@ -1,11 +1,10 @@
-Support for parallel transform with MPI.  Support other types of
-parallelization (e.g. doing different k points in parallel) without
-requiring external scripts.
-
 Export/import DXF, VRML, POV, ...?
 
 More eigensolver improvements...adaptive selection of an iteration technique?
 
 Try Jacobi-Davidson method with harmonic eigenvalues for targeted solver.
+
+Implement y-parity output.  x-parity, too (after transform so it is
+process-local)?
 
 World domination.
