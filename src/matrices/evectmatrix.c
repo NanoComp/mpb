@@ -31,14 +31,13 @@ void evectmatrix_aXpbY(real a, evectmatrix X, real b, evectmatrix Y)
      blasglue_axpy(X.n * X.p, b, Y.data, 1, X.data, 1);
 }
 
-/* compute X = YS.  If sdagger != 0, then adjoint(S) is used instead.
-   For Hermitian S, sdagger = 1 is probably preferred, since this
-   should lead to greater locality in the matrix multiply. */
-void evectmatrix_XeYS(evectmatrix X, evectmatrix Y, sqmatrix S, short sdagger)
+/* compute X = YS.  If sherm != 0, then S is assumed to be Hermitian.
+   This can be used to make the multiplication more efficient. */
+void evectmatrix_XeYS(evectmatrix X, evectmatrix Y, sqmatrix S, short sherm)
 {
      CHECK(X.p == Y.p && X.n == Y.n && X.p == S.p, "arrays not conformant");
 
-     blasglue_gemm('N', sdagger ? 'C' : 'N', X.n, X.p, X.p,
+     blasglue_gemm('N', sherm ? 'C' : 'N', X.n, X.p, X.p,
 		   1.0, Y.data, Y.p, S.data, S.p, 0.0, X.data, X.p);
 }
 

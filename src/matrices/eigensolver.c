@@ -69,7 +69,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      
      do {
 	  evectmatrix_XtX(U, Y);
-	  sqmatrix_invert(U, 1);
+	  sqmatrix_invert(U);
 	  A(Y, X); /* X = AY */
 	  evectmatrix_XeYS(G, X, U, 1); /* note that U = adjoint(U) */
 
@@ -119,7 +119,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	     half the previous stepsize: */
 	  evectmatrix_aXpbY(1.0, Y, prev_lambda*0.5, D);
 	  evectmatrix_XtX(U, Y);
-	  sqmatrix_invert(U, 1);
+	  sqmatrix_invert(U);
 	  A(Y, G); /* G = AY */
 	  evectmatrix_XtY(YtAYU, Y, G);
 	  E2 = SCALAR_RE(sqmatrix_traceAtB(U, YtAYU));
@@ -127,8 +127,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  /* Minimizing Y + lambda * D: */
 	  
 	  /* At this point, we know the value of the function at Y (E),
-	     the derivative dE, and the value at a second point Y'.  We
-	     fit this data to a quadratic and use that to predict the
+	     the derivative (dE), and the value at a second point Y' (E2).
+	     We fit this data to a quadratic and use that to predict the
 	     minimum along the direction D: */
 	  
 	  d2E = 2.0 * (E2 - E - dE * prev_lambda*0.5) /
@@ -169,7 +169,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
        evectmatrix_XtY(U, X, G);
 #else
        sqmatrix_AeBC(UYtAYU, Usqrt, 0, YtAYU, 0);
-       sqmatrix_invert(Usqrt,1);
+       sqmatrix_invert(Usqrt);
        sqmatrix_AeBC(U, UYtAYU, 0, Usqrt, 1); /* U == 1/sqrt(Yt*Y) * Yt *
 					              A * Y * 1/sqrt(Yt*Y) */
 #endif

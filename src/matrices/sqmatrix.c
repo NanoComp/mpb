@@ -61,30 +61,31 @@ void sqmatrix_ApaB(sqmatrix A, real a, sqmatrix B)
      blasglue_axpy(A.p * A.p, a, B.data, 1, A.data, 1);
 }
 
-/* U <- Cholesky factorization of U, which can
-   subsequently be used to multiply other matrices by 1/U.
-
-   If compute_Uinv is true, then U <- 1/U.
-
+/* U <- 1/U.
    U must be Hermitian and positive-definite (e.g. U = Yt*Y). */
-void sqmatrix_invert(sqmatrix U, short compute_Uinv)
+void sqmatrix_invert(sqmatrix U)
 {
+     int i, j;
+
      /* factorize U: */
      lapackglue_potrf('U', U.p, U.data, U.p);
 
-     if (compute_Uinv) {
-          int i, j;
+     /* QUESTION: would it be more efficient to stop here,
+	returning the Cholesky factorization of U?  This
+	could then be used to multiply by 1/U without
+	ever calculating the inverse explicitely.  It
+	would probably be more numerically stable, but
+	how do the computational costs compare? */
 
-	  /* Compute 1/U (upper half only) */
-	  lapackglue_potri('U', U.p, U.data, U.p);
-
-	  /* Now, copy the conjugate of the upper half
-	     onto the lower half of U */
-          for (i = 0; i < U.p; ++i)
-               for (j = i + 1; j < U.p; ++j) {
-                    ASSIGN_CONJ(U.data[j * U.p + i], U.data[i * U.p + j]);
-               }
-     }
+     /* Compute 1/U (upper half only) */
+     lapackglue_potri('U', U.p, U.data, U.p);
+     
+     /* Now, copy the conjugate of the upper half
+	onto the lower half of U */
+     for (i = 0; i < U.p; ++i)
+       for (j = i + 1; j < U.p; ++j) {
+	 ASSIGN_CONJ(U.data[j * U.p + i], U.data[i * U.p + j]);
+       }
 }
 
 /* U <- eigenvectors of U.  U must be Hermitian. eigenvals <- eigenvalues.

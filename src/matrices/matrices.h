@@ -28,7 +28,7 @@ extern void destroy_sqmatrix(sqmatrix X);
 extern void evectmatrix_copy(evectmatrix X, evectmatrix Y);
 extern void evectmatrix_aXpbY(real a, evectmatrix X, real b, evectmatrix Y);
 extern void evectmatrix_XeYS(evectmatrix X, evectmatrix Y,
-			     sqmatrix S, short sdagger);
+			     sqmatrix S, short sherm);
 extern void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y,sqmatrix S);
 extern void evectmatrix_XtX(sqmatrix U, evectmatrix X);
 extern void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y);
@@ -42,7 +42,7 @@ extern scalar sqmatrix_traceAtB(sqmatrix A, sqmatrix B);
 extern void sqmatrix_AeBC(sqmatrix A, sqmatrix B, short bdagger,
 			  sqmatrix C, short cdagger);
 extern void sqmatrix_ApaB(sqmatrix A, real a, sqmatrix B);
-extern void sqmatrix_invert(sqmatrix U, short compute_Uinv);
+extern void sqmatrix_invert(sqmatrix U);
 extern void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W);
 extern void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W);
 
