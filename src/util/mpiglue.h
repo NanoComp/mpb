@@ -48,6 +48,15 @@ CHECK((sb) == (rb), "MPI_Allreduce stub doesn't work for sendbuf != recvbuf")
 #define MPI_Barrier(comm) 0
 
 #define MPI_Comm_rank(comm, rankp) *(rankp) = 0
+#define MPI_Comm_size(comm, sizep) *(sizep) = 1
+
+#define MPI_Send(sb,n,t, r,tag, comm) \
+CHECK(0, "MPI_Send stub is non-functional");
+
+#define MPI_Recv(sb,n,t, r,tag, comm,statp) \
+CHECK(0, "MPI_Recv stub is non-functional");
+
+typedef int MPI_Status;
 
 typedef clock_t mpiglue_clock_t;
 #define MPIGLUE_CLOCK clock()

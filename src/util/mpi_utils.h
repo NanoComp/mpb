@@ -42,4 +42,7 @@ extern int mpi_is_master(void);
 
 extern void mpi_assert_equal(double x);
 
+extern void mpi_begin_critical_section(int tag);
+extern void mpi_end_critical_section(int tag);
+
 #endif /* MPI_UTILS_H */
