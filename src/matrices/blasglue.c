@@ -109,10 +109,24 @@ void blasglue_copy(int n, scalar *x, int incx, scalar *y, int incy)
 
 scalar blasglue_dotc(int n, scalar *x, int incx, scalar *y, int incy)
 {
-#ifdef SCALAR_COMPLEX
+#ifndef NO_FORTRAN_FUNCTIONS
+#  ifdef SCALAR_COMPLEX
      return (F(dotc,DOTC) (&n, x, &incx, y, &incy));
-#else
+#  else
      return (F(dot,DOT) (&n, x, &incx, y, &incy));
+#  endif
+#else /* on some machines, return values from Fortran functions don't work */
+     int i;
+     scalar sum = SCALAR_INIT_ZERO;
+     for (i = 0; i < n; ++i) {
+#  ifdef SCALAR_COMPLEX
+          sum.re += x[i*incx].re * y[i*incy].re + x[i*incx].im * y[i*incy].im;
+          sum.im += x[i*incx].re * y[i*incy].im - x[i*incx].im * y[i*incy].re;
+#  else
+	  sum += x[i*incx] * y[i*incy];
+#  endif
+     }
+     return sum;
 #endif
 }
 

@@ -28,6 +28,13 @@
 
 #endif
 
+/* On the RS/6000, getting return values from Fortran functions seems
+   to be problematic (and similarly for passing C return values to Fortran).
+   To disable use of functions, we define the symbol NO_FORTRAN_FUNCTIONS. */
+#if defined(IBM6000) || defined(_AIX) 
+#define NO_FORTRAN_FUNCTIONS
+#endif
+
 /* Passing strings to C programs from Fortran is a pain.  We can simplify
    matters by requiring that the caller pass the length of the string,
    but things are still bad because Cray Fortran passes an "_fcd"
