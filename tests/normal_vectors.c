@@ -27,6 +27,21 @@ double angle(vector3 v1, vector3 v2)
      return 180/K_PI * acos(vector3_dot(v1,v2));
 }
 
+/* return a random unit vector, uniformly distributed over a sphere */
+vector3 random_unit_vector3(void)
+{
+     double z, t, r;
+     vector3 v;
+
+     z = 2*mydrand() - 1;
+     t = 2*K_PI*mydrand();
+     r = sqrt(1 - z*z);
+     v.x = r * cos(t);
+     v.y = r * sin(t);
+     v.z = z;
+     return v;
+}
+
 int main(void)
 {
      int i, j, nsq, num_sq_pts[] = { 12, 50, 72 };
@@ -63,10 +78,7 @@ int main(void)
 	       vector3 n, nsum = {0,0,0};
 	       double d;
 	       
-	       n.x = mydrand() - 0.5;
-	       n.y = mydrand() - 0.5;
-	       n.z = mydrand() - 0.5;
-	       n = unit_vector3(n);
+	       n = random_unit_vector3();
 	       d = mydrand();
 	       for (j = 0; j < num_sq_pts[nsq]; ++j) {
 		    vector3 v;
@@ -97,10 +109,7 @@ int main(void)
 	       double r, d;
 	       int j;
 	       
-	       n.x = mydrand() - 0.5;
-	       n.y = mydrand() - 0.5;
-	       n.z = mydrand() - 0.5;
-	       n = unit_vector3(n);
+	       n = random_unit_vector3();
 	       d = mydrand();
 	       do {
 		    r = mydrand() * 10; /* radius of the sphere */
