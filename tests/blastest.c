@@ -30,7 +30,11 @@ void printmat_matlab(scalar *A, int m, int n)
   printf("[");
   for (i = 0; i < m; ++i) {
     for (j = 0; j < n; ++j) {
-      printf("  %6.3f", SCALAR_RE(A[i*n + j]));
+#ifdef SCALAR_COMPLEX
+         printf("  %g+%gi", A[i*n + j].re, A[i*n + j].im);
+#else
+         printf("  %g", A[i*n + j]);
+#endif
     }
     printf(";\n");
   }
@@ -41,14 +45,25 @@ int main(int argc, char **argv)
 {
   const int N = 4;
   int i,j;
+#ifndef SCALAR_COMPLEX
   scalar A[] = { 3.3, 6.2, 7.1, 9.1,
-		 -2.3, 3.6, 0.3, 9.7,
-		 6.7, -0.1, 1.1, 4.8,
-		 8.4, 7.7, 5.9, -1.8 };
+                 -2.3, 3.6, 0.3, 9.7,
+                 6.7, -0.1, 1.1, 4.8,
+                 8.4, 7.7, 5.9, -1.8 };
   scalar B[] = { 1.1, 2.2, 3.3, 4.4,
 		 8.8, 7.7, 6.6, 5.5,
 		 6.1, 8.2, 9.7, 3.6,
 		 6.3, 2.9, 5.5, 8.1 };
+#else
+  scalar A[] = { {3.3, 6.2} , {7.1, 9.1}, {2.3, 8.2}, {-3.2, 6.6},
+		 {-2.3, 3.6}, {0.3, 9.7}, {1.9,-4.9}, {7.1, 7.1},
+		 {6.7, -0.1}, {1.1, 4.8}, {-9.7, 3.7}, {-0.01, -0.2},
+		 {8.4, 7.7}, {5.9, -1.8}, {8.8, 9.9}, {0.0, 0.1} };
+  scalar B[] = { {1.1, 2.2}, {3.3, 4.4}, {1.2, 2.3}, {3.4, 4.5},
+		 {8.8, 7.7}, {6.6, 5.5}, {3.5, 7.2}, {-0.3, 6.1},
+		 {6.1, 8.2}, {9.7, 3.6}, {-5.1, 6.1}, {2.3, 8.1},
+		 {6.3, 2.9}, {5.5, 8.1}, {8.5, 6.7}, {9.0, 2.4} };
+#endif
   scalar C[16], D[16], E[16];
   real eigvals[4], wrk[20];
 
@@ -70,7 +85,7 @@ int main(int argc, char **argv)
     for (j = i + 1; j < N; ++j) {
       ASSIGN_CONJ(D[j * N + i], D[i * N + j]);
     }
-  printf("\nD = transpose(A) * A\n");
+  printf("\nD = A' * A\n");
   printmat(D,N,N);
 
   lapackglue_potrf('U', N, D, N);
@@ -87,10 +102,14 @@ int main(int argc, char **argv)
   /* D = At * A, again */
   blasglue_herk('U', 'C', N, N, 1.0, A, N, 0.0, D, N);
   lapackglue_heev('V', 'U', N, D, N, eigvals, E, 16, wrk);
-  printf("\neigenvals of D: ");
+  printf("\n[v,d] = eig(D);\n");
+  printf("\ndiag(d)\n  ");
   for (i = 0; i < 4; ++i) printf("  %6.3f", eigvals[i]);
-  printf("\neigenvects of D: \n");
+  printf("\nv'\n");
   printmat(D,N,N);
+  blasglue_gemm('C', 'N', N, N, N, 1.0, D, N, D, N, 0.0, C, N);
+  printf("\nv * v'\n");
+  printmat(C,N,N);
 
   /* Compute E = diag(sqrt(eigenvals)) * D; i.e. the rows of E
      become the rows of D times sqrt(corresponding eigenvalue) */

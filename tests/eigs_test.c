@@ -26,7 +26,7 @@ extern void debug_check_memory_leaks(void);
 int main(int argc, char **argv)
 {
      int i, j, n = 0, p;
-     sqmatrix X, U;
+     sqmatrix X, U, YtY;
      evectmatrix Y, Ystart, W[NWORK];
      real *eigvals, *eigvals_dense, sum = 0.0;
      int num_iters;
@@ -82,6 +82,8 @@ int main(int argc, char **argv)
      printf("\nEigenvectors are (by row): \n");
      printmat(U.data, p, n);
 
+     YtY = create_sqmatrix(p);
+
      Y = create_evectmatrix(n, 1, p, n, 0, n);
      Ystart = create_evectmatrix(n, 1, p, n, 0, n);
      for (i = 0; i < NWORK; ++i)
@@ -104,6 +106,9 @@ int main(int argc, char **argv)
      printf("\nEigenvalue sum = %f\n", sum);
      printf("Eigenvectors are (by column): \n");
      printmat(Y.data, n, p);
+     evectmatrix_XtX(YtY, Y);
+     printf("adjoint(Y) * Y:\n");
+     printmat(YtY.data, p, p);
 
      printf("\nSolving without conjugate-gradient...\n");
      evectmatrix_copy(Y, Ystart);
@@ -142,6 +147,7 @@ int main(int argc, char **argv)
      destroy_sqmatrix(A);
      destroy_sqmatrix(X);
      destroy_sqmatrix(U);
+     destroy_sqmatrix(YtY);     
      destroy_evectmatrix(Y);
      destroy_evectmatrix(Ystart);
      for (i = 0; i < NWORK; ++i)
@@ -221,7 +227,11 @@ void printmat_matlab(scalar *A, int m, int n)
   printf("[");
   for (i = 0; i < m; ++i) {
        for (j = 0; j < n; ++j) {
-	 printf("  %f", SCALAR_RE(A[i*n + j]));
+#ifdef SCALAR_COMPLEX
+	 printf("  %g+%gi", A[i*n + j].re, A[i*n + j].im);
+#else
+	 printf("  %g", A[i*n + j]);
+#endif
        }
     printf(";\n");
   }
