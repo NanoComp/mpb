@@ -1,3 +1,62 @@
+Wed Jan 26 17:40:56 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* src/maxwell/maxwell_pre.c: zparity and run-even/odd now work
+	correctly for 2d grids.  zparity calculation is also now ready for
+	use with MPI.
+
+	* doc/user-ref.html: fixed typo
+
+	* mpb-ctl/examples/tutorial.ctl, mpb-ctl/mpb.c,
+	mpb-ctl/mpb.scm.in, src/maxwell/maxwell.h,
+	src/maxwell/maxwell_eps.c, tests/maxwell_test.c,
+	doc/user-ref.html, doc/user-tutorial.html, mpb-ctl/epsilon_file.c:
+	added anisotropic dielectrics
+
+Sat Jan 22 05:57:27 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in: Fixed bug in output-dpwr-in-objects.  Thanks
+	to Mihai Ibanescu for the bug report.
+
+Fri Jan 21 02:18:28 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* src/matrixio/matrixio.h, doc/user-tutorial.html, mpb-ctl/mpb.c,
+	src/matrixio/fieldio.c, src/matrixio/matrixio.c: output all
+	components in one h5 file
+
+	* doc/developer.html: fixed typo
+
+	* src/matrixio/fieldio.c, src/matrixio/matrixio.c,
+	src/matrixio/matrixio.h, mpb-ctl/mpb.c: tag output datasets with k
+	& R attributes
+
+Mon Jan 17 03:00:19 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/license.html: yet more felicitous translation
+
+	* doc/license.html: more felicitous translation
+
+	* doc/user-tutorial.html: fixed typo
+
+Fri Jan 14 21:33:21 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/Makefile.in, src/matrices/Makefile.in,
+	src/matrixio/Makefile.in, src/maxwell/Makefile.in,
+	src/util/Makefile.in, tests/Makefile.in, Makefile.in,
+	configure.in, doc/installation.html: INCLUDES -> CPPFLAGS
+
+Wed Jan 12 02:02:09 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/Makefile.in: Added dependency rule to ensure ctl-io.h is
+	created before main.o is built.  Thanks to Christoph Becher for
+	the bug report.
+
+	* Makefile.in: Need to set the SHELL in the Makefile for non-GNU
+	makes.  Thanks to Christoph Becher for the bug report.
+
+Tue Jan 11 21:04:51 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html: user-ref.html
+
 Fri Jan  7 18:35:12 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* configure.in, mpb-ctl/mpb.c, NEWS: 0.9.1 eigensolver bugfix

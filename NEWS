@@ -1,3 +1,23 @@
+  * Added support for a new material type, dielectric-anisotropic, so
+    that you can specify arbitrary real/symmetric dielectric tensors.
+
+  * When outputting fields, output all field components (x, y, z, and
+    real and imaginary parts) to a single HDF5 file.  Also include info
+    on the lattice and k-point vectors to facilitate post-processing.
+
+  * Use CPPFLAGS environment variable instead of the less-standard
+    INCLUDES to pass -I flags to the configure script (for header files
+    in non-standard locations).
+
+  * Fixed z-parity output and run-even/odd functions for 2d grids.
+
+  * Fixed bug in output-dpwr-in-objects.  Thanks to Mihai Ibanescu for
+    the bug report.
+
+  * Compilation fixes.  We need to set SHELL in the Makefile for make on
+    some systems.  Also added rule to insure ctl-io.h is created before
+    main.c is compiled.  Thanks to Christoph Becher for the bug reports.
+
 MPB 0.9.1 (1/7/2000)
 
   * Fixed eigensolver bug where special handling of Gamma (k=0) point could
