@@ -26,6 +26,8 @@
 #include "matrices.h"
 #include "blasglue.h"
 
+extern int evectmatrix_flops = 0;
+
 /* Operations on evectmatrix blocks:
        X + a Y, X * S, X + a Y * S, Xt * X, Xt * Y, trace(Xt * Y), etc.
    (X, Y: evectmatrix, S: sqmatrix) */
@@ -74,6 +76,7 @@ void evectmatrix_aXpbY(real a, evectmatrix X, real b, evectmatrix Y)
 	  blasglue_scal(X.n * X.p, a, X.data, 1);
 
      blasglue_axpy(X.n * X.p, b, Y.data, 1, X.data, 1);
+     evectmatrix_flops += X.N * X.c * X.p * 3;
 }
 
 /* Compute X = a*X + b*Y*S.  Instead of using the entire S matrix, however,
@@ -93,6 +96,7 @@ void evectmatrix_aXpbYS_sub(real a, evectmatrix X, real b, evectmatrix Y,
 	  blasglue_gemm('N', sdagger ? 'C' : 'N', X.n, X.p, X.p,
 			b, Y.data, Y.p, S.data + Soffset, S.p,
 			a, X.data, X.p);
+	  evectmatrix_flops += X.N * X.c * X.p * (3 + 2 * X.p);
      }
 }
 
@@ -125,6 +129,7 @@ void evectmatrix_XtX(sqmatrix U, evectmatrix X)
      /* take advantage of the fact that U is Hermitian and only write
 	out the upper triangle of the matrix */
      blasglue_herk('U', 'C', X.p, X.n, 1.0, X.data, X.p, 0.0, U.data, U.p);
+     evectmatrix_flops += X.N * X.c * X.p * (X.p - 1);
 
      /* Now, copy the conjugate of the upper half onto the lower half of U */
      {
@@ -147,6 +152,7 @@ void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y)
      
      blasglue_gemm('C', 'N', X.p, X.p, X.n,
 		   1.0, X.data, X.p, Y.data, Y.p, 0.0, U.data, U.p);
+     evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
 
      MPI_Allreduce(U.data, U.data, U.p * U.p * SCALAR_NUMVALS,
 		   SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
@@ -164,6 +170,7 @@ void evectmatrixXtY_sub(sqmatrix U, int Uoffset, evectmatrix X, evectmatrix Y)
 
      blasglue_gemm('C', 'N', X.p, X.p, X.n,
                    1.0, X.data, X.p, Y.data, Y.p, 0.0, U.data + Uoffset, U.p);
+     evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
 
      for (i = 0; i < Y.p; ++i) {
 	  MPI_Allreduce(U.data + Uoffset + i*U.p, U.data + Uoffset + i*U.p,
@@ -176,6 +183,7 @@ void evectmatrixXtY_sub(sqmatrix U, int Uoffset, evectmatrix X, evectmatrix Y)
 void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag)
 {
      matrix_XtY_diag(X.data, Y.data, X.n, X.p, diag);
+     evectmatrix_flops += X.N * X.c * X.p * 2;
      MPI_Allreduce(diag, diag, X.p, SCALAR_MPI_TYPE * SCALAR_NUMVALS,
 		   MPI_SUM, MPI_COMM_WORLD);
 }
@@ -183,6 +191,7 @@ void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag)
 void evectmatrix_XtY_diag_real(evectmatrix X, evectmatrix Y, real *diag)
 {
      matrix_XtY_diag_real(X.data, Y.data, X.n, X.p, diag);
+     evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
      MPI_Allreduce(diag, diag, X.p, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 }
 
@@ -190,6 +199,7 @@ void evectmatrix_XtY_diag_real(evectmatrix X, evectmatrix Y, real *diag)
 void evectmatrix_XtX_diag_real(evectmatrix X, real *diag)
 {
      matrix_XtX_diag_real(X.data, X.n, X.p, diag);
+     evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
      MPI_Allreduce(diag, diag, X.p, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 }
 
@@ -201,6 +211,7 @@ scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y)
      CHECK(X.p == Y.p && X.n == Y.n, "matrices not conformant");
      
      trace = blasglue_dotc(X.n * X.p, X.data, 1, Y.data, 1);
+     evectmatrix_flops += X.N * X.c * X.p * (2*X.p) + X.p;
 
      MPI_Allreduce(&trace, &trace, SCALAR_NUMVALS, SCALAR_MPI_TYPE,
 		   MPI_SUM, MPI_COMM_WORLD);

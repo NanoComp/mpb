@@ -58,10 +58,15 @@
 
 (define-input-var epsilon-input-file "" 'string)
 
-(define-input-var simple-preconditioner? false 'boolean)
 (define-input-var deterministic? false 'boolean)
+
+; Eigensolver minutiae:
+(define-input-var simple-preconditioner? false 'boolean)
 (define-input-var eigensolver-flags EIGS_DEFAULT_FLAGS 'integer)
 (define-input-var eigensolver-block-size -11 'integer)
+(define-input-var eigensolver-nwork 3 'integer positive?)
+(define-input-var eigensolver-davidson? false 'boolean)
+(define-input-output-var eigensolver-flops 0 'integer)
 
 (define-output-var freqs (make-list-type 'number))
 (define-output-var z-parity (make-list-type 'number))
@@ -282,7 +287,10 @@
 							    (+ num-runs 1) 2)
 							   1))))))
 		  (display-many ", median = " median-iters))))
-	  (newline)))))
+	  (newline)
+	  (display-many "mean flops per iteration = "
+			(/ eigensolver-flops (* num-runs mean-iters)) "\n")
+	  ))))
 
 ; ****************************************************************
 

@@ -32,6 +32,9 @@ typedef struct {
      scalar *data;
 } sqmatrix;
 
+/* try to keep track of flops, at least from evectmatrix multiplications */
+extern int evectmatrix_flops;
+
 /* general creation/destruction operations: */
 
 extern evectmatrix create_evectmatrix(int N, int c, int p,

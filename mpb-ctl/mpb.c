@@ -55,6 +55,9 @@
    set when the user runs the program with --verbose */
 extern int verbose;
 
+#define MAX2(a,b) ((a) > (b) ? (a) : (b))
+#define MIN2(a,b) ((a) < (b) ? (a) : (b))
+
 /**************************************************************************/
 
 /* a couple of utilities to convert libctl data types to the data
@@ -76,7 +79,9 @@ static void matrix3x3_to_arr(real arr[3][3], matrix3x3 m)
 
 /**************************************************************************/
 
-#define NWORK 3
+#define MAX_NWORK 10
+static int nwork_alloc = 0;
+
 #define NUM_FFT_BANDS 20 /* max number of bands to FFT at a time */
 
 /* global variables for retaining data about the eigenvectors between
@@ -84,7 +89,7 @@ static void matrix3x3_to_arr(real arr[3][3], matrix3x3 m)
 
 static maxwell_data *mdata = NULL;
 static maxwell_target_data *mtdata = NULL;
-static evectmatrix H, W[NWORK], Hblock;
+static evectmatrix H, W[MAX_NWORK], Hblock;
 
 static scalar_complex *curfield = NULL;
 static int curfield_band;
@@ -352,6 +357,12 @@ void init_params(int p, boolean reset_fields)
      printf("     (%g, %g, %g)\n", Gm.c1.x, Gm.c1.y, Gm.c1.z);
      printf("     (%g, %g, %g)\n", Gm.c2.x, Gm.c2.y, Gm.c2.z);
      
+     if (eigensolver_nwork > MAX_NWORK) {
+	  printf("(Reducing nwork = %d to maximum: %d.)\n",
+		 eigensolver_nwork, MAX_NWORK);
+	  eigensolver_nwork = MAX_NWORK;
+     }
+
      matrix3x3_to_arr(R, Rm);
      matrix3x3_to_arr(G, Gm);
 
@@ -387,11 +398,12 @@ void init_params(int p, boolean reset_fields)
      
      if (mdata) {  /* need to clean up from previous init_params call */
 	  if (nx == mdata->nx && ny == mdata->ny && nz == mdata->nz &&
-	      block_size == Hblock.alloc_p && num_bands == H.p)
+	      block_size == Hblock.alloc_p && num_bands == H.p &&
+	      eigensolver_nwork == nwork_alloc)
 	       have_old_fields = 1; /* don't need to reallocate */
 	  else {
 	       destroy_evectmatrix(H);
-	       for (i = 0; i < NWORK; ++i)
+	       for (i = 0; i < nwork_alloc; ++i)
 		    destroy_evectmatrix(W[i]);
 	       if (Hblock.data != H.data)
 		    destroy_evectmatrix(Hblock);
@@ -434,7 +446,8 @@ void init_params(int p, boolean reset_fields)
 	  printf("Allocating fields...\n");
 	  H = create_evectmatrix(nx * ny * nz, 2, num_bands,
 				 local_N, N_start, alloc_N);
-	  for (i = 0; i < NWORK; ++i)
+	  nwork_alloc = eigensolver_nwork;
+	  for (i = 0; i < nwork_alloc; ++i)
 	       W[i] = create_evectmatrix(nx * ny * nz, 2, block_size,
 					 local_N, N_start, alloc_N);
 	  if (block_size < num_bands)
@@ -447,6 +460,8 @@ void init_params(int p, boolean reset_fields)
      set_polarization(p);
      if (!have_old_fields || reset_fields)
 	  randomize_fields();
+
+     evectmatrix_flops = eigensolver_flops; /* reset, if changed */
 }
 
 /**************************************************************************/
@@ -563,7 +578,7 @@ void solve_kpoint(vector3 kvector)
 	     the number of bands: */
 	  if (ib + mdata->num_bands > num_bands) {
 	       maxwell_set_num_bands(mdata, num_bands - ib);
-	       for (i = 0; i < NWORK; ++i)
+	       for (i = 0; i < nwork_alloc; ++i)
 		    evectmatrix_resize(&W[i], num_bands - ib, 0);
 	       evectmatrix_resize(&Hblock, num_bands - ib, 0);
 	  }
@@ -594,30 +609,57 @@ void solve_kpoint(vector3 kvector)
 	  }
 
 	  if (mtdata) {  /* solving for bands near a target frequency */
-	       eigensolver(Hblock, eigvals + ib,
-			   maxwell_target_operator, (void *) mtdata,
-			   simple_preconditionerp ? 
-			   maxwell_target_preconditioner :
-			   maxwell_target_preconditioner2,
-			   (void *) mtdata,
-			   evectconstraint_chain_func, (void *) constraints,
-			   W, NWORK, tolerance, &num_iters, flags);
+	       if (eigensolver_davidsonp)
+		    eigensolver_davidson(
+			 Hblock, eigvals + ib,
+			 maxwell_target_operator, (void *) mtdata,
+			 simple_preconditionerp ? 
+			 maxwell_target_preconditioner :
+			 maxwell_target_preconditioner2,
+			 (void *) mtdata,
+			 evectconstraint_chain_func,
+			 (void *) constraints,
+			 W, nwork_alloc, tolerance, &num_iters, flags, 0.0);
+	       else
+		    eigensolver(Hblock, eigvals + ib,
+				maxwell_target_operator, (void *) mtdata,
+				simple_preconditionerp ? 
+				maxwell_target_preconditioner :
+				maxwell_target_preconditioner2,
+				(void *) mtdata,
+				evectconstraint_chain_func,
+				(void *) constraints,
+				W, nwork_alloc, tolerance, &num_iters, flags);
+
 	       /* now, diagonalize the real Maxwell operator in the
 		  solution subspace to get the true eigenvalues and
 		  eigenvectors: */
-	       CHECK(NWORK >= 2, "not enough workspace");
+	       CHECK(nwork_alloc >= 2, "not enough workspace");
 	       eigensolver_get_eigenvals(Hblock, eigvals + ib,
 					 maxwell_operator,mdata, W[0],W[1]);
 	  }
 	  else {
-	       eigensolver(Hblock, eigvals + ib,
-			   maxwell_operator, (void *) mdata,
-			   simple_preconditionerp ?
-			   maxwell_preconditioner :
-			   maxwell_preconditioner2,
-			   (void *) mdata,
-			   evectconstraint_chain_func, (void *) constraints,
-			   W, NWORK, tolerance, &num_iters, flags);
+	       if (eigensolver_davidsonp)
+		    eigensolver_davidson(
+			 Hblock, eigvals + ib,
+			 maxwell_operator, (void *) mdata,
+			 simple_preconditionerp ?
+			 maxwell_preconditioner :
+			 maxwell_preconditioner2,
+			 (void *) mdata,
+			 evectconstraint_chain_func,
+			 (void *) constraints,
+			 W, nwork_alloc, tolerance, &num_iters, flags, 0.0);
+	       else
+		    eigensolver(Hblock, eigvals + ib,
+				maxwell_operator, (void *) mdata,
+				simple_preconditionerp ?
+				maxwell_preconditioner :
+				maxwell_preconditioner2,
+				(void *) mdata,
+				evectconstraint_chain_func,
+				(void *) constraints,
+				W, nwork_alloc, tolerance, &num_iters, flags);
 	  }
 	  
 	  if (Hblock.data != H.data) {  /* save solutions of current block */
@@ -653,7 +695,7 @@ void solve_kpoint(vector3 kvector)
 
      /* Reset scratch matrix sizes: */
      evectmatrix_resize(&Hblock, Hblock.alloc_p, 0);
-     for (i = 0; i < NWORK; ++i)
+     for (i = 0; i < nwork_alloc; ++i)
 	  evectmatrix_resize(&W[i], W[i].alloc_p, 0);
      maxwell_set_num_bands(mdata, Hblock.alloc_p);
 
@@ -691,6 +733,8 @@ void solve_kpoint(vector3 kvector)
      for (i = 0; i < num_bands; ++i)
 	  printf(", %g", z_parity.items[i]);
      printf("\n");
+
+     eigensolver_flops = evectmatrix_flops;
 
      free(eigvals);
      curfield = NULL;
