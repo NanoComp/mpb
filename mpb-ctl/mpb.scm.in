@@ -186,20 +186,20 @@
 (define filename-prefix "")
 
 (define (output-field . copies)
-  (output-field-extended (apply vector3 copies) -1) filename-prefix)
+  (output-field-extended (apply vector3 copies) -1 filename-prefix))
 
 (define (output-field-x . copies)
-  (output-field-extended (apply vector3 copies) 0))
+  (output-field-extended (apply vector3 copies) 0 filename-prefix))
 
 (define (output-field-y . copies)
-  (output-field-extended (apply vector3 copies) 1))
+  (output-field-extended (apply vector3 copies) 1 filename-prefix))
 
 (define (output-field-z . copies)
-  (output-field-extended (apply vector3 copies) 2))
+  (output-field-extended (apply vector3 copies) 2 filename-prefix))
 
 (define (output-epsilon . copies)
   (get-epsilon)
-  (apply output-field copies))
+  (output-field-extended (apply vector3 copies) -1 filename-prefix))
 
 (define (compute-energy-in-objects . objects)
   (compute-energy-in-object-list objects))
