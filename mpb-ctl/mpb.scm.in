@@ -447,7 +447,7 @@
 (define (apply-band-func band-func which-band)
   (if (zero? (procedure-num-args band-func))
       (if (= which-band 1) (band-func)) ; evaluate thunks once per k-point
-      (band-fund which-band)))
+      (band-func which-band)))
 
 ; The following function returns an output function that calls
 ; output-func for bands with D energy in objects > min-energy.
