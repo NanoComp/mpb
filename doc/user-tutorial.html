@@ -23,7 +23,7 @@ The <a href="user-ref.html">User Reference</a> section gives a more
 complete, but less colloquial, description of the features supported
 by Photonic-Bands.
 
-<h2>The ctl File</h2>
+<h2><a name="ctl">The ctl File</a></h2>
 
 <p>The use of the Photonic-Bands package revolves around the control
 file, abbreviated "ctl" and typically called something like
@@ -101,7 +101,7 @@ you do that right now, in your terminal window?  Then, you can paste
 in the commands from the tutorial as you follow it and see what they
 do.  Isn't this fun?
 
-<h2>Our First Band Structure</h2>
+<h2><a name="sq-rods">Our First Band Structure</a></h2>
 
 <p>As our beginning example, we'll compute the band structure of a
 two-dimensional square lattice of dielectric rods in air.  In our
@@ -332,7 +332,7 @@ also possible to call lower-level functions of the code directly, to
 have a finer control of the computation; such functions are described
 in the reference section.
 
-<h2>A Few Words on Units</h2>
+<h2><a name="units">A Few Words on Units</a></h2>
 
 <p>In principle, you can use any units you want with the
 Photonic-Bands package.  You can input all of your distances and
@@ -368,7 +368,7 @@ just the ordinary cartesian distances in your chosen units of
 unit of distance.  (Thus, the corresponding vacuum wavelength is
 <i>a</i> over the frequency eigenvalue.)
 
-<h2>Bands of a Triangular Lattice</h2>
+<h2><a name="tri-rods">Bands of a Triangular Lattice</a></h2>
 
 <p>As a second example, we'll compute the TM band structure of a
 <em>triangular</em> lattice of dielectric rods in air.  To do this, we
@@ -422,7 +422,7 @@ structure has an even larger TM gap than the square lattice:
 Gap from band 1 (0.275070820455975) to band 2 (0.446291213813384), 47.4714180185077%
 </pre>
 
-<h2>Maximizing the First TM Gap</h2>
+<h2><a name="max-gap">Maximizing the First TM Gap</a></h2>
 
 <p>Just for fun, we will now show you a more sophisticated example,
 utilizing the programming capabilities of Scheme: we will write a
@@ -502,7 +502,7 @@ default value:
 (set! mesh-size 3) ; reset to default value of 3
 </pre>
 
-<h2>A Complete 2D Gap with an Anisotropic Dielectric</h2>
+<h2><a name="aniso">A Complete 2D Gap with an Anisotropic Dielectric</a></h2>
 
 <p>As another example, one which does not require so much Scheme
 knowledge, let's construct a structure with a complete 2D gap (i.e.,
@@ -563,7 +563,7 @@ Gap from band 2 (0.223978579207912) to band 3 (0.275008627329051), 20.4534494883
 found that the lower edge of the complete gap in this case comes from
 the TM gap, and the upper edge comes from the TE gap.)
 
-<h2>Finding a Point-defect State</h2>
+<h2><a name="point-defect">Finding a Point-defect State</a></h2>
 
 <p>Here, we consider the problem of finding a point-defect state in
 our square lattice of rods.  This is a state that is localized in a
@@ -715,7 +715,7 @@ have to compute only a single band, however, we arrive at an answer
 much more quickly than before.  The result, of course, is again the
 defect band, with a frequency of 0.378166.
 
-<h2>Tuning the Point-defect Mode</h2>
+<h2><a name="tune-defect">Tuning the Point-defect Mode</a></h2>
 
 <p>As another example utilizing the programming power of Scheme, we
 will write a script to "tune" the defect mode to a particular
@@ -792,7 +792,7 @@ lower-level function, <code>(run-polarization TM false)</code>.  (The
 first parameter is the polarization to solve for, and the second tells
 it not to reset the fields if possible.)
 
-<h2>emacs and ctl</h2>
+<h2><a name="emacs">emacs and ctl</a></h2>
 
 <p>It is useful to have <code>emacs</code> use its
 <code>scheme-mode</code> for editing ctl files, so that hitting tab

@@ -22,7 +22,7 @@ broken up into different portions of the code.
 when <a href="http://www.w3.org/Math/">MathML</a> is supported in a <a
 href="http://www.mozilla.org/projects/mathml/">decent browser</a>.
 
-<h2>The Mathematics of MPB</h2>
+<h2><a name="math">The Mathematics of MPB</a></h2>
 
 <p>This section provides a whirlwind tour of the mathematics of
 photonic band structure calculations and the algorithms that we
@@ -118,7 +118,7 @@ Finding a good preconditioner involves making an approximate inverse
 of <code>M</code>, and is something of a black art with lots of trial
 and error.
 
-<h2>Dielectric Function Computation</h2>
+<h2><a name="epsilon">Dielectric Function Computation</a></h2>
 
 <p>The initialization of the dielectric function deserves some
 additional discussion, both because it is crucial for good
@@ -172,7 +172,7 @@ partitioning the set of objects in the cell.  This allows us to search
 for the object containing a point in a time logarithmic in the number
 of objects (instead of linear as before).
 
-<h2>Code Organization</h2>
+<h2><a name="code">Code Organization</a></h2>
 
 <p>The code is organized to keep the core computation independent of
 the user interface, and to keep the eigensolver routines independent

@@ -29,7 +29,7 @@ In the following list, some of the packages are dependent upon
 packages listed earlier, so you should install them in more-or-less
 the order given.
 
-<h2>BLAS</h2>
+<h2><a name="blas">BLAS</a></h2>
 
 <p>The first thing you must have on your system is a BLAS
 implementation.  "BLAS" stands for "Basic Linear Algebra Subroutines,"
@@ -80,7 +80,7 @@ a Pentium II.)  Note that MPB looks for the standard BLAS library with
 <code>configure</code> script and the <code>LDFLAGS</code> environment
 variable.)
 
-<h2>LAPACK</h2>
+<h2><a name="lapack">LAPACK</a></h2>
 
 <p>LAPACK, the Linear Algebra PACKage, is a standard collection of
 routines, built on BLAS, for more-complicated (dense) linear algebra
@@ -98,7 +98,7 @@ Applications on Linux (SAL) LAPACK page">SAL</a>.
 directory via the <code>LDFLAGS</code> environment variable; see
 below).
 
-<h2>MPI <i>(optional)</i></h2>
+<h2><a name="mpi">MPI</a> <i>(optional)</i></h2>
 
 <p>Optionally, MPB will someday be able to run on a distributed-memory
 parallel machine, and to do this we use the standard MPI
@@ -111,7 +111,7 @@ implementation installed.
 version of Photonic-Bands.  In fact, our MPI code is not even fully
 implemented yet; thank you for your patience (we value your call).
 
-<h2>HDF5 <i>(optional)</i></h2>
+<h2><a name="hdf5">HDF5</a> <i>(optional)</i></h2>
 
 <p>We require a portable, standard binary format for outputting the
 electromagnetic fields and similar volumetric data, and for this we
@@ -137,7 +137,7 @@ HDF4 files.
 <p>You can get HDF and learn about it on the <a
 href="http://hdf.ncsa.uiuc.edu">HDF Home Page</a>.
 
-<h2>FFTW</h2>
+<h2><a name="fftw">FFTW</a></h2>
 
 <p>FFTW is a self-optimizing, portable, high-performance FFT
 implementation, including both serial and parallel FFTs.  You can
@@ -148,7 +148,7 @@ install the <a href="">MPI FFTW</a> libraries (this just means
 including <code>--enable-mpi</code> in the FFTW <code>configure</code>
 flags).
 
-<h2>GNU Readline <i>(optional)</i></h2>
+<h2><a name="readline">GNU Readline</a> <i>(optional)</i></h2>
 
 <p>GNU Readline is a library to provide command-line history,
 tab-completion, emacs keybindings, and other shell-like niceties to
@@ -157,7 +157,7 @@ that can be used by Guile (see below) if it is installed; we recommend
 getting it.  You can <a href="ftp://ftp.gnu.org/gnu/readline">download
 Readline from the GNU ftp site</a>.
 
-<h2>GNU Guile</h2>
+<h2><a name="guile">GNU Guile</a></h2>
 
 <p>GNU Guile is an extension/scripting language implementation based on
 Scheme, and we use it to provide a rich, fully-programmable
@@ -166,7 +166,21 @@ download it from the <a
 href="http://www.gnu.org/software/guile/">Guile Home
 Page</a>.
 
-<h2>libctl</h2>
+<h2><a name="autoconf">GNU Autoconf</a> <i>(optional)</i></h2>
+
+<p>If you want to be a developer of the Photonic-Bands package (as
+opposed to merely a user), you will also need the GNU Autoconf
+program.  Autoconf is a portability tool that generates
+<code>configure</code> scripts to automatically detect the
+capabilities of a system and configure a package accordingly.  You can
+find out more at the <a
+href="http://sourceware.cygnus.com/autoconf/">Autoconf Home Page</a>
+(autoconf is typically installed by default on Linux systems).  In
+order to install Autoconf, you will also need the GNU <code>m4</code>
+program if you do not already have it (see the <a
+href="http://www.seindal.dk/rene/gnu/">GNU m4 Home Page</a>).
+
+<h2><a name="libctl">libctl</a></h2>
 
 <p>Instead of using Guile directly, we separated much of the user
 interface code into a package called libctl, in the hope that this
@@ -189,21 +203,7 @@ specify the location of the libctl shared files for the Photonic-Bands
 package, using the <code>--with-libctl=<i>dir</i>/share/libctl</code>
 option to the Photonic-Bands <code>configure</code>.
 
-<h2>GNU Autoconf <i>(optional)</i></h2>
-
-<p>If you want to be a developer of the Photonic-Bands package (as
-opposed to merely a user), you will also need the GNU Autoconf
-program.  Autoconf is a portability tool that generates
-<code>configure</code> scripts to automatically detect the
-capabilities of a system and configure a package accordingly.  You can
-find out more at the <a
-href="http://sourceware.cygnus.com/autoconf/">Autoconf Home Page</a>
-(autoconf is typically installed by default on Linux systems).  In
-order to install Autoconf, you will also need the GNU <code>m4</code>
-program if you do not already have it (see the <a
-href="http://www.seindal.dk/rene/gnu/">GNU m4 Home Page</a>).
-
-<h2>MIT Photonic-Bands</h2>
+<h2><a name="mpb">MIT Photonic-Bands</a></h2>
 
 <p>Okay, if you've made it all the way here, you're ready to install
 the Photonic-Bands package and start cranking out eigenmodes.  (You
