@@ -1,7 +1,4 @@
-Finish tuning maxwell preconditioner.
-
-Is the preconditioner screwing up convergence?  Sometimes it seems to
-converge to a slightly wrong value!
+Finish tuning maxwell preconditioner.  Implement fancy preconditioner.
 
 Profile--where is the performance going?
 
@@ -15,9 +12,7 @@ Allow real-complex transforms for structures with inversion symmetry.
 
 Store epsilon differently?
 
-Output fields to HDF.  (Eventually, use HDF5...?)
-
-Interface with libctl for input and control.
+Output fields to HDF.  (HDF5?)
 
 implement create_evectmatrix_clone, evectmatrices_conformant_p
 (convenience functions)

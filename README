@@ -1,7 +1,11 @@
 Photonic Band Structure Computation
 
-A new program for computing photonic band structure, using the libctl
-library for control files.
+A new program for computing photonic band structures.
+
+The user interface, photon-ctl, makes use of the GNU Guile interface
+in order to be flexible and fully scriptable.  My libctl library is
+used to automatically generate the interface code from a high-level
+description (photon-ctl/photon.ctl).
 
 The eigensolver routines are separated from the rest of the code and
 are designed to be parallel from the start, using LAPACK/BLAS routines
