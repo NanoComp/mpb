@@ -122,12 +122,12 @@ function is then used in place of <code>default-material</code>
 (<i>i.e.</i> where there are no <code>geometry</code> objects).  The
 grid of the epsilon file dataset need not match
 <code>grid-size</code>; it is scaled and/or linearly interpolated as
-needed.  The lattice vectors are assumed to be the same as
-<code>geometry-lattice</code> for the epsilon file.  [ Note that, even
-if the grid sizes match and there are no geometric objects, the
-dielectric function used by MPB will not be exactly the dielectric
-function of the epsilon file, unless you also set
-<code>mesh-size</code> to <code>1</code> (see above). ]
+needed.  The lattice vectors for the epsilon file are assumed to be
+the same as <code>geometry-lattice</code>.  [ Note that, even if the
+grid sizes match and there are no geometric objects, the dielectric
+function used by MPB will not be exactly the dielectric function of
+the epsilon file, unless you also set <code>mesh-size</code> to
+<code>1</code> (see above). ]
 
 <p><dt><code>simple-preconditioner?</code> [<code>boolean</code>]
 <dd>Whether or not to use a simplified preconditioner; defaults to
