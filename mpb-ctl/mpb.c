@@ -862,8 +862,16 @@ void output_field_extended(vector3 copiesv, int which_component)
 				      local_nx, local_x_start,
 				      copies, mdata->current_k, R, file_id);
 	  free(fname2);
-	  matrixio_write_data_attr(file_id, "Bloch wavevector",
-				   mdata->current_k, 1, attr_dims);
+	  {
+	       /* convert mdata->current_k back to the reciprocal basis */
+	       real k[3] = {0,0,0};
+	       int i, j;
+	       for (i = 0; i < 3; ++i)
+		    for (j = 0; j < 3; ++j)
+			 k[i] += R[i][j] * mdata->current_k[j];
+	       matrixio_write_data_attr(file_id, "Bloch wavevector",
+					k, 1, attr_dims);
+	  }
      }
      else if (strchr("DHn", curfield_type)) { /* scalar field */
 	  if (curfield_type == 'n') {
