@@ -28,6 +28,15 @@
 
 ; ****************************************************************
 
+; eigensolver flags (grabbed from eigensolver.h by configure)
+
+; first, we must define a function (pow2 n) to return 2^n:
+(define (pow2 n) (if (<= n 0) 1 (* 2 (pow2 (- n 1)))))
+
+@EIGS_FLAGS_SCM@ ; substituted by configure script
+
+; ****************************************************************
+
 ; More input/output variables (besides those defined by libgeom, above).
 
 (define-input-var k-points '() (make-list-type 'vector3))
@@ -43,6 +52,7 @@
 (define-input-var filename-prefix "" 'string)
 (define-input-var simple-preconditioner? false 'boolean)
 (define-input-var deterministic? false 'boolean)
+(define-input-var eigensolver-flags EIGS_DEFAULT_FLAGS 'integer)
 
 (define-output-var freqs (make-list-type 'number))
 (define-output-var iterations 'integer)

@@ -300,4 +300,12 @@ fi
 
 # ----------------------------------------------------------------------
 
+# grab the various EIGS_ flags from eigensolver.h and substitute them
+# into mpb.scm.in (aren't regular expressions fun?):
+# (note that autoconf gets unhappy if we have newlines; we must delete them)
+EIGS_FLAGS_SCM=`grep '#define EIGS_' $srcdir/src/matrices/eigensolver.h |sed 's/#define \([A-Za-z0-9_]*\) (1<<\([0-9]*\))/(define \1 (pow2 \2))/' |sed 's/#define \([A-Za-z0-9_]*\) (\(.*\))/(define \1 (+ \2))/' |sed 's/ *| */ /g' | tr -d '\n'`
+AC_SUBST(EIGS_FLAGS_SCM)
+
+# ----------------------------------------------------------------------
+
 AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm)

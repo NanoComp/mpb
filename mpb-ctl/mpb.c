@@ -391,7 +391,7 @@ void solve_kpoint(vector3 kvector)
 
      printf("Solving for bands...\n");
 
-     flags = EIGS_DEFAULT_FLAGS;
+     flags = eigensolver_flags; /* ctl file input variable */
      if (verbose)
 	  flags |= EIGS_VERBOSE;
 
