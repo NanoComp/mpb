@@ -19,6 +19,12 @@ all: blastest eigs_test maxwell_test malloctest normal_vectors
 
 libs:
 
+check: all
+	rm -f blastest.out.test
+	./blastest | sed 's/\-0\.000 / 0.000 /g' | sed 's/\-0\.000$/ 0.000/g' > blastest.out.test
+	diff blastest.out blastest.out.test
+	./maxwell_test -1 -c 1e-9 -x 256 -E 1e-3
+
 malloctest: malloctest.o $(MYLIBS)
 	$(CC) $(CFLAGS) $(LDFLAGS) malloctest.o $(MYLIBS) $(LIBS) -o $@
 

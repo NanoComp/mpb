@@ -18,11 +18,14 @@ distdir = $(package)-@MPB_VERSION@
 
 LIBSUBDIRS = src/util src/matrices src/maxwell src/matrixio
 INSTALLSUBDIRS = mpb-ctl utils
+CHECKSUBDIRS = mpb-ctl tests
 SUBDIRS = $(LIBSUBDIRS) tests $(INSTALLSUBDIRS)
 
 all: all-recursive
 
 libs: libs-recursive
+
+check: check-recursive
 
 install: install-recursive
 
@@ -71,6 +74,15 @@ all-recursive clean-recursive:
 libs-recursive:
 	@set fnord $(MAKEFLAGS); amf=$$2; \
 	list='$(LIBSUBDIRS)'; for subdir in $$list; do \
+          target=`echo $@ | sed s/-recursive//`; \
+          echo "Making $$target in $$subdir"; \
+          (cd $$subdir && $(MAKE) $$target) \
+           || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+        done && test -z "$$fail"
+
+check-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	list='$(CHECKSUBDIRS)'; for subdir in $$list; do \
           target=`echo $@ | sed s/-recursive//`; \
           echo "Making $$target in $$subdir"; \
           (cd $$subdir && $(MAKE) $$target) \

@@ -49,6 +49,9 @@ LIBCTL_DIR = @LIBCTL_DIR@
 # gen-ctl-io program
 GEN_CTL_IO = @GEN_CTL_IO@
 
+check: $(PROGRAM_NAME)
+	./$(PROGRAM_NAME) examples/check.ctl
+
 ##############################################################################
 #                  don't (normally) edit past here                           #
 ##############################################################################
