@@ -18,7 +18,7 @@ definite-frequency eigenstates of Maxwell's equations in periodic
 dielectric structures.  Its primary intended application is the study
 of photonic crystals, periodic dielectric structures exhibiting a band
 gap in their optical modes, prohibiting propagation of light in that
-frequency range.  However, it could just also be applied to compute
+frequency range.  However, it could also be easily applied to compute
 other optical dispersion relations and eigenstates.
 
 <p>This manual assumes that the reader is familiar with concepts from
@@ -26,9 +26,10 @@ solid-state physics such as eigenstates, band structures, and Bloch's
 theorem.  We also do not attempt to instruct the reader on photonic
 crystals or other optical applications for which this code might be
 useful.  For an excellent introduction to all of these topics in the
-context of photonic crystals, see the book <i>Photonic Crystals:
-Molding the Flow of Light</i>, by J. D. Joannopoulos, R. D. Meade, and
-J. N. Winn (Princeton, 1995).
+context of photonic crystals, see the book <a href="http://www.amazon.com/exec/obidos/ISBN=0691037442/1789-6986899-849017" title="the book
+at Amazon.com"><i>Photonic Crystals: Molding the Flow of
+Light</i></a>, by J. D. Joannopoulos, R. D. Meade, and J. N. Winn
+(Princeton, 1995).
 
 <p>Some of the main features and design goals of this package are:
 
@@ -39,7 +40,14 @@ also the <a
 href="http://ab-initio.mit.edu/libctl/doc/introduction.html">libctl
 design goals</a>.
 
-<p><li>Parallelizable.  (Targeted at distributed-memory machines with MPI.)
+<p><li>Parallelizable.  (Can run on a single-processor machine, but is
+designed to eventually also support parallel machines with MPI.)
+
+<p><li>"Targeted" eigensolver: find modes nearest to a specified
+frequency, not just the lowest-frequency bands.  (For defect
+calculations.)
+
+<p><li>Leverages existing software (LAPACK, BLAS, FFTW, HDF, MPI, GUILE...).
 
 <p><li>Modularity.  The eigensolver, Maxwell's equations, user interface,
 and so on, should be oblivious to each other as much as possible.
@@ -47,24 +55,28 @@ This way, they can be debugged separately, combined in various ways,
 replaced, used in other programs...all the usual benefits of modular
 design.
 
-<p><li>Leverages existing software (LAPACK, BLAS, FFTW, HDF, MPI...).
-
-<p><li>"Targeted" eigensolver: find modes nearest to a specified
-frequency, not just the lowest-frequency bands.  (For defect
-calculations.)
-
 <p><li>Take advantage of inversion symmetry in the dielectric
 function, but don't require it.  (This means that we have to handle
 both real and complex fields.)
 
 </ul>
 
+<p>For readers with some knowledge of photonic band-structure
+calculations, we should note that this program performs
+"frequency-domain" computations.  That is, it does a direct
+computation of the eigenvectors and eigenvalues of Maxwell's equations
+(using a planewave basis), as opposed to indirect techniques involving
+e.g. finite-difference time-domain or transfer matrix methods.
+Iterative eigensolver algorithms are employed so that the dense
+Maxwell operator is never explicitely stored, making large
+three-dimensional computations feasible.
+
 <h2>History</h2>
 
 <p>In order to shed some light on the past development and design
-decisions of the Photonic-Bands package, as well as to pay homage to my
-enormous ego, I thought I'd write a few paragraphs about its history.
-Read on to enjoy my narcissist ramblings.
+decisions of the Photonic-Bands package, I thought I'd write a few
+paragraphs about its history.  Read on to enjoy my narcissist
+ramblings.
 
 <p>Many different people have written codes to compute the modes of
 periodic dielectric materials (although we don't know of any others
