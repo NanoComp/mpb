@@ -1,5 +1,7 @@
 # Variables substituted by the autoconf configure script:
 
+SHELL = @SHELL@
+
 CC = @CC@
 CFLAGS = @CFLAGS@
 CPPFLAGS = @CPPFLAGS@ -I../src/util -I../src/matrices -I../src/maxwell

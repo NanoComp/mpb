@@ -11,6 +11,8 @@
 #
 # Steven G. Johnson can be contacted at stevenj@alum.mit.edu.
 
+SHELL = @SHELL@
+
 ##############################################################################
 
 # Makefile.in for programs using libctl (assumes that autoconf is
