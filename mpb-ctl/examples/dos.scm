@@ -8,6 +8,7 @@
 ; To apply it to output, say, the density of states at 100 points
 ; points in the frequency range 0 to 1 you would do:
 ;
+; (include "dos.scm")
 ; (define dos (all-freqs-broaden))
 ; (map (lambda (f) (print "dos:, " f ", " (dos f) "\n"))
 ;      (interpolate 98 (list 0 1)))
