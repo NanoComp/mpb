@@ -245,6 +245,8 @@ void matrixio_write_real_data(matrixio_id data_id,
      hssize_t *start;
      hsize_t *strides, *count;
      int i;
+     real *data_copy;
+     int data_copy_stride = 1, free_data_copy = 0;
 
      /*******************************************************************/
      /* Get dimensions of dataset */
@@ -268,6 +270,38 @@ void matrixio_write_real_data(matrixio_id data_id,
 #endif
 
      /*******************************************************************/
+     /* if stride > 1, make a contiguous copy; hdf5 is much faster
+	in this case. */
+
+     if (stride > 1) {
+	  int N = 1;
+	  for (i = 0; i < rank; ++i)
+	       N *= local_dims[i];
+	  data_copy = (real*) malloc(sizeof(real) * N);
+	  if (data_copy) {
+	       free_data_copy = 1;
+	       for (i = 0; i < N; i += 4) {
+		    real d0 = data[i * stride];
+		    real d1 = data[(i + 1) * stride];
+		    real d2 = data[(i + 2) * stride];
+		    real d3 = data[(i + 3) * stride];
+		    data_copy[i] = d0;
+		    data_copy[i+1] = d1;
+		    data_copy[i+2] = d2;
+		    data_copy[i+3] = d3;
+	       }
+	       for (i = i - 4 + 1; i < N; ++i)
+		    data_copy[i] = data[i * stride];
+	  }
+	  else {
+	       data_copy = 1;
+	       data_copy_stride = stride;
+	  }
+     }
+     else
+	  data_copy = data;
+
+     /*******************************************************************/
      /* Before we can write the data to the data set, we must define
 	the dimensions and "selections" of the arrays to be read & written: */
 
@@ -287,19 +321,22 @@ void matrixio_write_real_data(matrixio_id data_id,
 
      for (i = 0; i < rank; ++i)
 	  start[i] = 0;
-     strides[rank - 1] = stride;
-     count[rank - 1] *= stride;
+     strides[rank - 1] = data_copy_stride;
+     count[rank - 1] *= data_copy_stride;
      mem_space_id = H5Screate_simple(rank, count, NULL);
      count[rank - 1] = local_dims[rank - 1];
      H5Sselect_hyperslab(mem_space_id, H5S_SELECT_SET,
-			 start, stride <= 1 ? NULL : strides, count, NULL);
+			 start, data_copy_stride <= 1 ? NULL : strides,
+			 count, NULL);
 
      /*******************************************************************/
      /* Write the data, then free all the stuff we've allocated. */
 
      H5Dwrite(data_id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
-	      (void*) data);
+	      (void*) data_copy);
 
+     if (free_data_copy)
+	  free(data_copy);
      H5Sclose(mem_space_id);
      free(count);
      free(strides);
