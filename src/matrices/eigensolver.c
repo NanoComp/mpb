@@ -283,23 +283,24 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  E = SCALAR_RE(sqmatrix_trace(YtAYU));
 	  CHECK(!BADNUM(E), "crazy number detected in trace!!\n");
 
-	  if (iteration > 0 &&
-              fabs(E - prev_E) < tolerance * 0.5 * (E + prev_E + 1e-7))
-               break; /* convergence!  hooray! */
-	  
 	  convergence_history[iteration % EIG_HISTORY_SIZE] =
 	       200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E));
 	  
-	  if ((flags & EIGS_VERBOSE) ||
-              MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
-              > FEEDBACK_TIME) {
+	  if (iteration > 0 && 
+	      ((flags & EIGS_VERBOSE) ||
+	       MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
+	       > FEEDBACK_TIME)) {
                printf("    iteration %4d: "
-                      "trace = %g (%g%% change)\n", iteration + 1, E,
+                      "trace = %g (%g%% change)\n", iteration, E,
 		      convergence_history[iteration % EIG_HISTORY_SIZE]);
                fflush(stdout); /* make sure output appears */
                prev_feedback_time = MPIGLUE_CLOCK; /* reset feedback clock */
           }
 
+	  if (iteration > 0 &&
+              fabs(E - prev_E) < tolerance * 0.5 * (E + prev_E + 1e-7))
+               break; /* convergence!  hooray! */
+	  
 	  /* Compute gradient of functional: G = (1 - Y U Yt) A Y U */
 	  sqmatrix_AeBC(S1, U, 0, YtAYU, 0);
 	  evectmatrix_XpaYS(G, -1.0, Y, S1, 1);
