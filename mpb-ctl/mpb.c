@@ -195,10 +195,6 @@ void randomize_fields(void)
 	  ASSIGN_SCALAR(H.data[i], rand() * 1.0 / RAND_MAX,
 			rand() * 1.0 / RAND_MAX);
      }
-
-     /* Pass it once through the simple (1/k^2) preconditioner, to
-	taper off the high-frequency components. */
-     maxwell_simple_precondition(H, mdata, NULL);
 }
 
 /**************************************************************************/
