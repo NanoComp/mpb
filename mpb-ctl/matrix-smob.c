@@ -200,7 +200,7 @@ SCM get_eigenvectors(integer b_start, integer num_bands)
 void set_eigenvectors(SCM mo, integer b_start)
 {
      evectmatrix *m = SAFE_EVECTMATRIX(mo);
-     CHECK(m, "invalid argument to evectmatrix-size");
+     CHECK(m, "invalid argument to set-eigenvectors");
      CHECK(mdata, "init-params must be called before set-eigenvectors");
 
      evectmatrix_copy_slice(H, *m, b_start - 1, 0, m->p);
@@ -213,7 +213,7 @@ SCM dot_eigenvectors(SCM mo, integer b_start)
      sqmatrix U, S;
      SCM obj;
 
-     CHECK(m, "invalid argument to evectmatrix-size");
+     CHECK(m, "invalid argument to dot-eigenvectors");
      CHECK(mdata, "init-params must be called before dot-eigenvectors");
 
      U = create_sqmatrix(m->p);
