@@ -53,8 +53,9 @@
 /* shared declarations for the files in mpb-ctl: */
 #include "mpb.h"
 
-/*  matrix "smobs" (Scheme objects) */
+/*  matrix/field "smobs" (Scheme objects) */
 #include "matrix-smob.h"
+#include "field-smob.h"
 
 /**************************************************************************/
 
