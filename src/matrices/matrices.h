@@ -64,6 +64,8 @@ extern real matrix_diag_real_trace(real *diag, int p);
 
 extern void evectmatrix_resize(evectmatrix *A, int p, short preserve_data);
 extern void evectmatrix_copy(evectmatrix X, evectmatrix Y);
+extern void evectmatrix_copy_slice(evectmatrix X, evectmatrix Y,
+				   int ix, int iy, int p);
 extern void evectmatrix_aXpbY(real a, evectmatrix X, real b, evectmatrix Y);
 extern void evectmatrix_aXpbYS_sub(real a, evectmatrix X, 
 				   real b, evectmatrix Y,
@@ -75,6 +77,8 @@ extern void evectmatrix_XpaYS(evectmatrix X, real a, evectmatrix Y,
 extern void evectmatrix_XtX(sqmatrix U, evectmatrix X, sqmatrix S);
 extern void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y,
 			    sqmatrix S);
+extern void evectmatrix_XtY_slice(sqmatrix U, evectmatrix X, evectmatrix Y,
+				  int ix, int iy, int p, sqmatrix S);
 extern void evectmatrixXtY_sub(sqmatrix U, int Uoffset,
 			       evectmatrix X, evectmatrix Y, sqmatrix S);
 extern void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag,

@@ -244,8 +244,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  TIME_OP(time_ZtZ, evectmatrix_XtX(YtY, Y, S2));
 
 	  y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtY)) / Y.p);
-	  blasglue_scal(Y.p * Y.n, 1/y_norm, Y.data, 1);
-	  blasglue_scal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
+	  blasglue_rscal(Y.p * Y.n, 1/y_norm, Y.data, 1);
+	  blasglue_rscal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
 
 	  sqmatrix_copy(U, YtY);
 	  sqmatrix_invert(U, 1, S2);
@@ -269,8 +269,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 		    evectmatrix_XtX(YtY, Y, S2);
 		    y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtY)) / Y.p);
-		    blasglue_scal(Y.p * Y.n, 1/y_norm, Y.data, 1);
-		    blasglue_scal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
+		    blasglue_rscal(Y.p * Y.n, 1/y_norm, Y.data, 1);
+		    blasglue_rscal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
 		    sqmatrix_copy(U, YtY);
 		    sqmatrix_invert(U, 1, S2);
 	       }
@@ -504,7 +504,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	       d_scale = sqrt(SCALAR_RE(evectmatrix_traceXtY(D, D)) / Y.p);
 	       mpi_assert_equal(d_scale);
-	       blasglue_scal(Y.p * Y.n, 1/d_scale, D.data, 1);
+	       blasglue_rscal(Y.p * Y.n, 1/d_scale, D.data, 1);
 
 	       A(D, G, Adata, 0, X); /* G = A D; X is scratch */
 	       evectmatrix_XtX(DtD, D, S2);

@@ -40,6 +40,25 @@ void evectmatrix_copy(evectmatrix X, evectmatrix Y)
      blasglue_copy(X.n * X.p, Y.data, 1, X.data, 1);
 }
 
+/* set p selected columns of X to those in Y, starting at ix and iy.  */
+void evectmatrix_copy_slice(evectmatrix X, evectmatrix Y, 
+			    int ix, int iy, int p)
+{
+     CHECK(ix + p <= X.p && iy + p <= Y.p && ix >= 0 && iy >= 0 && X.n == Y.n,
+	   "invalid arguments to evectmatrix_copy_slice");
+
+     if (ix == 0 && iy == 0 && p == X.p && p == Y.p)
+	  evectmatrix_copy(X, Y);
+     else if (p == 1)
+	  blasglue_copy(X.n, Y.data + iy, Y.p, X.data + ix, X.p);
+     else {
+	  int i;
+	  for (i == 0; i < X.n; ++i)
+	       blasglue_copy(p, Y.data + iy + i * Y.p, 1,
+			     X.data + ix + i * X.p, 1);
+     }
+}
+
 /* Resize A from its current size to an nxp matrix, assuming that
    A was initially allocated to hold at least this big a matrix.
    If preserve_data is nonzero, copies the existing data in A (or
@@ -73,7 +92,7 @@ void evectmatrix_aXpbY(real a, evectmatrix X, real b, evectmatrix Y)
      CHECK(X.n == Y.n && X.p == Y.p, "arrays not conformant");
      
      if (a != 1.0)
-	  blasglue_scal(X.n * X.p, a, X.data, 1);
+	  blasglue_rscal(X.n * X.p, a, X.data, 1);
 
      blasglue_axpy(X.n * X.p, b, Y.data, 1, X.data, 1);
      evectmatrix_flops += X.N * X.c * X.p * 3;
@@ -145,18 +164,28 @@ void evectmatrix_XtX(sqmatrix U, evectmatrix X, sqmatrix S)
 		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 }
 
+/* Dot p selected columns of X with those in Y, starting at ix and iy.
+   Stores the result in U, with S a scratch matrix. */
+void evectmatrix_XtY_slice(sqmatrix U, evectmatrix X, evectmatrix Y,
+			   int ix, int iy, int p, sqmatrix S)
+{
+     CHECK(ix + p <= X.p && iy + p <= Y.p && ix >= 0 && iy >= 0 && X.n == Y.n
+           && p == U.p && p <= S.alloc_p, "invalid arguments to XtY_slice");
+
+     blasglue_gemm('C', 'N', p, p, X.n,
+                   1.0, X.data + ix, X.p, Y.data + iy, Y.p, 0.0, S.data, U.p);
+     evectmatrix_flops += X.N * X.c * p * (2*p);
+
+     mpi_allreduce(S.data, U.data, U.p * U.p * SCALAR_NUMVALS,
+                   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+}
+
 /* compute U = adjoint(X) * Y, with S a scratch matrix. */
 void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y, sqmatrix S)
 {
-     CHECK(X.p == Y.p && X.n == Y.n && X.p == U.p && U.p <= S.alloc_p,
-	   "matrices not conformant");
+     CHECK(X.p == Y.p, "matrices not conformant");
      
-     blasglue_gemm('C', 'N', X.p, X.p, X.n,
-		   1.0, X.data, X.p, Y.data, Y.p, 0.0, S.data, U.p);
-     evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
-
-     mpi_allreduce(S.data, U.data, U.p * U.p * SCALAR_NUMVALS,
-		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+     evectmatrix_XtY_slice(U, X, Y, 0, 0, X.p, S);
 }
 
 /* Compute adjoint(X) * Y, storing the result in U at an offset

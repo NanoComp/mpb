@@ -22,7 +22,8 @@
 
 extern void blasglue_axpy(int n, real a, scalar *x, int incx,
 			  scalar *y, int incy);
-extern void blasglue_scal(int n, real a, scalar *x, int incx);
+extern void blasglue_scal(int n, scalar a, scalar *x, int incx);
+extern void blasglue_rscal(int n, real a, scalar *x, int incx);
 extern void blasglue_copy(int n, scalar *x, int incx, scalar *y, int incy);
 extern scalar blasglue_dotc(int n, scalar *x, int incx, scalar *y, int incy);
 void blasglue_gemm(char transa, char transb, int m, int n, int k,

@@ -127,7 +127,12 @@ void blasglue_axpy(int n, real a, scalar *x, int incx, scalar *y, int incy)
      F(axpy,AXPY) (&n, &alpha, x, &incx, y, &incy);
 }
 
-void blasglue_scal(int n, real a, scalar *x, int incx)
+void blasglue_scal(int n, scalar a, scalar *x, int incx)
+{
+     F(scal,SCAL) (&n, &a, x, &incx);
+}
+
+void blasglue_rscal(int n, real a, scalar *x, int incx)
 {
      scalar alpha;
 

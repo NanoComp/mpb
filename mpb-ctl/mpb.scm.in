@@ -167,6 +167,18 @@
 (define-external-function set-kpoint-index false false
   no-return-value 'integer)
 
+(define-external-function sqmatrix-size false false 'integer 'SCM)
+(define-external-function sqmatrix-ref false false 'cnumber 
+  'SCM 'integer 'integer)
+(define-external-function get-eigenvectors false false 'SCM
+  'integer 'integer)
+(define-external-function set-eigenvectors false false no-return-value
+  'SCM 'integer)
+(define-external-function dot-eigenvectors false false 'SCM
+  'SCM 'integer)
+(define-external-function scale-eigenvector false false no-return-value
+  'integer 'cnumber)
+
 ; ****************************************************************
 
 ; Set print-ok? to whether or not we are the MPI master process.
@@ -588,6 +600,22 @@
 (define (fix-efield-phase which-band)
   (get-efield which-band)
   (fix-field-phase))
+
+; ****************************************************************
+
+(define (sqmatrix-diag m)
+  (map (lambda (i) (sqmatrix-ref m i i))
+       (arith-sequence 0 1 (sqmatrix-size m))))
+
+(define (fix-phase-consistency old-eigs first-band)
+  (let ((dots (dot-eigenvectors old-eigs first-band)))
+    (let ((phases (map (lambda (d) (conj (make-polar 1 (angle d))))
+		       (sqmatrix-diag dots))))
+      (map (lambda (i phase) 
+	     (print "scaling band " i " by " phase "\n")
+	     (scale-eigenvector i phase)
+	     (conj phase))
+	   (arith-sequence first-band 1 (length phases)) phases))))
 
 ; ****************************************************************
 

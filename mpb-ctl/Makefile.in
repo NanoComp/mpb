@@ -26,7 +26,7 @@ PROGRAM_NAME = mpb
 VERSION_STRING = "MIT Photonic Bands @MPB_VERSION@, Copyright (C) 1999-2001 by MIT."
 
 # objects for program sources:
-OBJECTS = mpb.o epsilon_file.o \
+OBJECTS = mpb.o epsilon.o fields.o epsilon_file.o matrix-smob.o \
 	  geom.o     # since we use the geom.scm utilities
 
 HEADERS =            # any extra header files you are dependent on
@@ -39,7 +39,7 @@ MY_LIBS = ../src/maxwell/maxwell.a \
 MY_LDFLAGS =         # extra -L flags go here
 MY_CPPFLAGS = -I. -I../src/util -I../src/matrices -I../src/matrixio \
               -I../src/maxwell
-MY_DEFS = -DHAVE_CTL_HOOKS=1 # so that main() calls our ctl_{start,stop}_hook()
+MY_DEFS = -DHAVE_CTL_HOOKS=1 -DHAVE_CTL_EXPORT_HOOK=1
 
 # The following variables should be detected and set by autoconf:
 
@@ -86,6 +86,10 @@ ALL_OBJECTS = main.o ctl-io.o $(OBJECTS)
 all: $(PROGRAM_NAME) mpb-split-tmp
 
 main.o: main.c ctl-io.h
+mpb.o: mpb.c ctl-io.h mpb.h
+epsilon.o: epsilon.c ctl-io.h mpb.h
+fields.o: fields.c ctl-io.h mpb.h
+matrix-smob.o: matrix-smob.c matrix-smob.h smob.h ctl-io.h mpb.h
 
 ctl-io.c ctl-io.h: $(SPECIFICATION_FILE)
 	$(GEN_CTL_IO) $(SPECIFICATION_FILE) $(LIBCTL_DIR)
@@ -138,7 +142,7 @@ install-mpb: $(PROGRAM_NAME)
 mpb-split-tmp:
 	rm -f mpb-split-tmp
 	mpb_name=`echo mpb | sed '$(transform)'`; \
-	sed "s%\./mpb%$$mpb_name%g" mpb-split > mpb-split-tmp;
+	sed "s%\./mpb%"$(prefix)/bin/"$$mpb_name%g" mpb-split > mpb-split-tmp;
 
 install-mpb-split: mpb-split-tmp
 	mpb_name=`echo mpb | sed '$(transform)'`; \

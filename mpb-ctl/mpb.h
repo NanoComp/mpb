@@ -18,9 +18,18 @@
 #ifndef MPB_H
 #define MPB_H
 
-/* definitions common to different files in the mpb-ctl directory */
-
 #include <maxwell.h>
+
+/* this integer flag is defined by main.c from libctl, and is
+   set when the user runs the program with --verbose */
+extern int verbose;
+
+#define MAX2(a,b) ((a) > (b) ? (a) : (b))
+#define MIN2(a,b) ((a) < (b) ? (a) : (b))
+
+#define TWOPI 6.2831853071795864769252867665590057683943388
+
+/**************************************************************************/
 
 extern void get_epsilon_file_func(const char *fname,
 				  maxwell_dielectric_function *func,
@@ -29,5 +38,44 @@ extern void destroy_epsilon_file_func_data(void *func_data);
 
 extern real linear_interpolate(real rx, real ry, real rz,
 			       real *data, int nx, int ny, int nz, int stride);
+
+/**************************************************************************/
+
+/* global variables for retaining data about the eigenvectors between
+   calls from Guile: */
+
+#define MAX_NWORK 10
+extern int nwork_alloc;
+
+#define NUM_FFT_BANDS 20 /* max number of bands to FFT at a time */
+
+extern maxwell_data *mdata;
+extern maxwell_target_data *mtdata;
+extern evectmatrix H, W[MAX_NWORK], Hblock;
+
+extern vector3 cur_kvector;
+extern scalar_complex *curfield;
+extern int curfield_band;
+extern char curfield_type;
+
+extern void curfield_reset(void);
+
+/* R[i]/G[i] are lattice/reciprocal-lattice vectors */
+extern real R[3][3], G[3][3];
+extern matrix3x3 Rm, Gm; /* same thing, but matrix3x3 */
+
+/* index of current kpoint, for labeling output */
+extern int kpoint_index;
+
+/**************************************************************************/
+
+extern void vector3_to_arr(real arr[3], vector3 v);
+extern void matrix3x3_to_arr(real arr[3][3], matrix3x3 m);
+extern scalar_complex cnumber2cscalar(cnumber c);
+extern cnumber cscalar2cnumber(scalar_complex cs);
+
+/**************************************************************************/
+
+extern void init_epsilon(void);
 
 #endif /* MPB_H */

@@ -160,7 +160,7 @@ void sqmatrix_aApbB(real a, sqmatrix A, real b, sqmatrix B)
      CHECK(A.p == B.p, "arrays not conformant");
 
      if (a != 1.0)
-          blasglue_scal(A.p * A.p, a, A.data, 1);
+          blasglue_rscal(A.p * A.p, a, A.data, 1);
 
      blasglue_axpy(A.p * A.p, b, B.data, 1, A.data, 1);
 }
@@ -257,7 +257,7 @@ void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W)
 	       CHECK(eigenvals[i] > 0, "non-positive eigenvalue");
 	       
 	       blasglue_copy(U.p, U.data + i*U.p, 1, W.data + i*U.p, 1);
-	       blasglue_scal(U.p, sqrt(eigenvals[i]), W.data + i*U.p, 1);
+	       blasglue_rscal(U.p, sqrt(eigenvals[i]), W.data + i*U.p, 1);
 	  }
      }
 
