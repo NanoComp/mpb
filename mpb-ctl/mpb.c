@@ -494,7 +494,7 @@ void solve_kpoint(vector3 kvector)
      /* if this is the first k point, print out a header line for
 	for the frequency grep data: */
      if (!kpoint_index && mpi_is_master()) {
-	  printf("%sfreqs:, k index, kx, ky, kz, kmag/2pi",
+	  printf("%sfreqs:, k index, k1, k2, k3, kmag/2pi",
 		 parity_string(mdata));
 	  for (i = 0; i < num_bands; ++i)
 	       printf(", %s%sband %d",
