@@ -119,7 +119,25 @@ int main(void)
 
   /* D = At * A, again */
   blasglue_herk('U', 'C', N, N, 1.0, A, N, 0.0, D, N);
+
+  /* Compute eigenvectors and eigenvalues: */
   lapackglue_heev('V', 'U', N, D, N, eigvals, E, 16, wrk);
+  /* Choose a deterministic phase for each row/eigenvector: */
+  for (i = 0; i < N; ++i) {
+       scalar phase;
+       real len;
+       for (j = 0; (len = sqrt(SCALAR_NORMSQR(D[i*N + j]))) < 1e-6; ++j)
+	    ;
+       /* phase to make D[i*N+j] purely real: */
+       ASSIGN_SCALAR(phase, SCALAR_RE(D[i*N+j])/len, -SCALAR_IM(D[i*N+j])/len);
+       ASSIGN_MULT(D[i*N+j], D[i*N+j], phase);
+       if (SCALAR_RE(D[i*N+j]) < 0) { /* pick deterministic (positive) sign */
+	    ASSIGN_SCALAR(phase, -SCALAR_RE(phase), -SCALAR_IM(phase));
+	    ASSIGN_SCALAR(D[i*N+j], -SCALAR_RE(D[i*N+j]),-SCALAR_IM(D[i*N+j]));
+       }
+       for (j = j + 1; j < N; ++j)
+	    ASSIGN_MULT(D[i*N + j], D[i*N + j], phase);
+  }
   printf("\n[v,d] = eig(D);\n");
   printf("\ndiag(d)\n  ");
   for (i = 0; i < 4; ++i) printf("  %6.3f", eigvals[i]);
