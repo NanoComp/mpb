@@ -1,3 +1,7 @@
+  * At long last, support for distributed-memory parallel machines
+    with MPI.  The computation time and memory usage can often improve
+    nearly linearly with the number of processors.
+
   * Added new material-function material type, so that you can now
     specify that the dielectric tensor be an arbitrary function of
     position.  Thanks to Peter Bermel for needing this.
