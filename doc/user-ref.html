@@ -368,13 +368,15 @@ on a list of objects, <code>obj-list</code>.  If <i>A</i> appears
 before <i>B</i> in the input list, then all the duplicates of <i>A</i>
 appear before all the duplicates of <i>B</i> in the output list.
 
-<p><dt><code>(geometric-objects-lattice-duplicates <i>obj-list</i>)</code>
-
-<dd>Duplicates the objects in <code>obj-list</code> by integer
-multiples of the lattice basis vectors, making all possible shifts
-that fit inside the lattice cell (determined by the lengths of the
-lattice vectors).  (Useful for supercell calculations; see the <a
-href="user-tutorial.html">tutorial</a>.)
+<p><dt><code>(geometric-objects-lattice-duplicates <i>obj-list [ ux uy uz ]</i>)</code>
+<dd>Duplicates the objects in <code>obj-list</code> by multiples of
+the lattice basis vectors, making all possible shifts of the
+"primitive cell" (see below) that fit inside the lattice cell.  (This
+is useful for supercell calculations; see the <a
+href="user-tutorial.html">tutorial</a>.)  The primitive cell to
+duplicate is <code>ux</code> by <code>uy</code> by <code>uz</code>, in
+units of the basis vectors.  These three parameters are optional; any
+that you do not specify are assumed to be <code>1</code>.
 
 <p><dt><code>(point-in-object? <i>point obj</i>)</code>
 <dd>Returns whether or not the given 3-vector <code>point</code> is
