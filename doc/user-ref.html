@@ -479,6 +479,50 @@ indented by <code>indent-by</code> spaces.
 
 </dl>
 
+<h3><a name="coordconvert">Coordinate conversion functions</a></h3>
+
+<p>The following functions allow you to easily convert back and forth
+between the lattice, cartesian, and reciprocal bases.  (See also the
+<a href="user-tutorial.html#units">note on units</a> in the tutorial.)
+
+<dl>
+
+<dt><code>(lattice->cartesian <i>x</i>)</code>, <code>(cartesian->lattice <i>x</i>)</code>
+<dd>Convert <code><i>x</i></code> between the lattice basis (the basis
+of the unit vectors in the lattice directions) and the ordinary
+cartesian basis, where <code><i>x</i></code> is either a
+<code>vector3</code> or a <code>matrix3x3</code>, returning the
+transformed vector/matrix.  In the case of a matrix argument, the
+matrix is treated as an operator on vectors in the given basis, and is
+transformed into the same operator on vectors in the new basis.
+
+<p><dt><code>(reciprocal->cartesian <i>x</i>)</code>, <code>(cartesian->reciprocal <i>x</i>)</code>
+<dd>Like the above, except that they convert to/from reciprocal space
+(the basis of the reciprocal lattice vectors).  Also, the cartesian
+vectors output/input are in units of 2 Pi.
+
+<p><dt><code>(reciprocal->lattice <i>x</i>)</code>, <code>(lattice->reciprocal <i>x</i>)</code>
+<dd>Convert between the reciprocal and lattice bases, where the
+conversion again leaves out the factor of 2 Pi (i.e. the lattice-basis
+vectors are assumed to be in units of 2 Pi).
+
+</dl>
+
+<p>Also, a couple of rotation functions are defined, for convenience,
+so that you don't have to explicitely convert to cartesian coordinates
+in order to use libctl's <code>rotate-vector3</code> function (see the
+<a href="http://ab-initio.mit.edu/libctl/doc/user-ref.html">libctl
+reference</a>):
+
+<dl>
+
+<dt><code>(rotate-lattice-vector3 <i>axis theta v</i>)</code>, <code>(rotate-reciprocal-vector3 <i>axis theta v</i>)</code>
+<dt>Like <code>rotate-vector3</code> , except that
+<code><i>axis</i></code> and <code><i>v</i></code> are specified in
+the lattice/reciprocal bases.
+
+</dl>
+
 <h3>Run functions</h3>
 
 <p>These are functions to help you run and control the simulation.
