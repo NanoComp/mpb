@@ -810,7 +810,7 @@ void get_efield(int which_band)
 /* get the dielectric function, and compute some statistics */
 void get_epsilon(void)
 {
-     int i, N;
+     int i, N, last_dim, last_dim_stored;
      real *epsilon;
      real eps_mean = 0, eps_inv_mean = 0, eps_high = -1e20, eps_low = 1e20;
      int fill_count = 0;
@@ -831,6 +831,9 @@ void get_epsilon(void)
 	i.e. 3/(trace 1/eps). */
 
      N = mdata->fft_output_size;
+     last_dim = mdata->last_dim;
+     last_dim_stored =
+	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
      for (i = 0; i < N; ++i) {
           epsilon[i] = 3.0 / (mdata->eps_inv[i].m00 +
                               mdata->eps_inv[i].m11 +
@@ -843,6 +846,18 @@ void get_epsilon(void)
 	  eps_inv_mean += 1/epsilon[i];
 	  if (epsilon[i] > 1.0001)
 	       ++fill_count;
+#ifndef SCALAR_COMPLEX
+	  /* most points need to be counted twice, by rfftw output symmetry: */
+	  {
+	       int last_index = i % last_dim_stored;
+	       if (last_index != 0 && 2*last_index != last_dim) {
+		    eps_mean += epsilon[i];
+		    eps_inv_mean += 1/epsilon[i];
+		    if (epsilon[i] > 1.0001)
+			 ++fill_count;
+	       }
+	  }
+#endif
      }
 
      MPI_Allreduce(&eps_mean, &eps_mean, 1, SCALAR_MPI_TYPE,
@@ -853,10 +868,17 @@ void get_epsilon(void)
                    MPI_MIN, MPI_COMM_WORLD);
      MPI_Allreduce(&eps_high, &eps_high, 1, SCALAR_MPI_TYPE,
                    MPI_MAX, MPI_COMM_WORLD);
+     MPI_Allreduce(&fill_count, &fill_count, 1, MPI_INT,
+                   MPI_SUM, MPI_COMM_WORLD);
+     N = mdata->nx * mdata->ny * mdata->nz;
+     eps_mean /= N;
+     eps_inv_mean = N/eps_inv_mean;
 
-     printf("eps goes from %g-%g, mean %g, harmonic mean %g, "
-	    "%g%% fill\n", eps_low, eps_high, eps_mean/N, N/eps_inv_mean,
-	    (100.0 * fill_count) / N);
+     printf("epsilon: %g-%g, mean %g, harm. mean %g, "
+	    "%g%% > 1, %g%% \"fill\"\n",
+	    eps_low, eps_high, eps_mean, eps_inv_mean,
+	    (100.0 * fill_count) / N, 
+	    100.0 * (eps_mean-eps_low) / (eps_high-eps_low));
 }
 
 /**************************************************************************/
@@ -868,7 +890,7 @@ void get_epsilon(void)
    in case the user needs the unnormalized version. */
 number compute_field_energy(void)
 {
-     int i, N;
+     int i, N, last_dim, last_dim_stored;
      real comp_sum[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
      real energy_sum = 0.0, normalization;
      real *energy_density = (real *) curfield;
@@ -879,6 +901,9 @@ number compute_field_energy(void)
      }
 
      N = mdata->fft_output_size;
+     last_dim = mdata->last_dim;
+     last_dim_stored =
+	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
      for (i = 0; i < N; ++i) {
 	  scalar_complex field[3];
 	  real
@@ -908,6 +933,21 @@ number compute_field_energy(void)
 
 	  energy_sum += energy_density[i] = 
 	       comp_sqr0+comp_sqr1+comp_sqr2+comp_sqr3+comp_sqr4+comp_sqr5;
+#ifndef SCALAR_COMPLEX
+	  /* most points need to be counted twice, by rfftw output symmetry: */
+	  {
+	       int last_index = i % last_dim_stored;
+	       if (last_index != 0 && 2*last_index != last_dim) {
+		    energy_sum += energy_density[i];
+		    comp_sum[0] += comp_sqr0;
+		    comp_sum[1] += comp_sqr1;
+		    comp_sum[2] += comp_sqr2;
+		    comp_sum[3] += comp_sqr3;
+		    comp_sum[4] += comp_sqr4;
+		    comp_sum[5] += comp_sqr5;
+	       }
+	  }
+#endif
      }
 
      MPI_Allreduce(&energy_sum, &energy_sum, 1, SCALAR_MPI_TYPE,
@@ -951,14 +991,19 @@ number compute_field_energy(void)
    above phase) by: (1) find the largest absolute value of the real
    part, (2) find the point with the greatest spatial array index that
    has |real part| at least half of the largest value, and (3) make
-   that point positive. */
+   that point positive.
+
+   In the case of inversion symmetry, on the other hand, the overall phase
+   is already fixed, to within a sign, by the choice to make the Fourier
+   transform purely real.  So, in that case we simply pick a sign, in
+   a manner similar to (2) and (3) above. */
 void fix_field_phase(void)
 {
      int i, N;
      real sq_sum[2] = {0,0}, maxabs = 0.0;
      int maxabs_index = 0, maxabs_sign = 1;
      double theta;
-     scalar_complex phase;
+     scalar phase;
 
      if (!curfield || !strchr("dhe", curfield_type)) {
           fprintf(stderr, "The D, H, or E field must be loaded first.\n");
@@ -966,6 +1011,7 @@ void fix_field_phase(void)
      }
      N = mdata->fft_output_size * 3;
 
+#ifdef SCALAR_COMPLEX
      /* Compute the phase that maximizes the sum of the squares of
 	the real parts of the components.  Equivalently, maximize
 	the real part of the sum of the squares. */
@@ -983,6 +1029,9 @@ void fix_field_phase(void)
      theta = 0.5 * atan2(-sq_sum[1], sq_sum[0]);
      phase.re = cos(theta);
      phase.im = sin(theta);
+#else /* ! SCALAR_COMPLEX */
+     phase = 1;
+#endif /* ! SCALAR_COMPLEX */
 
      /* Next, fix the overall sign.  We do this by first computing the
 	maximum |real part| of the jmax component (after multiplying
@@ -992,16 +1041,29 @@ void fix_field_phase(void)
 
         (Note that we can't just make the point of maximum |real part|
          positive, as that would be ambiguous in the common case of an
-         oscillating field within the unit cell.) */
+         oscillating field within the unit cell.)
+
+        In the case of inversion symmetry (!SCALAR_COMPLEX), we work with
+        (real part - imag part) instead of (real part), to insure that we
+        have something that is nonzero somewhere. */
+
      for (i = 0; i < N; ++i) {
+#ifdef SCALAR_COMPLEX
 	  real r = fabs(curfield[i].re * phase.re - curfield[i].im * phase.im);
+#else
+	  real r = fabs(curfield[i].re - curfield[i].im);
+#endif
 	  if (r > maxabs)
 	       maxabs = r;
      }
      MPI_Allreduce(&maxabs, &maxabs, 1, SCALAR_MPI_TYPE,
 		   MPI_MAX, MPI_COMM_WORLD);
      for (i = N - 1; i >= 0; --i) {
+#ifdef SCALAR_COMPLEX
 	  real r = curfield[i].re * phase.re - curfield[i].im * phase.im;
+#else
+	  real r = curfield[i].re - curfield[i].im;
+#endif
 	  if (fabs(r) >= 0.5 * maxabs) {
 	       maxabs_index = i;
 	       maxabs_sign = r < 0 ? -1 : 1;
@@ -1018,12 +1080,12 @@ void fix_field_phase(void)
 	  MPI_Allreduce(&x, &x, 1, MPI_2INT, MPI_MAXLOC, MPI_COMM_WORLD);
 	  maxabs_index = x.i; maxabs_sign = x.s;
      }
-     phase.re *= maxabs_sign;
-     phase.im *= maxabs_sign;
+     ASSIGN_SCALAR(phase,
+		   SCALAR_RE(phase)*maxabs_sign, SCALAR_IM(phase)*maxabs_sign);
 
      printf("Fixing %c-field (band %d) phase by %g + %gi; max ampl. = %g\n",
 	    curfield_type, curfield_band,
-	    phase.re, phase.im, maxabs);
+	    SCALAR_RE(phase), SCALAR_IM(phase), maxabs);
 
      /* Now, multiply everything by this phase, *including* the
 	stored "raw" eigenvector in H, so that any future fields
@@ -1031,18 +1093,13 @@ void fix_field_phase(void)
      for (i = 0; i < N; ++i) {
 	  real a,b;
 	  a = curfield[i].re; b = curfield[i].im;
-	  curfield[i].re = a*phase.re - b*phase.im;
-	  curfield[i].im = a*phase.im + b*phase.re;
+	  curfield[i].re = a*SCALAR_RE(phase) - b*SCALAR_IM(phase);
+	  curfield[i].im = a*SCALAR_IM(phase) + b*SCALAR_RE(phase);
      }
-#ifdef SCALAR_COMPLEX
-     /* We can only rotate the phase of the "raw" eigenvector for
-	complex scalar fields.  What should we do for real-amplitude fields?
-	For now, just punt. */
      for (i = 0; i < H.n; ++i) {
           ASSIGN_MULT(H.data[i*H.p + curfield_band - 1], 
 		      H.data[i*H.p + curfield_band - 1], phase);
      }
-#endif
 }
 
 /**************************************************************************/
@@ -1051,7 +1108,7 @@ void fix_field_phase(void)
    given range of dielectric constants: */
 number compute_energy_in_dielectric(number eps_low, number eps_high)
 {
-     int N, i;
+     int N, i, last_dim, last_dim_stored;
      real *energy = (real *) curfield;
      real epsilon, energy_sum = 0.0;
 
@@ -1061,12 +1118,23 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
      }
 
      N = mdata->fft_output_size;
+     last_dim = mdata->last_dim;
+     last_dim_stored =
+	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
      for (i = 0; i < N; ++i) {
 	  epsilon = 3.0 / (mdata->eps_inv[i].m00 +
 			   mdata->eps_inv[i].m11 +
 			   mdata->eps_inv[i].m22);
-	  if (epsilon >= eps_low && epsilon <= eps_high)
+	  if (epsilon >= eps_low && epsilon <= eps_high) {
 	       energy_sum += energy[i];
+#ifndef SCALAR_COMPLEX
+	       {
+		    int last_index = i % last_dim_stored;
+		    if (last_index != 0 && 2*last_index != last_dim)
+			 energy_sum += energy[i];
+	       }
+#endif
+	  }
      }
      MPI_Allreduce(&energy_sum, &energy_sum, 1, SCALAR_MPI_TYPE,
                    MPI_SUM, MPI_COMM_WORLD);
@@ -1221,7 +1289,7 @@ void output_field_extended(vector3 copiesv, int which_component)
    geometry list. */
 number compute_energy_in_object_list(geometric_object_list objects)
 {
-     int i, j, k, n1, n2, n3, n_other, n_last, rank;
+     int i, j, k, n1, n2, n3, n_other, n_last, rank, last_dim;
      real s1, s2, s3, c1, c2, c3;
      real *energy = (real *) curfield;
      real energy_sum = 0;
@@ -1234,6 +1302,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
      n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
      n_other = mdata->other_dims;
      n_last = mdata->last_dim_size / (sizeof(scalar_complex) / sizeof(scalar));
+     last_dim = mdata->last_dim;
      rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
 
      s1 = geometry_lattice.size.x / n1;
@@ -1296,6 +1365,10 @@ number compute_energy_in_object_list(geometric_object_list objects)
 	       for (n = objects.num_items - 1; n >= 0; --n)
 		    if (point_in_periodic_fixed_objectp(p, objects.items[n])) {
 			 energy_sum += energy[index];
+#ifndef SCALAR_COMPLEX
+			 if (j != 0 && 2*j != last_dim)
+			      energy_sum += energy[index];
+#endif
 			 break;
 		    }
 	  }
