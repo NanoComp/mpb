@@ -291,7 +291,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
 	       > FEEDBACK_TIME)) {
                printf("    iteration %4d: "
-                      "trace = %g (%g%% change)\n", iteration, E,
+                      "trace = %0.16g (%g%% change)\n", iteration, E,
 		      convergence_history[iteration % EIG_HISTORY_SIZE]);
                fflush(stdout); /* make sure output appears */
                prev_feedback_time = MPIGLUE_CLOCK; /* reset feedback clock */
