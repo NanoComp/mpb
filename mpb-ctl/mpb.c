@@ -150,8 +150,25 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 	  d->eps_file_func(eps, eps_inv, r, d->eps_file_func_data);
      }
      else {
+	  boolean destroy_material = 0;
+
 	  if (material.which_subclass == MATERIAL_TYPE_SELF)
 	       material = default_material;
+	  while (material.which_subclass == MATERIAL_FUNCTION) {
+	       material_type m;
+	       SCM mo;
+	       /* material_func is a Scheme function, taking a position
+		  vector and returning a material at that point: */
+	       mo = gh_call1(material.subclass.
+			     material_function_data->material_func,
+			     ctl_convert_vector3_to_scm(p));
+	       material_type_input(mo, &m);
+	       if (destroy_material)
+		    material_type_destroy(material);
+	       material = m;
+	       destroy_material = 1;
+	  }
+	       
 	  switch (material.which_subclass) {
 	      case DIELECTRIC:
 	      {
@@ -197,10 +214,15 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 		   maxwell_sym_matrix_invert(eps_inv, eps);
 		   break;
 	      }
+	      case MATERIAL_FUNCTION:
+		   CHECK(0, "invalid use of material-function");
+		   break;
 	      case MATERIAL_TYPE_SELF:
 		   CHECK(0, "invalid use of material-type");
 		   break;
 	  }
+	  if (destroy_material)
+	       material_type_destroy(material);
      }
 }
 

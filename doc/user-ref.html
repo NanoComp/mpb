@@ -350,6 +350,21 @@ fields (polarized in the xy plane) and 5.0 for TM fields (polarized in
 the z direction) would be specified via <code>(make
 (dielectric-anisotropic (epsilon-diag 3 3 5)))</code>.
 
+<p><dt><code>material-function</code>
+<dd>This material type allows you to specify the material as an
+arbitrary function of position.  (For an example of this, see the
+<code>bragg-sine.ctl</code> file in the <code>examples/<code>
+directory.)  It has one property:
+<dl>
+<dt><code>material-func</code> [<code>function</code>]
+<dd>A function of one argument, the position <code>vector3</code> (in
+lattice coordinates), that returns the material at that point.
+</dl>
+<p>Note that the function you supply can return <em>any</em> material;
+wild and crazy users could even return another
+<code>material-function</code> object (which would then have its
+function invoked in turn).
+
 </dl>
 
 <h3><a name="geometric-object">geometric-object</a></h3>
