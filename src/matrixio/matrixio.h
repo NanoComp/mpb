@@ -28,7 +28,7 @@ typedef int matrixio_id; /* dummy */
 #endif
 
 extern matrixio_id matrixio_create(const char *fname);
-extern matrixio_id matrixio_open(const char *fname);
+extern matrixio_id matrixio_open(const char *fname, int read_only);
 extern void matrixio_close(matrixio_id id);
 
 extern matrixio_id matrixio_create_sub(matrixio_id id,

@@ -4,8 +4,6 @@ Allow real-complex transforms for structures with inversion symmetry.
 
 Export/import DXF, VRML, POV, ...?
 
-Add ability to unskew HDF output for non-orthogonal unit cells.
-
 More eigensolver improvements...adaptive selection of an iteration technique.
 
 Support Hermitian (complex) dielectric tensors for magneto-optical materials.

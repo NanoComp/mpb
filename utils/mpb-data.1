@@ -1,0 +1,126 @@
+.\" Copyright (C) 1999, 2000 Massachusetts Institute of Technology.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+.\"
+.TH MPB-DATA 1 "January 27, 2000" "MPB" "MIT Photonic-Bands Package"
+.SH NAME
+mpb-data \- transformations of HDF5 files output by MPB
+.SH SYNOPSIS
+.B mpb-data
+[\fIOPTION\fR]... [\fIHDF5FILE\fR]...
+.SH DESCRIPTION
+.PP
+." Add any additional description here
+mpb-data is a utility to perform additional processing and
+transformations of HDF5 files output by MPB, the MIT Photonic-Bands
+program.  In particular, it is designed to make the output more
+amenable to visualization by reformatting it into a rectangular grid,
+extending it to multiple periods, and rescaling the data.
+
+MIT Photonic Bands (MPB) is a free program to compute the band
+structures (dispersion relations) and electromagnetic modes of
+periodic dielectric structures.
+
+HDF5 is a free, portable binary format and supporting library developed
+by the National Center for Supercomputing Applications at the University
+of Illinois in Urbana-Champaign.  A single
+.I h5
+file can contain multiple data sets; by default,
+.I mpb-data
+operates on all of the MPB-produced datasets in the file, but this can
+be changed via the
+.B -d
+option, or by using the syntax \fIHDF5FILE:DATASET\fR.
+
+.I mpb-data
+writes its output datasets as additional datasets in the input file(s), with "-new" appended to the dataset names.  Alternatively, it can write its output to a separate file, specified by the
+.B -o
+option.
+
+Note also that, by default, the output datasets are identical to the
+input datasets; you must use one or more of the options below to
+specify a transformation (the
+.B -r
+and
+.B -n
+options are perhaps the most useful).
+.SH OPTIONS
+.TP
+.B -h
+Display help on the command-line options and usage.
+.TP
+.B -V
+Print the version number and copyright info for mpb-data.
+.TP
+.B -v
+Verbose output.
+.TP
+\fB\-o\fR \fIfile\fR
+Write output datasets to
+.I file
+(for the first input file only) rather than as additional datasets in
+the input file(s) (the default).
+.TP
+.B -r
+Output a rectangular cell with the same volume as the cell of the input data.
+This option is particularly useful for visualizing data from non-orthogonal
+unit cells (e.g. a triangular lattice), as otherwise the data will appear
+skewed or warped in most graphics programs.
+.TP
+\fB\-n\fR \fIn\fR
+Output
+.I n
+grid points per lattice unit ("a").  This is useful not only for interpolating
+to finer (or coarser) resolutions, but also to ensure that the resolution
+is uniform in each direction (to prevent the data from looking distorted
+when you visualize it).
+.TP
+\fB\-x\fR \fImx\fR, \fB\-y\fR \fImy\fR, \fB\-z\fR \fImz\fR
+This tells
+.I mpb-data
+to output multiple periods in the corresponding lattice directions.
+to use a particular slice of a two- or three-dimensional dataset.  e.g.
+.B -x 3.2
+causes the output of 3.2 periods in the first lattice direction.  The
+default is to output only a single period.
+.TP
+\fB\-m\fR \fIs\fR
+Output
+.I s
+periods in each lattice direction; equivalent to:
+\fB\-x\fR \fIs\fR \fB\-y\fR \fIs\fR \fB\-z\fR \fIs\fR.
+.TP
+.B -p
+Pixellized output.  Normally, the input data is linearly interpolated to
+the output grid, but the
+.B -p
+option causes it to instead use the nearest grid point in the input data.
+This is useful, for example, if you want to study the discretization of the
+dielectric-function representation.
+.TP
+\fB\-d\fR \fIname\fR
+Use dataset
+.I name
+from the input files; otherwise, the first dataset from each file is used.
+Alternatively, use the syntax \fIHDF5FILE:DATASET\fR, which allows you
+to specify a different dataset for each file.
+You can use the
+.I h5ls
+command (included with hdf5) to find the names of datasets within a file.
+.SH BUGS
+Send bug reports to S. G. Johnson, stevenj@alum.mit.edu.
+.SH AUTHORS
+Written by Steven G. Johnson.  Copyright (c) 1999, 2000 by the Massachusetts
+Institute of Technology.

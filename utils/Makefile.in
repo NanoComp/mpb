@@ -1,0 +1,39 @@
+# Variables substituted by the autoconf configure script:
+
+SHELL = @SHELL@
+
+CC = @CC@
+CFLAGS = @CFLAGS@
+CPPFLAGS = @CPPFLAGS@ -I../src/util -I../src/matrices -I../src/matrixio
+DEFS = @DEFS@ -DMPB_VERSION='"'"@MPB_VERSION@"'"'
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+RANLIB = @RANLIB@
+@SET_MAKE@
+
+INSTALL = @INSTALL@
+prefix = @prefix@
+# c.f. AC_ARG_PROGRAM autoconf docs:
+transform=@program_transform_name@
+
+MYLIBS = ../src/matrixio/matrixio.a ../src/matrices/matrices.a \
+         ../src/util/util.a 
+
+all: mpb-data
+
+libs:
+
+mpb-data: mpb-data.o $(MYLIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) mpb-data.o $(MYLIBS) $(LIBS) -o $@
+
+.c.o:
+	$(CC) $(DEFS) $(CPPFLAGS) -c $(CFLAGS) $< -o $@
+
+install: mpb-data
+	$(INSTALL) -d $(prefix)/bin
+	$(INSTALL) -m 0755 -s mpb-data $(prefix)/bin/`echo mpb-data|sed '$(transform)'`
+	$(INSTALL) -d $(prefix)/man/man1
+	$(INSTALL) -m 0644 mpb-data.1 $(prefix)/man/man1
+
+clean: 
+	rm -f mpb-data mpb-data.o core

@@ -111,7 +111,7 @@ void get_epsilon_file_func(const char *fname,
 
 	  CHK_MALLOC(d, epsilon_file_data, 1);
 	  
-	  file_id = matrixio_open(fname);
+	  file_id = matrixio_open(fname, 1);
 	  d->data = matrixio_read_real_data(file_id, NULL, &rank, dims,
 					    0,0,0, NULL);
 	  CHECK(d->data, "couldn't find dataset in dielectric file");

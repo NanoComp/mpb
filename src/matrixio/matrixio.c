@@ -324,7 +324,7 @@ matrixio_id matrixio_create(const char *fname)
 #endif
 }
 
-matrixio_id matrixio_open(const char *fname)
+matrixio_id matrixio_open(const char *fname, int read_only)
 {
 #if defined(HAVE_HDF5)
      char *new_fname;
@@ -339,7 +339,10 @@ matrixio_id matrixio_open(const char *fname)
 
      new_fname = add_fname_suffix(fname);
 
-     id = H5Fopen(new_fname, H5F_ACC_RDONLY, access_props);
+     if (read_only)
+	  id = H5Fopen(new_fname, H5F_ACC_RDONLY, access_props);
+     else
+	  id = H5Fopen(new_fname, H5F_ACC_RDWR, access_props);
      CHECK(id >= 0, "error opening HDF input file");
 
      free(new_fname);

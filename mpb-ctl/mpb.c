@@ -907,7 +907,7 @@ void output_field_extended(vector3 copiesv, int which_component)
 	  rcopies[0] = copies[0] < 1 ? 1 : copies[0];
 	  rcopies[1] = copies[1] < 1 ? 1 : copies[1];
 	  rcopies[2] = copies[2] < 1 ? 1 : copies[2];
-	  matrixio_write_data_attr(file_id, "lattice size",
+	  matrixio_write_data_attr(file_id, "lattice copies",
 				   rcopies, 1, attr_dims);
 	  matrixio_write_string_attr(file_id, "description", description);
 

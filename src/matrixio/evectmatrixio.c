@@ -55,7 +55,7 @@ void evectmatrixio_readall_raw(const char *filename, evectmatrix a)
      dims[1] = a.c;
      dims[2] = a.p * SCALAR_NUMVALS;
 
-     file_id = matrixio_open(filename);     
+     file_id = matrixio_open(filename, 1);
      
      CHECK(matrixio_read_real_data(file_id, "rawdata", &rank, dims, 
 				   a.localN, a.Nstart, 1, (real *) a.data),

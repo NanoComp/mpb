@@ -304,4 +304,4 @@ AC_SUBST(EIGS_FLAGS_SCM)
 
 # ----------------------------------------------------------------------
 
-AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm)
+AC_OUTPUT(Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm utils/Makefile)
