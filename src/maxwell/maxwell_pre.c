@@ -22,6 +22,7 @@
 #include "../config.h"
 #include <check.h>
 
+#include <mpiglue.h>
 #include "maxwell.h"
 
 #define PRECOND_SUBTR_EIGS 0
@@ -144,7 +145,7 @@ void maxwell_constraint(evectmatrix X, void *data)
 void maxwell_zparity_constraint(evectmatrix X, void *data)
 {
      maxwell_data *d = (maxwell_data *) data;
-     int i, j, b;
+     int i, j, b, nxy, nz;
      int zparity = (d->polarization == EVEN_Z_POLARIZATION ? +1 :
 		    (d->polarization == ODD_Z_POLARIZATION ? -1 : 0));
 
@@ -154,10 +155,19 @@ void maxwell_zparity_constraint(evectmatrix X, void *data)
      CHECK(d, "null maxwell data pointer!");
      CHECK(X.c == 2, "fields don't have 2 components!");
 
-     for (i = 0; i < d->other_dims; ++i)
-	  for (j = 0; 2*j < d->last_dim; ++j) {
-	       int ij = i * d->last_dim + j; 
-	       int ij2 = i * d->last_dim + (j > 0 ? d->last_dim - j : 0);
+     if (d->nz > 1) {
+	  nxy = d->other_dims;
+	  nz = d->last_dim;
+     }
+     else {
+	  nxy = d->other_dims * d->last_dim;
+	  nz = 1;
+     }
+
+     for (i = 0; i < nxy; ++i)
+	  for (j = 0; 2*j < nz; ++j) {
+	       int ij = i * nz + j; 
+	       int ij2 = i * nz + (j > 0 ? nz - j : 0);
 	       for (b = 0; b < X.p; ++b) {
 		    scalar u,v, u2,v2;
 		    u = X.data[(ij * 2) * X.p + b];
@@ -184,10 +194,11 @@ void maxwell_zparity_constraint(evectmatrix X, void *data)
    of the parities (which the caller should deallocate with free).
    The parity of an arbitrary state is defined as the expectation value
    of the mirror flip operator, and will be +1/-1 for even/odd eigenstates
-   and something in between for everything else. */
+   and something in between for everything else.  Assumes that the
+   columns of X are normalized to 1. */
 real *maxwell_zparity(evectmatrix X, maxwell_data *d)
 {
-     int i, j, b;
+     int i, j, b, nxy, nz;
      real *zparity;
 
      CHECK(d, "null maxwell data pointer!");
@@ -197,10 +208,19 @@ real *maxwell_zparity(evectmatrix X, maxwell_data *d)
      for (b = 0; b < X.p; ++b)
 	  zparity[b] = 0.0;
 
-     for (i = 0; i < d->other_dims; ++i)
-	  for (j = 0; 2*j < d->last_dim; ++j) {
-	       int ij = i * d->last_dim + j; 
-	       int ij2 = i * d->last_dim + (j > 0 ? d->last_dim - j : 0);
+     if (d->nz > 1) {
+	  nxy = d->other_dims;
+	  nz = d->last_dim;
+     }
+     else {
+	  nxy = d->other_dims * d->last_dim;
+	  nz = 1;
+     }
+
+     for (i = 0; i < nxy; ++i)
+	  for (j = 0; 2*j < nz; ++j) {
+	       int ij = i * nz + j; 
+	       int ij2 = i * nz + (j > 0 ? nz - j : 0);
 	       for (b = 0; b < X.p; ++b) {
 		    scalar u,v, u2,v2;
 		    u = X.data[(ij * 2) * X.p + b];
@@ -214,6 +234,9 @@ real *maxwell_zparity(evectmatrix X, maxwell_data *d)
 			  SCALAR_IM(v) * SCALAR_IM(v2));
 	       }
 	  }
+
+     MPI_Allreduce(zparity, zparity, X.p,
+		   SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
      
      return zparity;
 }
