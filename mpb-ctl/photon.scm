@@ -244,4 +244,9 @@
 	(if (>= energy min-energy)
 	    (output-func which-band)))))
 
+; Combines zero or more band functions into one:
+(define (combine-band-functions . band-funcs)
+  (lambda (which-band)
+    (map (lambda (f) (f which-band)) band-funcs)))
+
 ; ****************************************************************
