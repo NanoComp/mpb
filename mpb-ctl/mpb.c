@@ -1074,7 +1074,8 @@ void get_epsilon(void)
 
      N = mdata->fft_output_size;
      last_dim = mdata->last_dim;
-     last_dim_stored = mdata->last_dim_size / 2;
+     last_dim_stored =
+	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
      for (i = 0; i < N; ++i) {
           epsilon[i] = 3.0 / (mdata->eps_inv[i].m00 +
                               mdata->eps_inv[i].m11 +
@@ -1144,7 +1145,8 @@ number_list compute_field_energy(void)
 
      N = mdata->fft_output_size;
      last_dim = mdata->last_dim;
-     last_dim_stored = mdata->last_dim_size / 2;
+     last_dim_stored =
+	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
      for (i = 0; i < N; ++i) {
 	  scalar_complex field[3];
 	  real
@@ -1373,7 +1375,8 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 
      N = mdata->fft_output_size;
      last_dim = mdata->last_dim;
-     last_dim_stored = mdata->last_dim_size / 2;
+     last_dim_stored =
+	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
      for (i = 0; i < N; ++i) {
 	  epsilon = 3.0 / (mdata->eps_inv[i].m00 +
 			   mdata->eps_inv[i].m11 +
@@ -1675,7 +1678,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
 
      n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
      n_other = mdata->other_dims;
-     n_last = mdata->last_dim_size / 2;
+     n_last = mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
      last_dim = mdata->last_dim;
      rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
 
