@@ -244,8 +244,8 @@ fi
 if test -z "$LIBCTL_DIR" -a -r /usr/share/libctl/base/ctl.scm; then
         LIBCTL_DIR="/usr/share/libctl"
 fi
-if test -z "$LIBCTL_DIR" -a -r $srcdir/../libctl/base/ctl.scm; then
-        LIBCTL_DIR="`pwd`/$srcdir/../libctl"
+if test -z "$LIBCTL_DIR"; then
+	AC_ERROR([could not find libctl files; use --with-libctl=<dir>])
 fi
 AC_MSG_RESULT($LIBCTL_DIR)
 AC_SUBST(LIBCTL_DIR)
