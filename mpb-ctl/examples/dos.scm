@@ -1,4 +1,4 @@
-; A simple function to compute the density-of-states by summing
+; A simple function to compute the density of states (DOS) by summing
 ; Gaussian smoothing functions around each computed frequency point,
 ; suggested by Xavier Gonze and implemented in ABINIT
 ; (http://www.mapr.ucl.ac.be/Fr/PCPM/ABINIT/), with further
