@@ -295,7 +295,7 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 	smallest grid direction: */
 
      /* first, find the minimum distance between grid points along the
-	lattice directions: */
+	lattice directions (should we use the maximum instead?): */
      for (i = 0; i < rank; ++i) {
 	  real ri = R[i][0] * R[i][0] + R[i][1] * R[i][1] + R[i][2] * R[i][2];
 	  ri = sqrt(ri) / (i == 0 ? nx : (i == 1 ? ny : nz));
