@@ -54,9 +54,6 @@ if test "$ok" = "no"; then
 	AC_DEFINE(CHECK_DISABLE)
 fi
 
-# Add path for config.h to include path:
-INCLUDES="$INCLUDES -I`pwd`/src"
-
 # Add lots of compiler warnings to check for if we are using gcc:
 # (The variable $GCC is set to "yes" by AC_PROG_CC if we are using gcc.)
 if test "$GCC" = "yes"; then

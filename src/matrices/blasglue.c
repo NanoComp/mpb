@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <config.h>
+#include "../config.h"
 #include <fortranize.h>
 #include <check.h>
 

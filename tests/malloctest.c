@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#include <config.h>
+#include "../src/config.h"
 #include <check.h>
 
 #define NUM_POINTERS 1000

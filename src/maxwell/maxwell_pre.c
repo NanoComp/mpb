@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include <config.h>
+#include "../config.h"
 #include <check.h>
 
 #include "maxwell.h"

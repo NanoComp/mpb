@@ -32,7 +32,7 @@
 #include <guile/gh.h>
 
 /* Header files for my eigensolver routines: */
-#include <config.h>
+#include "../src/config.h"
 #include <check.h>
 #include <blasglue.h>
 #include <matrices.h>
