@@ -803,6 +803,15 @@ visualize the real part.  To fix the phase for output, pass one of
 these functions to <code>run</code> before the corresponding output
 function, e.g. <code>(run-tm fix-dfield-phase output-dfield-z)</code>
 
+<p>Although we try to maximize the "real-ness" of the field, this has
+a couple of limitations.  First, the phase of the different field
+components cannot, of course, be chosen independently, so an
+individual field component may still be imaginary.  Second, if you use
+<code>mpbi</code> to take advantage of <a href="#inv-symmetry">inversion
+symmetry</a> in your problem, the phase is mostly determined elsewhere
+in the program; <code>fix-_field-phase</code> in that case only
+determines the sign.
+
 </dl>
 
 <p>Sometimes, you only want to output certain bands.  For example,
