@@ -107,8 +107,8 @@ extern void F(sytri,SYTRI) (char *, int *, scalar *, int *,
 			    int *, scalar *, int *);
 extern void F(heev,HEEV) (char *, char *, int *, scalar *, int *, real *,
 			  scalar *, int *, real *, int *);
-extern void FR(syev,SYEV) (char *, char *, int *, scalar *, int *, real *,
-			   scalar *, int *, int *);
+extern void FR(syev,SYEV) (char *, char *, int *, real *, int *, real *,
+			   real *, int *, int *);
 
 #ifdef __cplusplus
 }                               /* extern "C" */
@@ -284,7 +284,7 @@ void lapackglue_syev(char jobz, char uplo, int n, real *A, int fdA,
 
      uplo = uplo == 'U' ? 'L' : 'U';
 
-     F(syev,SYEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
+     FR(syev,SYEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
 
      CHECK(info >= 0, "invalid argument in heev");
      CHECK(info <= 0, "failure to converge in heev");
