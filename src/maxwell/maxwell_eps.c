@@ -24,6 +24,8 @@
 
 #include "maxwell.h"
 
+/**************************************************************************/
+
 /* Set Vinv = inverse of V, where both V and Vinv are real-symmetric
    (or possibly complex-Hermitian) matrices. */
 void maxwell_sym_matrix_invert(symmetric_matrix *Vinv, 
@@ -106,6 +108,59 @@ void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
      }
 #endif /* real matrix */
 }
+
+/* Returns whether or not V is positive-definite. */
+static int sym_matrix_positive_definite(symmetric_matrix *V)
+{
+     real det2, det3;
+     real m00 = V->m00, m11 = V->m11, m22 = V->m22;
+
+#if defined(WITH_HERMITIAN_EPSILON)
+     scalar_complex m01 = V->m01, m02 = V->m02, m12 = V->m12;
+
+     det2 = m00*m11 - CSCALAR_NORMSQR(m01);
+     det3 = det2*m22 - m11*CSCALAR_NORMSQR(m02) - CSCALAR_NORMSQR(m12)*m00 +
+	  2.0 * ((m01.re * m12.re - m01.im * m12.im) * m02.re +
+		 (m01.re * m12.im + m01.im * m12.re) * m02.im);
+#else /* real matrix */
+     real m01 = V->m01, m02 = V->m02, m12 = V->m12;
+
+     det2 = m00*m11 - m01*m01;
+     det3 = det2*m22 - m02*m11*m02 + 2.0 * m01*m12*m02 - m12*m12*m00;
+#endif /* real matrix */
+     
+     return (m00 > 0.0 && det2 > 0.0 && det3 > 0.0);
+}
+
+/**************************************************************************/
+
+int check_maxwell_dielectric(maxwell_data *d)
+{
+     int i, require_2d;
+
+     require_2d = d->polarization == TE_POLARIZATION ||
+	  d->polarization == TM_POLARIZATION;
+
+     for (i = 0; i < d->fft_output_size; ++i) {
+	  if (!sym_matrix_positive_definite(d->eps_inv + i))
+	       return 1;
+	  if (require_2d) {
+#if defined(WITH_HERMITIAN_EPSILON)
+	       if (d->eps_inv[i].m02.re != 0.0 ||
+		   d->eps_inv[i].m02.im != 0.0 ||
+		   d->eps_inv[i].m12.re != 0.0 ||
+		   d->eps_inv[i].m12.im != 0.0)
+		    return 2;
+#else /* real matrix */
+	       if (d->eps_inv[i].m02 != 0.0 || d->eps_inv[i].m12 != 0.0)
+		    return 2;
+#endif /* real matrix */
+	  }
+     }
+     return 0;
+}
+
+/**************************************************************************/
 
 #define SHIFT3(x,y,z) {real SHIFT3_dummy = z; z = y; y = x; x = SHIFT3_dummy;}
 
@@ -375,6 +430,8 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 	       moment_mesh[i][j] = G[j][0]*v[0] + G[j][1]*v[1] + G[j][2]*v[2];
      }
 }
+
+/**************************************************************************/
 
 /* The following function initializes the dielectric tensor md->eps_inv,
    using the dielectric function epsilon(&eps, &eps_inv, r, epsilon_data).

@@ -283,18 +283,26 @@ void set_polarization(integer p)
 	 case 1:
 	      printf("Solving for TE-polarized bands.\n");
 	      set_maxwell_data_polarization(mdata, TE_POLARIZATION);
+	      CHECK(mdata->polarization == TE_POLARIZATION,
+		    "TE polarization is only valid for 2d simulations");
 	      break;
 	 case 2:
 	      printf("Solving for TM-polarized bands.\n");
 	      set_maxwell_data_polarization(mdata, TM_POLARIZATION);
+	      CHECK(mdata->polarization == TM_POLARIZATION,
+		    "TM polarization is only valid for 2d simulations");
 	      break;
 	 case 3:
 	      printf("Solving for bands even about z=0.\n");
 	      set_maxwell_data_polarization(mdata, EVEN_Z_POLARIZATION);
+	      CHECK(mdata->polarization == EVEN_Z_POLARIZATION,
+		    "even symmetry is only valid for in-plane k-points");
 	      break;
 	 case 4:
 	      printf("Solving for bands odd about z=0.\n");
 	      set_maxwell_data_polarization(mdata, ODD_Z_POLARIZATION);
+	      CHECK(mdata->polarization == ODD_Z_POLARIZATION,
+		    "odd symmetry is only valid for in-plane k-points");
 	      break;
 	 default:
 	      fprintf(stderr, "Unknown polarization type!\n");
@@ -507,6 +515,17 @@ void init_params(integer p, boolean reset_fields)
      set_polarization(p);
      if (!have_old_fields || reset_fields)
 	  randomize_fields();
+
+     {
+	  int ierr = check_maxwell_dielectric(mdata);
+	  if (ierr == 1)
+	       fprintf(stderr,
+		       "ERROR: non positive-definite dielectric tensor\n");
+	  else if (ierr == 2)
+	       fprintf(stderr, "ERROR: dielectric tensor must not couple xy "
+		       "plane with z direction for 2D TE/TM calculations\n");
+	  CHECK(!ierr, "invalid dielectric function\n");
+     }
 
      evectmatrix_flops = eigensolver_flops; /* reset, if changed */
 }
