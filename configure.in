@@ -10,8 +10,6 @@ if test x = x"$CFLAGS"; then
 	CFLAGS="-O3"
 fi
 
-# Use native f77 if present, since BLAS libraries are often compiled with
-# this and there may be linking problems if we use a different compiler.
 AC_MSG_CHECKING([for vendor f77 to be used instead of g77])
 AC_MSG_RESULT()
 AC_CHECK_PROGS(F77, f77 xlf77 cf77 fort77 f90 xlf90)
@@ -131,8 +129,20 @@ if test x = x"`echo $LIBS | egrep 'l[[ds]]fftw'`"; then
 	fi
 fi
 
+if test x = x"`echo $LIBS | egrep 'l[[ds]]*fftw'`"; then
+	AC_MSG_ERROR([The FFTW libraries could not be found.  Make sure FFTW is installed, and that LDFLAGS and CPPFLAGS are set appropriately if necessary.])
+fi
+
+if test x"$inv_sym" = xyes; then
+	if test x = x"`echo $LIBS | egrep 'l[[ds]]*rfftw'`"; then
+		AC_MSG_ERROR([The RFFTW libraries, which are required to compile MPB with inversion symmetry, could not be found.  These should have been installed as a part of FFTW.])
+	fi
+fi
+
 ##############################################################################
 # Checks for BLAS libraries:
+
+save_LIBS_0="$LIBS" # save, to check later if we found any library
 
 # Generic BLAS:
 AC_CHECK_LIB(blas, main)
@@ -148,17 +158,17 @@ elif test "$ok" != "yes"; then
 	AC_CHECK_LIB($ok, main)
 fi
 
-if test "$save_LIBS" = "$LIBS"; then
+if test x"$save_LIBS" = x"$LIBS"; then
 	# BLAS in Alpha CXML library?
 	AC_CHECK_LIB(cxml, dgemm_)
 fi
 
-if test "$save_LIBS" = "$LIBS"; then
+if test x"$save_LIBS" = x"$LIBS"; then
 	# BLAS in Alpha DXML library? (now called CXML, see above)
 	AC_CHECK_LIB(dxml, dgemm_)
 fi
 
-if test "$save_LIBS" = "$LIBS"; then
+if test x"$save_LIBS" = x"$LIBS"; then
 	if test "x$GCC" != xyes; then
 		# Check for BLAS in Sun Performance library:
 		# AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
@@ -169,47 +179,52 @@ if test "$save_LIBS" = "$LIBS"; then
 	fi
 fi
 
-if test "$save_LIBS" = "$LIBS"; then
+if test x"$save_LIBS" = x"$LIBS"; then
 	# Check for BLAS in SCSL and SGIMATH libraries (prefer SCSL):
 	AC_CHECK_LIB(scs, dgemm_,
 	             LIBS="-lscs $LIBS", 
 		     AC_CHECK_LIB(complib.sgimath, dgemm_))
 fi
 
-if test "$save_LIBS" = "$LIBS"; then
+if test x"$save_LIBS" = x"$LIBS"; then
 	# Checks for BLAS in IBM ESSL library
 	AC_CHECK_LIB(essl, dgemm)
 fi
 
-if test "$save_LIBS" = "$LIBS"; then
+if test x"$save_LIBS" = x"$LIBS"; then
 	# Checks for ATLAS BLAS library:
 	AC_CHECK_LIB(atlas, ATL_xerbla)
-	if test "$save_LIBS" != "$LIBS"; then
+	if test x"$save_LIBS" != x"$LIBS"; then
 		# check for other atlas libs:
 		AC_CHECK_LIB(cblas, cblas_dgemm)
 		AC_CHECK_LIB(f77blas, main)
 	fi
 fi
 
-if test "$save_LIBS" = "$LIBS"; then
+if test x"$save_LIBS" = x"$LIBS"; then
 	# Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
 	AC_CHECK_LIB(dgemm, main)
 	AC_CHECK_LIB(sgemm, main)
 fi
 
-if test "$save_LIBS" = "$LIBS"; then
+if test x"$save_LIBS" = x"$LIBS"; then
 	# Optimized BLAS for Pentium Pro (from ASCII Red project):
 	# (see http://www.cs.utk.edu/~ghenry/distrib/)
 	AC_CHECK_LIB(blasppro1.1o,main)
 fi
 
+if test x"$save_LIBS_0" = x"$LIBS"; then
+	AC_MSG_WARN([A BLAS library could not be found!!  This may cause the compilation to fail, unless your C compiler links to BLAS by default.])
+fi
+
 ##############################################################################
+save_LIBS_0="$LIBS" # save, to check later if we found any library
+
 # Checks for LAPACK library
 AC_CHECK_LIB(lapack, main)
 
-# check for ATLAS LAPACK replacements functions:
-if test x != x"`echo $LIBS | grep atlas`"; then
-	AC_CHECK_LIB(atlaslapack, main)
+if test x"$save_LIBS_0" = x"$LIBS"; then
+	AC_MSG_WARN([A LAPACK library could not be found!!  This may cause the compilation to fail, unless your C compiler links to LAPACK by default.])
 fi
 
 ##############################################################################
@@ -259,7 +274,12 @@ if test "x$with_mpi" = "xyes"; then
 	        fi
 	fi
 	if test x = x"`echo $LIBS | egrep 'l[[ds]]*fftw_mpi'`"; then
-		AC_MSG_ERROR(couldn't find fftw_mpi library for --with-mpi)
+		AC_MSG_ERROR([couldn't find fftw_mpi library for --with-mpi])
+	fi
+        if test x"$inv_sym" = xyes; then
+		if test x = x"`echo $LIBS | egrep 'l[[ds]]*rfftw_mpi'`"; then
+			AC_MSG_ERROR([couldn't find rfftw_mpi library for --with-mpi --with-inv-symmetry])
+		fi
 	fi
 
 	AC_DEFINE(HAVE_MPI,1,[Define if you have & link an MPI library.])
@@ -274,10 +294,14 @@ fi
 AC_ARG_WITH(hdf5, [  --without-hdf5          do not use HDF5 output], ok=$withval, ok=yes)
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(z, deflate)
+
+	save_LIBS_0="$LIBS" # save, to check later if we found any library
 	AC_CHECK_LIB(hdf5, H5Pcreate, [
 		AC_CHECK_HEADERS(hdf5.h, [LIBS="-lhdf5 $LIBS"
-			                    AC_DEFINE(HAVE_HDF5)],
-			         AC_MSG_WARN([**** Did you forget to set CPPFLAGS for HDF5? ***]))])
+			                    AC_DEFINE(HAVE_HDF5)])])
+	if test x"$save_LIBS_0" = x"$LIBS"; then
+		AC_MSG_WARN([Couldn't find the HDF5 library!!  Switching to --without-hdf5.])
+	fi
 
         if test x != x"$MPILIBS"; then
 		AC_MSG_CHECKING([for H5Pset_mpi])
@@ -302,12 +326,17 @@ if test "$HAVE_GUILE_CONFIG" = "yes"; then
 	AC_MSG_CHECKING([if linking to guile works])
 	AC_TRY_LINK_FUNC(gh_enter, AC_MSG_RESULT(yes), [
 	AC_MSG_RESULT(no)
-	AC_MSG_ERROR(guile-config is broken)
+	AC_MSG_ERROR([guile-config is broken or Guile is not working.])
 	])
 else
         AC_CHECK_LIB(readline, readline)
         AC_CHECK_LIB(dl, dlopen)
+	
+	save_LIBS_0="$LIBS" # save, to check later if we found any library
         AC_CHECK_LIB(guile, gh_eval_str)
+	if test x"$save_LIBS_0" = x"$LIBS"; then
+		AC_MSG_ERROR([Couldn't find the required Guile library.])
+	fi
 fi
 
 # Check how to activate Guile readline support:
@@ -332,6 +361,8 @@ AC_SUBST(ACTIVATE_READLINE)
 
 ##############################################################################
 # Check for libctl library and files
+
+save_LIBS_0="$LIBS" # save, to check later if we found any library
 
 AC_ARG_WITH(libctl, [  --with-libctl=<dir>     specify libctl directory], ok=$withval, ok=yes)
 if test "$ok" = "no"; then
@@ -366,6 +397,10 @@ AC_SUBST(GEN_CTL_IO)
 
 # check for -lctl:
 AC_CHECK_LIB(ctl, ctl_get_vector3)
+
+if test x"$save_LIBS_0" = x"$LIBS"; then
+	AC_MSG_ERROR([Couldn't find the required libctl library.])
+fi
 
 ##############################################################################
 # Checks for header files.
@@ -419,7 +454,11 @@ AC_SUBST(EIGS_FLAGS_SCM)
 ##############################################################################
 
 # Find a shell that supports job control, for mpb-split:
-AC_PATH_PROG(SH_JOB, bash ksh ash bsh, sh)
+AC_PATH_PROG(SH_JOB, bash ksh ash, sh)
+
+if test x"$SH_JOB" = xsh; then
+	AC_MSG_WARN([Couldn't find bash or ksh shell on your system.  The mpb-split command may not work if your sh doesn't support job control.])
+fi
 
 ##############################################################################
 
