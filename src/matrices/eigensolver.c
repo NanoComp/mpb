@@ -508,7 +508,6 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    if (flags & EIGS_VERBOSE)
 			 printf("    switching back to exact "
 				"line minimization\n");
-		    printf("dE = %g, dE2 = %g, theta = %g\n", dE, d2E, theta);
 		    use_linmin = 1;
 		    evectmatrix_aXpbY(1.0, Y, -t / d_norm, D);
 	       }
