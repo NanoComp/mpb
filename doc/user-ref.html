@@ -373,6 +373,20 @@ objects with the x-y plane are considered.
 ignored.  Defaults to point parallel to the z axis.
 </dl>
 
+<p><dt><code>cone</code>
+
+<dd>A cone, or possibly a truncated cone.  This is actually a subclass
+of <code>cylinder</code>, and inherits all of the same properties,
+with one additional property.  The radius of the base of the cone is
+given by the <code>radius</code> property inherited from
+<code>cylinder</code>, while the radius of the tip is given by the new
+property:
+<dl>
+<dt><code>radius2</code> [<code>number</code>]
+<dd>Radius of the tip of the cone (i.e. the end of the cone pointed to
+by the <code>axis</code> vector).  Defaults to zero (a "sharp" cone).
+</dl>
+
 <p><dt><code>block</code>
 <dd>A parallelepiped (i.e., a brick, possibly with non-orthogonal
 axes). Properties:
