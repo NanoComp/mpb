@@ -184,6 +184,10 @@ typedef struct {
 extern maxwell_target_data *create_maxwell_target_data(maxwell_data *d,
 						       real target_frequency);
 extern void destroy_maxwell_target_data(maxwell_target_data *d);
+extern void maxwell_target_operator1(evectmatrix Xin, evectmatrix Xout,
+				     void *data,
+				     int is_current_eigenvector,
+				     evectmatrix Work);
 extern void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout,
 				    void *data, int is_current_eigenvector,
 				    evectmatrix Work);

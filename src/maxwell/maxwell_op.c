@@ -551,24 +551,38 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
      }
 }
 
-void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,
+/* Compute the operation Xout = (M - w^2) Xin, where M is the Maxwell
+   operator and w is the target frequency.  This shifts the eigenvalue
+   spectrum so that the smallest magnitude eigenvalues are those
+   nearest to w.  However, there are negative eigenvalues (the
+   operator is not positive-definite), and the smallest eigenvectors
+   (not taking the absolute value) are the same as those of M. */
+void maxwell_target_operator1(evectmatrix Xin, evectmatrix Xout, void *data,
 			     int is_current_eigenvector, evectmatrix Work)
 {
      maxwell_target_data *d = (maxwell_target_data *) data;
      real omega_sqr = d->target_frequency * d->target_frequency;
 
+     maxwell_operator(Xin, Xout, d->d, is_current_eigenvector, Work);
+     evectmatrix_aXpbY(1.0, Xout, -omega_sqr, Xin);
+}
+
+/* Compute the operation Xout = (M - w^2)^2 Xin, where M is the
+   Maxwell operator and w is the target frequency.  This shifts the
+   eigenvalue spectrum so that the smallest eigenvalues are those
+   nearest to w. */
+void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,
+			     int is_current_eigenvector, evectmatrix Work)
+{
      CHECK(Work.data && Work.data != Xin.data && Work.data != Xout.data,
 	   "maxwell_target_operator must have distinct workspace!");
 
-     maxwell_operator(Xin, Work, d->d, is_current_eigenvector, Xout);
-     evectmatrix_aXpbY(1.0, Work, -omega_sqr, Xin);
+     maxwell_target_operator1(Xin, Work, data, is_current_eigenvector, Xout);
 
-     /* note that maxwell_operator() doesn't actually need the
-	workspace (it can operate in-place, for that matter), so we
-	can safely pass Work here for the scratch parameter: */
-     maxwell_operator(Work, Xout, d->d, 0, Work);
-
-     evectmatrix_aXpbY(1.0, Xout, -omega_sqr, Work);
+     /* N.B. maxwell_operator(), and thus maxwell_target_operator1(),
+	doesn't actually need the workspace, so we can safely pass
+	Work here for the scratch parameter: */
+     maxwell_target_operator1(Work, Xout, data, is_current_eigenvector, Work);
 }
 
 /* Compute the operation Xout = curl 1/epsilon * i u x Xin, which 
