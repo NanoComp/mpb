@@ -21,14 +21,17 @@ void mpi_die(const char *template, ...)
 
 void mpi_one_fprintf(FILE *f, const char *template, ...)
 {
-     va_list ap;
-     int process_rank;
-
-     MPI_Comm_rank(MPI_COMM_WORLD, &process_rank);
-     
-     if (process_rank == 0) {
+     if (mpi_is_master()) {
+	  va_list ap;
 	  va_start(ap, template);
 	  vfprintf(f, template, ap);
 	  va_end(ap);
      }
+}
+
+int mpi_is_master(void)
+{
+     int process_rank;
+     MPI_Comm_rank(MPI_COMM_WORLD, &process_rank);
+     return (process_rank == 0);
 }

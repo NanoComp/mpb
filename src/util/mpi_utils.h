@@ -15,4 +15,6 @@ extern void mpi_one_fprintf(FILE *f, const char *template, ...)
 #endif
 ;
 
+extern int mpi_is_master(void);
+
 #endif /* MPI_UTIL_H */

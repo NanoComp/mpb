@@ -52,6 +52,22 @@ typedef scalar_complex scalar;
      ASSIGN_SCALAR(a, aaaa_tmp.re*aaaa_tmp_norm, aaaa_tmp.im*aaaa_tmp_norm); \
 }
 
+/* as above, but only assign real/imag part to real a: */
+
+/* a = b * c */
+#define ASSIGN_MULT_RE(a, b, c) { \
+     real bbbb_re = (b).re, bbbb_im = (b).im; \
+     real cccc_re = (c).re, cccc_im = (c).im; \
+     (a) = bbbb_re * cccc_re - bbbb_im * cccc_im; \
+}
+
+/* a = b * c */
+#define ASSIGN_MULT_IM(a, b, c) { \
+     real bbbb_re = (b).re, bbbb_im = (b).im; \
+     real cccc_re = (c).re, cccc_im = (c).im; \
+     (a) = bbbb_re * cccc_im + bbbb_im * cccc_re; \
+}
+
 /*************************** scalars are real ****************************/
 #else /* scalars are real */
 
@@ -76,6 +92,9 @@ typedef real scalar;
 
 #define ASSIGN_MULT(a, b, c) (a) = (b) * (c);
 #define ASSIGN_DIV(a, b, c) (a) = (b) / (c);
+
+#define ASSIGN_MULT_RE(a, b, c) (a) = (b) * (c);
+#define ASSIGN_MULT_IM(a, b, c) (a) = 0.0;
 
 #endif
 

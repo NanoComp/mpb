@@ -25,9 +25,10 @@
 
 #define NWORK 3
 
-#define EPS_LOW 1.0
-#define EPS_HIGH 9.0
-#define EPS_HIGH_X 0.25
+#define KX 0.5
+#define EPS_LOW 2.25
+#define EPS_HIGH 12.25
+#define EPS_HIGH_X 0.30
 
 #ifdef ENABLE_PROF
 #  define PROF_ITERS 10
@@ -135,15 +136,16 @@ void usage(void)
 	    "Options:\n"
             "   -h           Print this help\n"
 	    "   -s <seed>    Set random seed\n"
-	    "   -k <kx>      Set kx wavevector component [dflt. = 0.5]\n"
-	    "   -b <n>       Compute n bands [default = 8]\n"
-	    "   -n <index>   Specify high-dielectric index [dflt. = 3]\n"
-	    "   -f <f>       Specify high-index fill fraction [dflt. = 0.25]\n"
-	    "   -x <nx>      Use nx points in x direction [dflt. = 32]\n"
-	    "   -y <ny>      Use ny points in y direction [dflt. = 1]\n"
-	    "   -z <nz>      Use nz points in z direction [dflt. = 1]\n"
+	    "   -k <kx>      Set kx wavevector component [dflt. = %f]\n"
+	    "   -b <n>       Compute n bands [default = %d]\n"
+	    "   -n <index>   Specify high-dielectric index [dflt. = %f]\n"
+	    "   -f <f>       Specify high-index fill fraction [dflt. = %f]\n"
+	    "   -x <nx>      Use nx points in x direction [dflt. = %d]\n"
+	    "   -y <ny>      Use ny points in y direction [dflt. = %d]\n"
+	    "   -z <nz>      Use nz points in z direction [dflt. = %d]\n"
 	    "   -e           Solve for TE polarization only.\n"
-	    "   -m           Solve for TM polarization only.\n");
+	    "   -m           Solve for TM polarization only.\n",
+	    KX, NUM_BANDS, sqrt(EPS_HIGH), EPS_HIGH_X, NX, NY, NZ);
 }
 
 /*************************************************************************/
@@ -153,7 +155,7 @@ int main(int argc, char **argv)
      maxwell_data *mdata;
      int local_N, N_start, alloc_N;
      real G1[3] = {1,0,0}, G2[3] = {0,100,0}, G3[3] = {0,0,100};
-     real kvector[3] = {0.5,0,0};
+     real kvector[3] = {KX,0,0};
      evectmatrix H, Hstart, W[NWORK];
      real *eigvals;
      int i, j, k, iters;

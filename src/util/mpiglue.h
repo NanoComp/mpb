@@ -18,6 +18,8 @@ CHECK((sb) == (rb), "MPI_Allreduce stub doesn't work for sendbuf != recvbuf")
 
 #define MPI_Abort(comm, errcode) exit(errcode)
 
+#define MPI_Barrier(comm) 0
+
 #define MPI_Comm_rank(comm, rankp) *(rankp) = 0
 
 #endif /* HAVE_MPI */
