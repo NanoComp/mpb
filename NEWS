@@ -1,5 +1,5 @@
   * At long last, support for distributed-memory parallel machines
-    with MPI.  The computation time and memory usage can often improve
+    with MPI.  The computation time (and memory usage) can often improve
     nearly linearly with the number of processors.  Thanks to
     Clarendon Photonics for funding this work.
 
@@ -41,6 +41,10 @@
     which did not handle functions of no arguments ("thunks") correctly
     (crashing with an error message).  Thanks to Michelle Povinelli for
     the bug report.
+
+  * Fixed a floating-point sensitivity bug in mpb-data that could cause
+    a crash on the Alpha; thanks to Dominique Caron for the bug report
+    and debugging information.
 
 MPB 0.13 (1/7/2001)
 
