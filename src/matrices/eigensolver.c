@@ -26,7 +26,9 @@
    nWork > 3.
 
    tolerance is the convergence parameter.  Upon exit, 
-   num_iterations holds the number of iterations that were required. */
+   num_iterations holds the number of iterations that were required.
+
+   NOTE: A and C are assumed to be linear operators. */
 
 void eigensolver(evectmatrix Y, real *eigenvals,
 		 evectoperator A, void *Adata,
