@@ -3,6 +3,8 @@
 
 ; *** Our First Band Structure ***
 
+(display "********** Square lattice of rods in air **********\n")
+
 (set! num-bands 8)
 (set! k-points (list (vector3 0 0 0)     ; Gamma
                      (vector3 0.5 0 0)   ; X
@@ -14,13 +16,21 @@
                        (material (make dielectric (epsilon 12))))))
 (set! grid-size (vector3 32 32 1))
 
+(display "********** Square lattice of rods: TE bands**********\n")
 (run-te)
+
+(display "********** Square lattice of rods: TM bands **********\n")
 (run-tm)
 
+(display "********** Square lattice of rods: TM, w/efield **********\n")
 (run-tm output-efield)
+
+(display "********** Square lattice of rods: TE, w/hfield & dpwr **********\n")
 (run-te output-hfield output-dpwr)
 
 ; *** Bands of a Triangular Lattice ***
+
+(display "********** Triangular lattice of rods in air **********\n")
 
 (set! geometry-lattice (make lattice
                          (basis1 (/ (sqrt 3) 2) 0.5)
@@ -35,6 +45,8 @@
 (run-tm)
 
 ; *** Maximizing the First TM Gap ***
+
+(display "********** Maximizing the first TM gap **********\n")
 
 (define (first-tm-gap r)
   (set! geometry (list (make cylinder
@@ -52,6 +64,8 @@
 (display-many "gap size at maximum: " (max-val result) "\n")
 
 ; *** Finding a Point-defect State ***
+
+(display "********** 5x5 point defect **********\n")
 
 (set! geometry-lattice (make lattice (size 5 5 1)))
 (set! geometry (geometric-objects-lattice-duplicates geometry))
@@ -72,12 +86,15 @@
                                  (radius 1.0) (height infinity)
                                  (material air)))
 
+(display "********** 5x5 point defect, targeted solver **********\n")
 (set! num-bands 1)  ; only need to compute a single band, now!
 (set! target-freq (/ (+ 0.2812 0.4174) 2))
 (set! tolerance 1e-8)
 (run-tm)
 
 ; *** Tuning the Point-defect Mode ***
+
+(display "********** Tuning the 5x5 point defect **********\n")
 
 (define old-geometry geometry) ; save the 5x5 grid with a missing rod
 (define (rootfun eps)
