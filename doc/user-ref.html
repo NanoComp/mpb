@@ -154,11 +154,156 @@ of which are the various geometric object classes.  You can also get a
 list of the available classes, along with their property types and
 default values, at runtime with the <code>(help)</code> command.
 
-<h3>geometric-object</h3>
-
 <h3>lattice</h3>
 
+<p>The lattice class is normally used only for the
+<code>geometry-lattice</code> variable, specifies the three lattice
+directions of the crystal and the lengths of the corresponding lattice
+vectors.
+
+<dl>
+
+<dt><code>lattice</code>
+<dd>Properties:
+<dl>
+<dt><code>basis1</code>, <code>basis2</code>, <code>basis3</code> [vector3]
+<dd>The three lattice directions of the crystal, specified in the
+cartesian basis.  The lengths of these vectors are ignored--only their
+directions matter.  The corresponding unit vectors are used as the
+basis for all other 3-vectors in the ctl file.  They default to the x,
+y, and z directions, respectively.
+<dt><code>size</code> [vector3]
+<dd>The size of the lattice (i.e. the length of the lattice vectors,
+in which the crystal is periodic) along the three basis directions.
+(Alternatively, you can think of this as the vector between opposite
+corners of the primitive cell, specified in the lattice basis.)
+Defaults to unit lengths.
+</dl>
+
+</dl>
+
 <h3>material-type</h3>
+
+<p>This class is used to specify the materials that geometric objects
+are made of.  Currently, there is only one class,
+<code>dielectric</code>, but in the future there may be others.
+
+<dl>
+
+<dt><code>dielectric</code>
+<dd>A uniform, isotropic, linear dielectric material, with one property:
+<dl>
+<dt><code>epsilon</code> [number]
+<dd>The dielectric constant (must be positive).  No default value.
+</dl>
+
+</dl>
+
+<h3>geometric-object</h3>
+
+<p>This class, and its descendants, are used to specify the solid
+geometric objects that form the dielectric structure being simulated.
+The base class is:
+
+<dl>
+
+<dt><code>geometric-object</code>
+<dd>Properties:
+<dl>
+<dt><code>material</code> [material-type class]
+<dd>The material that the object is made of (usually some sort of
+dielectric).  No default value (must be specified).
+<dt><code>center</code> [vector3]
+<dd>Center point of the object.  No default value.
+</dl>
+
+</dl>
+
+<p>One normally does not create objects of type
+<code>geometric-object</code> directly, however; instead, you use one
+of the following subclasses.  Recall that subclasses inherit the
+properties of their superclass, so these subclasses automatically have
+the <code>material</code> and <code>center</code> properties (which
+must be specified, since they have no default values).
+
+<p>Recall that all 3-vectors, including the center of an object, its
+axes, and so on, are specified in the basis of the unit lattice
+vectors.  Note also that 3-vector properties can be specified by
+either <code>(<i>property</i> (vector3 <i>x y z</i>))</code> or,
+equivalently, <code>(<i>property</i> <i>x y z</i>)</code>.
+
+<p>In a two-dimensional calculation, only the intersections of the
+objects with the x-y plane are considered.
+
+<dl>
+
+<dt><code>sphere</code>
+<dd>A sphere.  Properties:
+<dl>
+<dt><code>radius</code> [number]
+<dd>Radius of the sphere.  No default value.
+</dl>
+
+<p><dt><code>cylinder</code>
+<dd>A cylinder, with circular cross-section and finite height.  Properties:
+<dl>
+<dt><code>radius</code> [number]
+<dd>Radius of the cylinder's cross-section.  No default value.
+<dt><code>height</code> [number]
+<dd>Length of the cylinder along its axis.  No default value.
+<dt><code>axis</code> [vector3]
+<dd>Direction of the cylinder's axis; the length of this vector is
+ignored.  Defaults to point parallel to the z axis.
+</dl>
+
+<p><dt><code>block</code>
+<dd>A parallelepiped (i.e., a brick, possibly with non-orthogonal
+axes). Properties:
+<dl>
+<dt><code>size</code> [vector3, sort of]
+<dd>The sizes of the block along each of its three axes.  Not really a
+3-vector, but it has three components, each of which should be
+nonzero.  No default value.
+<dt><code>e1</code>, <code>e2</code>, <code>e3</code> [vector3]
+<dd>The directions of the axes of the block; the lengths of these
+vectors are ignored.  Must be linearly-independent.  They default to
+the three lattice directions.
+</dl>
+
+<p><dt><code>ellipsoid</code>
+<dd>An ellipsoid.  This is actually a subclass of <code>block</code>,
+and inherits all the same properties, but defines an ellipsoid
+inscribed inside the block.
+
+</dl>
+
+<p>Here are some examples of geometric objects created using the above
+classes, assuming that the lattice directions (the basis) are just the
+ordinary unit axes, and <code>m</code> is some material we have
+defined:
+
+<pre>
+; A cylinder of infinite radius and height 0.25 pointing along the x axis,
+; centered at the origin:
+(make cylinder (center 0 0 0) (material m) 
+               (radius infinity) (height 0.25) (axis 1 0 0))
+
+
+; An ellipsoid with its long axis pointing along (1,1,1), centered on
+; the origin (the other two axes are orthogonal and have equal
+; semi-axis lengths):
+(make ellipsoid (center 0 0 0) (material m)
+                (size 0.8 0.2 0.2)
+		(e1 1 1 1)
+		(e2 0 1 -1)
+		(e3 -2 1 1))
+
+; A unit cube of material m with a spherical air hole of radius 0.2 at
+; its center, the whole thing centered at (1,2,3):
+(set! geometry (list
+		(make block (center 1 2 3) (material m) (size 1 1 1))
+		(make sphere (center 1 2 3) (material air) (radius 0.2))))
+</pre>
 
 <h2>Functions</h2>
 
@@ -174,11 +319,166 @@ functions defined by libctl.
 
 <h3>Geometry utilities</h3>
 
+<p>Some utility functions are provided to help you manipulate
+geometric objects:
+
+<dl>
+
+<dt><code>(shift-geometric-object <i>obj shift-vector</i>)</code>
+<dd>Translate <code>obj</code> by the 3-vector <code>shift-vector</code>.
+
+<p><dt><code>(geometric-object-duplicates <i>shift-vector min-multiple max-multiple obj</i>)</code>
+<dd>Return a list of duplicates of <code>obj</code>, shifted by
+various multiples of <code>shift-vector</code> (from
+<code>min-multiple</code> to <code>max-multiple</code>, inclusive, in
+steps of 1).
+
+<p><dt><code>(geometric-objects-duplicates <i>shift-vector min-multiple max-multiple obj-list</i>)</code>
+<dd>Same as <code>geometric-object-duplicates</code>, except operates
+on a list of objects, <code>obj-list</code>.  If <i>A</i> appears
+before <i>B</i> in the input list, then all the duplicates of <i>A</i>
+appear before all the duplicates of <i>B</i> in the output list.
+
+<p><dt><code>(geometric-objects-lattice-duplicates <i>obj-list</i>)</code>
+
+<dd>Duplicates the objects in <code>obj-list</code> by integer
+multiples of the lattice basis vectors, making all possible shifts
+that fit inside the lattice cell (determined by the lengths of the
+lattice vectors).  (Useful for supercell calculations; see the <a
+href="user-tutorial.html">tutorial</a>.)
+
+<p><dt><code>(point-in-object? <i>point obj</i>)</code>
+<dd>Returns whether or not the given 3-vector <code>point</code> is
+inside the geometric object <code>obj</code>.
+
+<p><dt><code>(point-in-periodic-object? <i>point obj</i>)</code>
+<dd>As <code>point-in-object?</code>, but also checks translations of
+the given object by the lattice vectors.
+
+<p><dt><code>(display-geometric-object-info <i>indent-by obj</i>)</code>
+<dd>Outputs some information about the given <code>obj</code>,
+indented by <code>indent-by</code> spaces.
+
+</dl>
+
 <h3>Run functions</h3>
+
+<p>These are functions to help you run and control the simulation.
+The ones you will most commonly use are the <code>run</code> function
+and its two variants, <code>run-tm</code> and <code>run-te</code>.
+The syntax of these functions, and one lower-level function, is:
+
+<dl>
+
+<dt><code>(run <i>band-func ...</i>)</code>
+
+<dd>This runs the simulation described by the input parameters (see
+above), with no constraints on the polarization of the solution.  That
+is, it reads the input parameters, initializes the simulation, and
+solves for the requested eigenstates of each k-point.  The dielectric
+function is outputted to "<code>epsilon.h5</code>" before any
+eigenstates are computed.  <code>run</code> takes as arguments zero or
+more "band functions" <code>band-func</code>.  A band function should
+be a function of one integer parameter, the band index, so that
+<code>(band-func which-band)</code> performs some operation on the
+band <code>which-band</code> (e.g. outputting fields).  After every k
+point, each band function is called for the indices of all the bands
+that were computed.
+
+<p><dt><code>(run-tm <i>band-func ...</i>), (run-te <i>band-func ...</i>)</code>
+
+<dd>These are the same as the <code>run</code> function except that
+they constrain their solutions to be TM- and TE-polarized,
+respectively, in two dimensions.  For three-dimensional simulations,
+or when a k point has a z component, the eigenstates are no longer
+completely polarized, and these functions behave identically to
+<code>run</code>.
+
+<p><dt><code>(run-polarization <i>p reset-fields band-func ...</i>)</code>
+
+<dd>Like the <code>run</code> function, except that it takes two extra
+parameters, a polarization <code>p</code> and a boolean
+(<code>true</code>/<code>false</code>) value
+<code>reset-fields</code>.  <code>p</code> specifies a polarization
+constraint, and should be one of the predefined variables
+<code>NO-POLARIZATION</code>, <code>TM</code>, or <code>TE</code>.  If
+<code>reset-fields</code> is <code>false</code>, the fields from any
+previous calculation will be reused as the starting point from this
+calculation, if possible; otherwise, the fields are reset to random
+values.  <code>(run-polarization NO-POLARIZATION true ...)</code> is
+equivalent to <code>(run ...)</code>, <code>(run-polarization TM true
+...)</code> is equivalent\ to <code>(run-tm ...)</code>, and
+<code>(run-polarization TE true ...)</code> is equivalent\ to
+<code>(run-te ...)</code>.
+
+</dl>
+
+<p>Several band functions for outputting the eigenfields are defined
+for your convenience, and are described in the <b>Band output
+functions</b> section, below.  You can also define your own band
+functions, and for this purpose the functions described in the section
+<b>Field manipulation functions</b>, below, are useful.
+
+<p>There are also some even lower-level functions that you can call,
+although you should not need to do most of the time:
+
+<dl>
+
+<dt><code>(init-params <i>p reset-fields?</i>)</code>
+
+<dd>Read the input variables and initialize the simulation in
+preparation for computing the eigenvalues.  The parameters are the
+same as the first two parameters of <code>run-polarization</code>.
+This function <em>must</em> be called before any of the other
+simulation functions below.  (Note, however, that the <code>run</code>
+functions all call <code>init-params</code>.)
+
+<p><dt><code>(set-polarization <i>p</i>)</code>
+<dd>After calling <code>init-params</code>, you can change the
+polarization constraint without resetting the other parameters by
+calling this function.  Beware that this does not randomize the fields
+(see below); you don't want to try to solve for, say, the TM
+eigenstates when the fields are initialized to TE states from a
+previous calculation.
+
+<p><dt><code>(randomize-fields)</code>
+<dd>Initialize the fields to random values.
+
+<p><dt><code>(solve-kpoint <i>k</i>)</code>
+<dd>Solve for the requested eigenstates at the Bloch wavevector
+<code>k</code>.
+
+</dl>
 
 <h3>Band output functions</h3>
 
+<dl>
+
+<dt><code>( <i></i>)</code>
+<dd>
+
+<p><dt><code>( <i></i>)</code>
+<dd>
+
+<p><dt><code>( <i></i>)</code>
+<dd>
+
+</dl>
+
 <h3>Field manipulation functions</h3>
+
+<dl>
+
+<dt><code>( <i></i>)</code>
+<dd>
+
+<p><dt><code>( <i></i>)</code>
+<dd>
+
+<p><dt><code>( <i></i>)</code>
+<dd>
+
+</dl>
 
 <hr>
 Go to the <a href="developer.html">next</a>, <a
