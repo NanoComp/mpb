@@ -215,7 +215,7 @@ void randomize_fields(void)
    p = -1 means the polarization of the previous call, 
        or NO_POLARIZATION if this is the first call */
 
-void set_polarization(int p)
+void set_polarization(integer p)
 {
      static int last_p = -2;  /* initialize to some non-value */
 
@@ -280,7 +280,7 @@ static char polarization_strings[5][10] = {
    If reset_fields is false, then any fields from a previous run are
    retained if they are of the same dimensions.  Otherwise, new
    fields are allocated and initialized to random numbers. */
-void init_params(int p, boolean reset_fields)
+void init_params(integer p, boolean reset_fields)
 {
      int i, local_N, N_start, alloc_N;
      int nx, ny, nz;
@@ -845,7 +845,7 @@ void get_dfield(int which_band)
      maxwell_compute_d_from_H(mdata, H, curfield, which_band - 1, 1);
 }
 
-void get_hfield(int which_band)
+void get_hfield(integer which_band)
 {
      if (!mdata) {
 	  fprintf(stderr, "init-params must be called before get-hfield!\n");
@@ -878,7 +878,7 @@ void get_efield_from_dfield(void)
      curfield_type = 'e';
 }
 
-void get_efield(int which_band)
+void get_efield(integer which_band)
 {
      get_dfield(which_band);
      get_efield_from_dfield();
@@ -1259,8 +1259,10 @@ static char *fix_fname(const char *fname, const char *prefix,
    the matrixio (fieldio) routines.  Allow the user to specify that
    the fields be periodically extended, so that several lattice cells
    are stored.  Also allow the component to be specified
-   (which_component 0/1/2 = x/y/z, -1 = all) for vector fields. */
-void output_field_extended(vector3 copiesv, int which_component)
+   (which_component 0/1/2 = x/y/z, -1 = all) for vector fields. 
+   Also allow the user to specify a prefix string for the filename. */
+void output_field_extended(vector3 copiesv, integer which_component,
+			   string filename_prefix)
 {
      char fname[100], *fname2, description[100];
      int dims[3], local_nx, local_x_start;

@@ -17,7 +17,12 @@
     per k-point as for ordinary band functions).
 
   * compute-field-energy function now also returns the fraction of the
-    energy in the various field components.
+    energy in the various field components.  Thanks to Karl Koch
+    for the suggestion.
+
+  * The filename-prefix variable is now read each time an output function
+    is called, instead of once per (run), so it can be changed frequently
+    if desired.  Thanks to Karl Koch for the suggestion.
 
   * Added first-brillouin-zone function to transform an arbitrary
     k-point into an equivalent point in the first Brillouin zone.

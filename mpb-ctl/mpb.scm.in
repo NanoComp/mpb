@@ -54,8 +54,6 @@
   (lambda (v) (vector-for-all? v (lambda (x) (and (> x 0) (integer? x))))))
 (define-input-var mesh-size 3 'integer positive?)
 
-(define-input-var filename-prefix "" 'string)
-
 (define-input-var epsilon-input-file "" 'string)
 
 (define-input-var deterministic? false 'boolean)
@@ -118,7 +116,7 @@
 (define-external-function compute-energy-in-dielectric false false
   'number 'number 'number)
 (define-external-function output-field-extended false false
-  no-return-value 'vector3 'integer)  
+  no-return-value 'vector3 'integer 'string)  
 (define-external-function compute-energy-in-object-list false false
   'number (make-list-type 'geometric-object))
 
@@ -185,8 +183,10 @@
   (get-dfield which-band)
   (get-efield-from-dfield))
 
+(define filename-prefix "")
+
 (define (output-field . copies)
-  (output-field-extended (apply vector3 copies) -1))
+  (output-field-extended (apply vector3 copies) -1) filename-prefix)
 
 (define (output-field-x . copies)
   (output-field-extended (apply vector3 copies) 0))
