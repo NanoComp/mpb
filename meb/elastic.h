@@ -170,6 +170,9 @@ extern void elastic_preconditioner(evectmatrix Xin, evectmatrix Xout,
 				   evectmatrix Y, real *eigenvals,
 				   sqmatrix YtY);
 
+extern int elastic_zero_k_num_const_bands(evectmatrix X, elastic_data *d);
+extern void elastic_zero_k_set_const_bands(evectmatrix X, elastic_data *d);
+
 extern void elastic_parity_constraint(evectmatrix X, void *data);
 extern void elastic_zparity_constraint(evectmatrix X, void *data);
 extern void elastic_yparity_constraint(evectmatrix X, void *data);
