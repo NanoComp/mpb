@@ -137,6 +137,17 @@ function used by MPB will not be exactly the dielectric function of
 the epsilon file, unless you also set <code>mesh-size</code> to
 <code>1</code> (see above). ]
 
+<p><dt><code>eigensolver-block-size</code> [<code>integer</code>]
+<dd>The eigensolver uses a "block" algorithm, which means that it
+solves for several bands simultaneously at each k-point.
+<code>eigensolver-block-size</code> specifies this number of bands to
+solve for at a time; if it is &lt;= zero or &gt;=
+<code>num-bands</code>, then all the bands are solved for at once.
+Making the block size a small number can reduce the memory
+requirements of MPB, but block sizes &gt; 1 are usually more efficient
+(there is typically some optimum size for a given problem).  Defaults
+to zero (i.e. solve for all bands at once).
+
 <p><dt><code>simple-preconditioner?</code> [<code>boolean</code>]
 <dd>Whether or not to use a simplified preconditioner; defaults to
 <code>false</code> (this is fastest most of the time).  (Turning this

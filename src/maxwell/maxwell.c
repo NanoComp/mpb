@@ -31,7 +31,7 @@
 maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				  int *local_N, int *N_start, int *alloc_N,
 				  int num_bands,
-				  int num_fft_bands)
+				  int max_fft_bands)
 {
      int n[3], rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
      maxwell_data *d = 0;
@@ -56,7 +56,8 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->ny = ny;
      d->nz = nz;
      
-     d->num_fft_bands = MIN2(num_bands, num_fft_bands);
+     d->max_fft_bands = MIN2(num_bands, max_fft_bands);
+     maxwell_set_num_bands(d, num_bands);
 
      d->current_k[0] = d->current_k[1] = d->current_k[2] = 0.0;
      d->polarization = NO_POLARIZATION;
@@ -79,15 +80,15 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->plan = fftwnd_create_plan_specific(rank, n, FFTW_FORWARD,
 					   FFTW_ESTIMATE | FFTW_IN_PLACE,
 					   (FFTW_COMPLEX*) d->fft_data,
-					   3 * num_fft_bands,
+					   3 * d->num_fft_bands,
 					   (FFTW_COMPLEX*) d->fft_data,
-					   3 * num_fft_bands);
+					   3 * d->num_fft_bands);
      d->iplan = fftwnd_create_plan_specific(rank, n, FFTW_BACKWARD,
 					    FFTW_ESTIMATE | FFTW_IN_PLACE,
 					    (FFTW_COMPLEX*) d->fft_data,
-					    3 * num_fft_bands,
+					    3 * d->num_fft_bands,
 					    (FFTW_COMPLEX*) d->fft_data,
-					    3 * num_fft_bands);
+					    3 * d->num_fft_bands);
 #    else /* not SCALAR_COMPLEX */
      d->last_dim_size = 2 * (d->last_dim / 2 + 1);
      d->fft_output_size = fft_data_size = d->other_dims * d->last_dim_size;
@@ -147,7 +148,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
      /* a scratch output array is required because the "ordinary" arrays
 	are not in a cartesian basis (or even a constant basis). */
-     CHK_MALLOC(d->fft_data, scalar, 3 * num_fft_bands * fft_data_size);
+     CHK_MALLOC(d->fft_data, scalar, 3 * d->num_fft_bands * fft_data_size);
 
      CHK_MALLOC(d->k_plus_G, k_data, *local_N);
      CHK_MALLOC(d->k_plus_G_normsqr, real, *local_N);
@@ -157,7 +158,6 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->local_N = *local_N;
      d->N_start = *N_start;
      d->alloc_N = *alloc_N;
-     d->num_bands = num_bands;
      d->N = nx * ny * nz;
 
      return d;
@@ -191,6 +191,12 @@ void destroy_maxwell_data(maxwell_data *d)
      }
 }
 
+void maxwell_set_num_bands(maxwell_data *d, int num_bands)
+{
+     d->num_bands = num_bands;
+     d->num_fft_bands = MIN2(num_bands, d->max_fft_bands);
+}
+
 /* compute a = b x c */
 static void compute_cross(real *a0, real *a1, real *a2,
 			  real b0, real b1, real b2,
@@ -217,8 +223,7 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
      ky = G1[1]*k[0] + G2[1]*k[1] + G3[1]*k[2];
      kz = G1[2]*k[0] + G2[2]*k[1] + G3[2]*k[2];
 
-     if (kx == 0.0 && ky == 0.0 && kz == 0.0)
-	  kx = 1e-5;
+     d->zero_k = kx == 0.0 && ky == 0.0 && kz == 0.0;
 
      d->current_k[0] = kx;
      d->current_k[1] = ky;
@@ -246,31 +251,37 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 		    
 		    /* Now, compute the two normal vectors: */
 
-		    if (kpGx == 0.0 && kpGy == 0.0) {
-			 /* just put n in the x direction if k+G is in z: */
-			 kpG->nx = 1.0;
-			 kpG->ny = 0.0;
-			 kpG->nz = 0.0;
+		    if (a == 0) {
+			 kpG->nx = 1.0; kpG->ny = 0.0; kpG->nz = 0.0;
+			 kpG->mx = 0.0; kpG->my = 1.0; kpG->mz = 0.0;
 		    }
 		    else {
-			 /* otherwise, let n = z x (k+G), normalized: */
+			 if (kpGx == 0.0 && kpGy == 0.0) {
+			      /* put n in the x direction if k+G is in z: */
+			      kpG->nx = 1.0;
+			      kpG->ny = 0.0;
+			      kpG->nz = 0.0;
+			 }
+			 else {
+			      /* otherwise, let n = z x (k+G), normalized: */
+			      compute_cross(&a, &b, &c,
+					    0.0, 0.0, 1.0,
+					    kpGx, kpGy, kpGz);
+			      leninv = 1.0 / sqrt(a*a + b*b + c*c);
+			      kpG->nx = a * leninv;
+			      kpG->ny = b * leninv;
+			      kpG->nz = c * leninv;
+			 }
+			 
+			 /* m = n x (k+G), normalized */
 			 compute_cross(&a, &b, &c,
-				       0.0, 0.0, 1.0,
+				       kpG->nx, kpG->ny, kpG->nz,
 				       kpGx, kpGy, kpGz);
 			 leninv = 1.0 / sqrt(a*a + b*b + c*c);
-			 kpG->nx = a * leninv;
-			 kpG->ny = b * leninv;
-			 kpG->nz = c * leninv;
+			 kpG->mx = a * leninv;
+			 kpG->my = b * leninv;
+			 kpG->mz = c * leninv;
 		    }
-
-		    /* m = n x (k+G), normalized */
-		    compute_cross(&a, &b, &c,
-				  kpG->nx, kpG->ny, kpG->nz,
-				  kpGx, kpGy, kpGz);
-		    leninv = 1.0 / sqrt(a*a + b*b + c*c);
-		    kpG->mx = a * leninv;
-		    kpG->my = b * leninv;
-		    kpG->mz = c * leninv;
 
 #ifdef DEBUG
 #define DOT(u0,u1,u2,v0,v1,v2) ((u0)*(v0) + (u1)*(v1) + (u2)*(v2))

@@ -23,7 +23,7 @@
 typedef struct {
      int N, localN, Nstart, allocN;
      int c;
-     int n, p;
+     int n, p, alloc_p;
      scalar *data;
 } evectmatrix;
 
@@ -59,6 +59,7 @@ extern real matrix_diag_real_trace(real *diag, int p);
 
 /* evectmatrix operations, defined in evectmatrix.c: */
 
+extern void evectmatrix_resize(evectmatrix *A, int p, short preserve_data);
 extern void evectmatrix_copy(evectmatrix X, evectmatrix Y);
 extern void evectmatrix_aXpbY(real a, evectmatrix X, real b, evectmatrix Y);
 extern void evectmatrix_aXpbYS_sub(real a, evectmatrix X, 

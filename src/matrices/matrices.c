@@ -40,7 +40,7 @@ evectmatrix create_evectmatrix(int N, int c, int p,
      X.c = c;
      
      X.n = localN * c;
-     X.p = p;
+     X.alloc_p = X.p = p;
      
      if (allocN > 0) {
 	  CHK_MALLOC(X.data, scalar, allocN * c * p);

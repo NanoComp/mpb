@@ -38,6 +38,33 @@ void evectmatrix_copy(evectmatrix X, evectmatrix Y)
      blasglue_copy(X.n * X.p, Y.data, 1, X.data, 1);
 }
 
+/* Resize A from its current size to an nxp matrix, assuming that
+   A was initially allocated to hold at least this big a matrix.
+   If preserve_data is nonzero, copies the existing data in A (or
+   a subset of it, if the matrix is shrinking) to the corresponding
+   entries of the resized matrix. */
+void evectmatrix_resize(evectmatrix *A, int p, short preserve_data)
+{
+     CHECK(p <= A->alloc_p, "tried to resize beyond allocated limit");
+
+     if (preserve_data) {
+	  int i, j;
+	  
+	  if (p < A->p) {
+	       for (i = 0; i < A->n; ++i)
+		    for (j = 0; j < p; ++j)
+			 A->data[i*p + j] = A->data[i*A->p + j];
+	  }
+	  else {
+	       for (i = A->n-1; i >= 0; --i)
+		    for (j = A->p-1; j >= 0; --j)
+			 A->data[i*p + j] = A->data[i*A->p + j];
+	  }
+     }
+
+     A->p = p;
+}
+
 /* compute X = a*X + b*Y; X and Y may be equal. */
 void evectmatrix_aXpbY(real a, evectmatrix X, real b, evectmatrix Y)
 {

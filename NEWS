@@ -1,6 +1,18 @@
+  * Added new eigensolver-block-size input variable, so that MPB can
+    optionally solve for only a few bands at a time instead of all
+    at once, reducing memory requirements and often increasing speed.
+
+  * Improved handling of the singular (zero-frequency) solutions at
+    the Gamma (k=0) point.  This k point should no longer converge
+    slowly (or cause additional problems in the targeted eigensolver).
+
   * Added first-brillouin-zone function to transform an arbitrary
     k-point into an equivalent point in the first Brillouin zone.
     Thanks to Payam Rabiei for the suggestion.
+
+  * Used improved spherical-quadrature formula in computing the
+    effective dielectric tensor in 3d; this should increase accuracy
+    somewhat at lower grid resolutions.
 
 MPB 0.12 (7/9/2000)
 

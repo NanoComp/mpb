@@ -31,7 +31,9 @@
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
 
-#define FIX_DENOM(x) MAX2(x, PRECOND_MIN_DENOM)
+/* used to be: MAX2(x, PRECOND_MIN_DENOM) but now zero k-point is
+   handled specially */
+#define FIX_DENOM(x) ((x) == 0 ? 1.0 : (x))
 
 void maxwell_simple_precondition(evectmatrix X, void *data, real *eigenvals)
 {
@@ -279,9 +281,27 @@ real *maxwell_zparity(evectmatrix X, maxwell_data *d)
    Also note that, in Fourier space, a constant field corresponds to
    1 in the DC component and 0 elsewhere. */
 
-void maxwell_zero_k_constraint(evectmatrix X, void *data)
+/* return the number of constant (zero-frequency) bands: */
+int maxwell_zero_k_num_const_bands(evectmatrix X, maxwell_data *d)
 {
-     maxwell_data *d = (maxwell_data *) data;
+    int num_const_bands;
+
+    CHECK(d, "null maxwell data pointer!");
+    CHECK(X.c == 2, "fields don't have 2 components!");
+
+    if (d->polarization == NO_POLARIZATION)
+	 num_const_bands = 2;
+    else
+	 num_const_bands = 1;
+    
+    if (num_const_bands > X.p)
+	 num_const_bands = X.p;
+    
+    return num_const_bands;
+}
+
+void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d)
+{
      int i, j, num_const_bands;
 
      CHECK(d, "null maxwell data pointer!");
@@ -290,13 +310,7 @@ void maxwell_zero_k_constraint(evectmatrix X, void *data)
      if (X.p < 1)
 	  return;
 
-     if (d->polarization == NO_POLARIZATION)
-	  num_const_bands = 2;
-     else
-	  num_const_bands = 1;
-
-     if (num_const_bands > X.p)
-	  num_const_bands = X.p;
+     num_const_bands = maxwell_zero_k_num_const_bands(X, d);
 
      /* for num_const_bands, all components except for the DC component
 	are zero. */
@@ -326,11 +340,18 @@ void maxwell_zero_k_constraint(evectmatrix X, void *data)
 	       ASSIGN_SCALAR(X.data[X.p + 1], 1.0, 0.0);
 	  }
      }
+}
 
-     for (j = num_const_bands; j < X.p; ++j) {
+/* during eigensolution (for upper bands), their DC components are
+   constrained to be zero */
+void maxwell_zero_k_constraint(evectmatrix X, void *data)
+{
+     int j;
+     for (j = 0; j < X.p; ++j) {
 	  ASSIGN_ZERO(X.data[j]);
 	  ASSIGN_ZERO(X.data[X.p + j]);
      }
+     (void)data; /* avoid warning about unused parameter */
 }
 
 /**************************************************************************/

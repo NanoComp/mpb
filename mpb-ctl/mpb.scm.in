@@ -61,6 +61,7 @@
 (define-input-var simple-preconditioner? false 'boolean)
 (define-input-var deterministic? false 'boolean)
 (define-input-var eigensolver-flags EIGS_DEFAULT_FLAGS 'integer)
+(define-input-var eigensolver-block-size 0 'integer)
 
 (define-output-var freqs (make-list-type 'number))
 (define-output-var z-parity (make-list-type 'number))
@@ -310,7 +311,8 @@
 		(set! band-range-data 
 		      (update-band-range-data band-range-data freqs k))
 		(set! eigensolver-iters
-		      (append eigensolver-iters (list iterations)))
+		      (append eigensolver-iters
+			      (list (/ iterations num-bands))))
 		(map (lambda (f)
 		       (do ((band 1 (+ band 1))) ((> band num-bands))
 			 (f band)))

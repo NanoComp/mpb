@@ -84,7 +84,7 @@ static void matrix3x3_to_arr(real arr[3][3], matrix3x3 m)
 
 static maxwell_data *mdata = NULL;
 static maxwell_target_data *mtdata = NULL;
-static evectmatrix H, W[NWORK];
+static evectmatrix H, W[NWORK], Hblock;
 
 static scalar_complex *curfield = NULL;
 static int curfield_band;
@@ -282,6 +282,7 @@ void init_params(int p, boolean reset_fields)
      int mesh[3];
      int have_old_fields = 0;
      int tree_depth, tree_nobjects;
+     int block_size;
      
      /* Output a bunch of stuff so that the user can see what we're
 	doing and what we've read in. */
@@ -295,6 +296,13 @@ void init_params(int p, boolean reset_fields)
      nx = grid_size.x;
      ny = grid_size.y;
      nz = grid_size.z;
+
+     if (eigensolver_block_size > 0 && eigensolver_block_size < num_bands) {
+	  block_size = eigensolver_block_size;
+	  printf("Solving for %d bands at a time.\n", block_size);
+     }
+     else
+	  block_size = num_bands;
 
      {
 	  int true_rank = nz > 1 ? 3 : (ny > 1 ? 2 : 1);
@@ -370,12 +378,14 @@ void init_params(int p, boolean reset_fields)
      
      if (mdata) {  /* need to clean up from previous init_params call */
 	  if (nx == mdata->nx && ny == mdata->ny && nz == mdata->nz &&
-	      num_bands == mdata->num_bands)
+	      block_size == Hblock.alloc_p && num_bands == H.p)
 	       have_old_fields = 1; /* don't need to reallocate */
 	  else {
 	       destroy_evectmatrix(H);
 	       for (i = 0; i < NWORK; ++i)
 		    destroy_evectmatrix(W[i]);
+	       if (Hblock.data != H.data)
+		    destroy_evectmatrix(Hblock);
 	  }
 	  destroy_maxwell_target_data(mtdata); mtdata = NULL;
 	  destroy_maxwell_data(mdata); mdata = NULL;
@@ -394,7 +404,7 @@ void init_params(int p, boolean reset_fields)
 
      printf("Creating Maxwell data...\n");
      mdata = create_maxwell_data(nx, ny, nz, &local_N, &N_start, &alloc_N,
-                                 num_bands, NUM_FFT_BANDS);
+                                 block_size, NUM_FFT_BANDS);
      CHECK(mdata, "NULL mdata");
 
      printf("Initializing dielectric function...\n");
@@ -416,8 +426,13 @@ void init_params(int p, boolean reset_fields)
 	  H = create_evectmatrix(nx * ny * nz, 2, num_bands,
 				 local_N, N_start, alloc_N);
 	  for (i = 0; i < NWORK; ++i)
-	       W[i] = create_evectmatrix(nx * ny * nz, 2, num_bands,
+	       W[i] = create_evectmatrix(nx * ny * nz, 2, block_size,
 					 local_N, N_start, alloc_N);
+	  if (block_size < num_bands)
+	       Hblock = create_evectmatrix(nx * ny * nz, 2, block_size,
+					   local_N, N_start, alloc_N);
+	  else
+	       Hblock = H;
      }
 
      set_polarization(p);
@@ -427,16 +442,52 @@ void init_params(int p, boolean reset_fields)
 
 /**************************************************************************/
 
+/* When we are solving for a few bands at a time, we solve for the
+   upper bands by "deflation"--by continually orthogonalizing them
+   against the already-computed lower bands.  (This constraint
+   commutes with the eigen-operator, of course, so all is well.) */
+
+typedef struct {
+     evectmatrix Y;  /* the vectors to orthogonalize against; Y must
+			itself be normalized (Yt Y = 1) */
+     int p;  /* the number of columns of Y to orthogonalize against */
+     scalar *S;  /* a matrix for storing the dot products; should have
+		    at least p * X.p elements (see below for X) */
+} deflation_data;
+
+static void deflation_constraint(evectmatrix X, void *data)
+{
+     deflation_data *d = (deflation_data *) data;
+
+     CHECK(X.n == d->Y.n && d->Y.p >= d->p, "invalid dimensions");
+
+     /* (Sigh...call the BLAS functions directly since we are not
+	using all the columns of Y...evectmatrix is not set up for
+	this case.) */
+
+     /* compute S = Xt Y (i.e. all the dot products): */
+     blasglue_gemm('C', 'N', X.p, d->p, X.n,
+		   1.0, X.data, X.p, d->Y.data, d->Y.p, 0.0, d->S, d->p);
+     MPI_Allreduce(d->S, d->S, d->p * X.p * SCALAR_NUMVALS,
+		   SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+
+     /* compute X = X - Y*St = (1 - Y Yt) X */
+     blasglue_gemm('N', 'C', X.n, X.p, d->p,
+		   -1.0, d->Y.data, d->Y.p, d->S, d->p,
+		   1.0, X.data, X.p);
+}
+
+/**************************************************************************/
+
 /* Solve for the bands at a given k point.
    Must only be called after init_params! */
 void solve_kpoint(vector3 kvector)
 {
-     static int prev_was_Gamma = 0; /* if previous k point was Gamma */
-     int i, num_iters;
+     int i, total_iters = 0, ib, ib0;
      real *eigvals;
      real k[3];
      int flags;
-     evectconstraint_chain *constraints = NULL;
+     deflation_data deflation;
 
      printf("solve_kpoint (%g,%g,%g):\n",
 	    kvector.x, kvector.y, kvector.z);
@@ -471,89 +522,144 @@ void solve_kpoint(vector3 kvector)
 
      CHK_MALLOC(eigvals, real, num_bands);
 
-     printf("Solving for bands...\n");
-
      flags = eigensolver_flags; /* ctl file input variable */
      if (verbose)
 	  flags |= EIGS_VERBOSE;
 
-     constraints = evect_add_constraint(constraints,
-					maxwell_constraint,
-					(void *) mdata);
-
-     if (mtdata) {  /* solving for bands near a target frequency */
-	  eigensolver(H, eigvals,
-		      maxwell_target_operator, (void *) mtdata,
-		      simple_preconditionerp ? 
-		      maxwell_target_preconditioner :
-		      maxwell_target_preconditioner2,
-		      (void *) mtdata,
-		      evectconstraint_chain_func, (void *) constraints,
-		      W, NWORK, tolerance, &num_iters, flags);
-	  /* now, diagonalize the real Maxwell operator in the
-	     solution subspace to get the true eigenvalues and
-	     eigenvectors: */
-	  CHECK(NWORK >= 2, "not enough workspace");
-	  eigensolver_get_eigenvals(H, eigvals, maxwell_operator, mdata,
-                                    W[0], W[1]);
+     /* constant (zero frequency) bands at k=0 are handled specially,
+        so remove them from the solutions for the eigensolver: */
+     if (mdata->zero_k && !mtdata) {
+	  int in, ip;
+	  ib0 = maxwell_zero_k_num_const_bands(H, mdata);
+	  for (in = 0; in < H.n; ++in)
+	       for (ip = 0; ip < H.p - ib0; ++ip)
+		    H.data[in * H.p + ip] = H.data[in * H.p + ip + ib0];
+	  evectmatrix_resize(&H, H.p - ib0, 1);
      }
-     else {
-	  real kmag = sqrt(mdata->current_k[0] * mdata->current_k[0] +
-			   mdata->current_k[1] * mdata->current_k[1] +
-			   mdata->current_k[2] * mdata->current_k[2]);
-	  if (kmag <= 1.1e-5 || kmag < tolerance) {
-	       /* hack: for some reason I don't comprehend, it is
-		  necessary to re-randomize the fields before doing a
-		  zero-k point in order to get good convergence, at
-		  least with the new "analytic" linmin in
-		  eigensolver.c.  Hey, it works, and it can't do any
-		  harm.  (Update for MPB 0.9.1: the same problem
-	          goes in the other direction--after the Gamma point,
-	          subsequent k-points are screwed up and don't converge
-	          properly, so we need to rerandomize after Gamma too
-	          (see below).  This occurs e.g. in a sq. lattice of rods.)
-	          Is this necessary any more with the new exact linmin? */
-	       if (kpoint_index)
-		    randomize_fields();
+     else
+	  ib0 = 0; /* solve for all bands */
 
-	       /* We have always had bad convergence for k ~ 0; there's
-		  probably some ill-conditioning thing going on since
-		  the lowest eigenvalues are ~ 0.  Anyway, the fix seems
-		  to put the correct lowest eigenvectors (constant fields)
-		  in "manually" as our starting guess. */
-	       if (verbose)
-		    printf("detected zero k; using special initial fields\n");
-	       maxwell_zero_k_constraint(H, (void *) mdata);
+     /* Set up deflation data: */
+     if (H.data != Hblock.data) {
+	  deflation.Y = H;
+	  deflation.p = 0;
+	  CHK_MALLOC(deflation.S, scalar, H.p * Hblock.p);
+     }
 
-	       prev_was_Gamma = 1;
+     for (ib = ib0; ib < num_bands; ib += Hblock.alloc_p) {
+	  evectconstraint_chain *constraints;
+	  int num_iters;
+
+	  /* don't solve for too many bands if the block size doesn't divide
+	     the number of bands: */
+	  if (ib + mdata->num_bands > num_bands) {
+	       maxwell_set_num_bands(mdata, num_bands - ib);
+	       for (i = 0; i < NWORK; ++i)
+		    evectmatrix_resize(&W[i], num_bands - ib, 0);
+	       evectmatrix_resize(&Hblock, num_bands - ib, 0);
+	  }
+
+	  printf("Solving for bands %d to %d...\n", ib + 1, ib + Hblock.p);
+
+	  constraints = NULL;
+	  constraints = evect_add_constraint(constraints,
+					     maxwell_constraint,
+					     (void *) mdata);
+
+	  if (mdata->zero_k)
+	       constraints = evect_add_constraint(constraints,
+						  maxwell_zero_k_constraint,
+						  (void *) mdata);
+
+	  if (Hblock.data != H.data) {  /* initialize fields of block from H */
+	       int in, ip;
+	       for (in = 0; in < Hblock.n; ++in)
+		    for (ip = 0; ip < Hblock.p; ++ip)
+			 Hblock.data[in * Hblock.p + ip] =
+			      H.data[in * H.p + ip + (ib-ib0)];
+	       deflation.p = ib-ib0;
+	       if (deflation.p > 0)
+		    constraints = evect_add_constraint(constraints,
+						       deflation_constraint,
+						       &deflation);
+	  }
+
+	  if (mtdata) {  /* solving for bands near a target frequency */
+	       eigensolver(Hblock, eigvals + ib,
+			   maxwell_target_operator, (void *) mtdata,
+			   simple_preconditionerp ? 
+			   maxwell_target_preconditioner :
+			   maxwell_target_preconditioner2,
+			   (void *) mtdata,
+			   evectconstraint_chain_func, (void *) constraints,
+			   W, NWORK, tolerance, &num_iters, flags);
+	       /* now, diagonalize the real Maxwell operator in the
+		  solution subspace to get the true eigenvalues and
+		  eigenvectors: */
+	       CHECK(NWORK >= 2, "not enough workspace");
+	       eigensolver_get_eigenvals(Hblock, eigvals + ib,
+					 maxwell_operator,mdata, W[0],W[1]);
 	  }
 	  else {
-	       /* hack: see above */
-	       if (prev_was_Gamma)
-		    randomize_fields();
-	       prev_was_Gamma = 0;
+	       eigensolver(Hblock, eigvals + ib,
+			   maxwell_operator, (void *) mdata,
+			   simple_preconditionerp ?
+			   maxwell_preconditioner :
+			   maxwell_preconditioner2,
+			   (void *) mdata,
+			   evectconstraint_chain_func, (void *) constraints,
+			   W, NWORK, tolerance, &num_iters, flags);
 	  }
-	  eigensolver(H, eigvals,
-		      maxwell_operator, (void *) mdata,
-		      simple_preconditionerp ?
-		      maxwell_preconditioner :
-		      maxwell_preconditioner2,
-		      (void *) mdata,
-		      evectconstraint_chain_func, (void *) constraints,
-		      W, NWORK, tolerance, &num_iters, flags);
+	  
+	  if (Hblock.data != H.data) {  /* save solutions of current block */
+	       int in, ip;
+	       for (in = 0; in < Hblock.n; ++in)
+		    for (ip = 0; ip < Hblock.p; ++ip)
+			 H.data[in * H.p + ip + (ib-ib0)] =
+			      Hblock.data[in * Hblock.p + ip];
+	  }
+
+	  evect_destroy_constraints(constraints);
+	  
+	  printf("Finished solving for bands %d to %d after %d iterations.\n",
+		 ib + 1, ib + Hblock.p, num_iters);
+	  total_iters += num_iters * Hblock.p;
      }
 
-     evect_destroy_constraints(constraints);
+     if (num_bands - ib0 > Hblock.alloc_p)
+	  printf("Finished k-point with %g mean iterations per band.\n",
+		 total_iters * 1.0 / num_bands);
 
-     printf("Finished solving for bands after %d iterations.\n", num_iters);
-     
+     /* Manually put in constant (zero-frequency) solutions for k=0: */
+     if (mdata->zero_k && !mtdata) {
+	  int in, ip;
+	  evectmatrix_resize(&H, H.alloc_p, 1);
+	  for (in = 0; in < H.n; ++in)
+	       for (ip = H.p - ib0 - 1; ip >= 0; --ip)
+		    H.data[in * H.p + ip + ib0] = H.data[in * H.p + ip];
+	  maxwell_zero_k_set_const_bands(H, mdata);
+	  for (ib = 0; ib < ib0; ++ib)
+	       eigvals[ib] = 0;
+     }
+
+     /* Reset scratch matrix sizes: */
+     evectmatrix_resize(&Hblock, Hblock.alloc_p, 0);
+     for (i = 0; i < NWORK; ++i)
+	  evectmatrix_resize(&W[i], W[i].alloc_p, 0);
+     maxwell_set_num_bands(mdata, Hblock.alloc_p);
+
+     /* Destroy deflation data: */
+     if (H.data != Hblock.data) {
+	  free(deflation.S);
+     }
+
      if (num_write_output_vars > 1) {
 	  /* clean up from prev. call */
 	  free(freqs.items);
 	  free(z_parity.items);
      }
 
-     iterations = num_iters; /* iterations output variable */
+     iterations = total_iters; /* iterations output variable */
 
      /* create freqs array for storing frequencies in a Guile list */
      freqs.num_items = num_bands;
@@ -651,9 +757,8 @@ void get_dfield(int which_band)
 	  fprintf(stderr, "solve-kpoint must be called before get-dfield!\n");
 	  return;
      }
-     if (which_band < 1 || which_band > mdata->num_bands) {
-	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",
-		  mdata->num_bands);
+     if (which_band < 1 || which_band > H.p) {
+	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",H.p);
 	  return;
      }
 
@@ -673,9 +778,8 @@ void get_hfield(int which_band)
 	  fprintf(stderr, "solve-kpoint must be called before get-hfield!\n");
 	  return;
      }
-     if (which_band < 1 || which_band > mdata->num_bands) {
-	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",
-		  mdata->num_bands);
+     if (which_band < 1 || which_band > H.p) {
+	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",H.p);
 	  return;
      }
 
@@ -811,7 +915,7 @@ number compute_field_energy(void)
      MPI_Allreduce(comp_sum, comp_sum, 6, SCALAR_MPI_TYPE,
                    MPI_SUM, MPI_COMM_WORLD);
 
-     normalization = 1.0 / energy_sum;
+     normalization = 1.0 / (energy_sum == 0 ? 1 : energy_sum);
      for (i = 0; i < N; ++i)
 	  energy_density[i] *= normalization;
 

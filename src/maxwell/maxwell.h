@@ -76,7 +76,7 @@ typedef struct {
 
      int fft_output_size;
 
-     int num_fft_bands;
+     int max_fft_bands, num_fft_bands;
 
      real current_k[3];  /* (in cartesian basis) */
      polarization_t polarization;
@@ -95,6 +95,7 @@ typedef struct {
 
      scalar *fft_data;
      
+     int zero_k;  /* non-zero if k is zero (handled specially) */
      k_data *k_plus_G;
      real *k_plus_G_normsqr;
 
@@ -108,6 +109,8 @@ extern maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 					 int num_bands,
 					 int num_fft_bands);
 extern void destroy_maxwell_data(maxwell_data *d);
+
+extern void maxwell_set_num_bands(maxwell_data *d, int num_bands);
 
 extern void update_maxwell_data_k(maxwell_data *d, real k[3],
 				  real G1[3], real G2[3], real G3[3]);
@@ -162,6 +165,9 @@ extern void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
 
 extern void maxwell_constraint(evectmatrix X, void *data);
 extern void maxwell_zparity_constraint(evectmatrix X, void *data);
+
+extern int maxwell_zero_k_num_const_bands(evectmatrix X, maxwell_data *d);
+extern void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d);
 extern void maxwell_zero_k_constraint(evectmatrix X, void *data);
 
 extern real *maxwell_zparity(evectmatrix X, maxwell_data *d);

@@ -12,8 +12,8 @@
 	 (center (vector3 0)) (axis (vector3 1)) 
 	 (radius infinity) (height 0.25))))
 
-(define X (vector3 0.5 0 0))
-(set! k-points (list X))
+(define-param kx 0.5)
+(set! k-points (list (vector3 kx 0 0)))
 
 (set! grid-size (vector3 nx 1 1))
 (set! num-bands 8)

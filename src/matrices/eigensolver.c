@@ -420,6 +420,16 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  d_scale = 1.0;
 
+	  /* In principle, it should not be necessary to apply the
+	     constraints here to D as well as to Y below, since they
+	     (putatively) commute with the operator.  However, due
+	     to numerical errors, this "redundant" constraint makes
+	     a big difference in convergence, especially if the constraints
+	     include a deflation constraint (e.g. when we are only solving
+	     for a few bands at a time). */
+	  if (constraint)
+               constraint(D, constraint_data);
+
 	  /* Minimize the trace along Y + lamba*D: */
 
 	  if (!use_linmin) {
