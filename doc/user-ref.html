@@ -446,7 +446,19 @@ equivalent to <code>(run ...)</code>, <code>(run-polarization TM true
 for your convenience, and are described in the <b>Band output
 functions</b> section, below.  You can also define your own band
 functions, and for this purpose the functions described in the section
-<b>Field manipulation functions</b>, below, are useful.
+<b>Field manipulation functions</b>, below, are useful.  A band
+function takes the form:
+
+<pre>
+(define (<i>my-band-func</i> which-band)
+  <i>...do stuff here with band index which-band...</i>
+)
+</pre>
+
+<p>Note that the output variable <code>freqs</code> may be used to
+retrieve the frequency of the band (see above).  Also, a global
+variable <code>current-k</code> is defined holding the current k-point
+vector from the <code>k-points</code> list.
 
 <p>There are also some even lower-level functions that you can call,
 although you should not need to do most of the time:
@@ -484,7 +496,7 @@ previous calculation.
 <p>All of these are functions that, given a band index, output the
 corresponding field or some function thereof (in the primitive cell of
 the lattice).  They are designed to be passed as band functions to the
-<code>run</code> routines.
+<code>run</code> routines, although they can also be called directly.
 
 <dl>
 

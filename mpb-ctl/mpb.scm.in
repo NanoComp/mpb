@@ -172,6 +172,8 @@
 
 ; ****************************************************************
 
+(define current-k (vector3 0)) ; current k point in the run function
+
 ; (run) functions, to do vanilla calculations.  They all take zero or
 ; more "band functions."  Each function should take a single
 ; parameter, the band index, and is called for each band index at
@@ -184,6 +186,7 @@
    (init-params p reset-fields)
    (output-epsilon)          ; output epsilon immediately
    (map (lambda (k)
+	  (set! current-k k)
 	  (begin-time "elapsed time for k point: " (solve-kpoint k))
 	  (set! band-range-data (update-band-range-data band-range-data freqs))
 	  (map (lambda (f)
