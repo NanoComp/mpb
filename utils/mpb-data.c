@@ -229,7 +229,7 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      int in_dims[3] = {1,1,1}, out_dims[3] = {1,1,1}, rank = 3, i, N;
      int start[3] = {0,0,0};
      hid_t data_id;
-     char out_name[1000], out_name2[1000];
+     char out_name[1000];
 
      d_in_re = matrixio_read_real_data(in_file, name_re, &rank, in_dims,
 				       0, 0, 0, NULL);
@@ -291,18 +291,9 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      strcpy(out_name, name_re);
      if (out_file == in_file)
 	  strcat(out_name, "-new");
-     for (i = 1; i < 10000; ++i) {
-	  if (i > 1)
-	       sprintf(out_name2, "%s%d", out_name, i);
-	  else
-	       strcpy(out_name2, out_name);
-	  if (!matrixio_dataset_exists(out_file, out_name2))
-	       break;
-     }
-     CHECK(i < 10000, "crazy number of datasets in output file");
      if (verbose)
-	  printf("Writing dataset to %s...\n", out_name2);
-     data_id = matrixio_create_dataset(out_file, out_name2,"", rank, out_dims);
+	  printf("Writing dataset to %s...\n", out_name);
+     data_id = matrixio_create_dataset(out_file, out_name,"", rank, out_dims);
      matrixio_write_real_data(data_id, out_dims, start, 1, d_out_re);
      matrixio_close_dataset(data_id);
 
@@ -310,13 +301,9 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
 	  strcpy(out_name, name_im);
 	  if (out_file == in_file)
 	       strcat(out_name, "-new");
-	  if (i > 1)
-               sprintf(out_name2, "%s%d", out_name, i);
-          else
-               strcpy(out_name2, out_name);
 	  if (verbose)
-	       printf("Writing dataset to %s...\n", out_name2);
-	  data_id = matrixio_create_dataset(out_file, out_name2, "",
+	       printf("Writing dataset to %s...\n", out_name);
+	  data_id = matrixio_create_dataset(out_file, out_name, "",
 					    rank, out_dims);
 	  matrixio_write_real_data(data_id, out_dims, start, 1, d_out_im);
 	  matrixio_close_dataset(data_id);

@@ -413,6 +413,16 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
      int i;
      hid_t space_id, type_id, data_id;
      hsize_t *dims_copy;
+	  
+     /* delete pre-existing datasets, or we'll have an error; I think
+        we can only do this on the master process. (?) */
+     if (matrixio_dataset_exists(id, name)) {
+	  if (mpi_is_master()) {
+	       matrixio_dataset_delete(id, name);
+	       H5Fflush(id, H5F_SCOPE_GLOBAL);
+	  }
+	  MPI_Barrier(MPI_COMM_WORLD);
+     }
 
      CHECK(rank > 0, "non-positive rank");
 
@@ -430,6 +440,8 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
      type_id = H5T_NATIVE_DOUBLE;
 #endif
      
+     /* Create the dataset.  Note that, on parallel machines, H5Dcreate
+	should do the right thing; it is supposedly a collective operation. */
      data_id = H5Dcreate(id, name, type_id, space_id, H5P_DEFAULT);
 
      H5Sclose(space_id);  /* the dataset should have its own copy now */
@@ -459,6 +471,13 @@ int matrixio_dataset_exists(matrixio_id id, const char *name)
      return (data_id >= 0);
 #else
      return 0;
+#endif
+}
+
+void matrixio_dataset_delete(matrixio_id id, const char *name)
+{
+#if defined(HAVE_HDF5)
+     H5Gunlink(id, name);
 #endif
 }
 
