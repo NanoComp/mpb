@@ -12,11 +12,6 @@ if test "$ok" = "yes"; then
         AC_DEFINE(SCALAR_COMPLEX)
 fi
 
-# Use native cc if present
-AC_MSG_CHECKING([for vendor's cc to be used instead of gcc])
-AC_MSG_RESULT()
-AC_CHECK_PROG(CC, cc, cc)
-
 # Use native f77 if present
 AC_MSG_CHECKING([for vendor's f77 to be used instead of g77])
 AC_MSG_RESULT()
