@@ -164,8 +164,8 @@ void maxwell_zparity_constraint(evectmatrix X, void *data)
 	  nz = 1;
      }
 
-     for (i = 0; i < nxy; ++i)
-	  for (j = 0; 2*j < nz; ++j) {
+     for (i = 0; i < nxy; ++i) {
+	  for (j = 0; 2*j <= nz; ++j) {
 	       int ij = i * nz + j; 
 	       int ij2 = i * nz + (j > 0 ? nz - j : 0);
 	       for (b = 0; b < X.p; ++b) {
@@ -188,6 +188,7 @@ void maxwell_zparity_constraint(evectmatrix X, void *data)
 				  0.5*(SCALAR_IM(v2) - zparity*SCALAR_IM(v)));
 	       }
 	  }
+     }
 }
 
 /* Compute the parity of all of the states in X, returning an array
@@ -218,7 +219,7 @@ real *maxwell_zparity(evectmatrix X, maxwell_data *d)
      }
 
      for (i = 0; i < nxy; ++i)
-	  for (j = 0; 2*j < nz; ++j) {
+	  for (j = 0; 2*j <= nz; ++j) {
 	       int ij = i * nz + j; 
 	       int ij2 = i * nz + (j > 0 ? nz - j : 0);
 	       for (b = 0; b < X.p; ++b) {
