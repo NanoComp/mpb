@@ -468,6 +468,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 #  endif
 		    
 		    if (last_index != 0 && 2*last_index != last_dim) {
+			 arg_list = SCM_EOL;
 			 for (ifield = fields.num_items - 1; 
 			      ifield >= 0; --ifield) {
 			      SCM item;
