@@ -623,6 +623,65 @@
   (fix-field-phase))
 
 ; ****************************************************************
+; Here, we solve the inverse problem, that of solving for the
+; wavevectors for a set of bands at a given frequency.  To do
+; this, we use the fact that we can compute the group velocities
+; cheaply, and thus can employ find-root-deriv (Newton's method).
+; Moreover, we save information gathered while finding the k's of
+; higher bands to speed the computation for lower bands.
+
+(define (find-k p omega band-min band-max kdir
+		tol kmag-guess kmag-min kmag-max)
+  (let ((num-bands-save num-bands) (k-points-save k-points)
+	(nb (- band-max band-min -1)) 
+	(kdir1 (unit-vector3 kdir))
+	; k0s is an array caching the best k value found for each band:
+	(k0s (if (list? kmag-guess) (list->vector kmag-guess)
+		 (make-vector (- band-max band-min -1) kmag-guess)))
+	; bktab is a table (assoc. list) to memoize all (band . k) results:
+	(bktab '()))
+    (define ((rootfun b) k)
+      (let ((tab-val (assoc (cons b k) bktab))) ; first, look in cached table
+	(if tab-val 
+	    (begin ; use cached result if available
+	      (print "find-k " b " at " k ": " (cadr tab-val) " (cached)\n")
+	      (cdr tab-val))
+	    (begin ; otherwise, compute bands and cache results
+	      (set! num-bands b)
+	      (set! k-points (list (vector3-scale k kdir1)))
+	      (run-parity p false)
+	      (let ((v (compute-group-velocity-component kdir1)))
+		; cache computed values:
+		(map (lambda (b f v)
+		       (let ((tabval (assoc 
+				      (cons b (vector-ref k0s (- b band-min)))
+				      bktab)))
+			 (if (or (not tabval)
+				 (< (abs (- f omega)) (abs (cadr tabval))))
+			     (vector-set! k0s (- b band-min) k))) ; cache k0
+		       (set! bktab (cons (cons (cons b k) (cons (- f omega) v))
+					 bktab)))
+		     (arith-sequence band-min 1 (- b band-min -1)) freqs v)
+		; finally return (frequency - omega . derivative):
+		(let ((fun (- (car (reverse freqs)) omega)))
+		  (print "find-k " b " at " k ": " fun "\n")
+		  (cons fun (car (reverse v)))))))))
+    (randomize-fields) ; don't let previous computations interfere
+    (let ((ks 
+	   (map
+	    (lambda (b)
+	      (find-root-deriv (rootfun b) tol kmag-min kmag-max
+			       (vector-ref k0s (- b band-min))))
+	    (arith-sequence band-max -1 nb))))
+      (set! num-bands num-bands-save)
+      (set! k-points k-points-save)
+      (print parity "kvals:, " omega ", " band-min ", " band-max)
+      (vector-map (lambda (k) (print ", " k)) kdir)
+      (map (lambda (k) (print ", " k)) ks) 
+      (print "\n")
+      ks)))
+
+; ****************************************************************
 
 (define (sqmatrix-diag m)
   (map (lambda (i) (sqmatrix-ref m i i))
