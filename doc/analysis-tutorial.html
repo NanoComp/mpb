@@ -207,18 +207,19 @@ files (named <code>e.k11.b*.z.tm.h5</code>), and then run
 
 <pre>
 unix% mpb-data -r -m 3 -n 32 e.k11.b*.z.tm.h5
-unix% h5topng -C epsilon.h5:data-new -c -Z -d z.r-new e.k11.b*.z.tm.h5
+unix% h5topng -C epsilon.h5:data-new -c bluered -Z -d z.r-new e.k11.b*.z.tm.h5
 </pre>
 
 <p>Here, we've used the <code>-C</code> option to superimpose (crude)
-black contours of the dielectric function over the fields,
-<code>-c</code> to use a blue-white-red color table, <code>-Z</code>
-to center the color scale at zero (white), and <code>-d</code> to
-specify the dataset name for all of the files at once.  <code>man
+black contours of the dielectric function over the fields, <code>-c
+bluered</code> to use a blue-white-red color table, <code>-Z</code> to
+center the color scale at zero (white), and <code>-d</code> to specify
+the dataset name for all of the files at once.  <code>man
 h5topng</code> for more information.  (There are plenty of
 data-visualization programs available if you want more sophisticated
 plotting capabilities than what <code>h5topng</code> offers, of
-course.)
+course; you can use <code>h5totxt</code> to convert the data to a
+format suitable for import into e.g. spreadsheets.)
 
 <p>Note that the dataset name is <code>z.r-new</code>, which is the
 real part of the z component of the output of <code>mpb-data</code>.
