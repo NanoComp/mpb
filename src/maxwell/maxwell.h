@@ -186,4 +186,7 @@ extern void maxwell_target_preconditioner2(evectmatrix Xin, evectmatrix Xout,
 					   evectmatrix Y, real *eigenvals,
 					   sqmatrix YtY);
 
+extern void spherical_quadrature_points(real *x, real *y, real *z,
+					real *weight, int num_sq_pts);
+
 #endif /* MAXWELL_H */

@@ -59,12 +59,154 @@ extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
      }
 }
 
+#define SHIFT3(x,y,z) {real SHIFT3_dummy = z; z = y; y = x; x = SHIFT3_dummy;}
+
+/* Compute quadrature points and weights for integrating on the
+   unit sphere.  x, y, z, and weight should be arrays of num_sq_pts
+   values to hold the coordinates and weights of the quadrature points
+   on output.   Currently, num_sq_pts = 12, 50, and 72 are supported. */
+void spherical_quadrature_points(real *x, real *y, real *z,
+				 real *weight, int num_sq_pts)
+{
+     int i,j,k,l, n = 0;
+     real x0, y0, z0, w;
+
+     if (num_sq_pts == 50) {
+	  /* Computes quadrature points and weights for 50-point 11th degree
+	     integration formula on a unit sphere.  This particular quadrature
+	     formula has the advantage, for our purposes, of preserving the
+	     symmetry group of an octahedraon (i.e. simple cubic symmetry, with
+	     respect to the Cartesian xyz axes).  References:
+	
+	     A. D. McLaren, "Optimal Numerical Integration on a Sphere,"
+	     Math. Comp. 17, pp. 361-383 (1963).
+	     
+	     Also in: Arthur H. Stroud, "Approximate Calculation of Multiple
+	     Integrals" (Prentice Hall, 1971) (formula number U3:11-1). 
+
+	     This code was written with the help of example code by
+	     John Burkardt (http://www.psc.edu/~burkardt/stroud.html). */
+     
+	  x0 = 1; y0 = z0 = 0;
+	  w = 9216 / 725760.0;
+	  for (i = 0; i < 2; ++i) {
+	       x0 = -x0;
+	       for (j = 0; j < 3; ++j) {
+		    SHIFT3(x0,y0,z0);
+		    x[n] = x0; y[n] = y0; z[n] = z0; weight[n++] = w;
+	       }
+	  }
+	  
+	  x0 = y0 = sqrt(0.5); z0 = 0;
+	  w = 16384 / 725760.0;
+	  for (i = 0; i < 2; ++i) {
+	       x0 = -x0;
+	       for (j = 0; j < 2; ++j) {
+		    y0 = -y0;
+		    for (k = 0; k < 3; ++k) {
+			 SHIFT3(x0,y0,z0);
+			 x[n] = x0; y[n] = y0; z[n] = z0; weight[n++] = w;
+		    }
+	       }
+	  }
+	  
+	  x0 = y0 = z0 = sqrt(1.0 / 3.0);
+	  w = 15309 / 725760.0;
+	  for (i = 0; i < 2; ++i) {
+	       x0 = -x0;
+	       for (j = 0; j < 2; ++j) {
+		    y0 = -y0;
+		    for (k = 0; k < 2; ++k) {
+			 z0 = -z0;
+			 x[n] = x0; y[n] = y0; z[n] = z0; weight[n++] = w;
+		    }
+	       }
+	  }
+	  
+	  x0 = y0 = sqrt(1.0 / 11.0); z0 = 3 * x0;
+	  w = 14641 / 725760.0;
+	  for (i = 0; i < 2; ++i) {
+	       x0 = -x0;
+	       for (j = 0; j < 2; ++j) {
+		    y0 = -y0;
+		    for (k = 0; k < 2; ++k) {
+			 z0 = -z0;
+			 for (l = 0; l < 3; ++l) {
+			      SHIFT3(x0,y0,z0);
+			      x[n] = x0; y[n] = y0; z[n] = z0; weight[n++] = w;
+			 }
+		    }
+	       }
+	  }
+     }  
+     else if (num_sq_pts == 72 || num_sq_pts == 12) {
+	  /* As above (same references), but with a 72-point 14th degree
+	     formula, this time with the symmetry group of an icosohedron.
+	     (Stroud formula number U3:14-1.)  Alternatively, just use
+	     the 12-point 5th degree formula consisting of the vertices
+	     of a regular icosohedron. */
+	  
+	  /* first, the vertices of an icosohedron: */
+	  x0 = sqrt(0.5 - sqrt(0.05));
+	  y0 = sqrt(0.5 + sqrt(0.05));
+	  z0 = 0;
+	  if (num_sq_pts == 72)
+	       w = 125 / 10080.0;
+	  else
+	       w = 1 / 12.0;
+	  for (i = 0; i < 2; ++i) {
+	       x0 = -x0;
+	       for (j = 0; j < 2; ++j) {
+		    y0 = -y0;
+		    for (k = 0; k < 3; ++k) {
+			 SHIFT3(x0,y0,z0);
+			 x[n] = x0; y[n] = y0; z[n] = z0; weight[n++] = w;
+		    }
+	       }
+	  }
+	  
+	  if (num_sq_pts == 72) {
+	       /* it would be nice, for completeness, to have more
+                  digits here: */
+	       real coords[3][5] = {
+		    { -0.151108275, 0.315838353, 0.346307112, -0.101808787, -0.409228403 },
+		    { 0.155240600, 0.257049387, 0.666277790,  0.817386065, 0.501547712 },
+		    { 0.976251323, 0.913330032, 0.660412970,  0.567022920, 0.762221757 }
+	       };
+	       
+	       w = 143 / 10080.0;
+	       for (l = 0; l < 5; ++l) {
+		    x0 = coords[0][l]; y0 = coords[1][l]; z0 = coords[2][l];
+		    for (i = 0; i < 3; ++i) {
+			 double dummy = x0;
+			 x0 = z0;
+			 z0 = -y0;
+			 y0 = -dummy;
+			 for (j = 0; j < 3; ++j) {
+			      SHIFT3(x0,y0,z0);
+			      x[n] = x0; y[n] = y0; z[n] = z0; weight[n++] = w;
+			 }
+			 y0 = -y0;
+			 z0 = -z0;
+			 x[n] = x0; y[n] = y0; z[n] = z0; weight[n++] = w;
+		    }
+	       }
+	  }
+     }
+     else
+	  mpi_die("spherical_quadrature_points: passed unknown # points!");
+
+     CHECK(n == num_sq_pts,
+	   "bug in spherical_quadrature_points: wrong number of points!");
+}
+
 #define K_PI 3.141592653589793238462643383279502884197
 #define SMALL 1.0e-6
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
 
-#define MAX_MOMENT_MESH 12 /* max # of moment-mesh vectors */
+#define NUM_SQ_PTS 50  /* number of spherical quadrature points to use */
+#define MAX_MOMENT_MESH NUM_SQ_PTS /* max # of moment-mesh vectors */
 #define MOMENT_MESH_R 0.5
 
 /* A function to set up the mesh given the grid dimensions, mesh size,
@@ -76,20 +218,24 @@ extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
                 mesh is the point (1,1,1). 
    mesh_prod: the product of the mesh sizes.
    moment_mesh: an array of size_moment_mesh vectors, in lattice
-                coordinates, of a spherically-symmetric mesh of
+                coordinates, of a "spherically-symmetric" mesh of
                 points centered on the origin, designed to be
 		used for averaging the first moment of epsilon at 
-		a grid point (for finding the local surface normal). */
+		a grid point (for finding the local surface normal).
+   moment_mesh_weights: an array of size_moment_mesh weights to multiply
+                        the integrand values by.  */
 static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 		     real R[3][3], real G[3][3],
 		     real mesh_center[3], int *mesh_prod,
 		     real moment_mesh[MAX_MOMENT_MESH][3],
+		     real moment_mesh_weights[MAX_MOMENT_MESH],
 		     int *size_moment_mesh)
 {
      int i,j;
      real min_diam = 1e20;
      real mesh_total[3] = { 0, 0, 0 };
      int rank = nz > 1 ? 3 : (ny > 1 ? 2 : 1);
+     real weight_sum = 0.0;
 	  
      *mesh_prod = 1;
      for (i = 0; i < 3; ++i) {
@@ -112,37 +258,37 @@ static void get_mesh(int nx, int ny, int nz, const int mesh_size[3],
 	  moment_mesh[1][0] = MOMENT_MESH_R;
 	  moment_mesh[1][1] = 0.0;
 	  moment_mesh[1][2] = 0.0;
+	  moment_mesh_weights[0] = moment_mesh_weights[1] = 0.5;
      }
      else if (rank == 2) {
 	  /* two-dimensional: 12 points at 30-degree intervals: */
 	  *size_moment_mesh = 12;
 	  for (i = 0; i < *size_moment_mesh; ++i) {
-	       moment_mesh[i][0] = cos(i * K_PI / 6.0) * MOMENT_MESH_R;
-	       moment_mesh[i][1] = sin(i * K_PI / 6.0) * MOMENT_MESH_R;
+	       moment_mesh[i][0] =
+		    cos(2*i * K_PI / *size_moment_mesh) * MOMENT_MESH_R;
+	       moment_mesh[i][1] =
+		    sin(2*i * K_PI / *size_moment_mesh) * MOMENT_MESH_R;
 	       moment_mesh[i][2] = 0.0;
+	       moment_mesh_weights[i] = 1.0 / *size_moment_mesh;
 	  }
      }
      else {
-	  /* three-dimensional: use the vertices of an icosahedron,
-	     which are at angles of acos(1/sqrt(5)) from each other
-	     (roughly 63 degrees).  The vertices are at points (0, +/-
-	     g, +/- 1), and cyclic shifts thereof, where g is the
-	     golden ratio, scaled by 0.5/sqrt(2-g) onto the
-	     unit-diameter sphere (see also the
-	     comp.graphics.algorithms FAQ). */
-	  real golden = (sqrt(5.0) - 1.0) * 0.5;  /* the golden ratio */
-	  *size_moment_mesh = 12;
+	  real x[NUM_SQ_PTS], y[NUM_SQ_PTS], z[NUM_SQ_PTS];
+
+	  *size_moment_mesh = NUM_SQ_PTS;
+	  spherical_quadrature_points(x,y,z, moment_mesh_weights, NUM_SQ_PTS);
 	  for (i = 0; i < *size_moment_mesh; ++i) {
-	       int shift = i / 4;
-	       moment_mesh[i][(shift + 0) % 3] = 0.0;
-	       moment_mesh[i][(shift + 1) % 3] = MOMENT_MESH_R *
-		    golden * (1 - 2 * (i & 1)) / sqrt(2 - golden);
-	       moment_mesh[i][(shift + 2) % 3] = MOMENT_MESH_R *
-		    1.0 * (1 - (i & 2)) / sqrt(2 - golden);
+	       moment_mesh[i][0] = x[i] * MOMENT_MESH_R;
+	       moment_mesh[i][1] = y[i] * MOMENT_MESH_R;
+	       moment_mesh[i][2] = z[i] * MOMENT_MESH_R;
 	  }
      }
 
      CHECK(*size_moment_mesh <= MAX_MOMENT_MESH, "yikes, moment mesh too big");
+
+     for (i = 0; i < *size_moment_mesh; ++i)
+	  weight_sum += moment_mesh_weights[i];
+     CHECK(fabs(weight_sum - 1.0) < SMALL, "bug, incorrect moment weights");
 
      /* scale the moment-mesh vectors so that the sphere has a
 	diameter of 2*MOMENT_MESH_R times the diameter of the
@@ -213,6 +359,7 @@ void set_maxwell_dielectric(maxwell_data *md,
      real s1, s2, s3, m1, m2, m3;  /* grid/mesh steps */
      real mesh_center[3];
      real moment_mesh[MAX_MOMENT_MESH][3];
+     real moment_mesh_weights[MAX_MOMENT_MESH];
      real eps_inv_total = 0.0;
      int i, j, k;
      int mesh_prod;
@@ -225,15 +372,17 @@ void set_maxwell_dielectric(maxwell_data *md,
 
      nx = md->nx; ny = md->ny; nz = md->nz;
 
-     get_mesh(nx, ny, nz, mesh_size, R, G,
-	      mesh_center, &mesh_prod, moment_mesh, &size_moment_mesh);
+     get_mesh(nx, ny, nz, mesh_size, R, G, 
+	      mesh_center, &mesh_prod, moment_mesh, moment_mesh_weights,
+	      &size_moment_mesh);
      mesh_prod_inv = 1.0 / mesh_prod;
 
 #ifdef DEBUG
-     printf("Using moment mesh:\n");
+     printf("Using moment mesh (%d):\n", size_moment_mesh);
      for (i = 0; i < size_moment_mesh; ++i)
-	  printf("   (%g, %g, %g)\n",
-		 moment_mesh[i][0], moment_mesh[i][1], moment_mesh[i][2]);
+	  printf("   (%g, %g, %g) (%g)\n",
+		 moment_mesh[i][0], moment_mesh[i][1], moment_mesh[i][2],
+		 moment_mesh_weights[i]);
 #endif
 
      s1 = 1.0 / nx;
@@ -376,6 +525,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 		    r[2] = k2 * s3 + moment_mesh[mi][2];
 		    epsilon(&eps, &eps_inv, r, epsilon_data);
 		    eps_trace = eps.m00 + eps.m11 + eps.m22;
+		    eps_trace *= moment_mesh_weights[mi];
 		    moment0 += eps_trace * moment_mesh[mi][0];
 		    moment1 += eps_trace * moment_mesh[mi][1];
 		    moment2 += eps_trace * moment_mesh[mi][2];
