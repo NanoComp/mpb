@@ -1,4 +1,10 @@
-2001-06-26  Steven G. Johnson  <stevenj@superjdj>
+2001-07-04  Steven G. Johnson  <stevenj@ab-initio>
+
+	* mpb-ctl/examples/bragg.ctl: generalized
+
+2001-06-26  Steven G. Johnson  <stevenj@ab-initio>
+
+	* ChangeLog: updated
 
 	* src/maxwell/maxwell_op.c: yikes, fixed bug in H output for cases
 	lacking inversion symmetry
