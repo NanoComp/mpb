@@ -520,6 +520,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 				    (traceXtAXU -
 				     traceUYtAYUXtX * y_norm*y_norm)
 				    * x_norm*x_norm);
+	       if ((flags & EIGS_VERBOSE) && fabs(lambda) > 0.3)
+		    printf("    large lambda = %g\n", lambda);
 	       evectmatrix_aXpbY(cos(lambda)*y_norm, Y,
 				 sin(lambda)*x_norm, X);
 	  }
