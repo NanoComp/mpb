@@ -1,4 +1,4 @@
-MPB 0.12
+MPB 0.12 (7/9/2000)
 
   * Added fix-*field-phase functions to allow a deterministic phase
     in the output fields, thanks to a suggestion by Doug Allan.

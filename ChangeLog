@@ -1,3 +1,37 @@
+2000-07-10  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/check.ctl:
+	Updated frequencies to account for changes due to new 12-point
+	mesh for normal vectors in 2d.  (This really only affects TE
+	states.)  We really need to do a more sophisticated quadrature in
+	3d, too; good algorithms are apparently available.
+
+2000-07-09  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* /home/a/stevenj/Repository/mpb/tests/eigs_test.c: updated for
+	new sqmatrix_invert arguments
+
+	* /home/a/stevenj/Repository/mpb/src/matrices/eigensolver.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver_davidson.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/eigensolver_utils.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/evectmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/matrices.h,
+	/home/a/stevenj/Repository/mpb/src/matrices/sqmatrix.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/blasglue.c,
+	/home/a/stevenj/Repository/mpb/src/matrices/blasglue.h: Added
+	experimental EIGS_ORTHOGONAL_PRECONDITIONER code (doesn't seem to
+	give any consistent benefit at this point).
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: fixed typo
+
+	* /home/a/stevenj/Repository/mpb/ChangeLog,
+	/home/a/stevenj/Repository/mpb/NEWS,
+	/home/a/stevenj/Repository/mpb/configure.in: Updated.
+
+	* /home/a/stevenj/Repository/mpb/doc/user-ref.html: documented
+	group-velocity functions
+
 2000-07-09  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/check.ctl,
