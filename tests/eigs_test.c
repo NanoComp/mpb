@@ -17,7 +17,7 @@ static int usePreconditioner = 1;
 
 extern void Aop(evectmatrix Xin, evectmatrix Xout, void *data);
 extern void Cop(evectmatrix Xin, evectmatrix Xout, void *data);
-extern void printmat(scalar *A, int m, int n);
+extern void printmat(scalar *A, int m, int n, int ldn);
 extern void printmat_matlab(scalar *A, int m, int n);
 
 extern void debug_check_memory_leaks(void);
@@ -32,12 +32,12 @@ int main(int argc, char **argv)
      real *eigvals, *eigvals_dense, sum = 0.0;
      int num_iters;
 
-     srand(time(NULL));
-
      if (argc >= 2)
 	  n = atoi(argv[1]);
 
-     CHECK(n > 0, "illegal argument\nSyntax: eigs_test <n>");
+     srand(argc >= 3 ? atoi(argv[2]) : time(NULL));
+
+     CHECK(n > 0, "illegal argument\nSyntax: eigs_test <n> [<seed>]");
 
      X = create_sqmatrix(n);
      A = create_sqmatrix(n);
@@ -71,6 +71,17 @@ int main(int argc, char **argv)
 
      sqmatrix_eigensolve(U, eigvals_dense, X);
 
+     /* The eigenvectors are actually the columns of U'.  Assign U = U': */
+     for (i = 0; i < n; ++i)
+	  for (j = i + 1; j < n; ++j) {
+	       scalar dummy;
+	       dummy = U.data[i*n + j];
+	       U.data[i*n + j] = U.data[j*n + i];
+	       U.data[j*n + i] = dummy;
+	  }
+     for (i = 0; i < n * n; ++i)
+	  ASSIGN_CONJ(U.data[i], U.data[i]);
+
      p = MIN(MIN(5, MAX(n/4, 2)), n);
      printf("\nSolving for %d eigenvals out of %d.\n", p, n);
 
@@ -80,8 +91,8 @@ int main(int argc, char **argv)
        printf("  %f", eigvals_dense[i]);
      }
      printf("\nEigenvalue sum = %f\n", sum);
-     printf("\nEigenvectors are (by row): \n");
-     printmat(U.data, p, n);
+     printf("\nEigenvectors are (by column): \n");
+     printmat(U.data, n, p, n);
 
      YtY = create_sqmatrix(p);
 
@@ -96,7 +107,18 @@ int main(int argc, char **argv)
 	  ASSIGN_REAL(Ystart.data[i], rand() * 1.0 / RAND_MAX);
 
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, W, NWORK, 1e-10, &num_iters);
+     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, W, NWORK, 1e-10,&num_iters);
+
+     /* Change phase of eigenvectors to match those solved for previously: */
+     for (i = 0; i < p; ++i) {
+	  scalar phase;
+
+	  ASSIGN_DIV(phase, U.data[i], Y.data[i]);
+
+	  for (j = 0; j < n; ++j) {
+	       ASSIGN_MULT(Y.data[j*p + i], Y.data[j*p + i], phase);
+	  }
+     }
 
      printf("\nSolved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -106,10 +128,10 @@ int main(int argc, char **argv)
      }
      printf("\nEigenvalue sum = %f\n", sum);
      printf("Eigenvectors are (by column): \n");
-     printmat(Y.data, n, p);
+     printmat(Y.data, n, p, p);
      evectmatrix_XtX(YtY, Y);
      printf("adjoint(Y) * Y:\n");
-     printmat(YtY.data, p, p);
+     printmat(YtY.data, p, p, p);
 
      printf("\nSolving without conjugate-gradient...\n");
      evectmatrix_copy(Y, Ystart);
@@ -196,16 +218,16 @@ void Cop(evectmatrix Xin, evectmatrix Xout, void *data)
        }
 }
 
-void printmat(scalar *A, int m, int n)
+void printmat(scalar *A, int m, int n, int ldn)
 {
   int i, j;
 
   for (i = 0; i < m; ++i) {
        for (j = 0; j < n; ++j) {
 #ifdef SCALAR_COMPLEX
-	 printf("  (%6.3f,%6.3f)", A[i*n + j].re, A[i*n + j].im);
+	 printf("  (%6.3f,%6.3f)", A[i*ldn + j].re, A[i*ldn + j].im);
 #else
-	 printf("  %6.3f", A[i*n + j]);
+	 printf("  %6.3f", A[i*ldn + j]);
 #endif
 
 	 if (j > 7) {
