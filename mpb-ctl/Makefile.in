@@ -29,6 +29,8 @@ MY_HEADERS =
 MY_INCLUDE_FLAGS = -I. -I$(LIBCTL_DIR)/utils/libgeom/
 MY_DEFINE_FLAGS = 
 
+GEOM_SCM = $(LIBCTL_DIR)/utils/libgeom/geom.scm
+
 ##############################################################################
 
 CC = @CC@
@@ -67,11 +69,11 @@ HEADERS = $(MY_HEADERS) $(LIBCTL_HEADERS) ctl-io.h
 
 all: $(PROGRAM_NAME)
 
-ctl-io.c: $(SPECIFICATION_FILE) \
+ctl-io.c: $(SPECIFICATION_FILE) $(GEOM_SCM) \
           $(CTL_IO_GEN_SRC) $(CTL_IO_GEN)
 	$(CTL_IO_GEN) $(SPECIFICATION_FILE)
 
-ctl-io.h: $(SPECIFICATION_FILE) \
+ctl-io.h: $(SPECIFICATION_FILE) $(GEOM_SCM) \
           $(CTL_IO_GEN_SRC) $(CTL_IO_GEN)
 	$(CTL_IO_GEN) $(SPECIFICATION_FILE)
 
