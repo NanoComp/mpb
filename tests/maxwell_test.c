@@ -206,8 +206,8 @@ int main(int argc, char **argv)
      maxwell_data *mdata;
      maxwell_target_data *mtdata = NULL;
      int local_N, N_start, alloc_N;
-     real G1[3] = {1,0,0}, G2[3] = {0,100,0}, G3[3] = {0,0,100};
      real R[3][3] = { {1,0,0}, {0,0.01,0}, {0,0,0.01} };
+     real G[3][3] = { {1,0,0}, {0,100,0}, {0,0,100} };
      real kvector[3] = {KX,0,0};
      evectmatrix H, Hstart, W[NWORK];
      real *eigvals;
@@ -326,11 +326,11 @@ int main(int argc, char **argv)
 
      printf("Setting k vector to (%g, %g, %g)...\n",
 	    kvector[0], kvector[1], kvector[2]);
-     update_maxwell_data_k(mdata, kvector, G1, G2, G3);
+     update_maxwell_data_k(mdata, kvector, G[0], G[1], G[2]);
 
      printf("Initializing dielectric...\n");
      /* set up dielectric function (a simple Bragg mirror) */
-     set_maxwell_dielectric(mdata, mesh, R, epsilon, &ed);
+     set_maxwell_dielectric(mdata, mesh, R, G, epsilon, &ed);
 
      if (verbose && ny == 1 && nz == 1) {
 	  printf("dielectric function:\n");

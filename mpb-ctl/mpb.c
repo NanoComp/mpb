@@ -110,7 +110,7 @@ static real epsilon_func(real r[3], void *edata)
      p.x = (r[0] - 0.5) * geometry_lattice.size.x;
      p.y = (r[1] - 0.5)* geometry_lattice.size.y;
      p.z = (r[2] - 0.5) * geometry_lattice.size.z;
-     
+
      material = material_of_point(p);  /* from libctl/utils/libgeom/geom.c */
      return material.epsilon;
 }
@@ -289,7 +289,7 @@ void init_params(int p, boolean reset_fields)
      CHECK(mdata, "NULL mdata");
 
      printf("Initializing dielectric function...\n");
-     set_maxwell_dielectric(mdata, mesh, R, epsilon_func, NULL);
+     set_maxwell_dielectric(mdata, mesh, R, G, epsilon_func, NULL);
 
      if (target_freq != 0.0)
 	  mtdata = create_maxwell_target_data(mdata, target_freq);
@@ -372,9 +372,7 @@ void solve_kpoint(vector3 kvector)
      printf("Finished solving for bands after %d iterations.\n", num_iters);
      
      if (num_write_output_vars > 1)
-	  destroy_output_vars(); /* we are required by libctl to call this
-				    in order to deallocate output vars from
-				    previous calls. */
+	  free(freqs.items); /* clean up from prev. call */
 
      /* create freqs array for storing frequencies in a Guile list */
      freqs.num_items = num_bands;
