@@ -1,4 +1,4 @@
-MPB 1.2
+MPB 1.2 (11/15/00)
 
   * Added new y-parity computation and constraints.  See the new
     run-parity function, which allows you to simultaneously specify
