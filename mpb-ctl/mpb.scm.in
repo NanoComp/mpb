@@ -625,10 +625,12 @@
 ; We need a special function to evaluate band functions, since
 ; band functions can either be a function of the band number or
 ; a thunk (function of no arguments, evaluated once per k-point).
-(define (apply-band-func band-func which-band)
+(define (apply-band-func-thunk band-func which-band eval-thunk?)
   (if (zero? (procedure-num-args band-func))
-      (if (= which-band 1) (band-func)) ; evaluate thunks once per k-point
+      (if eval-thunk? (band-func)) ; evaluate thunks once per k-point
       (band-func which-band)))
+(define (apply-band-func band-func which-band)
+  (apply-band-func-thunk band-func which-band (= which-band 1)))
 
 ; The following function returns an output function that calls
 ; output-func for bands with D energy in objects > min-energy.
@@ -727,8 +729,9 @@
 		 (run-parity p false
 			     (lambda (b')
 			       (if (= b' b)
-				   ((apply combine-band-functions band-funcs)
-				    b)))))
+				   (map (lambda (f) 
+					  (apply-band-func-thunk f b true))
+					band-funcs)))))
 	       (arith-sequence band-max -1 nb) (reverse ks)))
       (set! num-bands num-bands-save)
       (set! k-points k-points-save)
