@@ -54,9 +54,10 @@ extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 #define EIGS_CONVERGE_EACH_EIGENVALUE (1<<3)
 #define EIGS_VERBOSE (1<<4)
 #define EIGS_RESET_CG (1<<5)
+#define EIGS_ANALYTIC_LINMIN (1<<6)
 
 /* default flags: what we think works best most of the time: */
-#define EIGS_DEFAULT_FLAGS (EIGS_DIAGONALIZE_EACH_STEP | EIGS_CONVERGE_EACH_EIGENVALUE | EIGS_RESET_CG)
+#define EIGS_DEFAULT_FLAGS (EIGS_DIAGONALIZE_EACH_STEP | EIGS_CONVERGE_EACH_EIGENVALUE | EIGS_RESET_CG | EIGS_ANALYTIC_LINMIN)
 
 typedef struct evectconstraint_chain_struct {
      evectconstraint C;
@@ -64,7 +65,7 @@ typedef struct evectconstraint_chain_struct {
      struct evectconstraint_chain_struct *next;
 } evectconstraint_chain;
 
-extern evectconstraint_chain *evect_add_constraint(const evectconstraint_chain 
+extern evectconstraint_chain *evect_add_constraint(evectconstraint_chain 
 						   *constraints,
 						   evectconstraint C,
 						   void *constraint_data);

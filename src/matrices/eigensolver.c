@@ -112,12 +112,13 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		 int flags)
 {
      evectmatrix G, D, X;
-     sqmatrix U, Usqrt, YtAYU, UYtAYU;
+     sqmatrix U, YtAYU, S1, S2;
      short usingConjugateGradient = 0;
-     real E, E2, prev_E = 0.0;
+     real E, prev_E = 0.0;
+     real y_norm;
      real *prev_eigenvals = NULL;
      real dE = 0.0, d2E, traceGtX, prev_traceGtX = 0.0;
-     real lambda, prev_lambda = 0.001;
+     real lambda, prev_lambda = 0.001, prev_change = -1e20;
      int i, iteration = 0;
      double pref_feedback_time;
      
@@ -144,13 +145,13 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      else
 	  D = X;
 
-     /* the following matrices are named after the original uses I put
-	them to, but beware that I occasionally use them as scratch
-	matrices for other purposes */
+     /* U = 1/(Yt Y), YtAYU = Yt A Y U in the loop below */
      U = create_sqmatrix(Y.p);
-     Usqrt = create_sqmatrix(Y.p);
      YtAYU = create_sqmatrix(Y.p);
-     UYtAYU = create_sqmatrix(Y.p);
+
+     /* scratch matrices */
+     S1 = create_sqmatrix(Y.p);
+     S2 = create_sqmatrix(Y.p);
 
      if (flags & EIGS_DIAGONALIZE_EACH_STEP &&
 	 flags & EIGS_CONVERGE_EACH_EIGENVALUE) {
@@ -171,8 +172,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       constraint(Y, constraint_data);
 	  evectmatrix_XtX(U, Y);
 	  sqmatrix_invert(U);
-	  sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
-	  evectmatrix_XeYS(X, Y, Usqrt, 1);
+	  sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
+	  evectmatrix_XeYS(X, Y, S1, 1);
 	  evectmatrix_copy(Y, X);
      }
      
@@ -191,30 +192,35 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       constraint(Y, constraint_data);
 
 	  evectmatrix_XtX(U, Y);
+	  y_norm = sqrt(Y.p / SCALAR_RE(sqmatrix_trace(U)));
 	  sqmatrix_invert(U);
 
 	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
 	       /* First, orthonormalize: */
-	       sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
-	       evectmatrix_XeYS(X, Y, Usqrt, 1);
+	       sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
+	       evectmatrix_XeYS(X, Y, S1, 1);
+
+	       /* Note that we use YtAYU as a scratch matrix below,
+		  but set it to its intended use at the end of this block. */
 	       
 	       /* Now, compute eigenvectors: */
 	       A(X, Y, Adata, 1); /* Y = AX = A (Y/sqrt(U)) */
-	       evectmatrix_XtY(YtAYU, X, Y);
-	       sqmatrix_eigensolve(YtAYU, eigenvals, UYtAYU);
+	       evectmatrix_XtY(S2, X, Y);
+	       sqmatrix_eigensolve(S2, eigenvals, YtAYU);
 	       
 	       /* Compute G, Y, and D in new basis: */
-	       evectmatrix_XeYS(G, Y, YtAYU, 1);
-	       evectmatrix_XeYS(Y, X, YtAYU, 1);
+	       evectmatrix_XeYS(G, Y, S2, 1);
+	       evectmatrix_XeYS(Y, X, S2, 1);
 	       if (usingConjugateGradient) {
-		    /* mult. by Usqrt (not unitary) breaks conjugacy (?) */
-		    sqmatrix_AeBC(UYtAYU, Usqrt, 0, YtAYU, 1);
+		    /* mult. by S1 (not unitary) breaks conjugacy (?) */
+		    sqmatrix_AeBC(YtAYU, S1, 0, S2, 1);
 		    evectmatrix_copy(X, D);
-		    evectmatrix_XeYS(D, X, UYtAYU, 0);
-	       }  
+		    evectmatrix_XeYS(D, X, YtAYU, 0);
+	       }
+	       y_norm = 1.0; /* Yt Y is now the identity matrix */
 	       
 	       if (Cdata_update)
-		    Cdata_update(Cdata, YtAYU);
+		    Cdata_update(Cdata, S2);
 	       
 	       /* skip this since YtG should be diag(eigenvals)? */
 	       evectmatrix_XtY(YtAYU, Y, G);
@@ -238,6 +244,16 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  CHECK(!BADNUM(E), "crazy number detected in trace!!\n");
 
+	  if (prev_change > E - prev_E) {
+	       if (flags & EIGS_VERBOSE)
+		    printf("    trace decreased more on it. %d than before\n",
+			   iteration);
+	  }
+	  if (E > prev_E && iteration > 0) {
+	       if (flags & EIGS_VERBOSE)
+		    printf("    trace increased on it. %d!\n", iteration);
+	  }
+
 	  if (iteration > 0 && check_converged(E, eigenvals, 
 					       prev_E, prev_eigenvals, Y.p,
 					       tolerance))
@@ -260,33 +276,32 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       pref_feedback_time = MPI_Wtime(); /* reset feedback clock */
 	  }
 
+	  /* Compute gradient of functional G = (1 - Y U Yt) A Y U: */
 	  if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
 	       /* optimize this since YtAYU should be diagonal? */
-	       evectmatrix_XpaYS(G, -1.0, Y, YtAYU); /* G now = gradient of
-							the functional */
+	       evectmatrix_XpaYS(G, -1.0, Y, YtAYU);
 	  }
 	  else {
-	       sqmatrix_AeBC(UYtAYU, U, 0, YtAYU, 0);
-	       evectmatrix_XpaYS(G, -1.0, Y, UYtAYU); /* G now = gradient of
-							 the functional */
+	       sqmatrix_AeBC(S2, U, 0, YtAYU, 0);
+	       evectmatrix_XpaYS(G, -1.0, Y, S2);
 	  }
 	  
-	  if (C)
+	  if (C != NULL)
 	       C(G, X, Cdata, Y, eigenvals);  /* X = precondition(G) */
 	  else
 	       evectmatrix_copy(X, G);  /* X = G if no preconditioner */
 
 	  if (flags & EIGS_PROJECT_PRECONDITIONING) {
 	       /* Operate projection P = (1 - Y U Yt) on X: */
-	       evectmatrix_XtY(Usqrt, Y, X);  /* Usqrt = Yt X */
+	       evectmatrix_XtY(S1, Y, X);  /* S1 = Yt X */
 
 	       if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
 		    /* U is the identity matrix */
-		    evectmatrix_XpaYS(X, -1.0, Y, Usqrt);
+		    evectmatrix_XpaYS(X, -1.0, Y, S1);
 	       }
 	       else {
-		    sqmatrix_AeBC(UYtAYU, U, 0, Usqrt, 0);
-		    evectmatrix_XpaYS(X, -1.0, Y, UYtAYU);
+		    sqmatrix_AeBC(S2, U, 0, S1, 0);
+		    evectmatrix_XpaYS(X, -1.0, Y, S2);
 	       }
 	  }
 
@@ -327,38 +342,125 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       dE = traceGtX;
 	       D = X;
 	  }
-	  
-	  /* Now, let's evaluate the functional at a point slightly
-	     along the current direction, where "slightly" means
-	     half the previous stepsize: */
-	  evectmatrix_aXpbY(1.0, Y, prev_lambda*0.5, D);
-	  evectmatrix_XtX(U, Y);
-	  sqmatrix_invert(U);
-	  A(Y, G, Adata, 0); /* G = AY */
-	  evectmatrix_XtY(YtAYU, Y, G);
-	  E2 = SCALAR_RE(sqmatrix_traceAtB(U, YtAYU));
-	  
-	  /* Minimizing Y + lambda * D: */
-	  
-	  /* At this point, we know the value of the function at Y (E),
-	     the derivative (dE), and the value at a second point Y' (E2).
-	     We fit this data to a quadratic and use that to predict the
-	     minimum along the direction D: */
-	  
-	  d2E = 2.0 * (E2 - E - dE * prev_lambda*0.5) /
-	       (prev_lambda*prev_lambda*0.25);
-	  
-	  /* Actually, we'll model things by a cos() curve, with
-	     d2E being an approx. for the 2nd derivative, since
-	     this is more well-behaved for small d2E: */
 
-	  lambda = 0.5 * atan2(-dE, 0.5*d2E);
-	  
-	  /* Compute new Y.  Note that we have already shifted Y slightly. */
-	  evectmatrix_aXpbY(1.0, Y, lambda - prev_lambda*0.5, D);
-	  
+	  /*** Minimization of trace along D direction ***/
+
+	  if (flags & EIGS_ANALYTIC_LINMIN) {
+	       real traceYtAXU, traceUYtAYUXtX, traceXtAXU;
+	       real x_norm;
+
+	       /* For this minimization method, we write
+		      Y' = cos(lambda) Y + sin(lambda) X,
+		  where X is the projection of D perpendicular to Y
+		  (Yt X = 0).  (We also normalize the traces of Y and
+		  X to equal p.) We then approximate our function
+		  E(lambda) by dropping terms of O(lambda^3) and
+		  higher, and thus can minimize analytically.  This is
+		  actually exact for the case of p=1 (1 eigenvector). */
+	       
+	       /* make a copy of D, if we are using conj. gradient.
+		  (otherwise, X already equals D).  This is necessary
+		  to avoid screwing up the conjugacy condition when
+		  we project to space orthogonal to Y, below */
+	       if (usingConjugateGradient)
+		    evectmatrix_copy(X, D);
+
+	       /* make sure Yt X = 0 */
+	       if (usingConjugateGradient ||
+		   (!(flags & EIGS_PROJECT_PRECONDITIONING) && C != NULL)) {
+		    /* Operate projection P = (1 - Y U Yt) on D: */
+		    evectmatrix_XtY(S1, Y, X);  /* S1 = Yt X */
+		    
+		    if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
+			 /* U is the identity matrix */
+			 evectmatrix_XpaYS(X, -1.0, Y, S1);
+		    }
+		    else {
+			 sqmatrix_AeBC(S2, U, 0, S1, 0);
+			 evectmatrix_XpaYS(X, -1.0, Y, S2);
+		    }
+	       }
+
+	       A(X, G, Adata, 0); /* G = A X */
+	       
+	       if (flags & EIGS_DIAGONALIZE_EACH_STEP) {
+		    /* U is the identity matrix */
+		    traceYtAXU = SCALAR_RE(evectmatrix_traceXtY(Y, G));
+		    traceXtAXU = SCALAR_RE(evectmatrix_traceXtY(X, G));
+
+		    evectmatrix_XtY(S1, X, X); /* S1 = Xt X */
+		    traceUYtAYUXtX = SCALAR_RE(sqmatrix_traceAtB(S1,YtAYU));
+
+		    x_norm = sqrt(X.p / SCALAR_RE(sqmatrix_trace(S1)));
+	       }
+	       else {
+		    evectmatrix_XtY(S1, Y, G); /* S1 = Yt A X */
+		    traceYtAXU = SCALAR_RE(sqmatrix_traceAtB(U, S1));
+
+		    evectmatrix_XtY(S1, X, G); /* S1 = Xt A X */
+		    traceXtAXU = SCALAR_RE(sqmatrix_traceAtB(U, S1));
+
+		    evectmatrix_XtY(S1, X, X); /* S1 = Xt X */
+		    /* S2 = YtAYU Xt X */
+		    sqmatrix_AeBC(S2, YtAYU, 0, S1, 1);
+		    traceUYtAYUXtX = SCALAR_RE(sqmatrix_traceAtB(U, S2));
+
+		    x_norm = sqrt(X.p / SCALAR_RE(sqmatrix_trace(S1)));
+	       }
+
+	       lambda = 0.5 * atan2(-2.0 * traceYtAXU * x_norm * y_norm,
+				    (traceXtAXU -
+				     traceUYtAYUXtX * y_norm*y_norm)
+				    * x_norm*x_norm);
+	       evectmatrix_aXpbY(cos(lambda)*y_norm, Y,
+				 sin(lambda)*x_norm, X);
+	  }
+	  else {
+	       real E2;
+
+	       /* For this minimization method, we use the value
+		  of the function and its derivative at the current point,
+		  along with its value at a second point, to construct
+		  a quadratic approximation for the function which
+		  we can then minimize. */
+
+	       /* Now, let's evaluate the functional at a point slightly
+		  along the current direction, where "slightly" means
+		  half the previous stepsize: */
+	       evectmatrix_aXpbY(1.0, Y, prev_lambda*0.5, D);
+	       evectmatrix_XtX(U, Y);
+	       sqmatrix_invert(U);
+	       A(Y, G, Adata, 0); /* G = AY */
+	       evectmatrix_XtY(S1, Y, G);
+	       E2 = SCALAR_RE(sqmatrix_traceAtB(U, S1));
+	       
+	       /* Minimizing Y + lambda * D: */
+	       
+	       /* At this point, we know the value of the function at Y (E),
+		  the derivative (dE), and the value at a second point Y' (E2).
+		  We fit this data to a quadratic and use that to predict the
+		  minimum along the direction D: */
+	       
+	       d2E = 2.0 * (E2 - E - dE * prev_lambda*0.5) /
+		    (prev_lambda*prev_lambda*0.25);
+	       
+	       /* Actually, we'll model things by a cos() curve, with
+		  d2E being an approx. for the 2nd derivative, since
+		  this is more well-behaved for small d2E: */
+	       
+	       lambda = 0.5 * atan2(-dE, 0.5*d2E);
+
+	       if ((flags & EIGS_VERBOSE) && fabs(lambda) > 3.14159*0.2)
+		    printf("    it. %d: large lambda/pi = %g\n", 
+			   iteration, lambda/3.14159);
+	       
+	       /* Compute new Y.  Note that we have already shifted Y. */
+	       evectmatrix_aXpbY(1.0, Y, lambda - prev_lambda*0.5, D);
+	  }
+
 	  prev_traceGtX = traceGtX;
 	  prev_lambda = lambda;
+	  prev_change = E - prev_E;
 	  prev_E = E;
 
 	  if (prev_eigenvals)
@@ -376,15 +478,15 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	     and eigenvalues. */
 
 	  eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata,
-					X, G, U, Usqrt, UYtAYU);
+					X, G, U, S1, S2);
      }
      
      *num_iterations = iteration;
 
      destroy_sqmatrix(U);
-     destroy_sqmatrix(Usqrt);
+     destroy_sqmatrix(S1);
+     destroy_sqmatrix(S2);
      destroy_sqmatrix(YtAYU);
-     destroy_sqmatrix(UYtAYU);
 
      if (prev_eigenvals)
 	  free(prev_eigenvals);
@@ -431,8 +533,7 @@ void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 /* Subroutines for chaining constraints, to make it easy to pass
    multiple constraint functions to the eigensolver: */
 
-evectconstraint_chain *evect_add_constraint(const evectconstraint_chain
-					    *constraints,
+evectconstraint_chain *evect_add_constraint(evectconstraint_chain *constraints,
 					    evectconstraint C,
 					    void *constraint_data)
 {
