@@ -12,13 +12,11 @@
 #  endif
 #endif
 
-/* This data structure is designed to hold k+G data at a given point.
-   (kx,ky,kz) is the k+G vector.  kmag is its length.  The other two
-   vectors are orthogonal unit vectors orthogonal to (kx,ky,kz).
-   These are used as the basis for the H vector (to maintain
-   transversality). */
+/* This data structure is designed to hold k+G related data at a given
+   point.  kmag is the length of the k+G vector.  The m and n vectors are
+   orthonormal vectors orthogonal to (kx,ky,kz).  These are used
+   as the basis for the H vector (to maintain transversality). */
 typedef struct {
-     real kx, ky, kz;
      real kmag;
      real mx, my, mz;
      real nx, ny, nz;
