@@ -10,6 +10,13 @@
 /* Define to empty if the inline keyword does not work. */
 #undef inline
 
+/* Define if you have the following headers: */
+#undef HAVE_UNISTD_H
+#undef HAVE_GETOPT_H
+
+/* Define if you have the getopt function: */
+#undef HAVE_GETOPT
+
 /* Define to use MPI: */
 #undef HAVE_MPI
 

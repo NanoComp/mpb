@@ -17,6 +17,7 @@ all: all-recursive
 libs: libs-recursive
 
 clean: clean-recursive
+	rm -f core
 
 distclean: clean
 	@list='$(SUBDIRS)'; for subdir in $$list; do \

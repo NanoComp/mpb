@@ -136,7 +136,7 @@ int main(int argc, char **argv)
 	    norm_diff(Ystart.data, Y2.data, Y.n * Y.p));
 
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL, NULL, NULL,
 		 W, NWORK, 1e-10,&num_iters);
      printf("\nSolved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving with exact inverse preconditioner...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, Ainvop, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, Ainvop, NULL, NULL, NULL, NULL,
 		 W, NWORK, 1e-10, &num_iters);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -177,7 +177,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving without conjugate-gradient...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, Cop, NULL, NULL, NULL, NULL,
 		 W, NWORK - 1, 1e-10, &num_iters);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -189,7 +189,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving without preconditioning...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL, NULL, NULL,
 		 W, NWORK, 1e-10, &num_iters);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
 
      printf("\nSolving without conjugate-gradient or preconditioning...\n");
      evectmatrix_copy(Y, Ystart);
-     eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL,
+     eigensolver(Y, eigvals, Aop, NULL, NULL, NULL, NULL, NULL, NULL,
 		 W, NWORK - 1, 1e-10, &num_iters);
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("\nEigenvalues = ");

@@ -30,6 +30,10 @@
    can be NULL if you don't need to do anything to Cdata when
    there is a rotation.)
 
+   constraint is a function which applies some other constraint to
+   Y, or NULL if none.  Note that this can easily screw up
+   convergence, so be careful.
+
    See eigensolver.h for more information on the form of 
    A, C, and Cdata_update.
 
@@ -50,6 +54,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		 evectoperator A, void *Adata,
 		 evectpreconditioner C, void *Cdata,
  		 evectpreconditioner_data_updater Cdata_update,
+		 evectconstraint constraint, void *constraint_data,
 		 evectmatrix Work[], int nWork,
 		 real tolerance, int *num_iterations)
 {
@@ -92,6 +97,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      /* notation: for a matrix Z, Zt denotes adjoint(Z) */
 
 #if NORMALIZE_FIRST_STEP && ! DIAGONALIZE_EACH_STEP
+     if (constraint)
+	  constraint(Y, constraint_data);
      evectmatrix_XtX(U, Y);
      sqmatrix_invert(U);
      sqmatrix_sqrt(Usqrt, U, UYtAYU); /* Usqrt = 1/sqrt(Yt*Y) */
@@ -110,6 +117,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	constraint Zt*Z == 1.  (Z = Y / sqrt(Yt*Y)).  */
      
      do {
+	  if (constraint)
+	       constraint(Y, constraint_data);
+
 	  evectmatrix_XtX(U, Y);
 	  sqmatrix_invert(U);
 

@@ -6,8 +6,6 @@ Optimize multiplications by diagonal matrices?
 
 Check which order to link in -lblas and -ldgemm.
 
-Discriminate between TE/TM modes.
-
 Allow real-complex transforms for structures with inversion symmetry.
 
 Store epsilon differently?

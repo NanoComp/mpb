@@ -30,6 +30,10 @@ typedef struct {
                     m22;
 } symmetric_matrix;
 
+typedef enum { 
+     TE_POLARIZATION, TM_POLARIZATION, NO_POLARIZATION
+} polarization_t;
+
 typedef struct {
      int nx, ny, nz;
      int local_nx, local_ny;
@@ -39,6 +43,9 @@ typedef struct {
      int fft_output_size;
 
      int num_fft_bands;
+
+     real current_k[3];
+     polarization_t polarization;
 
 #ifdef HAVE_FFTW
 #  ifdef HAVE_MPI
@@ -71,9 +78,15 @@ extern void destroy_maxwell_data(maxwell_data *d);
 extern void update_maxwell_data_k(maxwell_data *d, real k[3],
 				  real G1[3], real G2[3], real G3[3]);
 
+extern void set_maxwell_data_polarization(maxwell_data *d,
+					  polarization_t polarization);
+
 extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 			     int is_current_eigenvector);
 extern void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout,
 				   void *data,
 				   evectmatrix Y, real *eigenvals);
+
+extern void maxwell_constraint(evectmatrix X, void *data);
+
 #endif /* MAXWELL_H */

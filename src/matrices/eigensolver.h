@@ -14,10 +14,13 @@ typedef void (*evectpreconditioner) (evectmatrix Xin, evectmatrix Xout,
 typedef void (*evectpreconditioner_data_updater) (void *data,
 						  sqmatrix Yrotation);
 
+typedef void (*evectconstraint) (evectmatrix X, void *data);
+
 extern void eigensolver(evectmatrix Y, real *eigenvals,
 			evectoperator A, void *Adata,
 			evectpreconditioner C, void *Cdata,
 			evectpreconditioner_data_updater Cdata_update,
+			evectconstraint constraint, void *constraint_data,
 			evectmatrix Work[], int nWork,
 			real tolerance, int *num_iterations);
 

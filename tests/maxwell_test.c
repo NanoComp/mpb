@@ -3,6 +3,14 @@
 #include <time.h>
 #include <math.h>
 
+#ifdef HAVE_GETOPT
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#elif defined(HAVE_UNISTD_H)
+#include <unistd.h>
+#endif
+#endif
+
 #include <config.h>
 #include <check.h>
 #include <blasglue.h>
@@ -10,7 +18,7 @@
 #include <eigensolver.h>
 #include <maxwell.h>
 
-#define NX 128
+#define NX 32
 #define NY 1
 #define NZ 1
 #define NUM_BANDS 8
@@ -70,8 +78,8 @@ real bragg_omega(real omega_guess,
 		 real n1, real f1, real n2, real f2,
 		 real tolerance)
 {
-     real omega_guess_low = omega_guess - 0.2, 
-	  omega_guess_high = omega_guess + 0.2;
+     real omega_guess_low = omega_guess - 0.4, 
+	  omega_guess_high = omega_guess + 0.4;
      real k_cur;
      real k_best = -1.0, omega_best = 0.0;
      real tol;
@@ -119,28 +127,112 @@ real norm_diff(scalar *a, scalar *b, int n)
      return sqrt(diffmag / bmag);
 }
 
+/*************************************************************************/
+
+void usage(void)
+{
+     printf("Syntax: maxwell_test [options]\n"
+	    "Options:\n"
+            "   -h           Print this help\n"
+	    "   -s <seed>    Set random seed\n"
+	    "   -k <kx>      Set kx wavevector component [dflt. = 0.5]\n"
+	    "   -b <n>       Compute n bands [default = 8]\n"
+	    "   -n <index>   Specify high-dielectric index [dflt. = 3]\n"
+	    "   -f <f>       Specify high-index fill fraction [dflt. = 0.25]\n"
+	    "   -x <nx>      Use nx points in x direction [dflt. = 32]\n"
+	    "   -y <ny>      Use ny points in y direction [dflt. = 1]\n"
+	    "   -z <nz>      Use nz points in z direction [dflt. = 1]\n"
+	    "   -e           Solve for TE polarization only.\n"
+	    "   -m           Solve for TM polarization only.\n");
+}
+
+/*************************************************************************/
+
 int main(int argc, char **argv)
 {
      maxwell_data *mdata;
      int local_N, N_start, alloc_N;
-     real G1[3] = {1,0,0}, G2[3] = {0,100,0}, G3[3] = {0,0,100};
+     real G1[3] = {1,0,0}, G2[3] = {0,1,0}, G3[3] = {0,0,1};
      real kvector[3] = {0.5,0,0};
      evectmatrix H, Hstart, W[NWORK];
      real *eigvals;
      int i, j, k, iters;
      int num_iters;
+     polarization_t polarization = NO_POLARIZATION;
+     int nx = NX, ny = NY, nz = NZ;
+     int num_bands = NUM_BANDS;
+     real high_eps = EPS_HIGH;
+     real high_index_fill = EPS_HIGH_X;
 
-     printf("Syntax: maxwell_test [<kx>] [<seed>]\n");
+     srand(time(NULL));
 
-     if (argc > 1)
-	  kvector[0] = atof(argv[1]);
+#ifdef HAVE_GETOPT
+     {
+          extern char *optarg;
+          extern int optind;
+          int c;
 
-     srand(argc > 2 ? atoi(argv[2]) : time(NULL));
-     
+          while ((c = getopt(argc, argv, "hs:k:b:n:f:x:y:z:em")) != -1)
+	       switch (c) {
+		   case 'h':
+			usage();
+			exit(EXIT_SUCCESS);
+			break;
+		   case 's':
+			srand(atoi(optarg));
+			break;	
+		   case 'k':
+			kvector[0] = atof(optarg);
+			break;
+		   case 'b':
+			num_bands = atoi(optarg);
+			CHECK(num_bands > 0, "num_bands must be positive");
+			break;
+		   case 'n':
+			high_eps = atof(optarg);
+			CHECK(high_eps > 0.0, "index must be positive");
+			high_eps = high_eps * high_eps;
+			break;
+		   case 'f':
+			high_index_fill = atof(optarg);
+			CHECK(high_index_fill > 0.0, "fill must be positive");
+			break;
+		   case 'x':
+			nx = atoi(optarg);
+			CHECK(nx > 0, "x size must be positive");
+			break;
+		   case 'y':
+			ny = atoi(optarg);
+			CHECK(ny > 0, "y size must be positive");
+			break;
+		   case 'z':
+			nz = atoi(optarg);
+			CHECK(nz > 0, "z size must be positive");
+			break;
+		   case 'e':
+			polarization = TE_POLARIZATION;
+			break;
+		   case 'm':
+			polarization = TM_POLARIZATION;
+			break;
+		   default:
+			usage();
+			exit(EXIT_FAILURE);
+	       }
+
+	  if (argc != optind) {
+	       usage();
+	       exit(EXIT_FAILURE);
+	  }
+     }     
+#endif
+
      printf("Creating Maxwell data...\n");
-     mdata = create_maxwell_data(NX, NY, NZ, &local_N, &N_start, &alloc_N,
-				 NUM_BANDS, NUM_BANDS);
+     mdata = create_maxwell_data(nx, ny, nz, &local_N, &N_start, &alloc_N,
+				 num_bands, num_bands);
      CHECK(mdata, "NULL mdata");
+
+     set_maxwell_data_polarization(mdata, polarization);
 
      printf("Setting k vector to (%g, %g, %g)...\n",
 	    kvector[0], kvector[1], kvector[2]);
@@ -148,12 +240,12 @@ int main(int argc, char **argv)
 
      printf("Initializing dielectric...\n");
      /* set up dielectric function (a simple Bragg mirror) */
-     for (i = 0; i < NX; ++i) {
-	  real epsinv = (i < EPS_HIGH_X * NX) ? (1/EPS_HIGH) : (1/EPS_LOW);
+     for (i = 0; i < nx; ++i) {
+	  real epsinv = (i < high_index_fill*nx) ? (1/high_eps) : (1/EPS_LOW);
 
-	  for (j = 0; j < NY; ++j)
-	       for (k = 0; k < NZ; ++k) {
-		    int ijk = k + NZ * (j + NY * i); /* row-major index */
+	  for (j = 0; j < ny; ++j)
+	       for (k = 0; k < nz; ++k) {
+		    int ijk = k + nz * (j + ny * i); /* row-major index */
 		    mdata->eps_inv[ijk].m00 = epsinv;
 		    mdata->eps_inv[ijk].m11 = epsinv;
 		    mdata->eps_inv[ijk].m22 = epsinv;
@@ -164,15 +256,15 @@ int main(int argc, char **argv)
      }
 
      printf("Allocating fields...\n");
-     H = create_evectmatrix(NX * NY * NZ, 2, NUM_BANDS,
+     H = create_evectmatrix(nx * ny * nz, 2, num_bands,
 			    local_N, N_start, alloc_N);
-     Hstart = create_evectmatrix(NX * NY * NZ, 2, NUM_BANDS,
+     Hstart = create_evectmatrix(nx * ny * nz, 2, num_bands,
 				 local_N, N_start, alloc_N);
      for (i = 0; i < NWORK; ++i)
-	  W[i] = create_evectmatrix(NX * NY * NZ, 2, NUM_BANDS,
+	  W[i] = create_evectmatrix(nx * ny * nz, 2, num_bands,
 				    local_N, N_start, alloc_N);
 
-     eigvals = (real*) malloc(sizeof(real) * NUM_BANDS);
+     eigvals = (real*) malloc(sizeof(real) * num_bands);
      CHECK(eigvals, "out of memory");
 
      for (iters = 0; iters < PROF_ITERS; ++iters) {
@@ -187,23 +279,24 @@ int main(int argc, char **argv)
      eigensolver(H, eigvals,
 		 maxwell_operator, (void *) mdata,
 		 maxwell_preconditioner, (void *) mdata, NULL,
+		 maxwell_constraint, (void *) mdata,
 		 W, NWORK, 1e-4, &num_iters);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("Eigenvalues (sqrt) = \n");
-     for (i = 0; i < NUM_BANDS; ++i) {
+     for (i = 0; i < num_bands; ++i) {
 	  printf("   %f (%f)\n", eigvals[i], sqrt(eigvals[i]));
      }
      printf("\n");
 
      printf("Corresponding analytic frequencies are:\n");
-     for (i = 0;  i < NUM_BANDS; ++i) {
+     for (i = 0;  i < num_bands; ++i) {
           printf("   %f\n",  bragg_omega(sqrt(eigvals[i]),
 					 kvector[0],
-					 sqrt(EPS_HIGH),
-					 EPS_HIGH_X,
+					 sqrt(high_eps),
+					 high_index_fill,
 					 sqrt(EPS_LOW),
-					 1.0 - EPS_HIGH_X,
+					 1.0 - high_index_fill,
 					 1.0e-7));
      }
      printf("\n");
@@ -218,11 +311,12 @@ int main(int argc, char **argv)
      eigensolver(H, eigvals,
 		 maxwell_operator, (void *) mdata,
 		 NULL, NULL, NULL,
+		 maxwell_constraint, (void *) mdata,
 		 W, NWORK, 1e-4, &num_iters);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("Eigenvalues (sqrt) = \n");
-     for (i = 0; i < NUM_BANDS; ++i) {
+     for (i = 0; i < num_bands; ++i) {
 	  printf("   %f (%f)\n", eigvals[i], sqrt(eigvals[i]));
      }
      printf("\n");
@@ -234,11 +328,12 @@ int main(int argc, char **argv)
      eigensolver(H, eigvals,
 		 maxwell_operator, (void *) mdata,
 		 maxwell_preconditioner, (void *) mdata, NULL,
+		 maxwell_constraint, (void *) mdata,
 		 W, NWORK - 1, 1e-4, &num_iters);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("Eigenvalues (sqrt) = \n");
-     for (i = 0; i < NUM_BANDS; ++i) {
+     for (i = 0; i < num_bands; ++i) {
 	  printf("   %f (%f)\n", eigvals[i], sqrt(eigvals[i]));
      }
      printf("\n");
@@ -249,11 +344,12 @@ int main(int argc, char **argv)
      eigensolver(H, eigvals,
 		 maxwell_operator, (void *) mdata,
 		 NULL, NULL, NULL,
+		 maxwell_constraint, (void *) mdata,
 		 W, NWORK - 1, 1e-4, &num_iters);
 
      printf("Solved for eigenvectors after %d iterations.\n", num_iters);
      printf("Eigenvalues (sqrt) = \n");
-     for (i = 0; i < NUM_BANDS; ++i) {
+     for (i = 0; i < num_bands; ++i) {
 	  printf("   %f (%f)\n", eigvals[i], sqrt(eigvals[i]));
      }
      printf("\n");
