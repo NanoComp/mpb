@@ -468,6 +468,7 @@ void get_dfield(int which_band)
      if (which_band < 1 || which_band > mdata->num_bands) {
 	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",
 		  mdata->num_bands);
+	  return;
      }
 
      curfield = (scalar_complex *) mdata->fft_data;
@@ -489,6 +490,7 @@ void get_hfield(int which_band)
      if (which_band < 1 || which_band > mdata->num_bands) {
 	  fprintf(stderr, "must have 1 <= band index <= num_bands (%d)\n",
 		  mdata->num_bands);
+	  return;
      }
 
      curfield = (scalar_complex *) mdata->fft_data;
