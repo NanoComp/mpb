@@ -594,10 +594,10 @@ void init_params(integer p, boolean reset_fields)
 	  randomize_fields();
 
      {
-	  int ierr = check_maxwell_dielectric(mdata);
+	  int ierr = check_maxwell_dielectric(mdata, negative_epsilon_okp);
 	  if (ierr == 1)
 	       mpi_one_fprintf(stderr,
-		       "ERROR: non positive-definite dielectric tensor\n");
+			   "ERROR: non positive-definite dielectric tensor\n");
 	  else if (ierr == 2)
 	       mpi_one_fprintf(stderr, 
 		       "ERROR: dielectric tensor must not couple xy "
@@ -876,7 +876,8 @@ void solve_kpoint(vector3 kvector)
 		    kpoint_index, k[0], k[1], k[2],
 		    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
      for (i = 0; i < num_bands; ++i) {
-	  freqs.items[i] = sqrt(eigvals[i]);
+	  freqs.items[i] =
+	       negative_epsilon_okp ? eigvals[i] : sqrt(eigvals[i]);
 	  mpi_one_printf(", %g", freqs.items[i]);
      }
      mpi_one_printf("\n");
@@ -967,7 +968,9 @@ number_list compute_group_velocity_component(vector3 d)
         Note that our k is in units of 2*Pi/a, and omega is in
         units of 2*Pi*c/a, so the result will be in units of c. */
      for (i = 0; i < num_bands; ++i)
-	  group_v.items[i] = group_v.items[i] / freqs.items[i];
+	  group_v.items[i] /= 
+	       negative_epsilon_okp ? sqrt(fabs(freqs.items[i]))
+	       : freqs.items[i];
      
      return group_v;
 }
@@ -1538,10 +1541,10 @@ void output_field_to_file(integer which_component, string filename_prefix)
 #  ifndef SCALAR_COMPLEX
      last_dim_index = dims[2] == 1 ? (dims[1] == 1 ? 0 : 1) : 2;
      local_dims[last_dim_index] = mdata->last_dim_size / 2;
-     first_dim_start = 0;
-     first_dim_size = local_dims[0];
      last_dim_start = local_dims[last_dim_index];
      last_dim_size = dims[last_dim_index] - local_dims[last_dim_index];
+     first_dim_start = last_dim_index ? 0 : last_dim_start;
+     first_dim_size = last_dim_index ? local_dims[0] : last_dim_size;
 #  endif
      start[0] = mdata->local_x_start;
      output_k[0] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]

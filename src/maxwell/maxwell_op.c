@@ -591,6 +591,9 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
      }
      else /* if (rank <= 2) */ {
 	  int i;
+	  if (rank == 1) /* (note that 1d MPI transforms are not allowed) */
+	       nx = 1; /* x dimension is handled by j (last dimension) loop */
+
 #  ifdef HAVE_MPI
 	  for (i = 0; i < nx; ++i)
 #  else
@@ -739,6 +742,9 @@ void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field)
      }
      else /* if (rank <= 2) */ {
 	  int i;
+	  if (rank == 1) /* (note that 1d MPI transforms are not allowed) */
+	       nx = 1; /* x dimension is handled by j (last dimension) loop */
+
 #  ifdef HAVE_MPI
 	  for (i = 0; i < nx; ++i)
 #  else
@@ -770,9 +776,9 @@ void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field)
 	       }
 	  }
 
-	  /* Next, conjugate, and remove the holes from the array
-	     corresponding to the DC and Nyquist frequencies (which were in
-	     the first half already): */
+	  /* Next, remove the holes from the array corresponding to
+	     the DC and Nyquist frequencies (which were in the first
+	     half already): */
 	  for (i = 0; i < nx; ++i)
 	       for (j = jmin; j < n_last_new + jmin; ++j) {
 #  ifdef HAVE_MPI

@@ -124,11 +124,16 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 	  sqmatrix_eigensolve(S, eigenvals2, Swork);
 
 	  /* find index itarget of start of "window" around the
-	     target frequency: */
-	  for (itarget = 0; itarget + Y.p < q &&
-		    fabs(target - eigenvals2[itarget]) >
-		    fabs(target - eigenvals2[itarget + Y.p]); ++itarget)
-	       ;
+	     target frequency : */
+	  if (target == 0.0) /* not attempting targeted eigensolver */
+	       itarget = 0;
+	  else {
+	       /* note that this technique seems to have convergence trouble */
+	       for (itarget = 0; itarget + Y.p < q &&
+			 fabs(target - eigenvals2[itarget]) >
+			 fabs(target - eigenvals2[itarget + Y.p]); ++itarget)
+		    ;
+	  }
 
 	  for (E = 0.0, i = 0; i < Y.p; ++i) {
 	       E += (eigenvals[i] = eigenvals2[itarget + i]);
@@ -154,7 +159,8 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
           }
 
 	  if (iteration > 0 &&
-              fabs(E - prev_E) < tolerance * 0.5 * (E + prev_E + 1e-7))
+              fabs(E - prev_E) < tolerance * 0.5 * (fabs(E) + 
+						    fabs(prev_E) + 1e-7))
                break; /* convergence!  hooray! */
 	  
 	  /* compute new directions from residual & update basis: */

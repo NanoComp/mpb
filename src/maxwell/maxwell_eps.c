@@ -136,7 +136,8 @@ static int sym_matrix_positive_definite(symmetric_matrix *V)
 
 /**************************************************************************/
 
-int check_maxwell_dielectric(maxwell_data *d)
+int check_maxwell_dielectric(maxwell_data *d,
+			     int negative_epsilon_okp)
 {
      int i, require_2d;
 
@@ -144,7 +145,8 @@ int check_maxwell_dielectric(maxwell_data *d)
 	  d->polarization == TM_POLARIZATION;
 
      for (i = 0; i < d->fft_output_size; ++i) {
-	  if (!sym_matrix_positive_definite(d->eps_inv + i))
+	  if (!negative_epsilon_okp &&
+	      !sym_matrix_positive_definite(d->eps_inv + i))
 	       return 1;
 	  if (require_2d) {
 #if defined(WITH_HERMITIAN_EPSILON)

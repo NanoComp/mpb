@@ -227,6 +227,7 @@ extern void maxwell_target_preconditioner2(evectmatrix Xin, evectmatrix Xout,
 extern void spherical_quadrature_points(real *x, real *y, real *z,
 					real *weight, int num_sq_pts);
 
-extern int check_maxwell_dielectric(maxwell_data *d);
+extern int check_maxwell_dielectric(maxwell_data *d,
+				    int negative_epsilon_okp);
 
 #endif /* MAXWELL_H */
