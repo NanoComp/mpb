@@ -456,13 +456,13 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
 {
 #ifndef SCALAR_COMPLEX
      int i, j, jmin = 1;
-     int rank, n_other, n_last, n_last_stored, n_last_new, nx, ny, nz;
+     int rank, n_other, n_last, n_last_stored, n_last_new, nx, ny, nz, nxmax;
 #  ifdef HAVE_MPI
      int local_x_start;
 #  endif
      scalar_complex pz, pxz, pyz, pxyz;
 
-     nx = d->nx; ny = d->ny; nz = d->nz;
+     nxmax = nx = d->nx; ny = d->ny; nz = d->nz;
      n_other = d->other_dims;
      n_last = d->last_dim;
      n_last_stored = d->last_dim_size / 2;
@@ -486,6 +486,7 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
      else { /* rank == 3 */
 	  ny = nx;
 	  nx = d->local_ny;
+	  nxmax = local_x_start ? nx - 1 : nx;
 	  n_other = nx * ny;
      }
 #  endif /* HAVE_MPI */
@@ -524,14 +525,14 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
 
      if (rank == 3) {
 	  int ix, iy;
-	  for (ix = 0; 2*ix <= nx; ++ix) {
+	  for (ix = 0; 2*ix <= nxmax; ++ix) {
 	       int xdiff, ixc;
 #  ifdef HAVE_MPI
 	       if (local_x_start == 0) {
 		    xdiff = ix != 0; ixc = (nx - ix) % nx;
 	       }
 	       else {
-		    xdiff = 0; ixc = nx-1 - ix;
+		    xdiff = 1; ixc = nx-1 - ix;
 	       }
 #  else
 	       xdiff = ix != 0; ixc = (nx - ix) % nx;
@@ -648,12 +649,12 @@ void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field)
 {
 #ifndef SCALAR_COMPLEX
      int i, j, jmin = 1;
-     int rank, n_other, n_last, n_last_stored, n_last_new, nx, ny, nz;
+     int rank, n_other, n_last, n_last_stored, n_last_new, nx, ny, nz, nxmax;
 #  ifdef HAVE_MPI
      int local_x_start;
 #  endif
 
-     nx = d->nx; ny = d->ny; nz = d->nz;
+     nxmax = nx = d->nx; ny = d->ny; nz = d->nz;
      n_other = d->other_dims;
      n_last = d->last_dim;
      n_last_stored = d->last_dim_size / 2;
@@ -677,6 +678,7 @@ void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field)
      else { /* rank == 3 */
 	  ny = nx;
 	  nx = d->local_ny;
+	  nxmax = local_x_start ? nx - 1 : nx;
 	  n_other = nx * ny;
      }
 #  endif /* HAVE_MPI */
@@ -688,7 +690,7 @@ void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field)
 
      if (rank == 3) {
 	  int ix, iy;
-	  for (ix = 0; 2*ix <= nx; ++ix) {
+	  for (ix = 0; 2*ix <= nxmax; ++ix) {
 	       int ixc;
 #  ifdef HAVE_MPI
 	       if (local_x_start == 0)
