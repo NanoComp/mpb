@@ -42,9 +42,9 @@
 (set! grid-size (vector3 res (* res supercell-y) 1))
 
 ; Compute the TM modes, outputting the Ez field in the *middle* of the
-; band.  (In general the guided mode in such an air defect may have
-; entered the gap by the time it reaches the edge of the Brillouin
-; zone.)
+; band.  (In general, the guided mode in such an air defect may have
+; exited the gap by the time it reaches the edge of the Brillouin
+; zone at K'.)
 (run-tm 
  (output-at-kpoint (list-ref k-points (quotient (length k-points) 2))
 		   fix-efield-phase output-efield-z))
