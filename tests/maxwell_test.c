@@ -21,6 +21,12 @@
 #define EPS_HIGH 9.0
 #define EPS_HIGH_X 0.25
 
+#ifdef ENABLE_PROF
+#  define PROF_ITERS 10
+#else
+#  define PROF_ITERS 1
+#endif
+
 /*************************************************************************/
 
 /* routines for analytic calculation of Bragg bands: */
@@ -121,7 +127,7 @@ int main(int argc, char **argv)
      real kvector[3] = {0.5,0,0};
      evectmatrix H, Hstart, W[NWORK];
      real *eigvals;
-     int i, j, k;
+     int i, j, k, iters;
      int num_iters;
 
      printf("Syntax: maxwell_test [<kx>] [<seed>]\n");
@@ -169,6 +175,8 @@ int main(int argc, char **argv)
      eigvals = (real*) malloc(sizeof(real) * NUM_BANDS);
      CHECK(eigvals, "out of memory");
 
+     for (iters = 0; iters < PROF_ITERS; ++iters) {
+
      printf("Initializing fields...\n");
      for (i = 0; i < H.n * H.p; ++i)
           ASSIGN_REAL(Hstart.data[i], rand() * 1.0 / RAND_MAX);
@@ -200,6 +208,9 @@ int main(int argc, char **argv)
      }
      printf("\n");
 
+     }
+
+#ifndef ENABLE_PROF
      /*****************************************/
 
      printf("\nSolving for eigenvectors without preconditioning...\n");
@@ -248,6 +259,7 @@ int main(int argc, char **argv)
      printf("\n");
 
      /*****************************************/
+#endif
      
      destroy_evectmatrix(H);
      destroy_evectmatrix(Hstart);

@@ -33,4 +33,7 @@
 /* define to enable expensive debugging checks, etcetera */
 #undef DEBUG
 
+/* define when profiling */
+#undef ENABLE_PROF
+
 #endif /* CONFIG_H */
