@@ -231,7 +231,7 @@ int main(int argc, char **argv)
      real *eigvals;
      int i, iters;
      int num_iters;
-     polarization_t polarization = NO_POLARIZATION;
+     int parity = NO_PARITY;
      int nx = NX, ny = NY, nz = NZ;
      int num_bands = NUM_BANDS;
      real target_freq = 0.0;
@@ -298,10 +298,10 @@ int main(int argc, char **argv)
 			CHECK(nz > 0, "z size must be positive");
 			break;
 		   case 'e':
-			polarization = TE_POLARIZATION;
+			parity = EVEN_Z_PARITY;
 			break;
 		   case 'm':
-			polarization = TM_POLARIZATION;
+			parity = ODD_Z_PARITY;
 			break;
 		   case 't':
 			target_freq = fabs(atof(optarg));
@@ -350,7 +350,7 @@ int main(int argc, char **argv)
 				 num_bands, NUM_FFT_BANDS);
      CHECK(mdata, "NULL mdata");
 
-     set_maxwell_data_polarization(mdata, polarization);
+     set_maxwell_data_parity(mdata, parity);
 
      printf("Setting k vector to (%g, %g, %g)...\n",
 	    kvector[0], kvector[1], kvector[2]);
@@ -420,7 +420,7 @@ int main(int argc, char **argv)
      eigensolver(H, eigvals,
 		 op, op_data,
 		 pre_op, pre_op_data,
-		 maxwell_constraint, (void *) mdata,
+		 maxwell_parity_constraint, (void *) mdata,
 		 W, NWORK, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
      if (do_target)
@@ -453,7 +453,7 @@ int main(int argc, char **argv)
      eigensolver(H, eigvals,
 		 op, op_data,
 		 NULL, NULL,
-		 maxwell_constraint, (void *) mdata,
+		 maxwell_parity_constraint, (void *) mdata,
 		 W, NWORK, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
      if (do_target)
@@ -482,7 +482,7 @@ int main(int argc, char **argv)
      eigensolver(H, eigvals,
 		 op, op_data,
 		 pre_op, pre_op_data,
-		 maxwell_constraint, (void *) mdata,
+		 maxwell_parity_constraint, (void *) mdata,
 		 W, NWORK - 1, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
      if (do_target)
@@ -510,7 +510,7 @@ int main(int argc, char **argv)
      eigensolver(H, eigvals,
 		 op, op_data,
 		 NULL, NULL,
-		 maxwell_constraint, (void *) mdata,
+		 maxwell_parity_constraint, (void *) mdata,
 		 W, NWORK - 1, error_tol, &num_iters, EIGS_DEFAULT_FLAGS);
 
      if (do_target)

@@ -82,11 +82,11 @@ typedef struct {
 				    (m).m12 == 0.0)
 #endif
 
-typedef enum { 
-     NO_POLARIZATION = 0,
-     TE_POLARIZATION = 1, TM_POLARIZATION = 2,
-     EVEN_Z_POLARIZATION = 3, ODD_Z_POLARIZATION = 4
-} polarization_t;
+#define NO_PARITY (0)
+#define EVEN_Z_PARITY (1<<0)
+#define ODD_Z_PARITY (1<<1)
+#define EVEN_Y_PARITY (1<<2)
+#define ODD_Y_PARITY (1<<3)
 
 typedef struct {
      int nx, ny, nz;
@@ -102,7 +102,7 @@ typedef struct {
      int max_fft_bands, num_fft_bands;
 
      real current_k[3];  /* (in cartesian basis) */
-     polarization_t polarization;
+     int parity;
 
 #ifdef HAVE_FFTW
 #  ifdef HAVE_MPI
@@ -142,8 +142,7 @@ extern void maxwell_set_num_bands(maxwell_data *d, int num_bands);
 extern void update_maxwell_data_k(maxwell_data *d, real k[3],
 				  real G1[3], real G2[3], real G3[3]);
 
-extern void set_maxwell_data_polarization(maxwell_data *d,
-					  polarization_t polarization);
+extern void set_maxwell_data_parity(maxwell_data *d, int parity);
 
 typedef void (*maxwell_dielectric_function) (symmetric_matrix *eps,
 					     symmetric_matrix *eps_inv,
@@ -195,14 +194,16 @@ extern void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout,
 extern void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
 			      maxwell_data *d, const real u[3]);
 
-extern void maxwell_constraint(evectmatrix X, void *data);
+extern void maxwell_parity_constraint(evectmatrix X, void *data);
 extern void maxwell_zparity_constraint(evectmatrix X, void *data);
+extern void maxwell_yparity_constraint(evectmatrix X, void *data);
 
 extern int maxwell_zero_k_num_const_bands(evectmatrix X, maxwell_data *d);
 extern void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d);
 extern void maxwell_zero_k_constraint(evectmatrix X, void *data);
 
 extern real *maxwell_zparity(evectmatrix X, maxwell_data *d);
+extern real *maxwell_yparity(evectmatrix X, maxwell_data *d);
 
 typedef struct {
      maxwell_data *d;

@@ -24,6 +24,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <math.h>
 #include <ctype.h>
@@ -328,75 +329,53 @@ void set_kpoint_index(integer i)
 
 /**************************************************************************/
 
-/* Set the current polarization to solve for. (init-params should have
+/* return a string describing the current parity, used for frequency
+   and filename prefixes */
+const char *parity_string(maxwell_data *d)
+{
+     static char s[128];
+     strcpy(s, "");
+     if (d->parity & EVEN_Z_PARITY)
+	  strcat(s, (d->nz == 1) ? "te" : "zeven");
+     else if (d->parity & ODD_Z_PARITY)
+	  strcat(s, (d->nz == 1) ? "tm" : "zodd");
+     if (d->parity & EVEN_Y_PARITY)
+	  strcat(s, "yeven");
+     else if (d->parity & ODD_Y_PARITY)
+	  strcat(s, "yodd");
+     return s;
+}
+
+/* Set the current parity to solve for. (init-params should have
    already been called.  (Guile-callable; see mpb.scm.) 
 
-   p = 0 means NO_POLARIZATION
-   p = 1 means TE_POLARIZATION
-   p = 2 means TM_POLARIZATION
-   p = 3 means EVEN_Z_POLARIZATION
-   p = 4 means ODD_Z_POLARIZATION
-   p = -1 means the polarization of the previous call, 
-       or NO_POLARIZATION if this is the first call */
+   p >= 0 means a bitwise OR of the various parity constants from
+   maxwell.h (NO_PARITY, EVEN_Z_PARITY, etcetera).
 
-void set_polarization(integer p)
+   p = -1 means the parity of the previous call, 
+       or NO_PARITY if this is the first call */
+
+void set_parity(integer p)
 {
      static int last_p = -2;  /* initialize to some non-value */
 
      if (!mdata) {
 	  mpi_one_fprintf(stderr,
-		  "init-params must be called before set-polarization!\n");
+		  "init-params must be called before set-parity!\n");
 	  return;
      }
 
      if (p == -1)
-	  p = last_p < 0 ? 0 : last_p;
+	  p = last_p < 0 ? NO_PARITY : last_p;
 
-     switch (p) {
-	 case 0:
-	      mpi_one_printf("Solving for non-polarized bands.\n");
-	      set_maxwell_data_polarization(mdata, NO_POLARIZATION);
-	      break;
-	 case 1:
-	      mpi_one_printf("Solving for TE-polarized bands.\n");
-	      set_maxwell_data_polarization(mdata, TE_POLARIZATION);
-	      CHECK(mdata->polarization == TE_POLARIZATION,
-		    "TE polarization is only valid for 2d simulations");
-	      break;
-	 case 2:
-	      mpi_one_printf("Solving for TM-polarized bands.\n");
-	      set_maxwell_data_polarization(mdata, TM_POLARIZATION);
-	      CHECK(mdata->polarization == TM_POLARIZATION,
-		    "TM polarization is only valid for 2d simulations");
-	      break;
-	 case 3:
-	      mpi_one_printf("Solving for bands even about z=0.\n");
-	      set_maxwell_data_polarization(mdata, EVEN_Z_POLARIZATION);
-	      CHECK(mdata->polarization == EVEN_Z_POLARIZATION,
-		    "even symmetry is only valid for in-plane k-points");
-	      break;
-	 case 4:
-	      mpi_one_printf("Solving for bands odd about z=0.\n");
-	      set_maxwell_data_polarization(mdata, ODD_Z_POLARIZATION);
-	      CHECK(mdata->polarization == ODD_Z_POLARIZATION,
-		    "odd symmetry is only valid for in-plane k-points");
-	      break;
-	 default:
-	      mpi_one_fprintf(stderr, "Unknown polarization type!\n");
-	      return;
-     }
+     set_maxwell_data_parity(mdata, p);
+     CHECK(mdata->parity == p, "k vector incompatible with parity");
+     mpi_one_printf("Solving for band polarization: %s.\n",
+		    parity_string(mdata));
 
      last_p = p;
      set_kpoint_index(0);  /* reset index */
 }
-
-static char polarization_strings[5][10] = {
-     "",      /* NO_POLARIZATION */
-     "te",    /* TE_POLARIZATION */
-     "tm",    /* TM_POLARIZATION */
-     "even",  /* EVEN_Z_POLARIZATION */
-     "odd"    /* ODD_Z_POLARIZATION */
-};
 
 /**************************************************************************/
 
@@ -405,9 +384,9 @@ static char polarization_strings[5][10] = {
    is called, the input variables (the geometry, etcetera) have already
    been read into the global variables defined in ctl-io.h.  
    
-   p is the polarization to use for the coming calculation, although
-   this can be changed by calling set-polarization.  p is interpreted
-   in the same way as for set-polarization.
+   p is the parity to use for the coming calculation, although
+   this can be changed by calling set-parity.  p is interpreted
+   in the same way as for set-parity.
 
    If reset_fields is false, then any fields from a previous run are
    retained if they are of the same dimensions.  Otherwise, new
@@ -592,7 +571,7 @@ void init_params(integer p, boolean reset_fields)
 	       Hblock = H;
      }
 
-     set_polarization(p);
+     set_parity(p);
      if (!have_old_fields || reset_fields)
 	  randomize_fields();
 
@@ -660,7 +639,7 @@ void solve_kpoint(vector3 kvector)
      real k[3];
      int flags;
      deflation_data deflation;
-     polarization_t prev_pol;
+     int prev_parity;
 
      mpi_one_printf("solve_kpoint (%g,%g,%g):\n",
 		    kvector.x, kvector.y, kvector.z);
@@ -682,20 +661,20 @@ void solve_kpoint(vector3 kvector)
 	for the frequency grep data: */
      if (!kpoint_index && mpi_is_master()) {
 	  printf("%sfreqs:, k index, kx, ky, kz, kmag/2pi",
-		 polarization_strings[mdata->polarization]);
+		 parity_string(mdata));
 	  for (i = 0; i < num_bands; ++i)
-	       printf(", %s%sband %d", 
-		      polarization_strings[mdata->polarization],
-		      mdata->polarization == NO_POLARIZATION ? "" : " ",
+	       printf(", %s%sband %d",
+		      parity_string(mdata),
+		      mdata->parity == NO_PARITY ? "" : " ",
 		      i + 1);
 	  printf("\n");
      }
 
-     prev_pol = mdata->polarization;
+     prev_parity = mdata->parity;
      vector3_to_arr(k, kvector);
      update_maxwell_data_k(mdata, k, G[0], G[1], G[2]);
-     CHECK(mdata->polarization == prev_pol,
-	   "in-plane k-points are required for TE/TM and even/odd fields");
+     CHECK(mdata->parity == prev_parity,
+	   "k vector is incompatible with specified parity");
 
      CHK_MALLOC(eigvals, real, num_bands);
 
@@ -742,7 +721,7 @@ void solve_kpoint(vector3 kvector)
 
 	  constraints = NULL;
 	  constraints = evect_add_constraint(constraints,
-					     maxwell_constraint,
+					     maxwell_parity_constraint,
 					     (void *) mdata);
 
 	  if (mdata->zero_k)
@@ -863,8 +842,11 @@ void solve_kpoint(vector3 kvector)
      if (num_write_output_vars > 1) {
 	  /* clean up from prev. call */
 	  free(freqs.items);
-	  free(z_parity.items);
+	  free(parity);
      }
+
+     CHK_MALLOC(parity, char, strlen(parity_string(mdata) + 1))
+     parity = strcpy(parity, parity_string(mdata));
 
      iterations = total_iters; /* iterations output variable */
 
@@ -875,7 +857,7 @@ void solve_kpoint(vector3 kvector)
      set_kpoint_index(kpoint_index + 1);
 
      mpi_one_printf("%sfreqs:, %d, %g, %g, %g, %g",
-		    polarization_strings[mdata->polarization],
+		    parity,
 		    kpoint_index, k[0], k[1], k[2],
 		    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
      for (i = 0; i < num_bands; ++i) {
@@ -885,17 +867,29 @@ void solve_kpoint(vector3 kvector)
      }
      mpi_one_printf("\n");
 
-     z_parity.num_items = num_bands;
-     z_parity.items = maxwell_zparity(H, mdata);
-     mpi_one_printf("%szparity:, %d", 
-		    polarization_strings[mdata->polarization], kpoint_index);
-     for (i = 0; i < num_bands; ++i)
-	  mpi_one_printf(", %g", z_parity.items[i]);
-     mpi_one_printf("\n");
-
      eigensolver_flops = evectmatrix_flops;
 
      free(eigvals);
+}
+
+/**************************************************************************/
+
+/* Return a list of the z/y parities, one for each band. */
+
+number_list compute_zparities(void)
+{
+     number_list z_parity;
+     z_parity.num_items = num_bands;
+     z_parity.items = maxwell_zparity(H, mdata);
+     return z_parity;
+}
+
+number_list compute_yparities(void)
+{
+     number_list y_parity;
+     y_parity.num_items = num_bands;
+     y_parity.items = maxwell_yparity(H, mdata);
+     return y_parity;
 }
 
 /**************************************************************************/
@@ -1524,12 +1518,12 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 
 /**************************************************************************/
 
-/* Prepend the prefix to the fname, and append a polarization
-   specifier (if any) (e.g. ".te"), returning a new string, which
-   should be deallocated with free().   fname or prefix may be NULL,
-   in which case they are treated as the empty string. */
+/* Prepend the prefix to the fname, and (if parity_suffix is true)
+   append a parity specifier (if any) (e.g. ".te"), returning a new
+   string, which should be deallocated with free().  fname or prefix
+   may be NULL, in which case they are treated as the empty string. */
 static char *fix_fname(const char *fname, const char *prefix,
-		       polarization_t p)
+		       maxwell_data *d, int parity_suffix)
 {
      char *s;
      CHK_MALLOC(s, char,
@@ -1537,11 +1531,11 @@ static char *fix_fname(const char *fname, const char *prefix,
 		(prefix ? strlen(prefix) : 0) + 20);
      strcpy(s, prefix ? prefix : "");
      strcat(s, fname ? fname : "");
-     if (p != NO_POLARIZATION) {
-	  /* assumes polarization suffix is less than 20 characters;
+     if (parity_suffix && d->parity != NO_PARITY) {
+	  /* assumes parity suffix is less than 20 characters;
 	     currently it is less than 12 */
 	  strcat(s, ".");
-	  strcat(s, polarization_strings[p]);
+	  strcat(s, parity_string(d));
      }
      return s;
 }
@@ -1720,7 +1714,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  sprintf(description, "%c field, kpoint %d, band %d, freq=%g",
 		  curfield_type, kpoint_index, curfield_band, 
 		  freqs.items[curfield_band - 1]);
-	  fname2 = fix_fname(fname, filename_prefix, mdata->polarization);
+	  fname2 = fix_fname(fname, filename_prefix, mdata, 1);
 	  mpi_one_printf("Outputting fields to %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
 	  free(fname2);
@@ -1777,10 +1771,9 @@ void output_field_to_file(integer which_component, string filename_prefix)
 		       curfield_type, kpoint_index, curfield_band, 
 		       freqs.items[curfield_band - 1]);
 	  }
-	  fname2 = fix_fname(fname, filename_prefix, 
-			     /* no polarization suffix for epsilon: */
-			     curfield_type == 'n' ? NO_POLARIZATION :
-			     mdata->polarization);
+	  fname2 = fix_fname(fname, filename_prefix, mdata, 
+			     /* no parity suffix for epsilon: */
+			     curfield_type != 'n');
 	  mpi_one_printf("Outputting %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
 	  free(fname2);

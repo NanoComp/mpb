@@ -4,7 +4,4 @@ More eigensolver improvements...adaptive selection of an iteration technique?
 
 Try Jacobi-Davidson method with harmonic eigenvalues for targeted solver.
 
-Implement y-parity output.  x-parity, too (after transform so it is
-process-local)?
-
 World domination.

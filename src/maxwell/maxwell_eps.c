@@ -141,8 +141,7 @@ int check_maxwell_dielectric(maxwell_data *d,
 {
      int i, require_2d;
 
-     require_2d = d->polarization == TE_POLARIZATION ||
-	  d->polarization == TM_POLARIZATION;
+     require_2d = d->nz == 1 && (d->parity & (EVEN_Z_PARITY | ODD_Z_PARITY));
 
      for (i = 0; i < d->fft_output_size; ++i) {
 	  if (!negative_epsilon_okp &&

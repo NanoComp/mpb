@@ -61,7 +61,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      maxwell_set_num_bands(d, num_bands);
 
      d->current_k[0] = d->current_k[1] = d->current_k[2] = 0.0;
-     d->polarization = NO_POLARIZATION;
+     d->parity = NO_PARITY;
 
      d->last_dim_size = d->last_dim = n[rank - 1];
 
@@ -266,8 +266,8 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
      d->current_k[1] = ky;
      d->current_k[2] = kz;
 
-     /* make sure current polarization is still valid: */
-     set_maxwell_data_polarization(d, d->polarization);
+     /* make sure current parity is still valid: */
+     set_maxwell_data_parity(d, d->parity);
 
      for (x = d->local_x_start; x < d->local_x_start + d->local_nx; ++x) {
 	  int kxi = (x >= cx) ? (x - nx) : x;
@@ -288,16 +288,18 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 		    *kpGn2 = a;
 		    
 		    /* Now, compute the two normal vectors: */
+		    /* (Note that we choose them so that m has odd/even
+		       parity in z/y, and n is even/odd in z/y.) */
 
 		    if (a == 0) {
-			 kpG->nx = 1.0; kpG->ny = 0.0; kpG->nz = 0.0;
-			 kpG->mx = 0.0; kpG->my = 1.0; kpG->mz = 0.0;
+			 kpG->nx = 0.0; kpG->ny = 1.0; kpG->nz = 0.0;
+			 kpG->mx = 0.0; kpG->my = 0.0; kpG->mz = 1.0;
 		    }
 		    else {
 			 if (kpGx == 0.0 && kpGy == 0.0) {
-			      /* put n in the x direction if k+G is in z: */
-			      kpG->nx = 1.0;
-			      kpG->ny = 0.0;
+			      /* put n in the y direction if k+G is in z: */
+			      kpG->nx = 0.0;
+			      kpG->ny = 1.0;
 			      kpG->nz = 0.0;
 			 }
 			 else {
@@ -348,14 +350,17 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
      }
 }
 
-void set_maxwell_data_polarization(maxwell_data *d,
-				   polarization_t polarization)
+void set_maxwell_data_parity(maxwell_data *d, int parity)
 {
-     if (d->current_k[2] != 0.0 || 
-	 ((polarization == TE_POLARIZATION || polarization == TM_POLARIZATION)
-	  && d->nz != 1))
-	  polarization = NO_POLARIZATION;
-     d->polarization = polarization;
+     if ((parity & EVEN_Z_PARITY) && (parity & ODD_Z_PARITY))
+	  parity &= ~(EVEN_Z_PARITY | ODD_Z_PARITY);
+     if (d->current_k[2] != 0.0)
+	  parity &= ~(EVEN_Z_PARITY | ODD_Z_PARITY);
+     if ((parity & EVEN_Y_PARITY) && (parity & ODD_Y_PARITY))
+	  parity &= ~(EVEN_Y_PARITY | ODD_Y_PARITY);
+     if (d->current_k[1] != 0.0)
+	  parity &= ~(EVEN_Y_PARITY | ODD_Y_PARITY);
+     d->parity = parity;
 }
 
 maxwell_target_data *create_maxwell_target_data(maxwell_data *md, 

@@ -8,7 +8,7 @@
 ; Note that this structure has mirror symmetry throught the z=0 plane,
 ; and we are looking at k-vectors in the xy plane only.  Thus, we can
 ; break up the modes into even and odd (analogous to TE and TM), using
-; the run-even and run-odd functions.
+; the run-zeven and run-zodd functions.
 
 (define-param h 0.5) ; the thickness of the slab
 (define-param eps 12.0) ; the dielectric constant of the slab
@@ -44,7 +44,7 @@
 (set! num-bands 9)
 
 ; Run even and odd bands, outputting fields only at the K point:
-(run-even (output-at-kpoint K output-hfield-z))
-(run-odd (output-at-kpoint K output-dfield-z))
+(run-zeven (output-at-kpoint K output-hfield-z))
+(run-zodd (output-at-kpoint K output-dfield-z))
 
 (display-eigensolver-stats)

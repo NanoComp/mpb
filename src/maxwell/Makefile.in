@@ -15,7 +15,8 @@ AR = ar
 
 all: libs
 
-OBJECTS = maxwell.o maxwell_op.o maxwell_pre.o maxwell_eps.o
+OBJECTS = maxwell.o maxwell_op.o maxwell_pre.o maxwell_eps.o	\
+	  maxwell_constraints.o
 LIBNAME = maxwell.a
 
 libs: $(LIBNAME)

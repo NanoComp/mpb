@@ -204,18 +204,10 @@ band <code>b</code> can be retrieved via <code>(list-ref freqs (- b
 <p><dt><code>iterations</code> [<code>integer</code>]
 <dd>The number of iterations required for convergence of the last k point.
 
-<p><dt><code>z-parity</code> [list of <code>number</code>]
-<dd>A list of the "z-parities" of each band computed for the last k
-point (in the same order as <code>freqs</code>).  The z-parity of a
-state is defined as the expectation value of the mirror-flip operation
-through z=0.  For true even and odd eigenstates (see
-<code>run-even</code> and <code>run-odd</code>), this will be +1 and
--1, respectively; for other states it will be something in between.
-This is useful when you have a nearly symmetric structure, such as a
-waveguide with a substrate underneath, and you want to tell which
-bands are even-like (z-parity &gt; 0) and odd-like (z-parity &lt; 0).
-The value of this variable is included in the output as a
-comma-delimited line prefixed with "<code>zparity:</code>".
+<p><dt><code>parity</code> [<code>string</code>]
+<dd>A string describing the current required parity/polarization
+(<code>"te"</code>, <code>"zeven"</code>, etcetera, or <code>""</code>
+for none), useful for prefixing output lines for grepping.
 
 </dl>
 
@@ -643,6 +635,21 @@ that were computed.  Alternatively, a band function may be a "thunk"
 (function of zero arguments), in which case <code>(band-func)</code>
 is called exactly once per k-point.
 
+<p><dt><code>(run-zeven <i>band-func ...</i>), (run-zodd <i>band-func ...</i>)</code>
+<dd>These are the same as the <code>run</code> function except that
+they constrain their solutions to have even and odd symmetry with
+respect to the z=0 plane.  You should use these functions
+<em>only</em> for structures that are symmetric through the z=0 mirror
+plane, where the third basis vector is in the z direction (0,0,1), and
+when the k vectors are in the xy plane.  Under these conditions, the
+eigenmodes always have either even or odd symmetry.  In two
+dimensions, even/odd parities are equivalent to TE/TM polarizations,
+respectively (and are often strongly analogous even in 3d).  It is
+useful in 2d and in 3d for structures such as waveguides and
+photonic-crystal slabs.  (For example, see the paper by S. G. Johnson
+<i>et al.</i>, "Guided modes in photonic crystal slabs," <i>PRB</i>
+<b>60</b>, 5751, August 1999.)
+
 <p><dt><code>(run-te <i>band-func ...</i>), (run-tm <i>band-func ...</i>)</code>
 <dd>These are the same as the <code>run</code> function except that
 they constrain their solutions to be TE- and TM-polarized,
@@ -651,12 +658,8 @@ defined has having electric and magnetic fields in the xy plane,
 respectively.  Equivalently, the H/E field of TE/TM light has only a z
 component (making it easier to visualize).
 
-<p>For a three-dimensional grid (<code>grid-size</code>) or when a k
-point has a nonzero z component, the eigenstates are no longer
-completely polarized, and MPB will exit with an error if you call
-<code>run-te</code> or <code>run-tm</code>.  (2d systems oriented in
-the yz or xz directions don't work, either; you have to orient your
-coordinates to be in the xy plane.)
+<p>These functions are actually equivalent to calling
+<code>run-zeven</code> and <code>run-zodd</code>, respectively.
 
 <p><a name="tetm-aniso">Note</a> that for the modes to be segregated
 into TE and TM polarizations, the dielectric function must have mirror
@@ -667,34 +670,33 @@ of the principle axes.  If you use <code>run-te</code> or
 <code>run-tm</code> in such a case of broken symmetry, MPB will exit
 with an error.
 
-<p><dt><code>(run-even <i>band-func ...</i>), (run-odd <i>band-func ...</i>)</code>
-<dd>These are the same as the <code>run</code> function except that
-they constrain their solutions to have even and odd symmetry with
-respect to the z=0 plane.  You should use these functions
-<em>only</em> for structures that are symmetric through the z=0 mirror
-plane, where the third basis vector is in the z direction (0,0,1), and
-when the k vectors are in the xy plane.  Under these conditions, the
-eigenmodes always have either even or odd symmetry.  The even/odd
-distinction is strongly analogous to TE/TM, respectively, and is
-equivalent in 2d; it is useful for structures such as waveguides and
-photonic-crystal slabs.  (For example, see the paper by S. G. Johnson
-<i>et al.</i>, "Guided modes in photonic crystal slabs," <i>PRB</i>
-<b>60</b>, 5751, August 1999.)
-
-<p><dt><code>(run-polarization <i>p reset-fields band-func ...</i>)</code>
+<p><dt><code>(run-parity <i>p reset-fields band-func ...</i>)</code>
 <dd>Like the <code>run</code> function, except that it takes two extra
-parameters, a polarization <code>p</code> and a boolean
+parameters, a parity <code>p</code> and a boolean
 (<code>true</code>/<code>false</code>) value
-<code>reset-fields</code>.  <code>p</code> specifies a polarization
-constraint, and should be one of the predefined variables
-<code>NO-POLARIZATION</code>, <code>TE</code>, <code>TM</code>,
-<code>EVEN-Z</code>, or <code>ODD-Z</code> (equivalent to
-<code>run</code>, <code>run-te</code>, <code>run-tm</code>,
-<code>run-even</code>, and <code>run-odd</code>, respectively).  If
-<code>reset-fields</code> is <code>false</code>, the fields from any
-previous calculation will be reused as the starting point from this
-calculation, if possible; otherwise, the fields are reset to random
-values.  The ordinary <code>run</code> functions use a default
+<code>reset-fields</code>.  <code>p</code> specifies a parity
+constraint, and should be one of the predefined variables:
+
+<ul>
+<li><code>NO-PARITY</code>: equivalent to <code>run</code>
+<li><code>EVEN-Z</code> (or <code>TE</code>): equivalent to <code>run-zeven</code> or <code>run-te</code>
+<li><code>ODD-Z</code> (or <code>TM</code>): equivalent to <code>run-zodd</code> or <code>run-tm</code>
+<li><code>EVEN-Y</code> (like code>EVEN-Z</code> but for y=0 plane)
+<li><code>ODD-Y</code> (like code>ODD-Z</code> but for y=0 plane)
+<ul>
+
+<p>It is possible to specify more than one symmetry constraint
+simultaneously by adding them, e.g. <code>(+ EVEN-Z ODD-Y)</code>
+requires the fields to be even through z=0 and odd through y=0.  It is
+an error to specify incompatible constraints (e.g. code>(+ EVEN-Z
+ODD-Z)</code>).  <b>Important:</b> if you specify the z/y parity, the
+dielectric structure (and the k vector) must be symmetric about the
+z/y=0 plane, respectively.
+
+<p>If <code>reset-fields</code> is <code>false</code>, the fields from
+any previous calculation will be reused as the starting point from
+this calculation, if possible; otherwise, the fields are reset to
+random values.  The ordinary <code>run</code> functions use a default
 <code>reset-fields</code> of<code>true</code>.
 
 <p><dt><code>(display-eigensolver-stats)</code>
@@ -730,14 +732,14 @@ although you should not need to do most of the time:
 
 <dd>Read the input variables and initialize the simulation in
 preparation for computing the eigenvalues.  The parameters are the
-same as the first two parameters of <code>run-polarization</code>.
+same as the first two parameters of <code>run-parity</code>.
 This function <em>must</em> be called before any of the other
 simulation functions below.  (Note, however, that the <code>run</code>
 functions all call <code>init-params</code>.)
 
-<p><dt><code>(set-polarization <i>p</i>)</code>
+<p><dt><code>(set-parity <i>p</i>)</code>
 <dd>After calling <code>init-params</code>, you can change the
-polarization constraint without resetting the other parameters by
+parity constraint without resetting the other parameters by
 calling this function.  Beware that this does not randomize the fields
 (see below); you don't want to try to solve for, say, the TM
 eigenstates when the fields are initialized to TE states from a
@@ -1029,6 +1031,40 @@ is higher than the minimum of the upper band.  (The gap is computed
 from the <code>band-range-data</code> of the previous run.)
 
 </dl>
+
+<h4><a name="parity">Parity</a></h4>
+
+<p>Given a set of eigenstates at a k-point, MPB can compute their
+<i>parity</i> with respect to the z=0 or y=0 plane.  The z/y parity of
+a state is defined as the expectation value of the mirror-flip
+operation through z/y=0, respectively.  For true even and odd
+eigenstates (see e.g.  <code>run-zeven</code> and
+<code>run-zodd</code>), this will be +1 and -1, respectively; for other
+states it will be something in between.  This is useful when you have
+a nearly symmetric structure, such as a waveguide with a substrate
+underneath, and you want to tell which bands are even-like (parity
+&gt; 0) and odd-like (parity &lt; 0).  (In fact, a state can be
+decomposed into purely even and odd functions, with amplitudes
+(1+parity)/2 and (1-parity)/2, respectively.)
+
+<dl>
+
+<p><dt><code>(compute-zparities)</code>
+<dd>Returns a list of the parities about the z=0 plane, one for each
+band computed at the last k-point.
+
+<p><dt><code>(compute-yparities)</code>
+<dd>Returns a list of the parities about the y=0 plane, one for each
+band computed at the last k-point.
+
+<p><dt><code>display-zparities</code>, <code>display-yparities</code>
+<dd>This are band functions, designed to be passed to
+<code>(run)</code>, which output all of the z/y parities,
+respectively, at each k-point (in comma-delimited format suitable for
+grepping).
+
+</dl>
+
 
 <h4><a name="group-vel">Group velocities</a></h4>
 

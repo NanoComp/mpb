@@ -85,8 +85,9 @@
 (define-input-output-var eigensolver-flops 0 'number)
 
 (define-output-var freqs (make-list-type 'number))
-(define-output-var z-parity (make-list-type 'number))
 (define-output-var iterations 'integer)
+
+(define-output-var parity 'string)
 
 (define-input-var negative-epsilon-ok? false 'boolean)
 (define (allow-negative-epsilon)
@@ -100,26 +101,29 @@
 
 ; (init-params p true) initializes the geometry, etcetera, and does
 ; everything else that's needed to get ready for an eigenvalue
-; calculation with polarization p (see below).  This should be called
+; calculation with parity p (see below).  This should be called
 ; after the input variables are changed.  If false is passed instead
 ; of true, fields from a previous run are retained, if possible, as a
 ; starting point for the eigensolver.
 (define-external-function init-params true false
   no-return-value 'integer 'boolean)
 
-; (set-polarization p) changes the polarization that is solved for by
+; (set-parity p) changes the parity that is solved for by
 ; solve-kpoint, below.  p should be one of the following constants
 ; init-params should already have been called.  Be sure to call
-; (randomize-fields) if you change the polarization without calling
+; (randomize-fields) if you change the parity without calling
 ; init-params.
-(define NO-POLARIZATION 0)
-(define TE 1)
-(define TM 2)
-(define EVEN-Z 3)
-(define ODD-Z 4)
-(define PREV-POLARIZATION -1)
-(define-external-function set-polarization false false 
+(define NO-PARITY 0)
+(define EVEN-Z 1)
+(define ODD-Z 2)
+(define EVEN-Y 4)
+(define ODD-Y 8)
+(define TE EVEN-Z)
+(define TM ODD-Z)
+(define PREV-PARITY -1)
+(define-external-function set-parity false false 
   no-return-value 'integer)
+(define set-polarization set-parity) ; backwards compatibility
 
 ; (randomize-fields) initializes the fields to random values; should
 ; only be called after init-params.
@@ -168,6 +172,30 @@
 
 ; ****************************************************************
 
+; Utility function to display a comma-delimited list of data for the
+; current k point, prefixed by data-name and the current parity.
+
+(define (display-kpoint-data data-name data)
+  (print parity data-name ":, " (get-kpoint-index))
+  (map (lambda (d) (print ", " d)) data)
+  (print "\n"))
+
+; ****************************************************************
+
+; Computing parities:
+
+(define-external-function compute-zparities false false
+  (make-list-type 'number))
+(define-external-function compute-yparities false false
+  (make-list-type 'number))
+
+(define (display-zparities)
+  (display-kpoint-data "zparity" (compute-zparities)))
+(define (display-yparities)
+  (display-kpoint-data "yparity" (compute-yparities)))
+
+; ****************************************************************
+
 ; Computing group velocities:
 
 (define-external-function compute-group-velocity-component false false
@@ -187,8 +215,7 @@
 ; Define a band function to be passed to run, so that you can easily
 ; display the group velocities for each k-point.
 (define (display-group-velocities)
-  (print "group velocities at " current-k ": "
-	 (compute-group-velocities) "\n"))
+  (display-kpoint-data "velocity" (compute-group-velocities)))
 
 ; ****************************************************************
 
@@ -388,7 +415,7 @@
 ; parameter, the band index, and is called for each band index at
 ; every k point.  These are typically used to output the bands.
 
-(define (run-polarization p reset-fields . band-functions)
+(define (run-parity p reset-fields . band-functions)
  (set! total-run-time (+ total-run-time
   (begin-time "total elapsed time for run: "
    (set! all-freqs '())
@@ -426,21 +453,22 @@
  (set! all-freqs (reverse all-freqs)) ; put them in the right order
  (print "done.\n"))
 
+(define run-polarization run-parity) ; backwards compatibility
+
 (define (run . band-functions)
-  (apply run-polarization
-	 (append (list NO-POLARIZATION true) band-functions)))
+  (apply run-parity
+	 (append (list NO-PARITY true) band-functions)))
 
-(define (run-te . band-functions)
-  (apply run-polarization (append (list TE true) band-functions)))
+(define (run-zeven . band-functions)
+  (apply run-parity (append (list EVEN-Z true) band-functions)))
 
-(define (run-tm . band-functions)
-  (apply run-polarization (append (list TM true) band-functions)))
+(define (run-zodd . band-functions)
+  (apply run-parity (append (list ODD-Z true) band-functions)))
 
-(define (run-even . band-functions)
-  (apply run-polarization (append (list EVEN-Z true) band-functions)))
-
-(define (run-odd . band-functions)
-  (apply run-polarization (append (list ODD-Z true) band-functions)))
+(define run-even run-zeven) ; backwards compatibility
+(define run-odd run-zodd) ; backwards compatibility
+(define run-te run-zeven)
+(define run-tm run-zodd)
 
 ; ****************************************************************
 
