@@ -49,7 +49,7 @@ snapshot:
 	cp install-sh $$ss_dir && \
 	(sed "s/VERSION=@MPB_VERSION@/VERSION=$$ss_vers/" $$ss_dir/configure.ac > $$ss_dir/configure.ac.ss) && \
 	mv -f $$ss_dir/configure.ac.ss $$ss_dir/configure.ac && \
-	pushd $$ss_dir && autoconf && popd && \
+	pushd $$ss_dir && autoconf && autoheader && popd && \
 	rm -f $$ss_dir".tar.gz" && \
 	GZIP="--best" tar chozf $$ss_dir".tar.gz" $$ss_dir && \
 	rm -rf $$ss_dir
