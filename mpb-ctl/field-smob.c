@@ -29,7 +29,7 @@
 #include "mpb.h"
 
 /* null mark function, for smobs containing no SCM objects */
-static SCM mark_null(SCM obj) { (void) obj; return SCM_BOOL_F;
+static SCM mark_null(SCM obj) { (void) obj; return SCM_BOOL_F; }
 
 /*************************************************************************/
 
