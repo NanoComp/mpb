@@ -357,6 +357,35 @@ even if we log out:
 unix% nohup mpb diamond.ctl &gt;&amp; diamond.out &amp;
 </pre>
 
+<h3><a name="fccunits">Important note on units for the diamond/fcc
+lattice</a></h3>
+
+<p><a href="user-tutorial.html#units">As usual,</a> all distances are
+in the "dimensionless" units determined by the length of the lattice
+vectors; here, the lattice vectors are unit vectors (the default), so
+their length is our unit of distance.  We refer to these units as
+<i>a</i>, and frequencies are given in units of <i>c/a</i>.
+
+<p>MPB users are sometimes confused by these units, because textbooks
+and papers often use a different convention for <i>a</i> in the fcc
+lattice.  Commonly, they depict a diamond/fcc lattice in a cubic
+supercell, and designate the side of the supercell by <i>a</i>.  This
+is <b>not</b> the same as MPB's <i>a</i>, which comes directly from
+the <em>primitive</em> lattice vectors that you specify (not from a
+supercell).  In particular, MPB's <i>a</i> is 1/sqrt(2) times the
+cubic-supercell <i>a</i> (and the frequencies are scaled by the same
+factor).
+
+<p>So, for example, in an fcc lattice of spheres, MPB's default
+<i>a</i> units would equal the center-to-center separation of the
+spheres, and close-packed (tangent) spheres would have a radius of
+0.5.  (The diamond structure is more complicated because it has two
+"atoms" per unit cell.)  If, on the other hand, you wanted to use the
+lattice units from the cubic supercell, you could just change the
+lengths of the lattice vectors by specifing a <code>(size (sqrt 0.5)
+(sqrt 0.5) (sqrt 0.5))</code> property for
+<code>geometry-lattice</code> (instead of the default unit lengths).
+
 <h3>Gaps and and band diagram for the diamond lattice</h3>
 
 <p>The diamond lattice has a complete band gap:
