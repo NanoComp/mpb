@@ -14,7 +14,7 @@
 (set! geometry 
       (list
        (make cylinder 
-	 (material Si) 
+	 (material GaAs) 
 	 (center 0 0) (radius r) (height infinity))))
       
 (define Gamma (vector3 0 0 0))
