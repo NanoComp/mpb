@@ -25,6 +25,9 @@ have these packages.
 
 <p>You will also need an ANSI C compiler, of course (gcc is fine), and
 installation will be easiest on a UNIX-like system (Linux is fine).
+In the following list, some of the packages are dependent upon
+packages listed earlier, so you should install them in more-or-less
+the order given.
 
 <h2>BLAS</h2>
 
@@ -63,28 +66,6 @@ LAPACK links can be found on <a
 href="http://SAL.KachinaTech.COM/B/0/LAPACK.html" title="Scientific
 Applications on Linux (SAL) LAPACK page">SAL</a>.
 
-<h2>HDF5</h2>
-
-<p>We require a portable, standard binary format for outputting the
-electromagnetic fields and similar volumetric data, and for this we
-use HDF.  HDF is a widely-used, free, portable library and file format
-for multi-dimensional scientific data, developed in the National
-Center for Supercomputing Applications (NCSA) at the University of
-Illinois (UIUC, home of the <a
-href="http://www.fightingillini.com/">Fighting Illini</a> and <i>alma
-mater</i> of many of my fine relatives).
-
-<p>There are two incompatible versions of HDF, HDF4 and HDF5 (no, not
-HDF1 and HDF2).  We require the newer version, HDF5.  (We use the
-newer version because it will be the focus of future development, it
-is cleaner, and it supports parallel I/O via MPI.)  Many visualization
-and data-analysis tools still use HDF4, but HDF5 includes an
-<code>h5toh4</code> conversion program that you can use if you need
-HDF4 files.
-
-<p>You can get HDF and learn about it on the <a
-href="http://hdf.ncsa.uiuc.edu">HDF Home Page</a>.
-
 <h2>MPI</h2>
 
 <p>Optionally, Photonic-Bands can run on a distributed-memory parallel
@@ -97,6 +78,28 @@ installed.
 <p>MPI is <i>not required</i> to compile the ordinary, uniprocessor
 version of Photonic-Bands.  In fact, our MPI code is not even fully
 implemented yet; thank you for your patience (we value your call).
+
+<h2>HDF5</h2>
+
+<p>We require a portable, standard binary format for outputting the
+electromagnetic fields and similar volumetric data, and for this we
+use HDF.  HDF is a widely-used, free, portable library and file format
+for multi-dimensional scientific data, developed in the National
+Center for Supercomputing Applications (NCSA) at the University of
+Illinois (UIUC, home of the <a
+href="http://www.fightingillini.com/">Fighting Illini</a> and <i>alma
+mater</i> of many of this author's fine relatives).
+
+<p>There are two incompatible versions of HDF, HDF4 and HDF5 (no, not
+HDF1 and HDF2).  We require the newer version, HDF5.  (We use the
+newer version because it will be the focus of future development, it
+is cleaner, and it supports parallel I/O via MPI.)  Many visualization
+and data-analysis tools still use HDF4, but HDF5 includes an
+<code>h5toh4</code> conversion program that you can use if you need
+HDF4 files.
+
+<p>You can get HDF and learn about it on the <a
+href="http://hdf.ncsa.uiuc.edu">HDF Home Page</a>.
 
 <h2>FFTW</h2>
 

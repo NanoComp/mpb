@@ -14,6 +14,88 @@ section.
 
 <h1>User Tutorial</h1>
 
+<p>In this section, we'll walk through the process of computing the
+band structure and outputting some fields for a two-dimensional
+photonic crystal using the Photonic-Bands package.  This should give
+you the basic idea of how it works and some of the things that are
+possible.  Here, we tell you the truth, but not the whole truth.  The
+<a href="user-ref.html">User Reference</a> section gives a more
+complete, but less colloquial, description of the features supported
+by Photonic-Bands.
+
+<h2>The ctl File</h2>
+
+<p>The use of the Photonic-Bands package revolves around the control
+file, abbreviated "ctl" and typically called something like
+<code>foo.ctl</code> (although you can use any filename extension you
+wish).  The ctl file specifies the geometry you wish to study, the
+number of eigenvectors to compute, what to output, and everything else
+specific to your calculation.  Rather than a flat, inflexible file
+format, however, the ctl file is actually written in a scripting
+language.  This means that it can be everything from a simple sequence
+of commands setting the geometry, etcetera, to a full-fledged program
+with user input, loops, and anything else that you need.  Don't worry,
+though--simple things are simple (you don't need to be a <a
+href="http://www.tuxedo.org/~esr/jargon/html/entry/Real-Programmer.html">Real
+Programmer</a>), and even then you will appreciate the flexibility
+that a scripting language gives you.  (e.g. you can input things in
+any order, without regard for whitespace, insert comments where you
+please, omit things when reasonable defaults are available...)
+
+<p>The ctl file is actually implemented on top of the libctl library,
+a set of utilities that are in turn built on top of the Scheme
+language.  Thus, there are three sources of possible commands and
+syntax for a ctl file:
+
+<ul>
+
+<li>Scheme, a powerful and beautiful programming language
+developed at MIT, which has a particularly simple syntax: all
+statements are of the form <code>(<i>function
+arguments...</i>)</code>.  We run Scheme under the GNU Guile
+interpreter (designed to be plugged into programs as a scripting and
+extension language).  You don't need to learn much Scheme for a basic
+ctl file, but it is always there if you need it; you can learn more
+about it from these <a
+href="http://ab-initio.mit.edu/libctl/doc/guile-links.html">Guile and
+Scheme links</a>.
+
+<li>libctl, a library that we built on top of Guile to simplify
+communication between Scheme and scientific computation software.
+libctl sets the basic tone of the user interface and defines a number
+of useful functions.  See the <a
+href="http://ab-initio.mit.edu/libctl/">libctl home page</a>.
+
+<li>The Photonic-Bands package, which defines all the interface
+features that are specific to photonic band structure calculations.
+This manual is primarily focused on documenting these features.
+
+</ul>
+
+<p>It would be an excellent idea at this point for you to go read the
+<a href="http://ab-initio.mit.edu/libctl/doc/">libctl manual</a>,
+particularly the <a
+href="http://ab-initio.mit.edu/libctl/doc/basic-user.html">Basic User
+Experience</a> section, which will give you an overview of what the
+user interface is like, provides a crash course in the Scheme features
+that are most useful here, and describes some useful general features.
+
+<p>Okay, let's continue with our tutorial.  The Photonic-Bands program
+is normally invoked by running:
+
+<pre>
+./photon <i>foo.ctl</i>
+</pre>
+
+<p>which reads the ctl file <code>foo.ctl</code> and executes it.
+However, as you already know (since you obediently read the libctl
+manual, right?), if you invoke <code>./photon</code> with no
+arguments, you are dropped into an <em>interactive</em> mode in which
+you can type commands and see their results immediately.  Why don't
+you do that right now, in your terminal window?  Then, you can paste
+in the commands from the tutorial as you follow it and see what they
+do.  Isn't this fun?
+
 <hr>
 Go to the <a href="user-ref.html">next</a>, <a
 href="installation.html">previous</a>, or <a href="index.html">main</a>
