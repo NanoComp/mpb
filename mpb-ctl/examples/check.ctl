@@ -191,8 +191,8 @@
 			       (vector3 0 0.5 0)              ; L
 			       (vector3 0 0 0)                ; Gamma
 			       (vector3 0 0.5 0.5)            ; X
-			       (vector3 0.25 0.5 0.75)        ; W
-			       (vector3 0.375 0.375 0.75))))  ; K
+			       (vector3 0.25 0.75 0.5)        ; W
+			       (vector3 0.375 0.75 0.375))))  ; K
 (set! geometry (list (make sphere (center 0) (radius 0.5) (material air))))
 (set! default-material (make dielectric (epsilon 11.56)))
 (set! grid-size (vector3 16 16 16))

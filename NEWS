@@ -26,6 +26,11 @@ MPB 1.2
   * The configure script now checks that guile is in the $PATH.  Thanks to
     Bing Li and Giridhar Malalahalli for their bug reports.
 
+  * Rotated the W and K points of the diamond-lattice example so that
+    they are oriented similarly to those in the Photonic Crystals book
+    by Joannopoulos et al. (eigenfrequencies are not affected).  Thanks
+    to Robert Sheldon for pointing out that this was confusing.
+
 MPB 1.1.1 (7/4/2001)
 
   * Fixed bug in H-field output that caused subtly incorrect H-field
