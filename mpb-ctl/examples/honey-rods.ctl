@@ -5,7 +5,7 @@
 
 (set! num-bands 8)
 
-(define-param r 0.15) ; the rod radius
+(define-param r 0.14) ; the rod radius
 (define-param eps 12) ; the rod dielectric constant
 
 ; triangular lattice:
