@@ -235,9 +235,7 @@ void scale_eigenvector(integer b, cnumber scale)
      CHECK(cnumber_im(scale) == 0, "scale-eigenvector must be called with real argument in mpbi");
 #endif     
      ASSIGN_SCALAR(s, cnumber_re(scale), cnumber_im(scale));
-     printf("scaling band %d by (%g,%g)\n", b, scale.re, scale.im);
      blasglue_scal(H.n, s, H.data + b-1, H.p);
-     printf("scaled band %d by (%g,%g)\n", b, s.re, s.im);
      curfield_reset();
 }
 
