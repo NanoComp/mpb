@@ -331,7 +331,7 @@ matrixio_id matrixio_create(const char *fname)
 #  ifdef HAVE_H5PSET_MPI
      id = H5Fcreate(new_fname, H5F_ACC_TRUNC, H5P_DEFAULT, access_props);
 #  else
-     mpi_start_critical_section(matrixio_critical_section_tag);
+     mpi_begin_critical_section(matrixio_critical_section_tag);
      if (mpi_is_master())
 	  id = H5Fcreate(new_fname, H5F_ACC_TRUNC, H5P_DEFAULT, access_props);
      else
@@ -367,7 +367,7 @@ matrixio_id matrixio_open(const char *fname, int read_only)
 
      new_fname = add_fname_suffix(fname);
 
-     IF_EXCLUSIVE(mpi_start_critical_section(matrixio_critical_section_tag),0);
+     IF_EXCLUSIVE(mpi_begin_critical_section(matrixio_critical_section_tag),0);
 
      if (read_only)
 	  id = H5Fopen(new_fname, H5F_ACC_RDONLY, access_props);
