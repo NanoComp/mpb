@@ -339,21 +339,20 @@ AC_CHECK_FUNCS(getopt strncmp)
 # complex dot product functions) works from C:
 
 AC_MSG_CHECKING([whether calling BLAS zdotc works])
+AC_F77_FUNC(zdotc)
 AC_TRY_RUN([
 #include <stdio.h>
 #include <stdlib.h>
-#include "$srcdir/src/util/fortranize.h"
 typedef struct { double re, im; } cmplx;
-#define zdotc FORTRANIZE(zdotc,ZDOTC)
 #ifdef __cplusplus
 extern "C"
 #endif
-extern cmplx zdotc(int *, cmplx *, int *, cmplx *, int *);
+extern cmplx $zdotc(int *, cmplx *, int *, cmplx *, int *);
 int main(void) {
      cmplx x[2] = { {1,0}, {0,1} }, y[2] = { {1,0}, {1,0} };
      int n = 2, inc1 = 1, inc2 = 1;
      cmplx result = { 0, 0 };
-     result = zdotc(&n, x, &inc1, y, &inc2);
+     result = $zdotc(&n, x, &inc1, y, &inc2);
      if (result.re != 1 || result.im != -1) return EXIT_FAILURE;
      else return EXIT_SUCCESS;
 }
