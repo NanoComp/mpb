@@ -11,6 +11,10 @@ MPB 1.1.1 (7/4/2001)
   * Added retrieve-gap convenience function to return the gap between
     two specified bands.
 
+  * C compiler flags -O3 are no longer used by default, since they
+    don't work with some compilers; most of the performance depends
+    upon the BLAS and FFTW anyway.
+
 MPB 1.1 (5/6/2001)
 
   * Added compute-energy-integral function to make it easier to compute

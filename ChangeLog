@@ -1,3 +1,35 @@
+2001-07-05  Steven G. Johnson  <stevenj@ab-initio>
+
+	* NEWS: updated
+
+	* configure.ac, src/maxwell/maxwell.h: fixed for new config.h
+
+	* configure.ac, config.guess, config.sub, configure.in,
+	src/config.h.in, src/matrices/blasglue.c, src/util/fortranize.h:
+	switched to autoconf 2.50
+
+	* doc/user-ref.html, doc/user-tutorial.html: lowered default
+	tolerance to 1e-7
+
+	* NEWS: updated
+
+	* mpb-ctl/mpb.scm.in: lowered default tolerance to 1e-7
+
+2001-07-04  Steven G. Johnson  <stevenj@ab-initio>
+
+	* doc/index.html, doc/user-ref.html: fixed documentation
+	cross-refs
+
+	* doc/user-ref.html, doc/user-tutorial.html,
+	mpb-ctl/examples/tutorial.ctl, mpb-ctl/mpb.scm.in: documented,
+	fixed retrieve-gap function
+
+	* ChangeLog, NEWS: updated
+
+	* configure.in: bumped version to 1.1.1
+
+	* mpb-ctl/examples/bragg.ctl: generalized
+
 2001-07-04  Steven G. Johnson  <stevenj@ab-initio>
 
 	* mpb-ctl/examples/bragg.ctl: generalized
