@@ -397,6 +397,7 @@ void init_params(int p, boolean reset_fields)
    Must only be called after init_params! */
 void solve_kpoint(vector3 kvector)
 {
+     static int prev_was_Gamma = 0; /* if previous k point was Gamma */
      int i, num_iters;
      real *eigvals;
      real k[3];
@@ -470,7 +471,11 @@ void solve_kpoint(vector3 kvector)
 		  zero-k point in order to get good convergence, at
 		  least with the new "analytic" linmin in
 		  eigensolver.c.  Hey, it works, and it can't do any
-		  harm. */
+		  harm.  (Update for MPB 0.9.1: the same problem
+	          goes in the other direction--after the Gamma point,
+	          subsequent k-points are screwed up and don't converge
+	          properly, so we need to rerandomize after Gamma too
+	          (see below).  This occurs e.g. in a sq. lattice of rods.) */
 	       if (kpoint_index)
 		    randomize_fields();
 
@@ -482,6 +487,14 @@ void solve_kpoint(vector3 kvector)
 	       if (verbose)
 		    printf("detected zero k; using special initial fields\n");
 	       maxwell_zero_k_constraint(H, (void *) mdata);
+
+	       prev_was_Gamma = 1;
+	  }
+	  else {
+	       /* hack: see above */
+	       if (prev_was_Gamma)
+		    randomize_fields();
+	       prev_was_Gamma = 0;
 	  }
 	  eigensolver(H, eigvals,
 		      maxwell_operator, (void *) mdata,

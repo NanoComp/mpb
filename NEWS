@@ -1,7 +1,12 @@
+MPB 0.9.1 (1/7/2000)
+
+  * Fixed eigensolver bug where special handling of Gamma (k=0) point could
+    screw up convergence for subsequent k-points, causing incorrect results.
+
   * Fixed behavior of filename-prefix input variable; thanks to Karl Koch
     for the bug report.
 
-MPB 0.9 (1/2/1999)
+MPB 0.9 (1/2/2000)
 
   * Added run-even and run-odd functions, so you can now compute only
     even/odd states (with respect to a z=0 mirror plane) in systems with
