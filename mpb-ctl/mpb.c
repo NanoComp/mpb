@@ -845,7 +845,7 @@ void solve_kpoint(vector3 kvector)
 	  free(parity);
      }
 
-     CHK_MALLOC(parity, char, strlen(parity_string(mdata) + 1))
+     CHK_MALLOC(parity, char, strlen(parity_string(mdata)) + 1);
      parity = strcpy(parity, parity_string(mdata));
 
      iterations = total_iters; /* iterations output variable */
