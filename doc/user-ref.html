@@ -1056,6 +1056,14 @@ description did not.  So, you should be careful, and look at the
 
 <h2><a name="parallel">Parallel MPB</a></h2>
 
+<p>We provide two methods by which you can parallelize MPB.  The
+first, using MPI, is the most sophisticated and potentially provides
+the greatest and most general benefits.  The second, which involves a
+simple script to split e.g. the <code>k-points</code> list among
+several processes, is less general but may be useful in many cases.
+
+<h3><a name="mpb-mpi">MPB with MPI parallelization</a></h3>
+
 <p>If you <code>configure</code> MPB with the <code>--with-mpi</code>
 flag, then the program is compiled to take advantage of
 distributed-memory parallel machines with <a
@@ -1111,7 +1119,7 @@ problems, the speedup is also nearly linear.
 <p>MPI support in MPB is thanks to generous support from <a
 href="http://www.clarendonphotonics.com/">Clarendon Photonics</a>.
 
-<h3><a name="mpb-split">Alternative parallelization</a></h3>
+<h3><a name="mpb-split">Alternative parallelization: mpb-split</a></h3>
 
 <p>There is an alternative method of parallelization when you have
 multiple k points: do each k-point on a different processor.  This
