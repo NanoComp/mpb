@@ -493,9 +493,13 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
 
      /* compute p = exp(i*phase) factors: */
      phasex *= -TWOPI; phasey *= -TWOPI; phasez *= -TWOPI;
-     switch (rank) { /* treat z as the last dimension always */
+     switch (rank) { /* treat z as the last/truncated dimension always */
 	 case 3: break;
+#  if defined(HAVE_MPI) && ! defined(SCALAR_COMPLEX)
+	 case 2: phasez = phasex; phasex = phasey; phasey = 0; break;
+#  else
 	 case 2: phasez = phasey; phasey = 0; break;
+#  endif
 	 case 1: phasez = phasex; phasex = phasey = 0; break;
      }
      CASSIGN_SCALAR(pz, cos(phasez), sin(phasez));
@@ -587,7 +591,12 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
      }
      else /* if (rank <= 2) */ {
 	  int i;
-	  for (i = 0; 2*i <= nx; ++i) {
+#  ifdef HAVE_MPI
+	  for (i = 0; i < nx; ++i)
+#  else
+	  for (i = 0; 2*i <= nx; ++i)
+#  endif
+	  {
 	       int xdiff = i != 0, ic = (nx - i) % nx;
 	       int jmax = n_last_new + (jmin - 1);
 #  ifndef HAVE_MPI
@@ -730,7 +739,12 @@ void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field)
      }
      else /* if (rank <= 2) */ {
 	  int i;
-	  for (i = 0; 2*i <= nx; ++i) {
+#  ifdef HAVE_MPI
+	  for (i = 0; i < nx; ++i)
+#  else
+	  for (i = 0; 2*i <= nx; ++i)
+#  endif
+	  {
 	       int ic = (nx - i) % nx;
 	       int jmax = n_last_new + (jmin - 1);
 #  ifndef HAVE_MPI
