@@ -502,11 +502,71 @@ default value:
 (set! mesh-size 3) ; reset to default value of 3
 </pre>
 
-<h2>Finding a Point-defect State</h2>
+<h2>A Complete 2D Gap with an Anisotropic Dielectric</h2>
 
 <p>As another example, one which does not require so much Scheme
-knowledge, let's consider the problem of finding a point-defect state
-in our square lattice of rods.  This is a state that is localized in a
+knowledge, let's construct a structure with a complete 2D gap (i.e.,
+in both TE and TM polarizations), in a somewhat unusual way: using an
+anisotropic dielectric structure.  An anisotropic dielectric presents
+a different dielectric constant depending upon the direction of the
+electric field, and can be used in this case to make the TE and TM
+polarizations "see" different structures.
+
+<p>We already know that the triangular lattice of rods has a gap for
+TM light, but not for TE light.  The dual structure, a triangular
+lattice of holes, has a gap for TE light but not for TM light (at
+least for the small radii we will consider).  Using an anisotropic
+dielectric, we can make both of these structures simultaneously, with
+each polarization seeing the structure that gives it a gap.
+
+<p>As before, our <code>geometry</code> will consist of a single
+cylinder, this time with a radius of 0.3, but now it will have an
+epsilon of 12 (dielectric rod) for TM light and 1 (air hole) for TE
+light:
+
+<pre>
+(set! geometry (list (make cylinder
+                       (center 0 0 0) (radius 0.3) (height infinity)
+                       (material (make dielectric-anisotropic
+                                   (epsilon-diag 1 1 12))))))
+</pre>
+
+<p>Here, <code>epsilon-diag</code> specifies the diagonal elements of
+the dielectric tensor.  The off-diagonal elements (specified by
+<code>epsilon-offdiag</code>) default to zero and are only needed when
+the principal axes of the dielectric tensor are different from the
+cartesian xyz axes.
+
+<p>The background defaults to air, but we need to make it a dielectric
+(epsilon of 12) for the TE light, so that the cylinder forms a hole.
+This is controlled via the <code>default-material</code> variable:
+
+<pre>
+(set! default-material (make dielectric-anisotropic (epsilon-diag 12 12 1)))
+</pre>
+
+<p>Finally, we'll increase the number of bands back to eight and run
+the computation:
+
+<pre>
+(set! num-bands 8)
+(run) ; just use run, instead of run-te or run-tm, to find the complete gap
+</pre>
+
+<p>The result, as expected, is a complete band gap:
+
+<pre>
+Gap from band 2 (0.223978579207912) to band 3 (0.275008627329051), 20.4534494883325%
+</pre>
+
+<p>(If we had computed the TM and TE bands separately, we would have
+found that the lower edge of the complete gap in this case comes from
+the TM gap, and the upper edge comes from the TE gap.)
+
+<h2>Finding a Point-defect State</h2>
+
+<p>Here, we consider the problem of finding a point-defect state in
+our square lattice of rods.  This is a state that is localized in a
 small region by creating a point defect in the crystal--e.g., by
 removing a single rod.  The resulting mode will have a frequency
 within, and be confined by, the gap.
