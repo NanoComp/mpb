@@ -1,14 +1,8 @@
-Photonic Band Structure Computation
+MIT Photonic-Bands
 
-A new program for computing photonic band structures.
+A program for computing photonic band structures.
 
-The user interface, photon-ctl, makes use of the GNU Guile interface
-in order to be flexible and fully scriptable.  My libctl library is
-used to automatically generate the interface code from a high-level
-description (photon-ctl/photon.ctl).
-
-The eigensolver routines are separated from the rest of the code and
-are designed to be parallel from the start, using LAPACK/BLAS routines
-extensively to provide portable performance.  They use block
-algorithms to solve for multiple eigenvectors simultaneously, and can
-easily be modified to use various iteration schemes.
+See the MIT Photonic-Bands manual, in doc/index.html, for a complete
+description of the package and its user interface, as well as
+installation instructions, the license and copyright, and other
+important information.
