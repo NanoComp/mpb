@@ -441,6 +441,14 @@
   (compute-field-energy)
   (output-field))
 
+; We need a special function to evaluate band functions, since
+; band functions can either be a function of the band number or
+; a thunk (function of no arguments, evaluated once per k-point).
+(define (apply-band-func band-func which-band)
+  (if (zero? (procedure-num-args band-func))
+      (if (= which-band 1) (band-func)) ; evaluate thunks once per k-point
+      (band-fund which-band)))
+
 ; The following function returns an output function that calls
 ; output-func for bands with D energy in objects > min-energy.
 ; For example, (output-dpwr-in-objects output-dfield 0.20 some-object)
@@ -455,19 +463,19 @@
 	(print "dpwr:, " which-band ", "
 	       (list-ref freqs (- which-band 1)) ", " energy "\n")
 	(if (>= energy min-energy)
-	    (output-func which-band)))))
+	    (apply-band-func output-func which-band)))))
 
 ; Combines zero or more band functions into one:
 (define (combine-band-functions . band-funcs)
   (lambda (which-band)
-    (map (lambda (f) (f which-band)) band-funcs)))
+    (map (lambda (f) (apply-band-func f which-band)) band-funcs)))
 
 ; Only invoke the given band functions for the specified k-point:
 (define (output-at-kpoint kpoint . band-funcs)
   (let ((band-func (apply combine-band-functions band-funcs)))
     (lambda (which-band)
       (if (vector3= current-k kpoint)
-	  (band-func which-band)))))
+	  (apply-band-func band-func which-band)))))
 
 ; Band functions to pick a canonical phase for the eigenstate of the
 ; given band based upon the spatial representation of the given field:
