@@ -1,3 +1,226 @@
+Fri Jan  7 18:35:12 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* configure.in, mpb-ctl/mpb.c, NEWS: 0.9.1 eigensolver bugfix
+	(yikes!)
+
+Tue Jan  4 05:52:41 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.c: noted units of reciprocal lattice vectors in
+	output
+
+	* NEWS: noted filename-prefix fix
+
+	* mpb-ctl/mpb.c: bug fix...prefix goes *before* filename; thanks
+	to Karl Koch.
+
+Sun Jan  2 17:29:20 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* ChangeLog: updated
+
+	* doc/user-tutorial.html: slight fix
+
+	* NEWS: noted more changes
+
+	* doc/user-tutorial.html: noted polarization (e.g. ".te") in the
+	output filenames.
+
+	* doc/user-tutorial.html: slight rewording
+
+	* NEWS, configure.in: version-numbering scheme is now 0.8, 0.9,
+	0.10, ...
+
+	* doc/introduction.html: small formatting fix
+
+	* TODO: updated
+
+	* NEWS: slight rewording
+
+	* NEWS: added version number to NEWS
+
+	* NEWS: removed inconsistent parens
+
+	* mpb-ctl/mpb.scm.in, NEWS, doc/user-ref.html, mpb-ctl/mpb.c:
+	added z-parity output var
+
+	* src/maxwell/maxwell_pre.c: fixed counting bug in zparity
+	computation
+
+	* NEWS, configure.in: configure works without f77 compiler,
+	hopefully
+
+Sat Jan  1 23:50:31 2000  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* tests/maxwell_test.c, src/util/check.h, src/util/debug_malloc.c,
+	src/util/fortranize.h, src/util/mpi_utils.c, src/util/mpi_utils.h,
+	src/util/mpiglue.h, tests/blastest.c, tests/eigs_test.c,
+	tests/malloctest.c, src/matrixio/matrixio.c,
+	src/matrixio/matrixio.h, src/maxwell/maxwell.c,
+	src/maxwell/maxwell.h, src/maxwell/maxwell_eps.c,
+	src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c,
+	src/matrices/blasglue.h, src/matrices/eigensolver.c,
+	src/matrices/eigensolver.h, src/matrices/evectmatrix.c,
+	src/matrices/matrices.c, src/matrices/matrices.h,
+	src/matrices/scalar.h, src/matrices/sqmatrix.c,
+	src/matrixio/evectmatrixio.c, src/matrixio/fieldio.c,
+	doc/license.html, mpb-ctl/epsilon_file.c, mpb-ctl/mpb.c,
+	mpb-ctl/mpb.h, mpb-ctl/mpb.scm.in, src/matrices/blasglue.c,
+	COPYRIGHT: bumped copyright year
+
+	* NEWS, configure.in: bumped version and went to 2-digit minor
+	version numbers
+
+	* mpb-ctl/examples/hole-slab.ctl, mpb-ctl/mpb.c,
+	mpb-ctl/mpb.scm.in, src/maxwell/maxwell.c, src/maxwell/maxwell.h,
+	src/maxwell/maxwell_pre.c, NEWS, doc/user-ref.html: added run-even
+	and run-odd
+
+Tue Dec 14 02:43:57 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html: defined reciprocal lattice
+
+	* doc/license.html: slight wording change in quotation
+
+	* doc/license.html: better translation
+
+Mon Dec 13 23:55:56 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/license.html: added St. Augustine quote
+
+Thu Dec  9 00:11:11 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/acknowledgments.html: slight fix
+
+Sun Dec  5 21:07:58 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/installation.html: various improvements
+
+Fri Dec  3 20:03:56 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/examples/hole-slab.ctl: fixed substrate
+
+	* mpb-ctl/examples/hole-slab.ctl: allow substrate
+
+	* mpb-ctl/examples/tri-holes.ctl:
+	Added 2d triangular lattice of holes example.
+
+Thu Dec  2 06:40:01 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-tutorial.html: warned of false-positives in band gaps
+
+	* tests/maxwell_test.c, src/util/check.h, tests/eigs_test.c, tests/malloctest.c, src/matrixio/matrixio.c, src/maxwell/maxwell.c, src/matrices/matrices.c, src/matrices/sqmatrix.c, src/matrixio/fieldio.c, mpb-ctl/mpb.c, src/matrices/eigensolver.c, mpb-ctl/epsilon_file.c:
+	Use CHK_MALLOC everywhere.  For one thing, this prevents problems
+	when we allocate 0 bytes on systems where malloc(0) returns NULL.
+
+	* mpb-ctl/mpb.scm.in, mpb-ctl/mpb.c: handle num-bands = 0
+
+Wed Dec  1 04:04:48 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* src/matrices/eigensolver.h: enable delay-cg by default
+
+	* src/matrices/eigensolver.c:
+	print warning in verbose mode for large lambda
+
+	* mpb-ctl/mpb.scm.in: fixed median bug for odd sizes
+
+	* mpb-ctl/examples/hole-slab.ctl, mpb-ctl/examples/sq-rods.ctl, mpb-ctl/mpb.scm.in, doc/user-ref.html:
+	added display-eigensolver-stats
+
+	* src/matrices/eigensolver.c, src/matrices/eigensolver.h:
+	added EIGS_DELAY_CG flag...don't enable by default until we do more tuning
+
+Tue Nov 30 23:47:35 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* src/matrices/eigensolver.c:
+	don't use cg with analytic multimin (multimin screws up cg) (because of
+	this, multimin is probably not worth it)
+
+	* tests/maxwell_test.c: got rid of gcc warning
+
+	* mpb-ctl/mpb.c:
+	randomize-fields now randomizes both the real and imaginary parts.
+	Previously, it just set the imaginary parts to zero (which is fine for
+	structures with inversion symmetry, but in general cases I don't see
+	any justification for it).
+
+	* src/matrices/eigensolver.c:
+	verbose mode now prints out trace on every iteration.
+
+Mon Nov 29 22:00:23 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* NEWS, ChangeLog: updated
+
+	* mpb-ctl/Makefile.in:
+	fixed trailing spaces in sed command; thanks to Ron Chase for the bug report.
+
+	* mpb-ctl/Makefile.in, tests/Makefile.in, configure.in:
+	incorporate FLIBS into LIBS
+
+	* doc/installation.html:
+	more explicit instructions for LAPACK and BLAS.
+
+Thu Nov 25 06:25:09 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/epsilon_file.c: minor improvements, mostly to comments
+
+	* src/matrices/eigensolver.c: get rid of warning
+
+	* src/matrices/eigensolver.c:
+	don't redeclare lambda (also gets rid of possiblity of prev_lambda being
+	assigned to undefined variable)
+
+	* Makefile.in: added 'make snapshot'
+
+	* doc/user-ref.html: slight rewording
+
+	* src/maxwell/maxwell_eps.c, src/matrixio/matrixio.c, src/matrixio/matrixio.h, src/maxwell/maxwell.h, mpb-ctl/mpb.h, mpb-ctl/mpb.scm.in, src/matrixio/evectmatrixio.c, mpb-ctl/Makefile.in, mpb-ctl/epsilon_file.c, mpb-ctl/mpb.c, doc/user-ref.html:
+	added epsilon-input-file input var
+
+Wed Nov 24 05:05:48 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/mpb.scm.in, configure.in, mpb-ctl/mpb.c:
+	added eigensolver-flags input variable
+
+	* src/matrices/evectmatrix.c, src/matrices/matrices.c, src/matrices/matrices.h, src/matrices/eigensolver.c, src/matrices/eigensolver.h:
+	Added EIGS_ANALYTIC_MULTIMIN, but don't enable by default until I
+	can fix the convergence.  (Maybe by implementing a generalized
+	conjugacy condition for conjugate gradient?)
+
+	* src/matrices/eigensolver.c:
+	commented on non-storage of U and YtAYU; also changed iteration counter
+	to be 1-based in verbose mode
+
+	* src/matrices/matrices.h, src/matrices/scalar.h, src/matrices/evectmatrix.c, src/matrices/matrices.c, src/matrices/eigensolver.c:
+	optimized when matrices are diagonal
+
+Mon Nov 22 05:12:35 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* configure.in: bumped version
+
+	* NEWS: noted (scheduled) 0.8.1 release.
+
+	* doc/introduction.html: added comparison with time-domain
+
+Sun Nov 21 17:59:22 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/examples/hole-slab.ctl, mpb-ctl/examples/tutorial.ctl, doc/user-tutorial.html, mpb-ctl/mpb.scm.in, doc/user-ref.html, NEWS:
+	output-hfieldz, etc -> output-hfield-z; also use these functions in tutorial
+
+	* NEWS: noted changes
+
+	* src/matrixio/matrixio.c: speed up saving non-contiguous data
+
+	* mpb-ctl/mpb.scm.in, doc/user-ref.html:
+	added output-field[xyz] and friends
+
+	* src/matrixio/matrixio.h, mpb-ctl/mpb.scm.in, src/matrixio/fieldio.c, mpb-ctl/mpb.c:
+	Sped up phase calculations in field output (but to no avail, it seems),
+	and set things up for outputting only a single component of a vector field.
+
+	* NEWS: fixed typo
+
+	* doc/user-ref.html, mpb-ctl/mpb.scm.in, NEWS:
+	added output-copies variable
+
 2000-01-02  stevenj  <stevenj@gil-galad.mit.edu>
 
 	* /home/a/stevenj/Repository/mpb/doc/user-tutorial.html: slight
@@ -323,7 +546,7 @@
 	/home/a/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
 	/home/a/stevenj/Repository/mpb/NEWS: added output-copies variable
 
-Fri Nov 19 00:45:13 1999  Steven G. Johnson  <stevenj@superjdj>
+Fri Nov 19 00:45:13 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* TODO: updated and cleaned up a bit
 
@@ -334,7 +557,7 @@ Fri Nov 19 00:45:13 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* mpb-ctl/examples/hole-slab.ctl: added hole-slab example
 
-Thu Nov 18 20:43:17 1999  Steven G. Johnson  <stevenj@superjdj>
+Thu Nov 18 20:43:17 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* configure.in: don't look in ../libctl and print error if libctl
 	not found
@@ -378,7 +601,7 @@ Thu Nov 18 20:43:17 1999  Steven G. Johnson  <stevenj@superjdj>
 	giving generic names to matrices UYtAYU and Usqrt that were being
 	used for lots of random things.
 
-Wed Nov 17 23:56:34 1999  Steven G. Johnson  <stevenj@superjdj>
+Wed Nov 17 23:56:34 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/user-ref.html: grammar fix
 
@@ -402,7 +625,7 @@ Wed Nov 17 23:56:34 1999  Steven G. Johnson  <stevenj@superjdj>
 	* src/matrices/eigensolver.c, src/matrices/eigensolver.h,
 	mpb-ctl/mpb.c: Added constraint "chaining" utilities.
 
-Tue Nov 16 07:10:08 1999  Steven G. Johnson  <stevenj@superjdj>
+Tue Nov 16 07:10:08 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/matrices/eigensolver.c: renamed check variable (don't reuse
 	E2--bad style)
@@ -415,7 +638,7 @@ Tue Nov 16 07:10:08 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* mpb-ctl/mpb.c: added missing return statements in error code
 
-Mon Nov 15 23:51:42 1999  Steven G. Johnson  <stevenj@superjdj>
+Mon Nov 15 23:51:42 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* TODO: we can't add HDF4 support because the HDF4 license
 	conflicts with the GPL
@@ -438,7 +661,7 @@ Mon Nov 15 23:51:42 1999  Steven G. Johnson  <stevenj@superjdj>
 	resetting of CG direction every 100 iters (determined by some
 	experimentation with the 5x5 defect).
 
-Sun Nov 14 20:29:37 1999  Steven G. Johnson  <stevenj@superjdj>
+Sun Nov 14 20:29:37 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/eigs_test.c, tests/malloctest.c, tests/maxwell_test.c,
 	src/util/mpi_utils.h, src/util/mpiglue.h, tests/blastest.c,
@@ -465,7 +688,7 @@ Sun Nov 14 20:29:37 1999  Steven G. Johnson  <stevenj@superjdj>
 	* configure.in: check for -lcxml in addition to -ldxml (name
 	changed due to acquisition by Compaq).
 
-Fri Nov 12 20:46:38 1999  Steven G. Johnson  <stevenj@superjdj>
+Fri Nov 12 20:46:38 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* photon-ctl/photon.scm.in: Removed begin-time macro (moved it to
 	libctl).
@@ -482,7 +705,7 @@ Fri Nov 12 20:46:38 1999  Steven G. Johnson  <stevenj@superjdj>
 	* src/util/fortranize.h: don't need to define NO_FORTRAN_FUNCTIONS
 	here on AIX, since it's detected by configure.
 
-Thu Nov 11 03:01:28 1999  Steven G. Johnson  <stevenj@superjdj>
+Thu Nov 11 03:01:28 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* configure.in, doc/installation.html: Added --with-fastblas=<lib>
 	to try linking with -l<lib>.
@@ -498,15 +721,15 @@ Thu Nov 11 03:01:28 1999  Steven G. Johnson  <stevenj@superjdj>
 	fancy preconditioner.  Also made different eigensolver iteration
 	schemes into runtime flags (instead of preprocessor #ifdefs).
 
-Wed Nov  3 23:14:56 1999  Steven G. Johnson  <stevenj@superjdj>
+Wed Nov  3 23:14:56 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* photon-ctl/photon.scm.in: added elapsed time output
 
-Mon Nov  1 22:52:13 1999  Steven G. Johnson  <stevenj@superjdj>
+Mon Nov  1 22:52:13 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* TODO: updated to reflect recent improvements
 
-Tue Oct 26 00:54:42 1999  Steven G. Johnson  <stevenj@superjdj>
+Tue Oct 26 00:54:42 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/developer.html: Fixed missing </code> tags.
 
@@ -517,49 +740,49 @@ Tue Oct 26 00:54:42 1999  Steven G. Johnson  <stevenj@superjdj>
 	* photon-ctl/photon.scm.in: Use default mesh of 3, like Fortran
 	code.
 
-Mon Oct 25 21:06:14 1999  Steven G. Johnson  <stevenj@superjdj>
+Mon Oct 25 21:06:14 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/developer.html: Wrote first-draft developer section.
 
 	* doc/introduction.html: small change
 
-Thu Oct 21 22:06:28 1999  Steven G. Johnson  <stevenj@superjdj>
+Thu Oct 21 22:06:28 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* photon-ctl/photon.c: Use new geom_fix_objects and geom_box_tree
 	routines...the latter greatly speed up dielectric function
 	calculation!!
 
-Wed Oct 20 22:45:55 1999  Steven G. Johnson  <stevenj@superjdj>
+Wed Oct 20 22:45:55 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* photon-ctl/photon.scm.in, configure.in: Added code to activate
 	readline in Guile 1.3.2+.  Also shuffled around BLAS libraries
 	somewhat.  Try the atlas library, and stop checking for BLAS
 	libraries after we find one.
 
-Tue Oct 19 00:30:28 1999  Steven G. Johnson  <stevenj@superjdj>
+Tue Oct 19 00:30:28 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* photon-ctl/examples/tutorial.ctl: added comments to output.
 
-Mon Oct 18 19:25:58 1999  Steven G. Johnson  <stevenj@superjdj>
+Mon Oct 18 19:25:58 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* photon-ctl/examples/tutorial.ctl: Added file of commands from
 	the User Tutorial (in the manual).
 
-Wed Oct 13 23:11:28 1999  Steven G. Johnson  <stevenj@superjdj>
+Wed Oct 13 23:11:28 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* configure.in: Fixed bug when gcc and/or Guile are installed in
 	non-standard directories.
 
-Fri Oct  1 19:44:34 1999  Steven G. Johnson  <stevenj@superjdj>
+Fri Oct  1 19:44:34 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/matrices/blasglue.c: herk routines take only *real*
 	coefficients to multiply matrices by.
 
-Thu Sep 30 19:35:50 1999  Steven G. Johnson  <stevenj@superjdj>
+Thu Sep 30 19:35:50 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* photon-ctl/photon.c: Check NWORK size before using W[0], W[1].
 
-Fri Sep 17 00:15:29 1999  Steven G. Johnson  <stevenj@superjdj>
+Fri Sep 17 00:15:29 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/malloctest.c: DEBUG -> DEBUG_MALLOC
 
@@ -569,7 +792,7 @@ Fri Sep 17 00:15:29 1999  Steven G. Johnson  <stevenj@superjdj>
 	(should be added automatically by AC_F77_LIBRARY_LDFLAGS), and
 	moved ordering of Guile libs.
 
-Thu Sep 16 23:09:22 1999  Steven G. Johnson  <stevenj@superjdj>
+Thu Sep 16 23:09:22 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/eigs_test.c, tests/malloctest.c, tests/maxwell_test.c,
 	src/util/debug_malloc.c, src/util/mpi_utils.c, tests/blastest.c,
@@ -593,7 +816,7 @@ Thu Sep 16 23:09:22 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* photon-ctl/examples/sq-rods.ctl: run-tm, not run.
 
-Wed Sep 15 03:05:32 1999  Steven G. Johnson  <stevenj@superjdj>
+Wed Sep 15 03:05:32 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* configure.in: Fixed library detection for SGI.
 
@@ -601,18 +824,18 @@ Wed Sep 15 03:05:32 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* tests/blastest.c: Got rid of warning about unused main() params.
 
-Tue Sep 14 18:24:59 1999  Steven G. Johnson  <stevenj@superjdj>
+Tue Sep 14 18:24:59 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/Makefile.in, tests/malloctest.c: Added malloctest.
 
 	* src/util/debug_malloc.c: Noted provenance of debug_malloc and
 	friends.
 
-Mon Sep 13 18:45:17 1999  Steven G. Johnson  <stevenj@superjdj>
+Mon Sep 13 18:45:17 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/acknowledgments.html: Fixed ack's.
 
-Sun Sep 12 01:47:36 1999  Steven G. Johnson  <stevenj@superjdj>
+Sun Sep 12 01:47:36 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* configure.in: compress test program a little
 
@@ -620,7 +843,7 @@ Sun Sep 12 01:47:36 1999  Steven G. Johnson  <stevenj@superjdj>
 	(this means that they get passed through to the configure script,
 	but so what).
 
-Fri Sep 10 23:41:28 1999  Steven G. Johnson  <stevenj@superjdj>
+Fri Sep 10 23:41:28 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/matrices/blasglue.c: Reverted changes (which I hadn't meant
 	to commit)--passing args as strings doesn't help things on the
@@ -649,7 +872,7 @@ Fri Sep 10 23:41:28 1999  Steven G. Johnson  <stevenj@superjdj>
 	that CFLAGS can be overridden more easily).  configure script now
 	looks for Guile, libctl.
 
-Thu Sep  9 18:07:15 1999  Steven G. Johnson  <stevenj@superjdj>
+Thu Sep  9 18:07:15 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* README: Mentioned contact addresses in manual.
 
@@ -665,7 +888,7 @@ Thu Sep  9 18:07:15 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* doc/introduction.html: Made a stab at an introduction.
 
-Wed Sep  8 22:12:05 1999  Steven G. Johnson  <stevenj@superjdj>
+Wed Sep  8 22:12:05 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* TODO: Added a couple more items.
 
@@ -674,7 +897,7 @@ Wed Sep  8 22:12:05 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* doc/user-ref.html: Wrote "Field manipulation functions" section.
 
-Tue Sep  7 23:28:42 1999  Steven G. Johnson  <stevenj@superjdj>
+Tue Sep  7 23:28:42 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/user-ref.html: put types in <code> font
 
@@ -687,7 +910,7 @@ Tue Sep  7 23:28:42 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* doc/user-ref.html: added more sections.
 
-Mon Sep  6 06:26:22 1999  Steven G. Johnson  <stevenj@superjdj>
+Mon Sep  6 06:26:22 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/user-tutorial.html: bug fix
 
@@ -713,7 +936,7 @@ Mon Sep  6 06:26:22 1999  Steven G. Johnson  <stevenj@superjdj>
 	photon-ctl/photon.c: Made it easier to re-run without
 	reinitializing fields.
 
-Sun Sep  5 23:48:29 1999  Steven G. Johnson  <stevenj@superjdj>
+Sun Sep  5 23:48:29 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/user-tutorial.html: Added mode-tuning tutorial.
 
@@ -759,7 +982,7 @@ Sun Sep  5 23:48:29 1999  Steven G. Johnson  <stevenj@superjdj>
 	* photon-ctl/photon.scm: Only output gaps if there is more than
 	one k point.
 
-Sat Sep  4 23:25:59 1999  Steven G. Johnson  <stevenj@superjdj>
+Sat Sep  4 23:25:59 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* TODO, doc/user-tutorial.html, photon-ctl/photon.c: Fixed bug for
 	non-square lattices (G was transposed).
@@ -780,12 +1003,12 @@ Sat Sep  4 23:25:59 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* photon-ctl/photon.scm: Added gap-list computation.
 
-Fri Sep  3 05:30:10 1999  Steven G. Johnson  <stevenj@superjdj>
+Fri Sep  3 05:30:10 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/installation.html, doc/user-tutorial.html, doc/index.html:
 	Slowly building the manual...
 
-Thu Sep  2 22:50:20 1999  Steven G. Johnson  <stevenj@superjdj>
+Thu Sep  2 22:50:20 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/user-tutorial.html, doc/installation.html,
 	doc/introduction.html: Added more to the manual.
@@ -796,7 +1019,7 @@ Thu Sep  2 22:50:20 1999  Steven G. Johnson  <stevenj@superjdj>
 
 	* doc/installation.html: Wrote installation section.
 
-Wed Sep  1 23:44:39 1999  Steven G. Johnson  <stevenj@superjdj>
+Wed Sep  1 23:44:39 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* doc/user-tutorial.html, doc/index.html, doc/installation.html,
 	doc/introduction.html, doc/license.html, doc/user-ref.html,
@@ -822,7 +1045,7 @@ Wed Sep  1 23:44:39 1999  Steven G. Johnson  <stevenj@superjdj>
 	photon-ctl/photon.c, photon-ctl/photon.scm, Makefile.in,
 	configure.in: Added matrixio (HDF5 output capability).
 
-Tue Aug 31 22:07:52 1999  Steven G. Johnson  <stevenj@superjdj>
+Tue Aug 31 22:07:52 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/maxwell/maxwell.h, src/maxwell/maxwell.c: k vector is passed
 	to maxwell function in the basis of the reciprocal lattice
@@ -841,7 +1064,7 @@ Tue Aug 31 22:07:52 1999  Steven G. Johnson  <stevenj@superjdj>
 	* configure.in: Cleaned up a little, and fixed (I think?) order of
 	linking BLAS libs.
 
-Mon Aug 30 20:31:20 1999  Steven G. Johnson  <stevenj@superjdj>
+Mon Aug 30 20:31:20 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* photon-ctl/examples/bragg.ctl, photon-ctl/examples/sq-rods.ctl:
 	Added a couple of examples (very half-baked at this point).
@@ -882,12 +1105,12 @@ Mon Aug 30 20:31:20 1999  Steven G. Johnson  <stevenj@superjdj>
 	photon-ctl/Makefile.in: Added first pass at a user interface
 	(photon-ctl).
 
-Sat Jul 17 17:58:07 1999  Steven G. Johnson  <stevenj@superjdj>
+Sat Jul 17 17:58:07 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/maxwell_test.c, src/maxwell/maxwell.c,
 	src/maxwell/maxwell_op.c: Implemented num_fft_bands != num_bands.
 
-Fri Jul 16 22:20:28 1999  Steven G. Johnson  <stevenj@superjdj>
+Fri Jul 16 22:20:28 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/maxwell_test.c, src/maxwell/maxwell.h,
 	src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c,
@@ -895,14 +1118,14 @@ Fri Jul 16 22:20:28 1999  Steven G. Johnson  <stevenj@superjdj>
 	routine, and got rid of eps_inv_mean[band] mess from maxwell_op
 	since it wasn't doing any good in the preconditioner.
 
-Thu Jun 10 22:04:23 1999  Steven G. Johnson  <stevenj@superjdj>
+Thu Jun 10 22:04:23 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/maxwell_test.c: Fixed -h help string.
 
 	* configure.in: Checked for ASCII project optimized Pentium Pro
 	BLAS library (libblasppro1).
 
-Sat Jun  5 00:22:20 1999  Steven G. Johnson  <stevenj@superjdj>
+Sat Jun  5 00:22:20 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/maxwell_test.c: Changed maxwell output format slightly;
 	added tolerance parameter.
@@ -910,7 +1133,7 @@ Sat Jun  5 00:22:20 1999  Steven G. Johnson  <stevenj@superjdj>
 	* tests/maxwell_test.c: Whoops!  TWOPI is a double, not
 	(implicitly) and int!
 
-Fri Jun  4 23:14:43 1999  Steven G. Johnson  <stevenj@superjdj>
+Fri Jun  4 23:14:43 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/maxwell_test.c: Default to quarter-wave stack.
 
@@ -927,7 +1150,7 @@ Fri Jun  4 23:14:43 1999  Steven G. Johnson  <stevenj@superjdj>
 	many cases, and also seems to mess up the convergence criteria for
 	the higher bands.)
 
-Tue Jun  1 19:59:38 1999  Steven G. Johnson  <stevenj@superjdj>
+Tue Jun  1 19:59:38 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/config.h.in, src/maxwell/maxwell.h, configure.in: Updated to
 	work with [ds]?r?fftw libraries (aren't regular expressions
@@ -940,7 +1163,7 @@ Tue Jun  1 19:59:38 1999  Steven G. Johnson  <stevenj@superjdj>
 	* src/maxwell/maxwell_op.c, src/maxwell/maxwell_pre.c: Separated
 	op and preconditioner into their own files.
 
-Thu Feb  4 02:51:19 1999  Steven G. Johnson  <stevenj@superjdj>
+Thu Feb  4 02:51:19 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/maxwell/maxwell.c, TODO: Check for k == 0 in when setting k
 	vector.
@@ -956,7 +1179,7 @@ Thu Feb  4 02:51:19 1999  Steven G. Johnson  <stevenj@superjdj>
 	TODO, configure.in, src/config.h.in: Allowed discrimination
 	between TE and TM modes.
 
-Wed Feb  3 22:55:15 1999  Steven G. Johnson  <stevenj@superjdj>
+Wed Feb  3 22:55:15 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* configure.in: Added profiling flags to existing flags, instead
 	of replacing.
@@ -977,7 +1200,7 @@ Wed Feb  3 22:55:15 1999  Steven G. Johnson  <stevenj@superjdj>
 	preconditioner (a better approximation, hopefully, to the correct
 	Hessian).
 
-Sun Jan 31 07:49:01 1999  Steven G. Johnson  <stevenj@superjdj>
+Sun Jan 31 07:49:01 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/maxwell/maxwell.c, src/maxwell/maxwell.h: No need to store
 	k+G in k_data since we don't use this information.
@@ -985,7 +1208,7 @@ Sun Jan 31 07:49:01 1999  Steven G. Johnson  <stevenj@superjdj>
 	* tests/maxwell_test.c, TODO, src/maxwell/maxwell.c: Maxwell seems
 	like it might be working!
 
-Sat Jan 30 22:17:11 1999  Steven G. Johnson  <stevenj@superjdj>
+Sat Jan 30 22:17:11 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/matrices/scalar.h, tests/eigs_test.c: Made complex
 	eigenvector output in eigs_test more uniform.
@@ -1002,7 +1225,7 @@ Sat Jan 30 22:17:11 1999  Steven G. Johnson  <stevenj@superjdj>
 	eigensolver.c (doh!).  Added test for maxwell operator code, and
 	got maxwell closer to working (I hope).
 
-Fri Jan 29 20:52:08 1999  Steven G. Johnson  <stevenj@superjdj>
+Fri Jan 29 20:52:08 1999  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/Attic/Makefile, tests/Makefile.in, tests/blastest.c,
 	tests/eigs_test.c, src/util/Makefile.in, src/util/debug_malloc.c,
@@ -1021,7 +1244,7 @@ Fri Jan 29 20:52:08 1999  Steven G. Johnson  <stevenj@superjdj>
 	* src/maxwell/maxwell.c, src/maxwell/maxwell.h,
 	src/maxwell/README: Initial version of Maxwell operator code.
 
-Mon Aug 10 23:32:35 1998  Steven G. Johnson  <stevenj@superjdj>
+Mon Aug 10 23:32:35 1998  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/matrices/eigensolver.c: Noted that A and C are assumed to be
 	linear.
@@ -1030,7 +1253,7 @@ Mon Aug 10 23:32:35 1998  Steven G. Johnson  <stevenj@superjdj>
 	src/matrices/eigensolver.h: Added callback data pointer to
 	eigensolver.
 
-Sat Aug  8 19:18:06 1998  Steven G. Johnson  <stevenj@superjdj>
+Sat Aug  8 19:18:06 1998  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* tests/blastest.c, tests/eigs_test.c: Made sure that solving for
 	complex eigenvectors works. (Hooray!)
@@ -1088,7 +1311,7 @@ Sat Aug  8 19:18:06 1998  Steven G. Johnson  <stevenj@superjdj>
 	problem with not enough memory being allocated for dense real
 	eigensolver of small sizes (U.p < 3).
 
-Fri Aug  7 22:35:16 1998  Steven G. Johnson  <stevenj@superjdj>
+Fri Aug  7 22:35:16 1998  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* src/util/mpi_utils.h: Fixed missing semicolon when not using
 	gcc.
@@ -1102,7 +1325,7 @@ Fri Aug  7 22:35:16 1998  Steven G. Johnson  <stevenj@superjdj>
 	src/matrices/eigensolver.h, src/matrices/evectmatrix.c,
 	src/matrices/README, src/matrices/blasglue.c: Added starting code.
 
-Wed May 20 01:18:50 1998  Steven G. Johnson  <stevenj@superjdj>
+Wed May 20 01:18:50 1998  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* README: Created photonic-bands repository.
 
