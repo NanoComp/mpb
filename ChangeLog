@@ -1,4 +1,37 @@
+2001-02-22  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* configure.in, mpb-ctl/mpb-split, mpb-ctl/mpb-split.in: try to
+	find a Bourne shell with job control
+
+2001-02-20  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* mpb-ctl/Makefile.in: whoops...variable assignments in Makefiles
+	don't carry over to the next line (I guess each line is executed
+	in its own subshell).
+
 2001-02-19  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/analysis-tutorial.html: punctuation alteration
+
+	* doc/analysis-tutorial.html: slight rewording
+
+	* doc/analysis-tutorial.html: noted that the real part is
+	sometimes zero
+
+	* doc/analysis-tutorial.html: noted units for resolution in
+	mpb-data
+
+	* doc/analysis-tutorial.html: use -S 3 instead of -X 3 -Y 3
+
+	* doc/tri-rods-eps-2.gif, doc/tri-rods-ez1.gif,
+	doc/tri-rods-ez2.gif, doc/tri-rods-ez3.gif, doc/tri-rods-ez4.gif,
+	doc/tri-rods-ez5.gif, doc/tri-rods-ez6.gif, doc/tri-rods-ez7.gif,
+	doc/tri-rods-ez8.gif: updated mode pictures (since mpb-data now
+	centers its output at the origin)
+
+	* config.guess, config.sub: updated to latest version
+
+	* ChangeLog: updated
 
 	* doc/analysis-tutorial.html, mpb-ctl/examples/diamond.ctl,
 	mpb-ctl/mpb.scm.in, src/maxwell/maxwell_eps.c: a couple
@@ -13,16 +46,6 @@
 	* doc/user-ref.html: clarification
 
 	* TODO: updated
-
-	* doc/license.html: compound adjectives are hyphenated, but *not*
-	adverbs modifying adjectives
-
-	* doc/index.html, doc/installation.html, doc/user-ref.html:
-	parallel doc cleanups
-
-	* configure.in, doc/user-ref.html, mpb-ctl/Makefile.in,
-	mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, mpb-ctl/mpb-split, NEWS: added
-	mpb-split for simpler parallelization without MPI
 
 2001-02-18  Steven G. Johnson  <stevenj@alum.mit.edu>
 
