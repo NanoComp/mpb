@@ -8,11 +8,4 @@ More eigensolver improvements...adaptive selection of an iteration technique?
 
 Try Jacobi-Davidson method with harmonic eigenvalues for targeted solver.
 
-Support Hermitian (complex) dielectric tensors for magneto-optical materials.
-
-More profiling to find performance bottlenecks.  More systematic
-comparisons with our old code.
-
-Store epsilon differently?
-
 World domination.
