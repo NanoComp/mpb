@@ -214,7 +214,7 @@ fi
 # Check for HDF5 library
 AC_ARG_WITH(hdf5, [AC_HELP_STRING([--without-hdf5],[do not use HDF5 output])], ok=$withval, ok=yes)
 if test "$ok" = "yes"; then
-	AC_CHECK_LIB(z, deflate)
+	AC_CHECK_LIB(z,deflate, [],[AC_MSG_WARN([zlib is required for HDF5!])])
 
 	save_LIBS_0="$LIBS" # save, to check later if we found any library
 	AC_CHECK_LIB(hdf5, H5Pcreate, [
