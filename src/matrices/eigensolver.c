@@ -145,7 +145,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      else
 	  D = X;
 
-     /* U = 1/(Yt Y), YtAYU = Yt A Y U in the loop below */
+     /* U = 1/(Yt Y), YtAYU = Yt A Y U in the loop below,
+	except when we are doing EIGS_DIAGONALIZE_EACH_STEP, in which
+        case U = identity and YtAYU = diag(eigenvals), so we don't
+        store them. */
      U = create_sqmatrix(Y.p);
      YtAYU = create_sqmatrix(Y.p);
 
@@ -272,7 +275,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 			 eigenvals[i] = 0.0;
 	  }
 
-	  if (((flags & EIGS_VERBOSE) && iteration % 10 == 0) ||
+	  if (((flags & EIGS_VERBOSE) && (iteration + 1) % 10 == 0) ||
 	      MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
 	      > FEEDBACK_TIME) {
 	       printf("    iteration %4d: "
