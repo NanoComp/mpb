@@ -12,8 +12,6 @@ Optimize multiplications by diagonal matrices?
 
 Allow real-complex transforms for structures with inversion symmetry.
 
-Add HDF4 support (uniprocessor only)?
-
 Export/import DXF, VRML, POV, ...?
 
 Store epsilon differently?
