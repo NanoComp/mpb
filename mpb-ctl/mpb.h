@@ -63,6 +63,7 @@ extern void curfield_reset(void);
 /* R[i]/G[i] are lattice/reciprocal-lattice vectors */
 extern real R[3][3], G[3][3];
 extern matrix3x3 Rm, Gm; /* same thing, but matrix3x3 */
+extern real Vol; /* computational cell volume = |det Rm| */
 
 /* index of current kpoint, for labeling output */
 extern int kpoint_index;

@@ -198,6 +198,8 @@ void init_epsilon(void)
      mpi_one_printf("     (%g, %g, %g)\n", Rm.c0.x, Rm.c0.y, Rm.c0.z);  
      mpi_one_printf("     (%g, %g, %g)\n", Rm.c1.x, Rm.c1.y, Rm.c1.z);
      mpi_one_printf("     (%g, %g, %g)\n", Rm.c2.x, Rm.c2.y, Rm.c2.z);
+     Vol = fabs(matrix3x3_determinant(Rm));
+     mpi_one_printf("Cell volume = %g\n", Vol);
   
      Gm = matrix3x3_inverse(matrix3x3_transpose(Rm));
      mpi_one_printf("Reciprocal lattice vectors (/ 2 pi):\n");

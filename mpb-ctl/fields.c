@@ -87,7 +87,7 @@ void get_dfield(int which_band)
 	  else
 	       scale = -1.0; /* arbitrary */
 
-	  scale /= sqrt(matrix3x3_determinant(Rm));
+	  scale /= sqrt(Vol);
 
 	  for (i = 0; i < 3*N; ++i) {
 	       curfield[i].re *= scale;
@@ -128,8 +128,7 @@ void get_hfield(integer which_band)
 	  double scale;
 	  N = mdata->fft_output_size;
 
-	  scale = 1.0 / sqrt(matrix3x3_determinant(Rm));
-
+	  scale = 1.0 / sqrt(Vol);
 	  for (i = 0; i < 3*N; ++i) {
 	       curfield[i].re *= scale;
 	       curfield[i].im *= scale;
@@ -420,7 +419,7 @@ number_list compute_field_energy(void)
      retval.num_items = 7;
      CHK_MALLOC(retval.items, number, retval.num_items);
 
-     retval.items[0] = energy_sum * matrix3x3_determinant(Rm) / H.N;
+     retval.items[0] = energy_sum * Vol / H.N;
 
      for (i = 0; i < 6; ++i)
 	  retval.items[i+1] = comp_sum[i];
@@ -839,7 +838,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
      }
      mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
 		     MPI_SUM, MPI_COMM_WORLD);
-     energy_sum *= matrix3x3_determinant(Rm) / H.N;
+     energy_sum *= Vol / H.N;
      return energy_sum;
 }
 
@@ -1318,7 +1317,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
 
      mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
 		     MPI_SUM, MPI_COMM_WORLD);
-     energy_sum *= matrix3x3_determinant(Rm) / H.N;
+     energy_sum *= Vol / H.N;
      return energy_sum;
 }
 
@@ -1548,8 +1547,8 @@ cnumber compute_field_integral(function f)
 	  }
      }
 
-     integral.re *= matrix3x3_determinant(Rm) / H.N;
-     integral.im *= matrix3x3_determinant(Rm) / H.N;
+     integral.re *= Vol / H.N;
+     integral.im *= Vol / H.N;
      {
 	  cnumber integral_sum;
 	  mpi_allreduce(&integral, &integral_sum, 2, number, 
