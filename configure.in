@@ -120,7 +120,12 @@ elif test "$ok" != "yes"; then
 fi
 
 if test "$save_LIBS" = "$LIBS"; then
-	# BLAS in Alpha DXML library?
+	# BLAS in Alpha CXML library?
+	AC_CHECK_LIB(cxml, dgemm_)
+fi
+
+if test "$save_LIBS" = "$LIBS"; then
+	# BLAS in Alpha DXML library? (now called CXML, see above)
 	AC_CHECK_LIB(dxml, dgemm_)
 fi
 
