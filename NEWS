@@ -1,4 +1,4 @@
-MPB 1.4
+MPB 1.4 (9/12/2002)
 
   * New find-k routine to find k as a function of frequency, instead of
     vice-versa.
