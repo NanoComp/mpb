@@ -153,7 +153,7 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 		   CHECK(vector3_norm(vector3_plus(
 			     cvector3_im(d->epsilon_offdiag),
 			     d->epsilon_offdiag_imag)) == 0.0,
-			 "imaginary epsilon-offdiag is only supported when MPB is configured --with-hermitian-epsilon");
+			 "imaginary epsilon-offdiag is only supported when MPB is configured --with-hermitian-eps");
 #endif
 		   maxwell_sym_matrix_invert(eps_inv, eps);
 		   break;
