@@ -1490,96 +1490,119 @@ void fix_field_phase(void)
 /* Functions to return epsilon, fields, energies, etcetera, at a specified
    point, linearly interpolating if necessary. */
 
-/* Given a point p in lattice coordinates, return the point
-   in grid coordinates as well as the grid size, whether the
-   point is conjugated, and whether the point is on the local process. */
-static void get_coord(vector3 p, double *x, double *y, double *z,
-		      int *nx, int *ny, int *nz, int *conjugate, int *local)
+static real get_val(int ix, int iy, int iz,
+		    real *data, int stride, int conjugate)
 {
-     double ipart;
-     *x = modf(p.x/geometry_lattice.size.x + 0.5, &ipart); if (*x < 0) *x += 1;
-     *y = modf(p.y/geometry_lattice.size.y + 0.5, &ipart); if (*y < 0) *y += 1;
-     *z = modf(p.z/geometry_lattice.size.z + 0.5, &ipart); if (*z < 0) *z += 1;
-     *nx = mdata->nx; *ny = mdata->ny; *nz = mdata->nz;
-
-     *conjugate = 0;
+     int nx = mdata->nx, ny = mdata->ny, nz = mdata->nz;
+     
 #ifndef SCALAR_COMPLEX
      {
-	  double *last;
-	  int *last_n, n2;
-	  if (*nz > 1) { last = z; last_n = nz; }
-	  else if (*ny > 1) { last = y; last_n = ny; }
-	  else { last = x; last_n = nx; }
-	  if (*last > 0.5) {
-	       *x = *x == 0 ? *x : 1 - *x; 
-	       *y = *y == 0 ? *y : 1 - *y; 
-	       *z = *z == 0 ? *z : 1 - *z;
-	       *conjugate = 1;
+	  int nlast = mdata->last_dim_size / 2;
+	  if ((nz > 1 ? iz : (ny > 1 ? iy : ix)) >= nlast) {
+	       ix = ix ? nx - ix : ix;
+	       iy = iy ? ny - iy : iy;
+	       iz = iz ? nz - iz : iz;
+	       conjugate = conjugate ? 1 : 0;
 	  }
-	  n2 = mdata->last_dim_size / 2;
-	  *last = (*last * *last_n) / n2;
-	  *last_n = n2;
+	  if (nz > 1) nz = nlast; else if (ny > 1) ny = nlast; else nx = nlast;
      }
+#else
+     conjugate = 0;
 #endif
 
-     *local = 1;
-#ifdef HAVE_MPI  /* ugh */
-     *y = (*y * *ny - mdata->local_y_start) / mdata->local_ny;
-     *ny = mdata->local_ny;
-
-     if (*y < 0 || *y >= 1.0) {
-	  if (*y * *ny >= -1 && *y < 0)
-	       *local = -1; /* left boundary pixel */
-	  else 
-	       *local = 0;
-     }
-     else if (*y * *ny >= *ny - 1)
-	  *local = 2; /* right boundary pixel */
-
-     { /* x and y dimensions are transposed */
-	  double swap = *x; int nswap = *nx;
-	  *x = *y; *nx = *ny; *y = swap; *ny = nswap;
-     }
+#ifdef HAVE_MPI
+     CHECK(0, "not yet implemented!");
+#else
+     if (conjugate)
+	  return -data[(((ix * ny) + iy) * nz + iz) * stride];
+     else
+	  return data[(((ix * ny) + iy) * nz + iz) * stride];
 #endif
 }
 
-/* Interpolate the point p in the array data of nvals fields, returning
-   vals... */
-static void get_vals(vector3 p, real *data, real *vals, int nvals,
-		     int *conjugate)
+static real interp_val(vector3 p, real *data, int stride, int conjugate)
 {
-     double x,y,z;
-     int nx,ny,nz, local;
+     double ipart;
+     real rx, ry, rz, dx, dy, dz;
+     int x, y, z, x2, y2, z2;
+     int nx = mdata->nx, ny = mdata->ny, nz = mdata->nz;
 
-     get_coord(p, &x,&y,&z, &nx,&ny,&nz, conjugate, &local);
-     if (local == 1) {
-	  int i;
-	  for (i = 0; i < nvals; ++i)
-	       vals[i] = linear_interpolate(x,y,z, data+i, nx,ny,nz, nvals);
-     }
-     else {
-	  CHECK(0, "not yet implemented");
-     }
+     rx = modf(p.x/geometry_lattice.size.x + 0.5, &ipart); if (rx < 0) rx += 1;
+     ry = modf(p.y/geometry_lattice.size.y + 0.5, &ipart); if (ry < 0) ry += 1;
+     rz = modf(p.z/geometry_lattice.size.z + 0.5, &ipart); if (rz < 0) rz += 1;
+
+     /* get the point corresponding to r in the grid: */
+     x = rx * nx;
+     y = ry * ny;
+     z = rz * nz;
+
+     /* get the difference between (x,y,z) and the actual point */
+     dx = rx * nx - x;
+     dy = ry * ny - y;
+     dz = rz * nz - z;
+
+     /* get the other closest point in the grid, with periodic boundaries: */
+     x2 = (nx + (dx >= 0.0 ? x + 1 : x - 1)) % nx;
+     y2 = (ny + (dy >= 0.0 ? y + 1 : y - 1)) % ny;
+     z2 = (nz + (dz >= 0.0 ? z + 1 : z - 1)) % nz;
+
+     /* take abs(d{xyz}) to get weights for {xyz} and {xyz}2: */
+     dx = fabs(dx);
+     dy = fabs(dy);
+     dz = fabs(dz);
+
+#define D(x,y,z) (get_val(x,y,z, data, stride, conjugate))
+
+     return(((D(x,y,z)*(1.0-dx) + D(x2,y,z)*dx) * (1.0-dy) +
+             (D(x,y2,z)*(1.0-dx) + D(x2,y2,z)*dx) * dy) * (1.0-dz) +
+            ((D(x,y,z2)*(1.0-dx) + D(x2,y,z2)*dx) * (1.0-dy) +
+             (D(x,y2,z2)*(1.0-dx) + D(x2,y2,z2)*dx) * dy) * dz);
+
+#undef D
+}
+
+static scalar_complex interp_cval(vector3 p, real *data, int stride,
+				  int conjugate)
+{
+     scalar_complex cval;
+     cval.re = interp_val(p, data, stride, conjugate);
+     cval.im = interp_val(p, data + 1, stride, !conjugate);
+     return cval;
+}
+
+static symmetric_matrix interp_eps_inv(vector3 p)
+{
+     int stride = sizeof(symmetric_matrix) / sizeof(real);
+     symmetric_matrix eps_inv;
+
+     eps_inv.m00 = interp_val(p, &mdata->eps_inv->m00, stride, 0);
+     eps_inv.m11 = interp_val(p, &mdata->eps_inv->m11, stride, 0);
+     eps_inv.m22 = interp_val(p, &mdata->eps_inv->m22, stride, 0);
+#ifdef WITH_HERMITIAN_EPSILON
+     eps_inv.m01 = interp_cval(p, &mdata->eps_inv->m01.re, stride, 0);
+     eps_inv.m02 = interp_cval(p, &mdata->eps_inv->m02.re, stride, 0);
+     eps_inv.m12 = interp_cval(p, &mdata->eps_inv->m12.re, stride, 0);
+#else
+     eps_inv.m01 = interp_val(p, &mdata->eps_inv->m01, stride, 0);
+     eps_inv.m02 = interp_val(p, &mdata->eps_inv->m02, stride, 0);
+     eps_inv.m12 = interp_val(p, &mdata->eps_inv->m12, stride, 0);
+#endif
+     return eps_inv;
 }
 
 number get_epsilon_point(vector3 p)
 {
-     int conjugate;
      symmetric_matrix eps_inv;
-
-     get_vals(p, (real *) mdata->eps_inv, (real *) &eps_inv,
-	      sizeof(symmetric_matrix) / sizeof(real), &conjugate);
+     eps_inv = interp_eps_inv(p);
      return mean_epsilon(&eps_inv);
 }
 
 matrix3x3 get_epsilon_inverse_tensor_point(vector3 p)
 {
-     int conjugate;
-     symmetric_matrix eps_inv;
      matrix3x3 eps_inv3x3;
+     symmetric_matrix eps_inv;
+     eps_inv = interp_eps_inv(p);
 
-     get_vals(p, (real *) mdata->eps_inv, (real *) &eps_inv,
-	      sizeof(symmetric_matrix) / sizeof(real), &conjugate);
      eps_inv3x3.c0.x = eps_inv.m00;
      eps_inv3x3.c1.y = eps_inv.m11;
      eps_inv3x3.c2.z = eps_inv.m22;
@@ -1597,18 +1620,11 @@ matrix3x3 get_epsilon_inverse_tensor_point(vector3 p)
 
 matrix3x3 get_epsilon_inverse_tensor_im_point(vector3 p)
 {
-     matrix3x3 eps_inv3x3 = {{0,0,0}, {0,0,0}, {0,0,0}};
+     matrix3x3 eps_inv3x3 = {{0,0,0},{0,0,0},{0,0,0}};
+     symmetric_matrix eps_inv;
+     eps_inv = interp_eps_inv(p);
 
 #ifdef WITH_HERMITIAN_EPSILON
-     int conjugate;
-     symmetric_matrix eps_inv;
-     get_vals(p, (real *) mdata->eps_inv, (real *) &eps_inv,
-	      sizeof(symmetric_matrix) / sizeof(real), &conjugate);
-     if (conjugate) {
-	  CASSIGN_CONJ(eps_inv.m01, eps_inv.m01);
-	  CASSIGN_CONJ(eps_inv.m02, eps_inv.m02);
-	  CASSIGN_CONJ(eps_inv.m12, eps_inv.m12);
-     }
      eps_inv3x3.c0.y = -(eps_inv3x3.c1.x = CSCALAR_IM(eps_inv.m01));
      eps_inv3x3.c0.z = -(eps_inv3x3.c2.x = CSCALAR_IM(eps_inv.m02));
      eps_inv3x3.c1.z = -(eps_inv3x3.c2.y = CSCALAR_IM(eps_inv.m12));
@@ -1618,63 +1634,56 @@ matrix3x3 get_epsilon_inverse_tensor_im_point(vector3 p)
 
 number get_energy_point(vector3 p)
 {
-     int conjugate;
-     real energy;
-
      CHECK(curfield && strchr("DH", curfield_type),
 	   "compute-field-energy must be called before get-energy-point");
-     get_vals(p, (real *) curfield, &energy, 1, &conjugate);
-     return energy;
+     return interp_val(p, (real *) curfield, 1, 0);
 }
 
 vector3 get_bloch_field_re_point(vector3 p)
 {
+     scalar_complex field[3];
      int conjugate;
-     real field[6];
      vector3 F;
 
      CHECK(curfield && strchr("dhe", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
-
-     get_vals(p, (real *) curfield, field, 6, &conjugate);
-     F.x = field[0]; F.y = field[2]; F.z = field[4];
+     conjugate = curfield_type != 'h'; /* non pseudo-vectors flip */
+     field[0] = interp_cval(p, &curfield[0].re, 6, conjugate);
+     field[1] = interp_cval(p, &curfield[1].re, 6, conjugate);
+     field[2] = interp_cval(p, &curfield[2].re, 6, conjugate);
+     F.x = field[0].re; F.y = field[1].re; F.z = field[2].re;
      return F;
 }
 
 vector3 get_bloch_field_im_point(vector3 p)
 {
+     scalar_complex field[3];
      int conjugate;
-     real field[6];
      vector3 F;
 
      CHECK(curfield && strchr("dhe", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
-
-     get_vals(p, (real *) curfield, field, 6, &conjugate);
-     if (conjugate) {
-	  F.x = -field[1]; F.y = -field[3]; F.z = -field[5];
-     }
-     else {
-	  F.x = field[1]; F.y = field[3]; F.z = field[5];
-     }
+     conjugate = curfield_type != 'h'; /* non pseudo-vectors flip */
+     field[0] = interp_cval(p, &curfield[0].re, 6, conjugate);
+     field[1] = interp_cval(p, &curfield[1].re, 6, conjugate);
+     field[2] = interp_cval(p, &curfield[2].re, 6, conjugate);
+     F.x = field[0].im; F.y = field[1].im; F.z = field[2].im;
      return F;
 }
 
 static void get_field_point_reim(vector3 p, vector3 *re, vector3 *im)
 {
-     int conjugate;
      scalar_complex field[3], phase;
-     real phase_phi;
+     double phase_phi;
+     int conjugate;
 
      CHECK(curfield && strchr("dhe", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
+     conjugate = curfield_type != 'h'; /* non pseudo-vectors flip */
+     field[0] = interp_cval(p, &curfield[0].re, 6, conjugate);
+     field[1] = interp_cval(p, &curfield[1].re, 6, conjugate);
+     field[2] = interp_cval(p, &curfield[2].re, 6, conjugate);
 
-     get_vals(p, (real *) curfield, (real *) field, 6, &conjugate);
-     if (conjugate) {
-	  CASSIGN_CONJ(field[0], field[0]);
-	  CASSIGN_CONJ(field[1], field[1]);
-	  CASSIGN_CONJ(field[2], field[2]);
-     }
      phase_phi = TWOPI * (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
 			  cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
 			  cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
@@ -1682,9 +1691,9 @@ static void get_field_point_reim(vector3 p, vector3 *re, vector3 *im)
      CASSIGN_MULT(field[0], field[0], phase);
      CASSIGN_MULT(field[1], field[1], phase);
      CASSIGN_MULT(field[2], field[2], phase);
-     re->x = CSCALAR_RE(field[0]); im->x = CSCALAR_IM(field[0]);
-     re->y = CSCALAR_RE(field[1]); im->y = CSCALAR_IM(field[1]);
-     re->z = CSCALAR_RE(field[2]); im->z = CSCALAR_IM(field[2]);
+
+     re->x = field[0].re; re->y = field[1].re; re->z = field[2].re;
+     im->x = field[0].im; im->y = field[1].im; im->z = field[2].im;
 }
 
 vector3 get_field_re_point(vector3 p)
