@@ -24,7 +24,7 @@ dnl library is found, and ACTION-IF-NOT-FOUND is a list of commands
 dnl to run it if it is not found.  If ACTION-IF-FOUND is not specified,
 dnl the default action will define HAVE_MPI.
 dnl
-dnl @version $Id: acx_mpi.m4,v 1.4 2002/09/26 16:46:50 stevenj Exp $
+dnl @version $Id: acx_mpi.m4,v 1.5 2002/10/24 05:08:52 stevenj Exp $
 dnl @author Steven G. Johnson <stevenj@alum.mit.edu>
 
 AC_DEFUN([ACX_MPI], [
@@ -61,6 +61,9 @@ if test x = x"$MPILIBS"; then
 fi
 if test x = x"$MPILIBS"; then
 	AC_CHECK_LIB(mpi, MPI_Init, [MPILIBS="-lmpi"])
+fi
+if test x = x"$MPILIBS"; then
+	AC_CHECK_LIB(mpich, MPI_Init, [MPILIBS="-lmpich"])
 fi
 
 dnl We have to use AC_TRY_COMPILE and not AC_CHECK_HEADER because the
