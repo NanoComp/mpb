@@ -79,12 +79,12 @@ way.  The good news is that, when you run <code>make install</code>
 for the packages involving shared libraries, the output includes the
 necessary instructions specific to your system, so pay close
 attention!  It will say something like "<code>add LIBDIR to the
-<i>foobar</i> environment variable</code>," where <code>LIBDIR</code>
-will be your library installation directory
+<code><i>foobar</i></code> environment variable</code>," where
+<code>LIBDIR</code> will be your library installation directory
 (e.g. <code>/usr/local/lib</code>) and <i>foobar</i> is some
 environment variable specific to your system
-(e.g. <code>LD_LIBRARY_PATH</code> on some systems, including
-Linux).  For example, you might do:
+(e.g. <code>LD_LIBRARY_PATH</code> on some systems, including Linux).
+For example, you might do:
 
 <pre>
 setenv <i>foobar</i> "/usr/local/lib:$<i>foobar</i>"
