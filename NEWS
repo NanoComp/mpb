@@ -11,9 +11,13 @@ MPB 1.1.1 (7/4/2001)
   * Added retrieve-gap convenience function to return the gap between
     two specified bands.
 
+  * Fixed typo that prevented compilation of MPI (parallel) version.
+
   * C compiler flags -O3 are no longer used by default, since they
     don't work with some compilers; most of the performance depends
-    upon the BLAS and FFTW anyway.
+    upon the BLAS and FFTW anyway.  (Users wishing greater optimization
+    can set the CFLAGS environment variable.)  Thanks to
+    Giridhar Malalahalli for the bug report.
 
 MPB 1.1 (5/6/2001)
 
