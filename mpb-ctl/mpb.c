@@ -47,57 +47,6 @@
 
 /**************************************************************************/
 
-/* function to display a little information about a geometric object to
-   convince the user that we've read it in correctly. */
-static void display_object_info(geometric_object obj)
-{
-     printf("     object center = (%g,%g,%g), epsilon = %g\n",
-	    obj.center.x, obj.center.y, obj.center.z,
-	    obj.material.epsilon);    
-     switch (obj.which_subclass) {
-	 case CYLINDER:
-	      printf("          cylinder with radius %g, height %g, "
-		     "axis (%g, %g, %g)\n",
-		     obj.subclass.cylinder_data->radius,
-		     obj.subclass.cylinder_data->height,
-		     obj.subclass.cylinder_data->axis.x,
-		     obj.subclass.cylinder_data->axis.y,
-		     obj.subclass.cylinder_data->axis.z);
-	      break;
-	 case SPHERE:
-	      printf("          sphere with radius %g\n",
-		     obj.subclass.sphere_data->radius);
-	      break;
-	 case BLOCK:
-	      printf("          %s with size (%g,%g,%g)\n",
-		     obj.subclass.block_data->which_subclass == BLOCK_SELF 
-		     ? "block" : "ellipsoid",
-		     obj.subclass.block_data->size.x,
-		     obj.subclass.block_data->size.y,
-		     obj.subclass.block_data->size.z);
-	      printf("          projection matrix: %10.6f%10.6f%10.6f\n"
-		     "                             %10.6f%10.6f%10.6f\n"
-		     "                             %10.6f%10.6f%10.6f\n",
-		     obj.subclass.block_data->projection_matrix.c0.x,
-		     obj.subclass.block_data->projection_matrix.c1.x,
-		     obj.subclass.block_data->projection_matrix.c2.x,
-		     obj.subclass.block_data->projection_matrix.c0.y,
-		     obj.subclass.block_data->projection_matrix.c1.y,
-		     obj.subclass.block_data->projection_matrix.c2.y,
-		     obj.subclass.block_data->projection_matrix.c0.z,
-		     obj.subclass.block_data->projection_matrix.c1.z,
-		     obj.subclass.block_data->projection_matrix.c2.z);
-	      break;
-	 case GEOMETRIC_OBJECT_SELF:
-	      printf("          generic geometric object\n");
-	      break;
-	 default:
-	      printf("          UNKNOWN OBJECT TYPE!\n");
-     }
-}
-
-/**************************************************************************/
-
 /* a couple of utilities to convert libctl data types to the data
    types of the eigensolver & maxwell routines: */
 
@@ -168,10 +117,17 @@ static real epsilon_func(real r[3], void *edata)
 /* Set the current polarization to solve for. (init-params should have
    already been called.  (Guile-callable; see photon.scm.) 
 
-   Also initializes the field to random numbers.  Hackery:  If
-   a polarization constant -(p+1) is substituted for p, then
-   the field is not reinitialized unless the polarization has
-   changed since the last call.  */
+   Also initializes the field to random numbers.
+
+   Hackery: If a polarization constant -(p+1) is substituted for p,
+   then the field is not reinitialized unless the polarization has
+   changed since the last call.  
+
+   p = 0 means NO_POLARIZATION
+   p = 1 means TE_POLARIZATION
+   p = 2 means TM_POLARIZATION
+   p = 3 means the polarization of the previous call, 
+       or NO_POLARIZATION if this is the first call */
 
 void set_polarization(int p)
 {
@@ -188,6 +144,9 @@ void set_polarization(int p)
 	  real_p = -(p + 1);
      else
 	  real_p = p;
+
+     if (real_p == 3)
+	  real_p = last_p == 0xDEADBEEF ? 0 : last_p;
 
      switch (real_p) {
 	 case 0:
@@ -208,8 +167,7 @@ void set_polarization(int p)
      }
 
      if (p > 0 || real_p != last_p) {
-	  /* need to re-randomize fields 
-	     (might have the wrong polarization). */
+	  /* need to re-randomize fields */
 	  printf("Initializing fields to random numbers...\n");
 	  for (i = 0; i < H.n * H.p; ++i)
 	       ASSIGN_REAL(H.data[i], rand() * 1.0 / RAND_MAX);
@@ -283,8 +241,11 @@ void init_params(boolean reset_fields)
      matrix3x3_to_arr(G, Gm);
 
      printf("Geometric objects:\n");
-     for (i = 0; i < geometry.num_items; ++i)
-	  display_object_info(geometry.items[i]);
+     for (i = 0; i < geometry.num_items; ++i) {
+	  display_geometric_object_info(5, geometry.items[i]);
+	  printf("%*sdielectric constant epsilon = %g\n", 5 + 5, "",
+		 geometry.items[i].material.epsilon);
+     }
 
      printf("%d k-points:\n", k_points.num_items);
      for (i = 0; i < k_points.num_items; ++i)
@@ -329,7 +290,11 @@ void init_params(boolean reset_fields)
 					 local_N, N_start, alloc_N);
      }
 
-     set_polarization((have_old_fields && !reset_fields) ? -1 : 0);
+     if (!have_old_fields || reset_fields)
+	  set_polarization(0);
+     else
+	  set_polarization(-(3+1)); /* make same as prev. call, but
+				       don't reinitialize the fields. */
 
      printf("Stuff for grepping:\n");
      printf("sumfrq:, k index, kx, ky, kz, kmag/2pi");
