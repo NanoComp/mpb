@@ -484,11 +484,11 @@ searching in the range of radii from 0.1 to 0.5, with a tolerance of 0.1:
 
 <pre>
 (define result (maximize first-tm-gap 0.1 0.1 0.5))
-(display-many "radius at maximum: " (max-arg result) "\n")
-(display-many "gap size at maximum: " (max-val result) "\n")
+(print "radius at maximum: " (max-arg result) "\n")
+(print "gap size at maximum: " (max-val result) "\n")
 </pre>
 
-<p>(<code>display-many</code> is a function defined by libctl to apply
+<p>(<code>print</code> is a function defined by libctl to apply
 the built-in <code>display</code> function to zero or more arguments.)
 After five iterations, the output is:
 
@@ -673,7 +673,7 @@ cylinder (within a radius 1.0 of the origin):
 <pre>
 (get-dfield 25)  ; compute the D field for band 25
 (compute-field-energy)  ; compute the energy density from D
-(display-many
+(print
  "energy in cylinder: "
  (compute-energy-in-objects (make cylinder (center 0 0 0)
                                   (radius 1.0) (height infinity)
@@ -694,11 +694,9 @@ energy fraction, but does not itself print this value.  This is fine
 when you are running interactively, in which case Guile always
 displays the result of the last expression, but when running as part
 of a script you need to explicitly print the result as we have done
-above with the <code>display-many</code> function.
-(<code>display-many</code> is a libctl function that calls Scheme's
-<code>display</code> built-in on each of its arguments.)  The
-<code>"\n"</code> string is newline character (like in C), to put
-subsequent output on a separate line.
+above with the <code>print</code> function.  The <code>"\n"</code>
+string is newline character (like in C), to put subsequent output on a
+separate line.
 
 <p>Instead of computing all those bands, we can instead take advantage
 of a special feature of the MIT Photonic-Bands software that allows you to
@@ -752,7 +750,7 @@ is the function we'll be finding the root of:
 				     (material (make dielectric
 						 (epsilon eps)))))))
   (run-tm)  ; solve for the mode (using the targeted solver)
-  (display-many "epsilon = " eps " gives freq. = " (list-ref freqs 0) "\n")
+  (print "epsilon = " eps " gives freq. = " (list-ref freqs 0) "\n")
   (- (list-ref freqs 0) 0.314159))  ; return 1st band freq. - 0.314159
 </pre>
 
@@ -761,7 +759,7 @@ a fractional tolerance of 0.01) by:
 
 <pre>
 (define rooteps (find-root rootfun 0.01 1 12))
-(display-many "root (value of epsilon) is at: " rooteps "\n")
+(print "root (value of epsilon) is at: " rooteps "\n")
 </pre>
 
 <p>The sequence of dielectric constants that it tries, along with the

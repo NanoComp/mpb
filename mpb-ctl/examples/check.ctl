@@ -46,14 +46,14 @@
   (if (= (length correct-freqs) (length all-freqs))
       (begin
 	(map check-freqs-aux correct-freqs all-freqs (indices all-freqs))
-	(display "check-freqs: PASSED\n"))
+	(print "check-freqs: PASSED\n"))
       (error "check-freqs: wrong number of k-points")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; First test: a simple 1d Bragg mirror:
 
-(display-many
+(print
  "**************************************************************************\n"
  " Test case: 1d quarter-wave stack.\n"
  "**************************************************************************\n"
@@ -79,7 +79,7 @@
 ; Second test: a less-simple 1d Bragg mirror, consisting of a sinusoidally
 ; varying dielectric index (see also bragg-sine.ctl):
 
-(display-many
+(print
  "**************************************************************************\n"
  " Test case: 1d sinusoidal Bragg mirrors.\n"
  "**************************************************************************\n"
@@ -103,7 +103,7 @@
 
 ; Square lattice of dielectric rods in air.
 
-(display-many
+(print
  "**************************************************************************\n"
  " Test case: Square lattice of dielectric rods in air.\n"
  "**************************************************************************\n"
@@ -128,7 +128,7 @@
 ; Using the targeted solver to find a defect state in a 5x5 triangular
 ; lattice of rods.
 
-(display-many
+(print
  "**************************************************************************\n"
  " Test case: 3x3 triangular lattice of rods in air, dipole defect states.\n"
  "**************************************************************************\n"
@@ -160,7 +160,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(display-many
+(print
  "**************************************************************************\n"
  " Test case: fcc lattice of air spheres in dielectric.\n"
  "**************************************************************************\n"
@@ -188,7 +188,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(display-many
+(print
  "**************************************************************************\n"
  " Test case: simple cubic lattice with anisotropic dielectric.\n"
  "**************************************************************************\n"
@@ -217,6 +217,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (display-eigensolver-stats)
-(display-many "Relative error ranged from " min-err " to " max-err
+(print "Relative error ranged from " min-err " to " max-err
 	      ", with a mean of " (/ sum-err num-err) "\n")
-(display "PASSED all tests.\n")
+(print "PASSED all tests.\n")

@@ -152,8 +152,8 @@
 ; Define a band function to be passed to run, so that you can easily
 ; display the group velocities for each k-point.
 (define (display-group-velocities)
-  (display-many "group velocities at " current-k ": "
-		(compute-group-velocities) "\n"))
+  (print "group velocities at " current-k ": "
+	 (compute-group-velocities) "\n"))
 
 ; ****************************************************************
 
@@ -249,8 +249,8 @@
   (define (obr br i)
     (if (not (null? br))
 	(begin
-	  (display-many "Band " i " range: " (caaar br) " at " (cdaar br)
-			" to "  (cadar br) " at " (cddar br) "\n")
+	  (print "Band " i " range: " (caaar br) " at " (cdaar br)
+		 " to "  (cadar br) " at " (cddar br) "\n")
 	  (obr (cdr br) (+ i 1)))))
   (obr br-data 1))
 
@@ -264,9 +264,8 @@
 	    (ogaps (car br-rest) (cdr br-rest) (+ i 1) gaps)
 	    (let ((gap-size (/ (* 200 (- (caaar br-rest) (cadr br-cur)))
 			       (+ (caaar br-rest) (cadr br-cur)))))
-	      (display-many "Gap from band " i " (" (cadr br-cur)
-			    ") to band " (+ i 1) " (" (caaar br-rest) "), "
-			    gap-size "%\n")
+	      (print "Gap from band " i " (" (cadr br-cur) ") to band "
+		     (+ i 1) " (" (caaar br-rest) "), " gap-size "%\n")
 	      (ogaps (car br-rest) (cdr br-rest) (+ i 1)
 		     (cons (list gap-size (cadr br-cur) (caaar br-rest)) gaps))
 	      ))))
@@ -290,9 +289,8 @@
 	(let ((min-iters (apply min eigensolver-iters))
 	      (max-iters (apply max eigensolver-iters))
 	      (mean-iters (/ (fold-right + 0 eigensolver-iters) num-runs)))
-	  (display-many "eigensolver iterations for " num-runs 
-			" k-points: " min-iters "-" max-iters
-			", mean = "  mean-iters)
+	  (print "eigensolver iterations for " num-runs " k-points: "
+		 min-iters "-" max-iters ", mean = "  mean-iters)
 	  (if (defined? 'sort)  ; sort was added in Guile 1.3.x
 	      (let ((sorted-iters (sort eigensolver-iters <)))
 		(let ((median-iters (* 0.5 (+ (list-ref sorted-iters
@@ -301,10 +299,9 @@
 							(- (quotient 
 							    (+ num-runs 1) 2)
 							   1))))))
-		  (display-many ", median = " median-iters))))
-	  (display-many "\nmean flops per iteration = "
-			(/ eigensolver-flops (* num-runs mean-iters)) "\n")
-	  ))))
+		  (print ", median = " median-iters))))
+	  (print "\nmean flops per iteration = "
+		 (/ eigensolver-flops (* num-runs mean-iters)) "\n")))))
 
 ; ****************************************************************
 
@@ -348,7 +345,7 @@
 	       (set! gap-list (output-gaps band-range-data)))
 	     (set! gap-list '())))))
   (set! all-freqs (reverse all-freqs)) ; put them in the right order
-  (display-many "done.\n"))
+  (print "done.\n"))
 
 (define (run . band-functions)
   (apply run-polarization
@@ -434,8 +431,8 @@
     (compute-field-energy)
     (let ((energy (compute-energy-in-object-list objects)))
         ; output the computed energy for grepping:
-	(display-many "dpwr:, " which-band ", "
-		      (list-ref freqs (- which-band 1)) ", " energy "\n")
+	(print "dpwr:, " which-band ", "
+	       (list-ref freqs (- which-band 1)) ", " energy "\n")
 	(if (>= energy min-energy)
 	    (output-func which-band)))))
 
