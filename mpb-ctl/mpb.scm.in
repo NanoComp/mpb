@@ -474,7 +474,7 @@
    (set! band-range-data '())
    (set! interactive? false)  ; don't be interactive if we call (run)
    (begin-time "elapsed time for initialization: "
-	       (init-params p reset-fields)
+	       (init-params p (if reset-fields true false))
 	       (if (string? reset-fields) (load-eigenvectors reset-fields)))
    (let ((k-split (list-split k-points k-split-num k-split-index)))
      (set-kpoint-index (car k-split))
