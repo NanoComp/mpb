@@ -9,12 +9,14 @@ typedef double real;
 #define SCALAR_MPI_TYPE MPI_DOUBLE
 #endif
 
+typedef struct {
+     real re, im;
+} scalar_complex;
+
 /************************** scalars are complex **************************/
 #ifdef SCALAR_COMPLEX
 
-typedef struct {
-     real re, im;
-} scalar;
+typedef scalar_complex scalar;
 
 #define SCALAR_NUMVALS 2
 
