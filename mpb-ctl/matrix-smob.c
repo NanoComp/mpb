@@ -232,7 +232,8 @@ void scale_eigenvector(integer b, cnumber scale)
      CHECK(b > 0 && b <= H.p, "invalid band number in scale-eigenvector");
 
 #ifndef SCALAR_COMPLEX
-     CHECK(cnumber_im(scale) == 0, "scale-eigenvector must be called with real argument in mpbi");
+     CHECK(fabs(cnumber_im(scale) * cnumber_re(scale)) < 1e-14,
+	   "scale-eigenvector must be called with real argument in mpbi");
 #endif     
      ASSIGN_SCALAR(s, cnumber_re(scale), cnumber_im(scale));
      blasglue_scal(H.n, s, H.data + b-1, H.p);
