@@ -198,7 +198,12 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 
 #    else /* HAVE_MPI */
 
-#      error rfftwnd_mpi not supported yet.
+     CHECK(stride == howmany && dist == 1,
+	   "weird strides and dists don't work with rfftwnd_mpi");
+     
+     rfftwnd_mpi(dir < 0 ? d->plan : d->iplan,
+		 howmany, array, (scalar *) NULL,
+		 FFTW_TRANSPOSED_ORDER);
 
 #    endif /* HAVE_MPI */
 
@@ -405,7 +410,7 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
    is fine for computation, but for visualization/output we
    want the whole array, redundant or not.  So, we output the array
    in two stages, first outputting the array we are given, then
-   using the functions below to compute the other half and ouputting
+   using the functions below to compute the other half and outputting
    that.
 
    Given an array A(i,j,k), the redundant half is given by the
@@ -434,31 +439,56 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
    modulo n (i.e. the zero indices aren't reordered).  e.g. for
    the point (nx-i,ny-j,nz-k), R = Rx*(i!=0) + Ry*(j!=0) + Rz*(k!=0).
 
+   Another complication is that, for 2d rfftwnd_mpi transforms, the
+   truncated dimension (in the transformed, transposed array) is
+   the *first* dimension rather than the last.
+
    This code is a little too subtle for my tastes; real FFTs are a pain. */
 
 #define TWOPI 6.2831853071795864769252867665590057683943388
 
-/* This function takes a complex vector field and replaces it with
-   its other "half."  phase{x,y,z} is the phase k*R{x,y,z}, in "units"
-   of 2*pi.  */
+/* This function takes a complex vector field and replaces it with its
+   other "half."  phase{x,y,z} is the phase k*R{x,y,z}, in "units" of
+   2*pi.  (Equivalently, phase{x,y,z} is the k vector in the
+   reciprocal lattice basis.) */
 void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
 				   real phasex, real phasey, real phasez)
 {
 #ifndef SCALAR_COMPLEX
-     int i, j;
+     int i, j, jmin = 1;
      int rank, n_other, n_last, n_last_stored, n_last_new, nx, ny, nz;
+#  ifdef HAVE_MPI
+     int local_x_start;
+#  endif
      scalar_complex pz, pxz, pyz, pxyz;
 
-#ifdef HAVE_MPI
-#  error not yet implemented!
-#else /* ! HAVE_MPI */
      nx = d->nx; ny = d->ny; nz = d->nz;
      n_other = d->other_dims;
      n_last = d->last_dim;
      n_last_stored = d->last_dim_size / 2;
      n_last_new = n_last - n_last_stored; /* < n_last_stored always */
      rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
-#endif /* ! HAVE_MPI */
+
+#  ifdef HAVE_MPI
+     local_x_start = d->local_y_start;
+     CHECK(rank == 2 || rank == 3, "unsupported rfftwnd_mpi rank!");
+     if (rank == 2) {
+	  n_other = nx;
+	  n_last_new = ny = d->local_ny;
+	  if (local_x_start == 0)
+	       --n_last_new; /* DC frequency should not be in other half */
+	  else
+	       jmin = 0;
+	  if (local_x_start + ny == n_last_stored && n_last % 2 == 0)
+	       --n_last_new; /* Nyquist freq. should not be in other half */
+	  n_last_stored = ny;
+     }
+     else { /* rank == 3 */
+	  ny = nx;
+	  nx = d->local_ny;
+	  n_other = nx * ny;
+     }
+#  endif /* HAVE_MPI */
 
      /* compute p = exp(i*phase) factors: */
      phasex *= -TWOPI; phasey *= -TWOPI; phasez *= -TWOPI;
@@ -490,65 +520,118 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
      /* First, swap the order of elements and multiply by exp(ikR)
         phase factors.  We have to be careful here not to double-swap
         any element pair; this is prevented by never swapping with a
-        "conjugated" point that is earlier in the array.  Note that
-        the i loop doesn't need to run all the way to n_other, but it
-        not worth it to compute the exact limit. */
-     for (i = 0; i < n_other; ++i) {
-          int ic;  /* conjugated index to i */
-	  int xdiff = 0, ydiff = 0;
-	  int jmax;
-          switch (rank) {  /* is there a cleaner way to get ic? */
-              case 2: ic = (nx - i) % nx; xdiff = i != 0; break;
-              case 3:
-		   ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny;
-		   xdiff = i/ny != 0; ydiff = i%ny != 0;
-		   break;
-              default: ic = 0; break;
-          }
-	  if (ic < i)
-	       continue;
-	  jmax = n_last_new;
-	  if (ic == i)
-	       jmax = (jmax + 1) / 2;
-	  for (j = 1; j <= jmax; ++j) {
-               int jc = n_last_new + 1 - j;
-	       scalar_complex f_tmp[3];
-	       switch (xdiff*2 + ydiff) {
-		   case 3: /* xdiff && ydiff */
-		    ASSIGN_VP(f_tmp, 0, field, ic*n_last_stored + jc, pxyz);
-		    ASSIGN_VP(field, ic*n_last_stored + jc,
-			      field, i*n_last_stored + j, pxyz);
-		    ASSIGN_V(field, i*n_last_stored + j, f_tmp, 0);
-		    break;
-		   case 2: /* xdiff && !ydiff */
-		    ASSIGN_VP(f_tmp, 0, field, ic*n_last_stored + jc, pxz);
-		    ASSIGN_VP(field, ic*n_last_stored + jc,
-			      field, i*n_last_stored + j, pxz);
-		    ASSIGN_V(field, i*n_last_stored + j, f_tmp, 0);
-		    break;
-		   case 1: /* !xdiff && ydiff */
-		    ASSIGN_VP(f_tmp, 0, field, ic*n_last_stored + jc, pyz);
-		    ASSIGN_VP(field, ic*n_last_stored + jc,
-			      field, i*n_last_stored + j, pyz);
-		    ASSIGN_V(field, i*n_last_stored + j, f_tmp, 0);
-		    break;
-		   case 0: /* !xdiff && !ydiff */
-		    ASSIGN_VP(f_tmp, 0, field, ic*n_last_stored + jc, pz);
-		    ASSIGN_VP(field, ic*n_last_stored + jc,
-			      field, i*n_last_stored + j, pz);
-		    ASSIGN_V(field, i*n_last_stored + j, f_tmp, 0);
-		    break;
+        "conjugated" point that is earlier in the array.  */
+
+     if (rank == 3) {
+	  int ix, iy;
+	  for (ix = 0; 2*ix <= nx; ++ix) {
+	       int xdiff, ixc;
+#  ifdef HAVE_MPI
+	       if (local_x_start == 0) {
+		    xdiff = ix != 0; ixc = (nx - ix) % nx;
+	       }
+	       else {
+		    xdiff = 0; ixc = nx-1 - ix;
+	       }
+#  else
+	       xdiff = ix != 0; ixc = (nx - ix) % nx;
+#  endif
+	       for (iy = 0; iy < ny; ++iy) {
+		    int ydiff = iy != 0;
+		    int i = ix * ny + iy, ic = ixc * ny + (ny - iy) % ny, jmax;
+		    if (ic < i)
+			 continue;
+		    jmax = n_last_new;
+		    if (ic == i)
+			 jmax = (jmax + 1) / 2;
+		    for (j = 1; j <= jmax; ++j) {
+			 int jc = n_last_new + 1 - j;
+			 int ij = i*n_last_stored + j;
+			 int ijc = ic*n_last_stored + jc;
+			 scalar_complex f_tmp[3];
+			 switch (xdiff*2 + ydiff) { /* pick exp(-ikR) phase */
+			     case 3: /* xdiff && ydiff */
+				  ASSIGN_VP(f_tmp, 0, field, ijc, pxyz);
+				  ASSIGN_VP(field, ijc, field, ij, pxyz);
+				  ASSIGN_V(field, ij, f_tmp, 0);
+				  break;
+			     case 2: /* xdiff && !ydiff */
+				  ASSIGN_VP(f_tmp, 0, field, ijc, pxz);
+				  ASSIGN_VP(field, ijc, field, ij, pxz);
+				  ASSIGN_V(field, ij, f_tmp, 0);
+				  break;
+			     case 1: /* !xdiff && ydiff */
+				  ASSIGN_VP(f_tmp, 0, field, ijc, pyz);
+				  ASSIGN_VP(field, ijc, field, ij, pyz);
+				  ASSIGN_V(field, ij, f_tmp, 0);
+				  break;
+			     case 0: /* !xdiff && !ydiff */
+				  ASSIGN_VP(f_tmp, 0, field, ijc, pz);
+				  ASSIGN_VP(field, ijc, field, ij, pz);
+				  ASSIGN_V(field, ij, f_tmp, 0);
+				  break;
+			 }
+		    }
 	       }
 	  }
-     }
 
-     /* Next, conjugate, and remove the holes from the array
-	corresponding to the DC and Nyquist frequencies (which were in
-	the first half already): */
-     for (i = 0; i < n_other; ++i)
-	  for (j = 1; j < n_last_new + 1; ++j)
-	       ASSIGN_CV(field, i*n_last_new + j-1, 
-			 field, i*n_last_stored + j);
+	  /* Next, conjugate, and remove the holes from the array
+	     corresponding to the DC and Nyquist frequencies (which were in
+	     the first half already): */
+	  for (i = 0; i < n_other; ++i)
+	       for (j = 1; j < n_last_new + 1; ++j) {
+		    int ij = i*n_last_stored + j, ijnew = i*n_last_new + j-1;
+		    ASSIGN_CV(field, ijnew, field, ij);
+	       }
+     }
+     else /* if (rank <= 2) */ {
+	  int i;
+	  for (i = 0; 2*i <= nx; ++i) {
+	       int xdiff = i != 0, ic = (nx - i) % nx;
+	       int jmax = n_last_new + (jmin - 1);
+#  ifndef HAVE_MPI
+	       if (ic == i)
+		    jmax = (jmax + 1) / 2;
+#  endif
+	       for (j = jmin; j <= jmax; ++j) {
+		    scalar_complex f_tmp[3];
+#  ifdef HAVE_MPI
+		    int jc = jmax + jmin - j;
+		    int ij = j * nx + i;
+		    int ijc = jc * nx + ic;
+		    if (ijc < ij)
+			 break;
+#  else  /* ! HAVE_MPI */
+		    int jc = n_last_new + 1 - j;
+		    int ij = i*n_last_stored + j;
+		    int ijc = ic*n_last_stored + jc;
+#  endif /* ! HAVE_MPI */
+		    if (xdiff) {
+			 ASSIGN_VP(f_tmp, 0, field, ijc, pxz);
+			 ASSIGN_VP(field, ijc, field, ij, pxz);
+			 ASSIGN_V(field, ij, f_tmp, 0);
+		    }
+		    else {
+			 ASSIGN_VP(f_tmp, 0, field, ijc, pz);
+			 ASSIGN_VP(field, ijc, field, ij, pz);
+			 ASSIGN_V(field, ij, f_tmp, 0);
+		    }
+	       }
+	  }
+
+	  /* Next, conjugate, and remove the holes from the array
+	     corresponding to the DC and Nyquist frequencies (which were in
+	     the first half already): */
+	  for (i = 0; i < nx; ++i)
+	       for (j = jmin; j < n_last_new + jmin; ++j) {
+#  ifdef HAVE_MPI
+		    int ij = j*nx + i, ijnew = (j-jmin)*nx + i;
+#  else
+		    int ij = i*n_last_stored + j, ijnew = i*n_last_new + j-1;
+#  endif
+		    ASSIGN_CV(field, ijnew, field, ij);
+	       }
+     }
 
 #  undef ASSIGN_V
 #  undef ASSIGN_VP
@@ -558,58 +641,132 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
 }
 
 /* Similar to vectorfield_otherhalf, above, except that it operates on
-   a real scalar field, which is assumed to have come from the real
-   parts, or the absolute values, of a complex field. */
+   a real scalar field, which is assumed to have come from e.g. the
+   absolute values of a complex field (and thus no phase factors or
+   conjugations are necessary). */
 void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field)
 {
 #ifndef SCALAR_COMPLEX
-     int i, j;
+     int i, j, jmin = 1;
      int rank, n_other, n_last, n_last_stored, n_last_new, nx, ny, nz;
+#  ifdef HAVE_MPI
+     int local_x_start;
+#  endif
 
-#ifdef HAVE_MPI
-#  error not yet implemented!
-#else /* ! HAVE_MPI */
      nx = d->nx; ny = d->ny; nz = d->nz;
      n_other = d->other_dims;
      n_last = d->last_dim;
      n_last_stored = d->last_dim_size / 2;
      n_last_new = n_last - n_last_stored; /* < n_last_stored always */
      rank = (nz == 1) ? (ny == 1 ? 1 : 2) : 3;
-#endif /* ! HAVE_MPI */
 
-     /* First, swap the order of elements.  We have to be careful here
-        not to double-swap any element pair; this is prevented by never
-        swapping with a "conjugated" point that is earlier in the array. 
-        Note that the i loop doesn't need to run all the way to n_other,
-        but it not worth it to compute the exact limit. */
-     for (i = 0; i < n_other; ++i) {
-          int ic;  /* conjugated index to i */
-	  int jmax;
-          switch (rank) {  /* is there a cleaner way to get ic? */
-              case 2: ic = (nx - i) % nx; break;
-              case 3: ic = ((nx-(i/ny)) % nx) * ny + (ny-(i%ny)) % ny; break;
-              default: ic = 0; break;
-          }
-	  if (ic < i)
-	       continue;
-	  jmax = n_last_new;
-	  if (ic == i)
-	       jmax = (jmax + 1) / 2;
-	  for (j = 1; j <= jmax; ++j) {
-               int jc = n_last_new + 1 - j;
-	       real f_tmp;
-	       f_tmp = field[ic*n_last_stored + jc];
-	       field[ic*n_last_stored + jc] = field[i*n_last_stored + j];
-	       field[i*n_last_stored + j] = f_tmp;
-	  }
+#  ifdef HAVE_MPI
+     local_x_start = d->local_y_start;
+     CHECK(rank == 2 || rank == 3, "unsupported rfftwnd_mpi rank!");
+     if (rank == 2) {
+	  n_other = nx;
+	  n_last_new = ny = d->local_ny;
+	  if (local_x_start == 0)
+	       --n_last_new; /* DC frequency should not be in other half */
+	  else
+	       jmin = 0;
+	  if (local_x_start + ny == n_last_stored && n_last % 2 == 0)
+	       --n_last_new; /* Nyquist freq. should not be in other half */
+	  n_last_stored = ny;
      }
+     else { /* rank == 3 */
+	  ny = nx;
+	  nx = d->local_ny;
+	  n_other = nx * ny;
+     }
+#  endif /* HAVE_MPI */
 
-     /* Next, remove the holes from the array corresponding to the DC
-	and Nyquist frequencies (which are in the other half already): */
-     for (i = 0; i < n_other; ++i)
-	  for (j = 1; j < n_last_new + 1; ++j)
-	       field[i*n_last_new + j-1] = field[i*n_last_stored + j];
+     /* First, swap the order of elements and multiply by exp(ikR)
+        phase factors.  We have to be careful here not to double-swap
+        any element pair; this is prevented by never swapping with a
+        "conjugated" point that is earlier in the array.  */
 
+     if (rank == 3) {
+	  int ix, iy;
+	  for (ix = 0; 2*ix <= nx; ++ix) {
+	       int ixc;
+#  ifdef HAVE_MPI
+	       if (local_x_start == 0)
+		    ixc = (nx - ix) % nx;
+	       else
+		    ixc = nx-1 - ix;
+#  else
+	       ixc = (nx - ix) % nx;
+#  endif
+	       for (iy = 0; iy < ny; ++iy) {
+		    int i = ix * ny + iy, ic = ixc * ny + (ny - iy) % ny, jmax;
+		    if (ic < i)
+			 continue;
+		    jmax = n_last_new;
+		    if (ic == i)
+			 jmax = (jmax + 1) / 2;
+		    for (j = 1; j <= jmax; ++j) {
+			 int jc = n_last_new + 1 - j;
+			 int ij = i*n_last_stored + j;
+			 int ijc = ic*n_last_stored + jc;
+			 real f_tmp;
+			 f_tmp = field[ijc];
+			 field[ijc] = field[ij];
+			 field[ij] = f_tmp;
+		    }
+	       }
+	  }
+
+	  /* Next, conjugate, and remove the holes from the array
+	     corresponding to the DC and Nyquist frequencies (which were in
+	     the first half already): */
+	  for (i = 0; i < n_other; ++i)
+	       for (j = 1; j < n_last_new + 1; ++j) {
+		    int ij = i*n_last_stored + j, ijnew = i*n_last_new + j-1;
+		    field[ijnew] = field[ij];
+	       }
+     }
+     else /* if (rank <= 2) */ {
+	  int i;
+	  for (i = 0; 2*i <= nx; ++i) {
+	       int ic = (nx - i) % nx;
+	       int jmax = n_last_new + (jmin - 1);
+#  ifndef HAVE_MPI
+	       if (ic == i)
+		    jmax = (jmax + 1) / 2;
+#  endif
+	       for (j = jmin; j <= jmax; ++j) {
+		    real f_tmp;
+#  ifdef HAVE_MPI
+		    int jc = jmax + jmin - j;
+		    int ij = j * nx + i;
+		    int ijc = jc * nx + ic;
+		    if (ijc < ij)
+			 break;
+#  else  /* ! HAVE_MPI */
+		    int jc = n_last_new + 1 - j;
+		    int ij = i*n_last_stored + j;
+		    int ijc = ic*n_last_stored + jc;
+#  endif /* ! HAVE_MPI */
+		    f_tmp = field[ijc];
+		    field[ijc] = field[ij];
+		    field[ij] = f_tmp;
+	       }
+	  }
+
+	  /* Next, conjugate, and remove the holes from the array
+	     corresponding to the DC and Nyquist frequencies (which were in
+	     the first half already): */
+	  for (i = 0; i < nx; ++i)
+	       for (j = jmin; j < n_last_new + jmin; ++j) {
+#  ifdef HAVE_MPI
+		    int ij = j*nx + i, ijnew = (j-jmin)*nx + i;
+#  else
+		    int ij = i*n_last_stored + j, ijnew = i*n_last_new + j-1;
+#  endif
+		    field[ijnew] = field[ij];
+	       }
+     }
 #endif /* ! SCALAR_COMPLEX */
 }
 

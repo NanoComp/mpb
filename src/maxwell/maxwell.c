@@ -92,7 +92,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 					    3 * d->num_fft_bands);
 #    else /* not SCALAR_COMPLEX */
      d->last_dim_size = 2 * (d->last_dim / 2 + 1);
-     d->fft_output_size = fft_data_size = d->other_dims * (d->last_dim_size/2);
+     d->fft_output_size = (fft_data_size = d->other_dims * d->last_dim_size)/2;
      d->plan = rfftwnd_create_plan_specific(rank, n, FFTW_COMPLEX_TO_REAL,
 					    FFTW_ESTIMATE | FFTW_IN_PLACE,
 					    (fftw_real*) d->fft_data,
@@ -116,14 +116,17 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      CHECK(rank > 1, "rank < 2 MPI computations are not supported");
 
 #    ifdef SCALAR_COMPLEX
-     d->plan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
-				      FFTW_BACKWARD,
-				      FFTW_ESTIMATE | FFTW_IN_PLACE);
      d->iplan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
 				       FFTW_FORWARD,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
+     {
+	  int nt[3] = { n[1], n[0], n[2] }; /* transposed for reverse FFT */
+	  d->plan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, nt,
+					   FFTW_BACKWARD,
+					   FFTW_ESTIMATE | FFTW_IN_PLACE);
+     }
 
-     fftwnd_mpi_local_sizes(d->plan, &d->local_nx, &d->local_x_start,
+     fftwnd_mpi_local_sizes(d->iplan, &d->local_nx, &d->local_x_start,
 			    &d->local_ny, &d->local_y_start,
 			    &fft_data_size);
      
@@ -131,9 +134,29 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
 #    else /* not SCALAR_COMPLEX */
 
-     CHECK(rank > 2, "rank <= 2 MPI computations must use SCALAR_COMPLEX");
+     CHECK(rank > 1, "rank < 2 MPI computations are not supported");
 
-#      error rfftw MPI transforms not yet supported
+     d->iplan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
+				       FFTW_REAL_TO_COMPLEX,
+				       FFTW_ESTIMATE | FFTW_IN_PLACE);
+
+     /* Unlike fftwnd_mpi, we do *not* pass transposed dimensions for
+	the reverse transform here--we always pass the dimensions of the
+	original real array, and rfftwnd_mpi assumes that if one
+	transform is transposed, then the other is as well. */
+     d->plan = rfftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
+				       FFTW_COMPLEX_TO_REAL,
+				       FFTW_ESTIMATE | FFTW_IN_PLACE);
+
+     rfftwnd_mpi_local_sizes(d->iplan, &d->local_nx, &d->local_x_start,
+			     &d->local_ny, &d->local_y_start,
+			     &fft_data_size);
+
+     d->last_dim_size = 2 * (d->last_dim / 2 + 1);
+     if (rank == 2)
+	  d->fft_output_size = nx * d->local_ny * nz;
+     else
+	  d->fft_output_size = nx * d->local_ny * (d->last_dim_size / 2);
 
 #    endif /* not SCALAR_COMPLEX */
      
@@ -156,8 +179,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      /* A scratch output array is required because the "ordinary" arrays
 	are not in a cartesian basis (or even a constant basis). */
      fft_data_size *= d->max_fft_bands;
-     CHK_MALLOC(d->fft_data, scalar,
-		3 * fft_data_size * (sizeof(scalar_complex) / sizeof(scalar)));
+     CHK_MALLOC(d->fft_data, scalar, 3 * fft_data_size);
 
      CHK_MALLOC(d->k_plus_G, k_data, *local_N);
      CHK_MALLOC(d->k_plus_G_normsqr, real, *local_N);
@@ -178,8 +200,13 @@ void destroy_maxwell_data(maxwell_data *d)
 
 #ifdef HAVE_FFTW
 #  ifdef HAVE_MPI
+#    ifdef SCALAR_COMPLEX
 	  fftwnd_mpi_destroy_plan(d->plan);
 	  fftwnd_mpi_destroy_plan(d->iplan);
+#    else /* not SCALAR_COMPLEX */
+	  rfftwnd_mpi_destroy_plan(d->plan);
+	  rfftwnd_mpi_destroy_plan(d->iplan);
+#    endif /* not SCALAR_COMPLEX */
 #  else /* not HAVE_MPI */
 #    ifdef SCALAR_COMPLEX
 	  fftwnd_destroy_plan(d->plan);

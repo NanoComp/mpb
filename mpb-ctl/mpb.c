@@ -1433,7 +1433,12 @@ void output_field_to_file(integer which_component, string filename_prefix)
      int attr_dims[2] = {3, 3};
      real output_k[3]; /* kvector in reciprocal lattice basis */
      real output_R[3][3];
+#ifndef SCALAR_COMPLEX     
+     /* where to put "otherhalf" block of output: */
      int last_dim_index;
+     int first_dim_start, first_dim_size, last_dim_start, last_dim_size;
+     int write_start0_special = 0;
+#endif
 
      if (!curfield) {
 	  mpi_one_fprintf(stderr, 
@@ -1448,10 +1453,41 @@ void output_field_to_file(integer which_component, string filename_prefix)
      local_dims[1] = dims[1] = mdata->nx;
      local_dims[2] = dims[2] = mdata->nz;
      local_dims[0] = mdata->local_ny;
-#  ifndef SCALAR_COMPLEX
-#    error not yet implemented!
-#  endif
      start[0] = mdata->local_y_start;
+#  ifndef SCALAR_COMPLEX
+     /* Ugh, hairy.  See also maxwell_vectorfield_otherhalf. */
+     if (dims[2] == 1) {
+	  last_dim_index = 0;
+	  first_dim_size = local_dims[0];
+	  first_dim_start = dims[0] - (start[0] + local_dims[0] - 1);
+
+	  if (start[0] == 0)
+	       --first_dim_size; /* DC frequency is not in other half */
+	  if (start[0] + local_dims[0] == mdata->last_dim_size / 2 &&
+	      dims[0] % 2 == 0) {
+	       --first_dim_size; /* Nyquist frequency is not in other half */
+	       ++first_dim_start;
+	  }
+
+	  last_dim_start = first_dim_start;
+	  last_dim_size = first_dim_size;
+     }
+     else {
+	  last_dim_index = 2;
+	  local_dims[last_dim_index] = mdata->last_dim_size / 2;
+	  if (start[0] == 0) {
+	       first_dim_size = local_dims[0] - 1;
+	       first_dim_start = dims[0] - first_dim_size;
+	       write_start0_special = 1;
+	  }
+	  else {
+	       first_dim_start = dims[0] - (start[0] + local_dims[0] - 1);
+	       first_dim_size = local_dims[0];
+	  }
+	  last_dim_start = local_dims[last_dim_index];
+	  last_dim_size = dims[last_dim_index] - local_dims[last_dim_index];
+     }
+#  endif
      output_k[0] = R[1][0]*mdata->current_k[0] + R[1][1]*mdata->current_k[1]
 	  + R[1][0]*mdata->current_k[2];
      output_k[1] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
@@ -1469,6 +1505,10 @@ void output_field_to_file(integer which_component, string filename_prefix)
 #  ifndef SCALAR_COMPLEX
      last_dim_index = dims[2] == 1 ? (dims[1] == 1 ? 0 : 1) : 2;
      local_dims[last_dim_index] = mdata->last_dim_size / 2;
+     first_dim_start = 0;
+     first_dim_size = local_dims[0];
+     last_dim_start = local_dims[last_dim_index];
+     last_dim_size = dims[last_dim_index] - local_dims[last_dim_index];
 #  endif
      start[0] = mdata->local_x_start;
      output_k[0] = R[0][0]*mdata->current_k[0] + R[0][1]*mdata->current_k[1]
@@ -1508,15 +1548,14 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  /* Here's where it gets hairy. */
 	  maxwell_vectorfield_otherhalf(mdata, curfield,
 					output_k[0], output_k[1], output_k[2]);
-	  start[last_dim_index] += local_dims[last_dim_index];
-	  local_dims[last_dim_index] =
-	       dims[last_dim_index] - start[last_dim_index];
-	  if (start[0] == 0) {
+	  start[last_dim_index] = last_dim_start;
+	  local_dims[last_dim_index] = last_dim_size;
+	  start[0] = first_dim_start;
+	  local_dims[0] = first_dim_size;
+	  if (write_start0_special) {
 	       /* The conjugated array half may be discontiguous.
 		  First, write the part not containing start[0], and
 		  then write the start[0] slab. */
-	       local_dims[0] -= 1;
-	       start[0] = dims[0] - local_dims[0];
 	       fieldio_write_complex_field(curfield + 
 					   3 * local_dims[1] * local_dims[2],
 					   3, dims, local_dims, start,
@@ -1529,7 +1568,6 @@ void output_field_to_file(integer which_component, string filename_prefix)
 					   file_id, 1, data_id);
 	  }
 	  else {
-	       start[0] = dims[0] - (start[0] + local_dims[0] - 1);
 	       fieldio_write_complex_field(curfield, 3, dims,local_dims,start,
 					   which_component, NULL,
 					   file_id, 1, data_id);
@@ -1569,15 +1607,14 @@ void output_field_to_file(integer which_component, string filename_prefix)
 
 #ifndef SCALAR_COMPLEX
 	  maxwell_scalarfield_otherhalf(mdata, (real *) curfield);
-	  start[last_dim_index] += local_dims[last_dim_index];
-	  local_dims[last_dim_index] =
-	       dims[last_dim_index] - start[last_dim_index];
-	  if (start[0] == 0) {
+	  start[last_dim_index] = last_dim_start;
+	  local_dims[last_dim_index] = last_dim_size;
+	  start[0] = first_dim_start;
+	  local_dims[0] = first_dim_size;
+	  if (write_start0_special) {
 	       /* The conjugated array half may be discontiguous.
 		  First, write the part not containing start[0], and
 		  then write the start[0] slab. */
-	       local_dims[0] -= 1;
-	       start[0] = dims[0] - local_dims[0];
 	       fieldio_write_real_vals(((real *) curfield) +
 				       local_dims[1] * local_dims[2],
 				       3, dims, local_dims, start, 
@@ -1589,7 +1626,6 @@ void output_field_to_file(integer which_component, string filename_prefix)
 				       file_id, 1, &data_id);
 	  }
 	  else {
-	       start[0] = dims[0] - (start[0] + local_dims[0] - 1);
 	       fieldio_write_real_vals((real *) curfield, 3, dims, 
 				       local_dims, start, 
 				       file_id, 1, &data_id);
@@ -1626,7 +1662,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
 {
      int i, j, k, n1, n2, n3, n_other, n_last, rank, last_dim;
 #ifdef HAVE_MPI
-     int local_n2, local_y_start;
+     int local_n2, local_y_start, local_n3;
 #endif
      real s1, s2, s3, c1, c2, c3;
      real *energy = (real *) curfield;
@@ -1687,7 +1723,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
 	  int i2 = i, j2 = j + local_y_start, k2 = k;
 	  int index = ((j * n1 + i) * n3 + k);
 
-#  endif
+#  endif /* HAVE_MPI */
 
 #else /* not SCALAR_COMPLEX */
 
@@ -1705,8 +1741,29 @@ number compute_energy_in_object_list(geometric_object_list objects)
 	  }
 
 #  else /* HAVE_MPI */
-#    error not yet implemented!
-#  endif
+
+     local_n2 = md->local_ny;
+     local_y_start = md->local_y_start;
+
+     /* For a real->complex transform, the last dimension is cut in
+	half.  For a 2d transform, this is taken into account in local_ny
+	already, but for a 3d transform we must compute the new n3: */
+     if (n3 > 1)
+	  local_n3 = md->last_dim_size / (sizeof(scalar_complex) / sizeof(scalar));
+     else
+	  local_n3 = 1;
+     
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < local_n3; ++k)
+     {
+#         define i2 i
+	  int j2 = j + local_y_start;
+#         define k2 k
+	  int index = ((j * n1 + i) * local_n3 + k);
+
+#  endif /* HAVE_MPI */
 
 #endif /* not SCALAR_COMPLEX */
 

@@ -26,18 +26,21 @@
 #  include <rfftw.h>
 #  ifdef HAVE_MPI
 #    include <fftw_mpi.h>
+#    include <rfftw_mpi.h>
 #  endif
 #elif defined(HAVE_LIBDFFTW)
 #  include <dfftw.h>
 #  include <drfftw.h>
 #  ifdef HAVE_MPI
 #    include <dfftw_mpi.h>
+#    include <drfftw_mpi.h>
 #  endif
 #elif defined(HAVE_LIBSFFTW)
 #  include <sfftw.h>
 #  include <srfftw.h>
 #  ifdef HAVE_MPI
 #    include <sfftw_mpi.h>
+#    include <srfftw_mpi.h>
 #  endif
 #endif
 
@@ -99,7 +102,11 @@ typedef struct {
 
 #ifdef HAVE_FFTW
 #  ifdef HAVE_MPI
+#    ifdef SCALAR_COMPLEX
      fftwnd_mpi_plan plan, iplan;
+#    else
+     rfftwnd_mpi_plan plan, iplan;
+#    endif
 #  else
 #    ifdef SCALAR_COMPLEX
      fftwnd_plan plan, iplan;

@@ -474,7 +474,7 @@ void set_maxwell_dielectric(maxwell_data *md,
      int size_moment_mesh = 0;
      int n1, n2, n3;
 #ifdef HAVE_MPI
-     int local_n2, local_y_start;
+     int local_n2, local_y_start, local_n3;
 #endif
 #ifndef SCALAR_COMPLEX
      int n_other, n_last, rank;
@@ -537,14 +537,14 @@ void set_maxwell_dielectric(maxwell_data *md,
 #         define k2 k
 	  int eps_index = ((j * n1 + i) * n3 + k);
 
-#  endif
+#  endif /* HAVE_MPI */
 
 #else /* not SCALAR_COMPLEX */
 
 #  ifndef HAVE_MPI
 
      n_other = md->other_dims;
-     n_last = md->last_dim_size / (sizeof(scalar_complex) / sizeof(scalar));
+     n_last = md->last_dim_size / 2;
      rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
 
      for (i = 0; i < n_other; ++i)
@@ -560,9 +560,28 @@ void set_maxwell_dielectric(maxwell_data *md,
 
 #  else /* HAVE_MPI */
 
-#    error not yet implemented!
+     local_n2 = md->local_ny;
+     local_y_start = md->local_y_start;
 
-#  endif
+     /* For a real->complex transform, the last dimension is cut in
+	half.  For a 2d transform, this is taken into account in local_ny
+	already, but for a 3d transform we must compute the new n3: */
+     if (n3 > 1)
+	  local_n3 = md->last_dim_size / 2;
+     else
+	  local_n3 = 1;
+     
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < local_n3; ++k)
+     {
+#         define i2 i
+	  int j2 = j + local_y_start;
+#         define k2 k
+	  int eps_index = ((j * n1 + i) * local_n3 + k);
+
+#  endif  /* HAVE_MPI */
 
 #endif /* not SCALAR_COMPLEX */
 
