@@ -1,3 +1,60 @@
+2000-10-23  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html, mpb-ctl/examples/bragg.ctl, mpb-ctl/mpb.c,
+	mpb-ctl/mpb.scm.in, NEWS, src/matrices/eigensolver.c,
+	src/matrices/evectmatrix.c, src/matrices/matrices.c,
+	src/matrices/matrices.h, src/maxwell/maxwell.c,
+	src/maxwell/maxwell.h, src/maxwell/maxwell_pre.c: added
+	eigensolver-block-size and zero-k handling
+
+2000-10-22  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* NEWS: added first-brillouin-zone function
+
+	* doc/user-ref.html: documented first-brillouin-zone
+
+	* mpb-ctl/mpb.scm.in: added first-brillouin-zone
+
+2000-10-21  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* tests/normal_vectors.c: print more angle information
+
+2000-09-21  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/user-ref.html: clarification of compute-field-energy
+	normalization
+
+2000-08-10  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* utils/mpb-data.c: Re-mapping (rectangularizing, etcetera) now
+	maps the center of the original primitive cell to the center of
+	the output.  Also, the -x, -y, and -z lattice multipliers now
+	apply to the axes *after* the cell is rectangularized.
+
+2000-08-06  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* configure.in: Fix test for sunperf...-xlic_lib only supported in
+	Sun cc, not gcc.
+
+2000-08-05  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/installation.html: updated PHiPACK URL.
+
+2000-07-18  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* doc/license.html: John likes to go by his initials.
+
+	* doc/license.html: noted Meade reference
+
+2000-07-12  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* tests/malloctest.c: added benchmark
+
+	* src/maxwell/maxwell_eps.c, tests/Makefile.in,
+	tests/normal_vectors.c, src/maxwell/maxwell.h: Added more
+	sophisticated spherical quadrature algorithm for computing normal
+	vectors (rather than just using the vertices of an icosahedron).
+
 2000-07-10  Steven G. Johnson  <stevenj@alum.mit.edu>
 
 	* /home/a/stevenj/Repository/mpb/mpb-ctl/examples/check.ctl:

@@ -10,6 +10,10 @@
     k-point into an equivalent point in the first Brillouin zone.
     Thanks to Payam Rabiei for the suggestion.
 
+  * In mpb-data, the center of the output cell is now always identical
+    to the origin of the coordinate system.  Thanks to Michelle
+    Povinelli for pointing out this deficiency.	
+
   * Used improved spherical-quadrature formula in computing the
     effective dielectric tensor in 3d; this should increase accuracy
     somewhat at lower grid resolutions.
