@@ -61,7 +61,7 @@
 (define-input-var simple-preconditioner? false 'boolean)
 (define-input-var deterministic? false 'boolean)
 (define-input-var eigensolver-flags EIGS_DEFAULT_FLAGS 'integer)
-(define-input-var eigensolver-block-size 0 'integer)
+(define-input-var eigensolver-block-size -11 'integer)
 
 (define-output-var freqs (make-list-type 'number))
 (define-output-var z-parity (make-list-type 'number))

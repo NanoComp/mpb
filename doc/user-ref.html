@@ -141,12 +141,14 @@ the epsilon file, unless you also set <code>mesh-size</code> to
 <dd>The eigensolver uses a "block" algorithm, which means that it
 solves for several bands simultaneously at each k-point.
 <code>eigensolver-block-size</code> specifies this number of bands to
-solve for at a time; if it is &lt;= zero or &gt;=
-<code>num-bands</code>, then all the bands are solved for at once.
+solve for at a time; if it is zero or &gt;= <code>num-bands</code>,
+then all the bands are solved for at once.  If
+<code>eigensolver-block-size</code> is a negative number, -<i>n</i>,
+then MPB will try to use nearly-equal block-sizes close to <i>n</i>.
 Making the block size a small number can reduce the memory
 requirements of MPB, but block sizes &gt; 1 are usually more efficient
-(there is typically some optimum size for a given problem).  Defaults
-to zero (i.e. solve for all bands at once).
+(there is typically some optimum size for any given problem).
+Defaults to -11 (i.e. solve for around 11 bands at a time).
 
 <p><dt><code>simple-preconditioner?</code> [<code>boolean</code>]
 <dd>Whether or not to use a simplified preconditioner; defaults to

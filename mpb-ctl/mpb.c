@@ -300,8 +300,14 @@ void init_params(int p, boolean reset_fields)
      ny = grid_size.y;
      nz = grid_size.z;
 
-     if (eigensolver_block_size > 0 && eigensolver_block_size < num_bands) {
+     if (eigensolver_block_size != 0 && eigensolver_block_size < num_bands) {
 	  block_size = eigensolver_block_size;
+	  if (block_size < 0) {
+	       /* Guess a block_size near -block_size, chosen so that
+		  all blocks are nearly equal in size: */
+	       block_size = (num_bands - block_size - 1) / (-block_size);
+	       block_size = (num_bands + block_size - 1) / block_size;
+	  }
 	  printf("Solving for %d bands at a time.\n", block_size);
      }
      else
