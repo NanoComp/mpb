@@ -129,7 +129,8 @@ thing we want to set (although the order really doesn't matter), is
 the set of k points (Bloch wavevectors) we want to compute the bands
 at.  This is controlled by the variable <code>k-points</code>, a list
 of 3-vectors (which is initially empty).  We'll set it to the corners
-of the Brillouin zone of a square lattice, Gamma, X, M, and Gamma again:
+of the irreducible Brillouin zone of a square lattice, Gamma, X, M,
+and Gamma again:
 
 <pre>
 (set! k-points (list (vector3 0 0 0)     ; Gamma
@@ -262,7 +263,27 @@ Gap from band 4 (0.715678780635625) to band 5 (0.743689685572616), 3.83877075400
 <p>This data is also stored in the variable <code>gap-list</code>,
 which is a list of <code>(<i>gap-percent gap-min gap-max</i>)</code>
 lists.  We will use this data later to write a script to maximize the
-first TM gap.
+first TM gap.  It is important to realize, however, that this band-gap
+data may include "false positives," from two possible sources:
+
+<ul>
+
+<li>If two bands cross at a k-point not in the <code>k-points</code>
+list (usually due to an accidental degeneracy), a false gap may result
+because the code computes the gap (connecting the dots in the band
+diagram) by assuming that bands never cross.  Such false gaps are
+typically quite small (&lt; 1%); to be sure of what's going on, you
+should either look at the symmetry of the modes involved or compute k
+points very close to the crossing.
+
+<li>One typically computes band diagrams by considering k-points
+around the boundary of the irreducible Brillouin zone.  It is possible
+(though rare) that the band edges may occur at points in the interior
+of the Brillouin zone.  To be absolutely sure you have a band gap (and
+of its size), you should compute the frequencies for points inside the
+Brillouin zone, too.
+
+</ul>
 
 <p>You've computed the band structure, and extracted the
 eigenfrequencies for each k point.  But what if you want to see what
@@ -369,7 +390,7 @@ subsection, we'll do a supercell calculation where we'll want to
 change the lengths of the lattice vectors (using the <code>size</code>
 property).
 
-<p>The first Brillouin zone of a triangular lattice is different from
+<p>The irreducible Brillouin zone of a triangular lattice is different from
 that of a square lattice, so we'll need to modify the
 <code>k-points</code> list accordingly:
 
