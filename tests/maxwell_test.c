@@ -211,6 +211,7 @@ void usage(void)
 	    "   -g <NMESH>   Set mesh size [dflt. %d].\n"
 	    "   -1           Stop after first computation.\n"
 	    "   -p           Use simple preconditioner.\n"
+	    "   -E <err>     Exit with error if the error exceeds <err>\n"
 	    "   -v           Verbose output.\n",
 	    KX, NUM_BANDS, sqrt(EPS_HIGH), EPS_HIGH_X, NX, NY, NZ,
 	    ERROR_TOL, MESH_SIZE);
@@ -244,6 +245,7 @@ int main(int argc, char **argv)
      int stop1 = 0;
      int verbose = 0;
      int which_preconditioner = 2;
+     double max_err = 1e20;
 
      srand(time(NULL));
 
@@ -304,6 +306,10 @@ int main(int argc, char **argv)
 		   case 't':
 			target_freq = fabs(atof(optarg));
 			do_target = 1;
+			break;
+		   case 'D':
+			max_err = fabs(atof(optarg));
+			CHECK(max_err > 0, "maximum error must be positive");
 			break;
 		   case 'c':
 			error_tol = fabs(atof(optarg));
@@ -425,12 +431,14 @@ int main(int argc, char **argv)
      printf("%15s%15s%15s%15s\n","eigenval", "frequency", "exact freq.", 
 	    "error");
      for (i = 0; i < num_bands; ++i) {
+	  double err;
 	  real freq = sqrt(eigvals[i]);
 	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(ed.eps_high),
 					ed.eps_high_x, sqrt(ed.eps_low),
 					1.0 - ed.eps_high_x, 1.0e-7);
 	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
-		 fabs(freq - exact_freq) / exact_freq);
+		 err = fabs(freq - exact_freq) / exact_freq);
+	  CHECK(err <= max_err, "error exceeds tolerance");
      }
      printf("\n");
 
@@ -456,12 +464,14 @@ int main(int argc, char **argv)
      printf("%15s%15s%15s%15s\n","eigenval", "frequency", "exact freq.", 
 	    "error");
      for (i = 0; i < num_bands; ++i) {
+	  double err;
 	  real freq = sqrt(eigvals[i]);
 	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(ed.eps_high),
 					ed.eps_high_x, sqrt(ed.eps_low),
 					1.0 - ed.eps_high_x, 1.0e-7);
 	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
-		 fabs(freq - exact_freq) / exact_freq);
+		 err = fabs(freq - exact_freq) / exact_freq);
+	  CHECK(err <= max_err, "error exceeds tolerance");
      }
      printf("\n");
 
@@ -483,12 +493,14 @@ int main(int argc, char **argv)
      printf("%15s%15s%15s%15s\n","eigenval", "frequency", "exact freq.", 
 	    "error");
      for (i = 0; i < num_bands; ++i) {
+	  double err;
 	  real freq = sqrt(eigvals[i]);
 	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(ed.eps_high),
 					ed.eps_high_x, sqrt(ed.eps_low),
 					1.0 - ed.eps_high_x, 1.0e-7);
 	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
-		 fabs(freq - exact_freq) / exact_freq);
+		 err = fabs(freq - exact_freq) / exact_freq);
+	  CHECK(err <= max_err, "error exceeds tolerance");
      }
      printf("\n");
 
@@ -509,12 +521,14 @@ int main(int argc, char **argv)
      printf("%15s%15s%15s%15s\n","eigenval", "frequency", "exact freq.", 
 	    "error");
      for (i = 0; i < num_bands; ++i) {
+	  double err;
 	  real freq = sqrt(eigvals[i]);
 	  real exact_freq = bragg_omega(freq, kvector[0], sqrt(ed.eps_high),
 					ed.eps_high_x, sqrt(ed.eps_low),
 					1.0 - ed.eps_high_x, 1.0e-7);
 	  printf("%15f%15f%15f%15e\n", eigvals[i], freq, exact_freq,
-		 fabs(freq - exact_freq) / exact_freq);
+		 err = fabs(freq - exact_freq) / exact_freq);
+	  CHECK(err <= max_err, "error exceeds tolerance");
      }
      printf("\n");
 
