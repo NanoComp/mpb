@@ -1,3 +1,7 @@
+  * configure script can now detect and link ATLAS 3.0 accelerated BLAS.
+
+  * Added band-range-data output variable.
+
   * Fixed compilation --without-hdf5, or when HDF5 is not found.  Thanks
     to Rajesh Rengarajan for the bug report.
 
