@@ -78,8 +78,8 @@ real bragg_omega(real omega_guess,
 		 real n1, real f1, real n2, real f2,
 		 real tolerance)
 {
-     real omega_guess_low = omega_guess - 0.4, 
-	  omega_guess_high = omega_guess + 0.4;
+     real omega_guess_low = omega_guess - 0.2, 
+	  omega_guess_high = omega_guess + 0.2;
      real k_cur;
      real k_best = -1.0, omega_best = 0.0;
      real tol;
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 {
      maxwell_data *mdata;
      int local_N, N_start, alloc_N;
-     real G1[3] = {1,0,0}, G2[3] = {0,1,0}, G3[3] = {0,0,1};
+     real G1[3] = {1,0,0}, G2[3] = {0,100,0}, G3[3] = {0,0,100};
      real kvector[3] = {0.5,0,0};
      evectmatrix H, Hstart, W[NWORK];
      real *eigvals;
