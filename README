@@ -1,6 +1,8 @@
 MIT Photonic-Bands (http://ab-initio.mit.edu/mpb/)
 
-A program for computing photonic band structures.
+A program for computing photonic band structures, developed by Steven
+G. Johnson of the Joannoupoulos Ab-Initio Physics group in the MIT
+Physics Department.
 
 See the MIT Photonic-Bands manual, in doc/index.html, for a complete
 description of the package and its user interface, as well as
