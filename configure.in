@@ -58,6 +58,9 @@ if test "$ok" = "no"; then
 	AC_DEFINE(CHECK_DISABLE)
 fi
 
+BUILD_MPB_DATA=mpb-data  # mpb-data program to build, if any
+AC_SUBST(BUILD_MPB_DATA)
+
 AC_ARG_WITH(inv-symmetry,[  --with-inv-symmetry     take advantage of (and require) inv. sym.], inv_sym=$withval, inv_sym=no)
 if test "$inv_sym" = "no"; then
         AC_DEFINE(SCALAR_COMPLEX)
@@ -257,6 +260,8 @@ if test "x$with_mpi" = "xyes"; then
 	fi
 
 	AC_DEFINE(HAVE_MPI,1,[Define if you have & link an MPI library.])
+
+	BUILD_MPB_DATA="" # don't build/install MPI-linked mpb-data
 fi
 
 # ----------------------------------------------------------------------

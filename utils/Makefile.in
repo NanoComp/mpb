@@ -19,7 +19,7 @@ transform=@program_transform_name@
 MYLIBS = ../src/matrixio/matrixio.a ../src/matrices/matrices.a \
          ../src/util/util.a 
 
-all: mpb-data
+all: @BUILD_MPB_DATA@
 
 libs:
 
@@ -29,7 +29,11 @@ mpb-data: mpb-data.o $(MYLIBS)
 .c.o:
 	$(CC) $(DEFS) $(CPPFLAGS) -c $(CFLAGS) $< -o $@
 
-install: mpb-data
+install: install-@BUILD_MPB_DATA@
+
+install-: # dummy target for when BUILD_MPB_DATA is ""
+
+install-mpb-data: mpb-data
 	$(INSTALL) -d $(prefix)/bin
 	$(INSTALL) -m 0755 -s mpb-data $(prefix)/bin/`echo mpb-data|sed '$(transform)'`
 	$(INSTALL) -d $(prefix)/man/man1
