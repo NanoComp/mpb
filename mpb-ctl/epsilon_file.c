@@ -48,10 +48,10 @@ static real epsilon_file_func(real r[3], void *edata)
      real rx, ry, rz, dx, dy, dz;
      int x, y, z, x2, y2, z2;
 
-     /* make sure r positive: */
-     rx = r[0] > 0.0 ? r[0] : (r[0] + (1 + (int) (-r[0])));
-     ry = r[1] > 0.0 ? r[1] : (r[1] + (1 + (int) (-r[1])));
-     rz = r[2] > 0.0 ? r[2] : (r[2] + (1 + (int) (-r[2])));
+     /* make sure r is positive: */
+     rx = r[0] >= 0.0 ? r[0] : (r[0] + (1 + (int) (-r[0])));
+     ry = r[1] >= 0.0 ? r[1] : (r[1] + (1 + (int) (-r[1])));
+     rz = r[2] >= 0.0 ? r[2] : (r[2] + (1 + (int) (-r[2])));
 
      /* make sure r is in [0,1) */
      rx = rx < 1.0 ? rx : rx - ((int) rx);
@@ -73,12 +73,13 @@ static real epsilon_file_func(real r[3], void *edata)
      y2 = (d->ny + (dy >= 0.0 ? y + 1 : y - 1)) % d->ny;
      z2 = (d->nz + (dz >= 0.0 ? z + 1 : z - 1)) % d->nz;
 
-     /* take abs(d{xyz}): */
+     /* take abs(d{xyz}) to get weights for {xyz} and {xyz}2: */
      dx = fabs(dx);
      dy = fabs(dy);
      dz = fabs(dz);
 
-     /* define a macro to give us epsilon(x,y,z) on the grid: */
+     /* define a macro to give us epsilon(x,y,z) on the grid,
+	in row-major order (the order used by HDF5): */
 #define EPS(x,y,z) (d->data[((x)*d->ny + (y))*d->nz + (z)])
 
      /* compute the effective epsilon by linear interpolation: */
