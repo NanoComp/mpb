@@ -27,11 +27,17 @@ In the following list, some of the packages are dependent upon
 packages listed earlier, so you should install them in more-or-less
 the order given.
 
-<p>Many of these libraries may be available in precompiled binary
-form, especially for GNU/Linux systems.  Be aware, however, that
-library binary packages often come in two parts, <code>library</code>
-and <code>library-dev</code>, and <em>both</em> are required to
-compile programs using it.
+<p><b>Note:</b> Many of these libraries may be available in
+precompiled binary form, especially for GNU/Linux systems.  Be aware,
+however, that library binary packages often come in two parts,
+<code>library</code> and <code>library-dev</code>, and <em>both</em>
+are required to compile programs using it.
+
+<p><b>Note:</b> It is important that you use the <em>same Fortran
+compiler</em> to compile Fortran libraries (like LAPACK) and for
+configuring MPB.  Different Fortran compilers often have incompatible
+linking schemes.  (The Fortran compiler for MPB can be set via the
+<code>F77</code> environment variable.)
 
 <h2><a name="paths">Installation Paths</a></h2>
 
