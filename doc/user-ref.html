@@ -661,6 +661,19 @@ returns a band function that does nothing.)
 
 </dl>
 
+<p>It is also often useful to output the fields only at a certain k-point,
+to let you look at typical field patterns for a given band while avoiding
+gratuitous numbers of output files.  This can be accomplished via:
+
+<dl>
+
+<dt><code>(output-at-kpoint <i>k-point</i> <i>band-funcs...</i>)</code>
+<dd>Given zero or more band functions, returns a new band function
+that calls all of them in sequence, but only at the specified
+<code>k-point</code>.  For other k-points, does nothing.
+
+</dl>
+
 <h4>Outputting multiple periods</h4>
 
 <p>By default, all of these functions output the fields in only a
