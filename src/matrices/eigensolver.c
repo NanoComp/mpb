@@ -369,6 +369,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      do {
 	  real y_norm, d_norm;
 
+	  if (flags & EIGS_FORCE_APPROX_LINMIN)
+	       use_linmin = 0;
+
 	  TIME_OP(time_ZtZ, evectmatrix_XtX(YtY, Y));
 
 	  y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtY)) / Y.p);
@@ -594,7 +597,11 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 					   time_ZS, time_ZtZ, time_linmin);
 	       t_approx = APPROX_LINMIN_TIME(time_AZ, time_KZ, time_ZtW,
 					     time_ZS, time_ZtZ);
-	       if (!(flags & EIGS_ALWAYS_EXACT_LINMIN) &&
+	       if (flags & EIGS_PROJECT_PRECONDITIONING) {
+		    t_exact += time_ZtW + time_ZS;
+		    t_approx += time_ZtW + time_ZS;
+	       }
+	       if (!(flags & EIGS_FORCE_EXACT_LINMIN) &&
 		   linmin_improvement > 0 &&
 		   linmin_improvement <= APPROX_LINMIN_IMPROVEMENT_THRESHOLD &&
 		   t_exact > t_approx * APPROX_LINMIN_SLOWDOWN_GUESS) {

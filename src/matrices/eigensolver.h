@@ -45,10 +45,11 @@ extern void eigensolver_get_eigenvals(evectmatrix Y, real *eigenvals,
 
 /* eigensolver option flags, designed to be combined with a bitwise or ('|');
    each flag should set exactly one bit. */
-#define EIGS_PROJECT_PRECONDITIONING (1<<0)
-#define EIGS_VERBOSE (1<<1)
+#define EIGS_VERBOSE (1<<0)
+#define EIGS_PROJECT_PRECONDITIONING (1<<1)
 #define EIGS_RESET_CG (1<<2)
-#define EIGS_ALWAYS_EXACT_LINMIN (1<<3)
+#define EIGS_FORCE_EXACT_LINMIN (1<<3)
+#define EIGS_FORCE_APPROX_LINMIN (1<<4)
 
 /* default flags: what we think works best most of the time: */
 #define EIGS_DEFAULT_FLAGS (EIGS_RESET_CG)
