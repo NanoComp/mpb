@@ -27,63 +27,64 @@ href="http://ab-initio.mit.edu/libctl/doc/">libctl manual</a>).
 parameters of the Photonic-Bands computation.  They are also listed
 (along with their current values) by the <code>(help)</code> command.
 In brackets after each variable is the type of value that it should
-hold.  (The classes, complex datatypes like geometric-object, are
-described in a later subsection.  The basic datatypes, like integer,
-boolean, and vector3, are defined by libctl.)
+hold.  (The classes, complex datatypes like
+<code>geometric-object</code>, are described in a later subsection.
+The basic datatypes, like <code>integer</code>, <code>boolean</code>,
+and <code>vector3</code>, are defined by libctl.)
 
 <dl>
 
-<dt><code>geometry</code> [list of geometric-object class]
+<dt><code>geometry</code> [list of <code>geometric-object</code> class]
 <dd>Specifies the geometric objects making up the structure being
 simulated.  When objects overlap, later objects in the list take
 precedence.  Defaults to no objects (empty list).
 
-<p><dt><code>default-material</code> [material-type class]
+<p><dt><code>default-material</code> [<code>material-type</code> class]
 <dd>Holds the default material that is used for points not in any
 object of the geometry list.  Defaults to air (epsilon of 1).
 
-<p><dt><code>ensure-periodicity</code> [boolean]
+<p><dt><code>ensure-periodicity</code> [<code>boolean</code>]
 <dd>If true (the default), then geometric objects are treated as if
 they were shifted by all possible lattice vectors; i.e. they are made
 periodic in the lattice.
 
-<p><dt><code>geometry-lattice</code> [lattice class]
+<p><dt><code>geometry-lattice</code> [<code>lattice</code> class]
 <dd>Specifies the lattice vectors of the periodic structure.  The unit
 lattice vectors form the basis for all other 3-vectors in the
 geometry, and their lengths determine the size of the primitive cell.
 Defaults to the orthogonal x-y-z vectors of unit length (i.e. a
 square/cubic lattice).
 
-<p><dt><code>grid-size</code> [vector3]
+<p><dt><code>grid-size</code> [<code>vector3</code>]
 <dd>Determines the size of the discrete computational grid along each
 of the lattice directions.  Defaults to 16x16x16.  If the third grid
 dimension is 1, the computation is two-dimensional.  Note that the
 computational grid is centered on the origin of the coordinate system.
 
-<p><dt><code>mesh-size</code> [integer]
+<p><dt><code>mesh-size</code> [<code>integer</code>]
 
 <dd>At each grid point, the dielectric constant is averaged over a
 "mesh" of points to find an effective dielectric tensor.  This mesh is
 a grid with <code>mesh-size</code> points on a side.  Defaults to 7.
 
-<p><dt><code>dimensions</code> [integer]
+<p><dt><code>dimensions</code> [<code>integer</code>]
 <dd>Explicitly specifies the dimensionality of the simulation; if the
 value is less than 3, the sizes of the extra dimensions in
 <code>grid-size</code> are ignored (assumed to be one).  Usually, it
 is easier to set the dimensions through <code>grid-size</code>, as
 discussed above.  Defaults to 3.
 
-<p><dt><code>k-points</code> [list of vector3]
+<p><dt><code>k-points</code> [list of <code>vector3</code>]
 <dd>List of Bloch wavevectors to compute the bands at, expressed in
 the basis of the reciprocal lattice vectors (<em>not</em> the
 unit-normalized reciprocal lattice vectors).  Defaults to none (empty
 list).
 
-<p><dt><code>num-bands</code> [integer]
+<p><dt><code>num-bands</code> [<code>integer</code>]
 <dd>Number of bands (eigenvectors) to compute at each k
 point. Defaults to 1.
 
-<p><dt><code>target-freq</code> [number]
+<p><dt><code>target-freq</code> [<code>number</code>]
 
 <dd>If zero, the lowest-frequency <code>num-bands</code> states are
 solved for at each k point (ordinary eigenproblem).  If non-zero,
@@ -93,12 +94,12 @@ the smallest absolute difference with <code>target-freq</code>
 converges more slowly than the ordinary eigensolver and may require a
 lower <code>tolerance</code> to get reliable results.  Defaults to 0.
 
-<p><dt><code>tolerance</code> [number]
+<p><dt><code>tolerance</code> [<code>number</code>]
 <dd>Specifies when convergence of the eigensolver is judged to have
 been reached (when the eigenvalues have a fractional change less than
 <code>tolerance</code> between iterations).  Defaults to 1.0e-4.
 
-<p><dt><code>filename-prefix</code> [string]
+<p><dt><code>filename-prefix</code> [<code>string</code>]
 <dd>A string prepended to all output filenames.  Defaults to "" (no
 prefix).
 
@@ -110,11 +111,11 @@ prefix).
 
 <dl>
 
-<dt><code>air</code>, <code>vacuum</code> [material-type class]
+<dt><code>air</code>, <code>vacuum</code> [<code>material-type</code> class]
 <dd>Two aliases for a predefined material type with a dielectric
 constant of 1.
 
-<p><dt><code>infinity</code> [number]
+<p><dt><code>infinity</code> [<code>number</code>]
 <dd>A big number (1.0e20) to use for "infinite" dimensions of objects.
 
 </dl>
@@ -126,7 +127,7 @@ eigensolver.
 
 <dl>
 
-<dt><code>freqs</code> [list of number]
+<dt><code>freqs</code> [list of <code>number</code>]
 <dd>A list of the frequencies of each band computed for the last k
 point.  Guaranteed to be sorted in increasing order.  The frequency of
 band <code>b</code> can be retrieved via <code>(list-ref freqs (- b
@@ -171,13 +172,13 @@ vectors.
 <dt><code>lattice</code>
 <dd>Properties:
 <dl>
-<dt><code>basis1</code>, <code>basis2</code>, <code>basis3</code> [vector3]
+<dt><code>basis1</code>, <code>basis2</code>, <code>basis3</code> [<code>vector3</code>]
 <dd>The three lattice directions of the crystal, specified in the
 cartesian basis.  The lengths of these vectors are ignored--only their
 directions matter.  The corresponding unit vectors are used as the
 basis for all other 3-vectors in the ctl file.  They default to the x,
 y, and z directions, respectively.
-<dt><code>size</code> [vector3]
+<dt><code>size</code> [<code>vector3</code>]
 <dd>The size of the lattice (i.e. the length of the lattice vectors,
 in which the crystal is periodic) along the three basis directions.
 (Alternatively, you can think of this as the vector between opposite
@@ -198,7 +199,7 @@ are made of.  Currently, there is only one class,
 <dt><code>dielectric</code>
 <dd>A uniform, isotropic, linear dielectric material, with one property:
 <dl>
-<dt><code>epsilon</code> [number]
+<dt><code>epsilon</code> [<code>number</code>]
 <dd>The dielectric constant (must be positive).  No default value.
 </dl>
 
@@ -215,10 +216,10 @@ The base class is:
 <dt><code>geometric-object</code>
 <dd>Properties:
 <dl>
-<dt><code>material</code> [material-type class]
+<dt><code>material</code> [<code>material-type</code> class]
 <dd>The material that the object is made of (usually some sort of
 dielectric).  No default value (must be specified).
-<dt><code>center</code> [vector3]
+<dt><code>center</code> [<code>vector3</code>]
 <dd>Center point of the object.  No default value.
 </dl>
 
@@ -245,18 +246,18 @@ objects with the x-y plane are considered.
 <dt><code>sphere</code>
 <dd>A sphere.  Properties:
 <dl>
-<dt><code>radius</code> [number]
+<dt><code>radius</code> [<code>number</code>]
 <dd>Radius of the sphere.  No default value.
 </dl>
 
 <p><dt><code>cylinder</code>
 <dd>A cylinder, with circular cross-section and finite height.  Properties:
 <dl>
-<dt><code>radius</code> [number]
+<dt><code>radius</code> [<code>number</code>]
 <dd>Radius of the cylinder's cross-section.  No default value.
-<dt><code>height</code> [number]
+<dt><code>height</code> [<code>number</code>]
 <dd>Length of the cylinder along its axis.  No default value.
-<dt><code>axis</code> [vector3]
+<dt><code>axis</code> [<code>vector3</code>]
 <dd>Direction of the cylinder's axis; the length of this vector is
 ignored.  Defaults to point parallel to the z axis.
 </dl>
@@ -265,11 +266,11 @@ ignored.  Defaults to point parallel to the z axis.
 <dd>A parallelepiped (i.e., a brick, possibly with non-orthogonal
 axes). Properties:
 <dl>
-<dt><code>size</code> [vector3, sort of]
+<dt><code>size</code> [<code>vector3</code>]
 <dd>The sizes of the block along each of its three axes.  Not really a
-3-vector, but it has three components, each of which should be
-nonzero.  No default value.
-<dt><code>e1</code>, <code>e2</code>, <code>e3</code> [vector3]
+3-vector (at least, not in the lattice basis), but it has three
+components, each of which should be nonzero.  No default value.
+<dt><code>e1</code>, <code>e2</code>, <code>e3</code> [<code>vector3</code>]
 <dd>The directions of the axes of the block; the lengths of these
 vectors are ignored.  Must be linearly-independent.  They default to
 the three lattice directions.
