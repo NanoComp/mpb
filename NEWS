@@ -1,3 +1,5 @@
+MPB 1.0 (2/23/2001)
+
   * At long last, support for distributed-memory parallel machines
     with MPI.  The computation time (and memory usage) can often improve
     nearly linearly with the number of processors.  Thanks to

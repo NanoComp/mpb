@@ -1,7 +1,19 @@
+2001-02-23  Steven G. Johnson  <stevenj@alum.mit.edu>
+
+	* configure.in, src/config.h.in, src/matrixio/matrixio.c:
+	H5Pset_mpi is now called H5Pset_fapl_mpio in HDF5 1.4.0
+
+	* configure.in: more warnings or errors if important things are
+	not found
+
 2001-02-22  Steven G. Johnson  <stevenj@alum.mit.edu>
 
-	* configure.in, mpb-ctl/mpb-split, mpb-ctl/mpb-split.in: try to
-	find a Bourne shell with job control
+	* tests/blastest.c, tests/blastest.complex.out,
+	tests/blastest.real.out: pick deterministic phase for eigenvectors
+
+	* configure.in: removed single quotes that confuse emacs coloring
+
+	* configure.in: use nicer section separator
 
 2001-02-20  Steven G. Johnson  <stevenj@alum.mit.edu>
 
@@ -84,21 +96,6 @@
 	have technically caused problems)
 
 	* ChangeLog: updated
-
-2001-02-17  Steven G. Johnson  <stevenj@alum.mit.edu>
-
-	* src/maxwell/maxwell.c: whoops, fixed typo
-
-	* mpb-ctl/mpb.c: slight cleanup and mpi compilation fix
-
-	* src/maxwell/maxwell.c, src/maxwell/maxwell_eps.c,
-	src/maxwell/maxwell.h, src/maxwell/maxwell_op.c, mpb-ctl/mpb.c:
-	Laid much of the groundwork for mpbi-mpi (still untested, though).
-	Rewritten otherhalf routine and field output to support funky
-	rfftwnd_mpi output formats (especially the 2d case).  Fixed bug in
-	mpb-mpi when x and y grid sizes are not equal.
-
-	* mpb-ctl/mpb.scm.in: fixed typo
 
 2001-02-16  Steven G. Johnson  <stevenj@alum.mit.edu>
 
@@ -221,27 +218,6 @@
 	* doc/user-ref.html: fix
 
 	* ChangeLog, NEWS: updated
-
-2001-02-06  Steven G. Johnson  <stevenj@alum.mit.edu>
-
-	* mpb-ctl/mpb.scm.in: workaround for older versions of Guile where
-	we can't get the number of arguments to a function (apparently)
-
-	* configure.in: fixed gen-ctl-io check, removed AC_PROG_CC_STDC
-	ifdef...there's something not working about ifdef that I don't
-	understand
-
-	* configure.in: call AC_PROG_CC_STDC if defined, in part so that
-	autoconf 2.5 doesn't complain
-
-	* configure.in: added MPI checks
-
-	* src/util/mpi_utils.c: clarification
-
-	* src/matrixio/matrixio.c: fixed misnamed function call
-
-	* configure.in, src/config.h.in, src/matrixio/matrixio.c: support
-	HDF5 file i/o without H5Pset_mpi
 
 2001-02-06  Steven G. Johnson  <stevenj@alum.mit.edu>
 
@@ -524,134 +500,6 @@
 
 	* mpb-ctl/mpb.c, mpb-ctl/mpb.scm.in, NEWS: read filename-prefix on
 	each output call
-
-2001-01-06  Steven G. Johnson  <stevenj@alum.mit.edu>
-
-	* /home/stevenj/Repository/mpb/doc/license.html: clarification
-
-	* /home/stevenj/Repository/mpb/doc/analysis-tutorial.html: updated
-	fcc units note
-
-	* /home/stevenj/Repository/mpb/doc/analysis-tutorial.html,
-	/home/stevenj/Repository/mpb/doc/diamond-bands.gif,
-	/home/stevenj/Repository/mpb/mpb-ctl/examples/diamond.ctl: use
-	standard units for fcc (diamond)
-
-	* /home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: bug fix in
-	filename-prefix use (fixes bug introduced by previous change)
-
-	* /home/stevenj/Repository/mpb/doc/analysis-tutorial.html,
-	/home/stevenj/Repository/mpb/doc/index.html,
-	/home/stevenj/Repository/mpb/doc/user-ref.html: expanded table of
-	contents
-
-	* /home/stevenj/Repository/mpb/doc/installation.html:
-	clarification of efence
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: fixes
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: fixed
-	missing link
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: slight
-	change
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: emphasize
-	HDF5
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: noted more
-	clearly that MPI is not yet used
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: fixed ref
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: recommend
-	ATLAS
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: moved Bourne
-	shell note up front.
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: grammar
-	fix(?)
-
-	* /home/stevenj/Repository/mpb/doc/installation.html: notes on
-	binary packages for Linux
-
-	* /home/stevenj/Repository/mpb/doc/license.html: clarification
-
-	* /home/stevenj/Repository/mpb/doc/license.html: expanded and
-	updated referencing suggestions
-
-	* /home/stevenj/Repository/mpb/doc/license.html: comma goes
-	outside of link
-
-	* /home/stevenj/Repository/mpb/doc/license.html: fixed
-	capitalization
-
-	* /home/stevenj/Repository/mpb/src/matrices/matrices.c,
-	/home/stevenj/Repository/mpb/src/matrices/matrices.h,
-	/home/stevenj/Repository/mpb/src/matrices/scalar.h,
-	/home/stevenj/Repository/mpb/src/matrices/sqmatrix.c,
-	/home/stevenj/Repository/mpb/src/matrixio/evectmatrixio.c,
-	/home/stevenj/Repository/mpb/src/matrixio/fieldio.c,
-	/home/stevenj/Repository/mpb/src/matrixio/matrixio.c,
-	/home/stevenj/Repository/mpb/src/matrixio/matrixio.h,
-	/home/stevenj/Repository/mpb/src/maxwell/maxwell.c,
-	/home/stevenj/Repository/mpb/src/maxwell/maxwell.h,
-	/home/stevenj/Repository/mpb/src/maxwell/maxwell_eps.c,
-	/home/stevenj/Repository/mpb/src/maxwell/maxwell_op.c,
-	/home/stevenj/Repository/mpb/src/maxwell/maxwell_pre.c,
-	/home/stevenj/Repository/mpb/src/util/check.h,
-	/home/stevenj/Repository/mpb/src/util/debug_malloc.c,
-	/home/stevenj/Repository/mpb/src/util/fortranize.h,
-	/home/stevenj/Repository/mpb/src/util/mpi_utils.c,
-	/home/stevenj/Repository/mpb/src/util/mpi_utils.h,
-	/home/stevenj/Repository/mpb/src/util/mpiglue.h,
-	/home/stevenj/Repository/mpb/tests/blastest.c,
-	/home/stevenj/Repository/mpb/tests/eigs_test.c,
-	/home/stevenj/Repository/mpb/tests/malloctest.c,
-	/home/stevenj/Repository/mpb/tests/maxwell_test.c,
-	/home/stevenj/Repository/mpb/utils/mpb-data.1,
-	/home/stevenj/Repository/mpb/utils/mpb-data.c,
-	/home/stevenj/Repository/mpb/COPYRIGHT,
-	/home/stevenj/Repository/mpb/mpb-ctl/epsilon_file.c,
-	/home/stevenj/Repository/mpb/mpb-ctl/mpb.1,
-	/home/stevenj/Repository/mpb/mpb-ctl/mpb.c,
-	/home/stevenj/Repository/mpb/mpb-ctl/mpb.h,
-	/home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in,
-	/home/stevenj/Repository/mpb/src/matrices/blasglue.c,
-	/home/stevenj/Repository/mpb/src/matrices/blasglue.h,
-	/home/stevenj/Repository/mpb/src/matrices/eigensolver.c,
-	/home/stevenj/Repository/mpb/src/matrices/eigensolver.h,
-	/home/stevenj/Repository/mpb/src/matrices/eigensolver_davidson.c,
-	/home/stevenj/Repository/mpb/src/matrices/eigensolver_utils.c,
-	/home/stevenj/Repository/mpb/src/matrices/evectmatrix.c,
-	/home/stevenj/Repository/mpb/src/matrices/linmin.c,
-	/home/stevenj/Repository/mpb/src/matrices/linmin.h: 2001 copyright
-	year update
-
-	* /home/stevenj/Repository/mpb/doc/license.html: fixed copyright
-	year
-
-	* /home/stevenj/Repository/mpb/doc/license.html: Added Latin quote
-	and fixed reference.
-
-	* /home/stevenj/Repository/mpb/doc/developer.html: fixed reference
-
-	* /home/stevenj/Repository/mpb/ChangeLog: fixed email
-
-	* /home/stevenj/Repository/mpb/ChangeLog: updated
-
-	* /home/stevenj/Repository/mpb/NEWS,
-	/home/stevenj/Repository/mpb/mpb-ctl/mpb.c,
-	/home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: read
-	filename-prefix on each output call
-
-2001-01-06  Steven G. Johnson  <stevenj@alum.mit.edu>
-
-	* /home/stevenj/Repository/mpb/NEWS,
-	/home/stevenj/Repository/mpb/mpb-ctl/mpb.c,
-	/home/stevenj/Repository/mpb/mpb-ctl/mpb.scm.in: read
-	filename-prefix on each output call
 
 2001-01-03  Steven G. Johnson  <stevenj@alum.mit.edu>
 
