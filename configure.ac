@@ -359,7 +359,7 @@ if guile -c "$ractivate" > /dev/null 2>&1; then
 	ACTIVATE_READLINE="$ractivate"
 else
 	ractivate="(use-modules (ice-9 readline)) (activate-readline)"
-	if guile -c "$ractivate" >& /dev/null; then
+	if guile -c "$ractivate" > /dev/null 2>&1; then
 	        AC_MSG_RESULT(ice-9 readline)
 	        ACTIVATE_READLINE="$ractivate"
 	else
