@@ -42,6 +42,9 @@
 /* Define if you have the HDF5 library and headers: */
 #undef HAVE_HDF5
 
+/* Define if we have the H5Pset_mpi function for collective access: */
+#undef HAVE_H5PSET_MPI
+
 /* Define if you have the strncmp() function: */
 #undef HAVE_STRNCMP
 

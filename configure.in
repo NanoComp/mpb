@@ -215,6 +215,17 @@ if test "$ok" = "yes"; then
 		AC_CHECK_HEADERS(hdf5.h, [LIBS="-lhdf5 $LIBS"
 			                    AC_DEFINE(HAVE_HDF5)],
 			         AC_MSG_WARN([**** Did you forget to set CPPFLAGS for HDF5? ***]))])
+
+	# FIXME: move this after MPI check:
+	AC_MSG_CHECKING([for H5Pset_mpi])
+	AC_TRY_LINK([#include <mpi.h>
+#include <hdf5.h>],
+		[H5Pset_mpi(H5P_DEFAULT, MPI_COMM_WORLD, MPI_INFO_NULL);],
+		ok=yes, ok=no)
+	AC_MSG_RESULT($ok)
+	if test "x$ok" = xyes; then
+		AC_DEFINE(HAVE_H5PSET_MPI)
+	fi
 fi
 
 # ----------------------------------------------------------------------

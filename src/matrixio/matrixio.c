@@ -35,6 +35,23 @@
 
 /*****************************************************************************/
 
+/* If we have the H5Pset_mpi function (which is available if HDF5 was
+   compiled for MPI), then we can perform collective file i/o operations
+   (e.g. all processes call H5Fcreate at the same time to create one file).
+
+   If we don't, however, then we deal with it by having one process
+   work with the file at a time: "exclusive" access.  The following
+   macro helps us select different bits of code depending upon whether
+   this is the case. */
+
+#ifdef HAVE_H5PSET_MPI
+#  define IF_EXCLUSIVE(yes,no) no
+#else
+#  define IF_EXCLUSIVE(yes,no) yes
+#endif
+
+/*****************************************************************************/
+
 /* Normally, HDF5 prints out all sorts of error messages, e.g. if a dataset
    can't be found, in addition to returning an error code.  The following
    macro can be wrapped around code to temporarily suppress error messages. */
@@ -294,6 +311,8 @@ static char *add_fname_suffix(const char *fname)
 
 /*****************************************************************************/
 
+static int matrixio_critical_section_tag = 0;
+
 matrixio_id matrixio_create(const char *fname)
 {
 #if defined(HAVE_HDF5)
@@ -303,13 +322,22 @@ matrixio_id matrixio_create(const char *fname)
 
      access_props = H5Pcreate (H5P_FILE_ACCESS);
      
-#  ifdef HAVE_MPI
+#  if defined(HAVE_MPI) && defined(HAVE_H5PSET_MPI)
      H5Pset_mpi(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
 #  endif
 
      new_fname = add_fname_suffix(fname);
 
+#  ifdef HAVE_H5PSET_MPI
      id = H5Fcreate(new_fname, H5F_ACC_TRUNC, H5P_DEFAULT, access_props);
+#  else
+     mpi_start_critical_section(matrixio_critical_section_tag);
+     if (mpi_is_master())
+	  id = H5Fcreate(new_fname, H5F_ACC_TRUNC, H5P_DEFAULT, access_props);
+     else
+	  id = H5Fopen(new_fname, H5F_ACC_RDWR, access_props);
+#  endif
+
      CHECK(id >= 0, "error creating HDF output file");
 
      free(new_fname);
@@ -333,11 +361,13 @@ matrixio_id matrixio_open(const char *fname, int read_only)
 
      access_props = H5Pcreate (H5P_FILE_ACCESS);
      
-#ifdef HAVE_MPI
+#  if defined(HAVE_MPI) && defined(HAVE_H5PSET_MPI)
      H5Pset_mpi(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
-#endif
+#  endif
 
      new_fname = add_fname_suffix(fname);
+
+     IF_EXCLUSIVE(mpi_start_critical_section(matrixio_critical_section_tag),0);
 
      if (read_only)
 	  id = H5Fopen(new_fname, H5F_ACC_RDONLY, access_props);
@@ -360,6 +390,7 @@ void matrixio_close(matrixio_id id)
 {
 #if defined(HAVE_HDF5)
      H5Fclose(id);
+     IF_EXCLUSIVE(mpi_end_critical_section(matrixio_critical_section_tag++),0);
 #endif
 }
 
@@ -382,10 +413,10 @@ matrixio_id matrixio_create_sub(matrixio_id id,
 	  
 	  H5Fflush(sub_id, H5F_SCOPE_GLOBAL);
 
-	  MPI_Barrier(MPI_COMM_WORLD);
+	  IF_EXCLUSIVE(0,MPI_Barrier(MPI_COMM_WORLD));
      }
      else {
-	  MPI_Barrier(MPI_COMM_WORLD);
+	  IF_EXCLUSIVE(0,MPI_Barrier(MPI_COMM_WORLD));
 
 	  sub_id = H5Gopen(id, name);
      }
@@ -421,7 +452,7 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
 	       matrixio_dataset_delete(id, name);
 	       H5Fflush(id, H5F_SCOPE_GLOBAL);
 	  }
-	  MPI_Barrier(MPI_COMM_WORLD);
+	  IF_EXCLUSIVE(0,MPI_Barrier(MPI_COMM_WORLD));
      }
 
      CHECK(rank > 0, "non-positive rank");
@@ -442,7 +473,12 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
      
      /* Create the dataset.  Note that, on parallel machines, H5Dcreate
 	should do the right thing; it is supposedly a collective operation. */
-     data_id = H5Dcreate(id, name, type_id, space_id, H5P_DEFAULT);
+     IF_EXCLUSIVE(
+	  if (mpi_is_master())
+	       data_id = H5Dcreate(id, name, type_id, space_id, H5P_DEFAULT);
+	  else
+	       data_id = H5Dopen(id, name),
+	  data_id = H5Dcreate(id, name, type_id, space_id, H5P_DEFAULT));
 
      H5Sclose(space_id);  /* the dataset should have its own copy now */
      
