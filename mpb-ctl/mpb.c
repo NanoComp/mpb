@@ -146,6 +146,8 @@ static scalar_complex *curfield = NULL;
 static int curfield_band;
 static char curfield_type = '-';
 
+static void curfield_reset(void) { curfield = NULL; curfield_type = '-'; }
+
 /* R[i]/G[i] are lattice/reciprocal-lattice vectors */
 static real R[3][3], G[3][3];
 static matrix3x3 Rm, Gm; /* same thing, but matrix3x3 */
@@ -543,7 +545,7 @@ void init_params(integer p, boolean reset_fields)
 	  }
 	  destroy_maxwell_target_data(mtdata); mtdata = NULL;
 	  destroy_maxwell_data(mdata); mdata = NULL;
-	  curfield = NULL;
+	  curfield_reset();
      }
      else
 	  srand(time(NULL)); /* init random seed for field initialization */
@@ -663,7 +665,7 @@ void solve_kpoint(vector3 kvector)
      mpi_one_printf("solve_kpoint (%g,%g,%g):\n",
 		    kvector.x, kvector.y, kvector.z);
 
-     curfield_type = '-'; /* reset curfield, invalidating stored fields */
+     curfield_reset();
 
      if (num_bands == 0) {
 	  mpi_one_printf("  num-bands is zero, not solving for any bands\n");
@@ -894,7 +896,6 @@ void solve_kpoint(vector3 kvector)
      eigensolver_flops = evectmatrix_flops;
 
      free(eigvals);
-     curfield = NULL;
 }
 
 /**************************************************************************/
@@ -911,6 +912,8 @@ number_list compute_group_velocity_component(vector3 d)
      int i, ib;
 
      group_v.num_items = 0;  group_v.items = (number *) NULL;
+
+     curfield_reset(); /* has the side effect of overwriting curfield scratch */
 
      if (!mdata) {
 	  mpi_one_fprintf(stderr, "init-params must be called first!\n");
@@ -1165,7 +1168,7 @@ void get_epsilon_tensor(int c1, int c2, int imag, int inv)
 {
      int i, N;
      real *epsilon;
-     int conj = 0, offset;
+     int conj = 0, offset = 0;
 
      curfield_type = '-'; /* only used internally, for now */
      epsilon = (real *) mdata->fft_data;
@@ -1840,10 +1843,9 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  matrixio_close(file_id);
      }
 
-     /* Change curfield_type to reflect the fact that we have
-	destroyed curfield (by multiplying it by phases, and/or
-	reorganizing in the case of real-amplitude fields). */
-     curfield_type = '-';
+     /* We have destroyed curfield (by multiplying it by phases,
+	and/or reorganizing in the case of real-amplitude fields). */
+     curfield_reset();
 }
 
 /**************************************************************************/
