@@ -1,0 +1,448 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD>
+<TITLE>Data Analysis Tutorial</TITLE>
+<LINK rel="Contents" href="index.html">
+<LINK rel="Copyright" href="license.html">
+<LINK rel="Start" href="index.html">
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#FFFFFF">
+
+Go to the <a href="user-ref.html">next</a>, <a
+href="user-tutorial.html">previous</a>, or <a href="index.html">main</a>
+section.
+<hr>
+
+<h1>Data Analysis Tutorial</h1>
+
+<p>In the previous section, we focused on how to perform a calculation
+in MPB.  Now, we'll give a brief tutorial on what you might do with
+the results of the calculations, and in particular how you might
+visualize the results.  We'll focus on two systems, one
+two-dimensional and one three-dimensional.
+
+<h2><a name="tri-rods">Triangular Lattice of Rods</a></h2>
+
+<p>First, we'll return to the two-dimensional <a
+href="user-tutorial.html#tri-rods">triangular lattice of rods</a> in
+air from the tutorial.  The control file for this calculation, which
+can also be found in <code>mpb-ctl/examples/tri-rods.ctl</code>, will
+consist of:
+
+<h3>The tri-rods.ctl control file</h3>
+
+<pre>
+(set! num-bands 8)
+
+(set! geometry-lattice (make lattice
+                         (basis1 (/ (sqrt 3) 2) 0.5)
+                         (basis2 (/ (sqrt 3) 2) -0.5)))
+(set! geometry (list (make cylinder
+                       (center 0 0 0) (radius 0.2) (height infinity)
+                       (material (make dielectric (epsilon 12))))))
+
+(set! k-points (list (vector3 0 0 0)          ; Gamma
+                     (vector3 0 0.5 0)        ; M
+                     (vector3 (/ -3) (/ 3) 0) ; K
+                     (vector3 0 0 0)))        ; Gamma
+(set! k-points (interpolate 4 k-points))
+
+(set! grid-size (vector3 32 32 1))
+
+(run-tm (output-at-kpoint (vector3 (/ -3) (/ 3) 0) output-efield-z))
+(run-te)
+</pre>
+
+<p>Notice that we're computing both TM and TE bands (where we expect a
+gap in the TM bands), and are outputting the z component of the
+electric field for the TM bands at the K point.
+
+<p>Now, run the calculation, directing the output to a file, by
+entering the following command at the Unix prompt:
+
+<pre>
+unix% mpb tri-rods.ctl &gt;&amp; tri-rods.out
+</pre>
+
+<p>It should finish after a minute or two.
+
+<h3>The tri-rods dielectric function</h3>
+
+<p>In most cases, the first thing we'll want to do is to look at the
+dielectric function, to make sure that we specified the correct
+geometry.  We can do this by looking at the <code>epsilon.h5</code>
+output file.
+
+<p>The first thing that might come to mind would be to examine
+<code>epsilon.h5</code> directly, say by converting it to a <a
+href="http://www.cdrom.com/pub/png/">PNG</a> image with
+<code>h5topng</code> (from my free <a
+href="http://ab-initio.mit.edu/mpb/hdf.html#h5utils">h5utils</a> package),
+magnifying it by 3:
+
+<pre>
+unix% h5topng -X 3 -Y 3 epsilon.h5
+</pre>
+
+<p><img align="right" src="tri-rods-eps-1.gif" border="1" width="96"
+height="96" alt="epsilon unit cell">The resulting image
+(<code>epsilon.png</code>) is shown at right, and it initially seems
+wrong!  Why is the rod oval-shaped and not circular?  Actually, the
+dielectric function is correct, but the image is distorted because the
+primitive cell of our lattice is a rhombus (with 60-degree acute
+angles).  Since the output grid of MPB is defined over the
+non-orthogonal unit cell, while the image produced by
+<code>h5topng</code> (and most other plotting programs) is square, the
+image is skewed.
+
+<p>We can fix the image in a variety of ways, but the best way is
+probably to use the <code>mpb-data</code> utility included (and
+installed) with MPB.  <code>mpb-data</code> allows us to rearrange the
+data into a rectangular cell (<code>-r</code>) with the same
+area/volume, expand the data to include multiple periods (<code>-m
+<i>periods</i></code>), and change the resolution per unit distance in
+each direction to a fixed value (<code>-n <i>resolution</i></code>).
+<code>man mpb-data</code> or run <code>mpb-data -h</code> for more
+options.  In this case, we'll rectify the cell, expand it to three
+periods in each direction, and fix the resolution to 32 pixels:
+
+<br clear="right">
+
+<pre>
+unix% mpb-data -r -m 3 -n 32 epsilon.h5
+</pre>
+
+<p>It's important to use <code>-n</code> when you use <code>-r</code>,
+as otherwise the non-square unit cell output by <code>-r</code> will
+have a different density of grid points in each direction, and appear
+distorted.  The output of <code>mpb-data</code> is by default an
+additional dataset within the input file, as we can see by running
+<code>h5ls</code>:
+
+<pre>
+unix% h5ls epsilon.h5 
+data                     Dataset {32, 32}
+data-new                 Dataset {96, 83}
+description              Dataset {SCALAR}
+lattice\ copies          Dataset {3}
+lattice\ vectors         Dataset {3, 3}
+</pre>
+
+<p><img align="right" src="tri-rods-eps-2.gif" border="1" width="83"
+height="96" alt="epsilon 3x3 cell, rectified">Here, the new dataset
+output by <code>mpb-data</code> is the one called
+<code>data-new</code>.  We can examine it by running
+<code>h5topng</code> again, this time explicitly specifying the name
+of the dataset (and no longer magnifying):
+
+<pre>
+unix% h5topng epsilon.h5:data-new
+</pre>
+
+<p> The new <code>epsilon.png</code> output image is shown at right.
+As you can see, the rods are now circular as desired, and they clearly
+form a triangular lattice.
+
+<br clear="right">
+
+<h3>Gaps and and band diagram for tri-rods</h3>
+
+<p>At this point, let's check for band gaps by picking out lines with
+the word "<code>Gap</code>" in them:
+
+<pre>
+unix% grep Gap tri-rods.out
+Gap from band 1 (0.275066439346827) to band 2 (0.446290429077378), 47.4727550885009%
+Gap from band 3 (0.563584034021526) to band 4 (0.593059150925396), 5.09666546908704%
+Gap from band 4 (0.79116192674256) to band 5 (0.792043037927768), 0.111307279205154%
+Gap from band 5 (0.838732466052519) to band 6 (0.840307998313466), 0.187670552840708%
+Gap from band 6 (0.86928536632084) to band 7 (0.873497179273491), 0.483343485772052%
+Gap from band 4 (0.821661555010753) to band 5 (0.86445473122796), 5.07594601469253%
+</pre>
+
+<p>The first five gaps are for the TM bands (which we ran first), and
+the last gap is for the TE bands.  Note, however that the &lt; 1% gaps
+are probably false positives due to band crossings, as described in
+the <a href="user-tutorial.html#sq-rods">user tutorial</a>.  There are
+no complete (overlapping TE/TM) gaps, and the largest gap is the 47%
+TM gap as expected.  (To be absolutely sure of the other band gaps, we
+would also check k-points within the interior of the Brillouin zone,
+but we'll omit that step here.)
+
+<p>Next, let's plot out the band structure.  To do this, we'll first
+extract the TM and TE bands as comma-delimited text, which can then be
+imported and plotted in our favorite spreadsheet/plotting program.
+
+<pre>
+unix% grep tmfreqs tri-rods.out > tri-rods.tm.dat
+unix% grep tefreqs tri-rods.out > tri-rods.te.dat
+</pre>
+
+<p>The TM and TE bands are both plotted below against the "k index"
+column of the data, with the special k-points labelled.  TM bands are
+shown in blue (filled circles) with the gaps shaded light blue, while
+TE bands are shown in red (hollow circles) with the gaps shaded light
+red.
+
+<p align="center"><img src="tri-rods-bands.gif" width="520"
+height="454" alt="tri-rods band diagram">
+
+<p>Note that we truncated the upper frequencies at a cutoff of 1.0 c/a.
+Although some of our bands go above that frequency, we didn't compute
+enough bands to fill in all of the states in that range.  Besides, we
+only really care about the states around the gap(s), in most cases.
+
+<h3>The source of the TM gap: examining the modes</h3>
+
+<p>Now, let's actually examine the electric-field distributions for
+some of the bands (which were output at the K point, remember).
+Besides looking neat, the field patterns will tell us about the
+characters of the modes and provide some hints regarding the origin of
+the band gap.
+
+<p>As before, we'll run <code>mpb-data</code> on the field output
+files (named <code>e.k11.b*.z.tm.h5</code>), and then run
+<code>h5topng</code> to view the results:
+
+<pre>
+unix% mpb-data -r -m 3 -n 32 e.k11.b*.z.tm.h5
+unix% h5topng -C epsilon.h5:data-new -c -Z -d z.r-new e.k11.b*.z.tm.h5
+</pre>
+
+<p>Here, we've used the <code>-C</code> option to superimpose (crude)
+black contours of the dielectric function over the fields,
+<code>-c</code> to use a blue-white-red color table, <code>-Z</code>
+to center the color scale at zero (white), and <code>-d</code> to
+specify the dataset name for all of the files at once.  <code>man
+h5topng</code> for more information.  (There are plenty of
+data-visualization programs available if you want more sophisticated
+plotting capabilities than what <code>h5topng</code> offers, of
+course.)
+
+<p>Note that the dataset name is <code>z.r-new</code>, which is the
+real part of the z component of the output of <code>mpb-data</code>.
+The real and imaginary parts of the fields correspond to what the
+fields look like at half-period intervals in time, and in general they
+are different.  However, at K they are redundant, due to the inversion
+symmetry of that k-point (proof left as an exercise for the reader).
+So, it suffices in our case to look at the real parts.  (And, of
+course, since these are TM fields, the z component is the only
+component of the electric field.)
+
+<p>The resulting field images are shown below:
+
+<p>
+<table cellspacing=2 cellpadding=1>
+
+<tr align="center">
+<th>TM band 1</th>
+<th>TM band 2</th>
+<th>TM band 3</th>
+<th>TM band 4</th>
+<th>TM band 5</th>
+<th>TM band 6</th>
+<th>TM band 7</th>
+<th>TM band 8</th>
+</tr>
+
+<tr>
+<td><img src="tri-rods-ez1.gif" border="1" width="83" height="96"></td>
+<td><img src="tri-rods-ez2.gif" border="1" width="83" height="96"></td>
+<td><img src="tri-rods-ez3.gif" border="1" width="83" height="96"></td>
+<td><img src="tri-rods-ez4.gif" border="1" width="83" height="96"></td>
+<td><img src="tri-rods-ez5.gif" border="1" width="83" height="96"></td>
+<td><img src="tri-rods-ez6.gif" border="1" width="83" height="96"></td>
+<td><img src="tri-rods-ez7.gif" border="1" width="83" height="96"></td>
+<td><img src="tri-rods-ez8.gif" border="1" width="83" height="96"></td>
+</tr>
+
+</table>
+
+<p>We can see several things from these plots.
+
+<p>First, the origin of the band gap is apparent.  The lowest band is
+concentrated within the dielectric rods in order to minimize its
+frequency.  The next band(s), in order to be orthogonal, are forced to
+have a node within the rods, imposing a large "kinetic energy" cost
+and hence a gap.  Successive bands have more and more complex nodal
+structures in order to maintain orthogonality.  (The contrasting
+absence of a large TE gap has to do with boundary conditions.  The
+perpendicular component of the displacement field must be continuous
+across the dielectric boundary, but the parallel component need not
+be.)
+
+<p>We can also see the deep impact of symmetry on the states.  The K
+point has the full C<sub>6v</sub> symmetry of the dielectric
+structure.  This symmetry group has only one two-dimensional
+representation, and we can see that all three pairs of degenerate
+states (2/3, 4/5, and 7/8) fall into this "p-like" category (where the
+states differ by 90 degree rotations, essentially).  The other two
+bands, 1 and 6, transform under the trivial "s-like" representation
+(with band 6 just a higher-order version of 1).
+
+<h2><a name="diamond">Diamond Lattice of Spheres</a></h2>
+
+<blockquote>
+"Then were the entrances of this world made narrow, full of sorrow and
+travail: they are but few and evil, full of perils, and very
+painful." (<i>Ezra</i> 4:7)
+</blockquote>
+
+<p>Now, let us turn to a three-dimensional structure, a diamond
+lattice of dielectric spheres in air.  The basic techniques to compute
+and analyze the modes of this structure are the same as in two
+dimensions, but of course, everything becomes more complicated in 3d.
+It's harder to find a structure with a complete gap, the modes are no
+longer polarized, the computations are far bigger, and visualization
+is much more difficult, for starters.
+
+<p>The control file for this calculation, which can also be found in
+<code>mpb-ctl/examples/diamond.ctl</code>, consists of:
+
+<h3>Diamond control file</h3>
+
+<pre>
+(set! geometry-lattice (make lattice
+                         (basis1 0 1 1)
+                         (basis2 1 0 1)
+                         (basis3 1 1 0)))
+
+; Corners of the irreducible Brillouin zone for the fcc lattice,
+; in a canonical order:
+(set! k-points (interpolate 4 (list
+                               (vector3 0 0.5 0.5)            ; X
+                               (vector3 0 0.625 0.375)        ; U
+                               (vector3 0 0.5 0)              ; L
+                               (vector3 0 0 0)                ; Gamma
+                               (vector3 0 0.5 0.5)            ; X
+                               (vector3 0.25 0.5 0.75)        ; W
+                               (vector3 0.375 0.375 0.75))))  ; K
+
+; define a couple of parameters (which we can set from the command-line)
+(define-param eps 11.56) ; the dielectric constant of the spheres
+(define-param r 0.35)    ; the radius of the spheres
+
+(define diel (make dielectric (epsilon eps)))
+
+; A diamond lattice has two "atoms" per unit cell:
+(set! geometry (list (make sphere (center 0.125 0.125 0.125) (radius r)
+                           (material diel))
+                     (make sphere (center -0.125 -0.125 -0.125) (radius r)
+                           (material diel))))
+
+; (A simple fcc lattice would have only one sphere/object at the origin.)
+
+(set! grid-size (vector3 16 16 16))
+(set! mesh-size 5)
+(set! num-bands 5)
+
+; run calculation, outputting electric-field energy density at the U point:
+(run (output-at-kpoint (vector3 0 0.625 0.375) output-dpwr))
+</pre>
+
+<p>As before, run the calculation, directing the output to a file.
+This will take a few minutes (6 minutes on my 450MHz Pentium-II);
+we'll put it in the background with <code>nohup</code> so that it will
+finish even if we log out:
+
+<pre>
+unix% nohup mpb diamond.ctl &gt;&amp; diamond.out &amp;
+</pre>
+
+<h3>Gaps and and band diagram for the diamond lattice</h3>
+
+<p>The diamond lattice has a complete band gap:
+
+<pre>
+unix% grep Gap diamond.out
+Gap from band 2 (0.28324668665799) to band 3 (0.316525666009875), 11.0972035319253%
+</pre>
+
+<p>We can also plot its band diagram, much as for the tri-rods case
+except that now there we can't classify the bands by polarization.
+
+<pre>
+unix% grep freqs diamond.out > diamond.dat
+</pre>
+
+<p>The resulting band diagram, with the complete band gap shaded
+yellow, is shown below.  Note that we only computed 5 bands, so in
+reality the upper portion of the plot would contain a lot more bands
+(which are of less interest than the bands adjoining the gap).
+
+<p align="center"><img src="diamond-bands.gif" width="452"
+height="346" alt="diamond band diagram">
+
+<h3>Visualizing the diamond lattice structure and bands</h3>
+
+<p>Visualizing fields in a useful way for general three-dimensional
+structures is fairly difficult, but we'll show you what we can with
+the help of the free <a
+href="http://www.ssec.wisc.edu/~billh/vis5d.html">Vis5D</a>
+volumetric-visualization program, and the <code>h5tov5d</code>
+conversion program from <a
+href="http://ab-initio.mit.edu/mpb/hdf.html#h5utils">h5utils</a>.
+
+<p>First, of course, we've got to rectangularize the unit cell using
+<code>mpb-data</code>, as before.  We'll also expand it to two
+periods in each direction.
+
+<pre>
+unix% mpb-data -m 2 -r -n 32 epsilon.h5 dpwr.k06.b*.h5
+</pre>
+
+<p>Then, we'll use <code>h5tov5d</code> to convert the resulting
+datasets to Vis5D format, joining all the datasets into a single file
+(<code>diamond.v5d</code>) so that we can view them simultaneously if
+we want to:
+
+<pre>
+unix% h5tov5d -o diamond.v5d -d data-new epsilon.h5 dpwr.k06.b*.h5
+</pre>
+
+<p>Note that all of the datasets are named <code>data-new</code> (from
+the original datasets called <code>data</code>) since we are looking
+at scalar data (the time-averaged electric-field energy density).  No
+messy field components or real and imaginary parts this time; we have
+enough to deal with already.
+
+<p>Now we can open the file with Vis5D and play around with various
+plots of the data:
+
+<pre>
+unix% vis5d diamond.v5d &amp;
+</pre>
+
+<p>If you stare at the dielectric function long enough from various
+angles, you can convince yourself that it is a diamond lattice:
+
+<p align="center"><img src="diamond-eps.gif" width="394" height="394" alt="diamond epsilon plot">
+
+<p>The lowest two bands have their fields concentrated within the
+spheres as you might expect, flowing along more-or-less linear paths.
+The second band differs from the first mainly by the orientation of
+its field paths.  The fields for the first band at U are depicted
+below, with the strongest fields (highest energy density) shown as the
+most opaque, blue pixels.  Next to it is the same plot but with an
+isosurface at the boundary of the dielectric superimposed, so you can
+see that the energy is concentrated inside the dielectric.
+
+<p align="center">
+<img src="diamond-b1.gif" width="394" height="394" alt="diamond band 1 plot">
+<img src="diamond-b1-eps.gif" width="394" height="394" alt="diamond band 1 plot, epsilon superimposed">
+
+<p>The first band above the gap is band 3.  Its field energy densities
+are depicted below in the same manner as above.  The field patterns
+are considerably harder to make out than for the lower band, but the
+seem to be more diffuse and "clumpy," the latter likely indicating the
+expected field oscillations for orthogonality with the lower bands.
+
+<p align="center">
+<img src="diamond-b3.gif" width="394" height="394" alt="diamond band 3 plot">
+<img src="diamond-b3-eps.gif" width="394" height="394" alt="diamond band 3 plot, epsilon superimposed">
+
+<p><hr> Go to the <a href="user-ref.html">next</a>, <a
+href="user-tutorial.html">previous</a>, or <a
+href="index.html">main</a> section.
+
+</BODY>
+</HTML>
