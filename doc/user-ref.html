@@ -95,8 +95,9 @@ vectors are defined as follows: Given the lattice vectors
 <code>G<sub>j</sub></code> satisfies <code>R<sub>i</sub> *
 G<sub>j</sub> = 2*Pi*delta<sub>i,j</sub></code>, where
 <code>delta<sub>i,j</sub></code> is the Kronecker delta (1 for <code>i
-= j</code> and 0 otherwise). <code>k-points</code> defaults to none
-(empty list).
+= j</code> and 0 otherwise). Normally, the wavevectors should be in
+the first Brillouin zone (<a href="#first-brillouin-zone">see
+below</a>).  <code>k-points</code> defaults to none (empty list).
 
 <p><dt><code>num-bands</code> [<code>integer</code>]
 <dd>Number of bands (eigenvectors) to compute at each k
@@ -539,6 +540,30 @@ reference</a>):
 the lattice/reciprocal bases.
 
 </dl>
+
+<p><a name="first-brillouin-zone"></a>Usually, k-points are specified
+in the first Brillouin zone, but sometimes it is convenient to specify
+an arbitrary k-point.  However, the accuracy of MPB degrades as you
+move farther from the first Brillouin zone (due to the choice of a
+fixed planewave set for a basis).  This is easily fixed: simply
+transform the k-point to a corresponding point in the first Brillouin
+zone, and a completely equivalent solution (identical frequency,
+fields, etcetera) is obtained with maximum accuracy.  The following
+function accomplishes this:
+
+<dl>
+
+<dt><code>(first-brillouin-zone <i>k</i>)</code>
+<dd>Given a k-point <code><i>k</i></code> (in the basis of the
+reciprocal lattice vectors, as usual), return an equivalent point in
+the first Brillouin zone of the current lattice
+(<code>geometry-lattice</code>).
+
+</dl>
+
+<p>Note that <code>first-brillouin-zone</code> can be applied to the
+entire <code>k-points</code> list with the Scheme expression:
+<code>(map first-brillouin-zone k-points)</code>.
 
 <h3>Run functions</h3>
 
