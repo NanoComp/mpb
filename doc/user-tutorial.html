@@ -281,23 +281,23 @@ information, you need to pass one or more arguments to the
 <code>run</code> function.  For example:
 
 <pre>
-(run-tm output-efield)
-(run-te output-hfield output-dpwr)
+(run-tm output-efield-z)
+(run-te output-hfield-z output-dpwr)
 </pre>
 
-<p>This will output the electric (E) fields for the TM bands; and the
-magnetic (H) fields and electric field energy densities (D power) for
-the TE bands.  The output filenames will be things like
-"<code>e.k12.b3.z.r.h5</code>", which stands for the real part
-(<code>.r</code>) of the z component (<code>.z</code>) of the electric
-field (<code>e</code>) for the third band (<code>.b3</code>) of the
-twelfth k point (<code>.k12</code>).
+<p>This will output the electric (E) field z components for the TM
+bands; and the magnetic (H) field z components and electric field
+energy densities (D power) for the TE bands.  The output filenames
+will be things like "<code>e.k12.b3.z.r.h5</code>", which stands for
+the real part (<code>.r</code>) of the z component (<code>.z</code>)
+of the electric field (<code>e</code>) for the third band
+(<code>.b3</code>) of the twelfth k point (<code>.k12</code>).
 
 <p>There are several other output functions you can pass, described in
 the <a href="user-ref.html">user reference section</a>, like
 <code>output-dfield</code>, <code>output-hpwr</code>, and
 <code>output-dpwr-in-objects</code>.  Actually, though, you can pass
-in arbitrary functions which can do much more than just output the
+in arbitrary functions that can do much more than just output the
 fields--you can perform arbitrary analyses of the bands (using
 functions that we will describe later).
 
@@ -562,10 +562,11 @@ up into the gap by the defect.
 <p>We haven't yet output any of the fields, but we don't have to
 repeat the run to do so.  The fields from the last k-point computation
 remain in memory and can continue to be accessed and analyzed.  For
-example, to output the electric field of band 25, we just do:
+example, to output the electric field z component of band 25, we just
+do:
 
 <pre>
-(output-efield 25)
+(output-efield-z 25)
 </pre>
 
 <p>That's right, the output functions that we passed to

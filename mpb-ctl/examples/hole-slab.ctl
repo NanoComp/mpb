@@ -32,6 +32,6 @@
 ; Define a band function to output the magnetic fields only at the K point:
 (define (output-hfield-only-at-K band)
   (if (vector3= current-k K)
-      (output-hfield band)))
+      (output-hfield-z band)))
 
-(run output-hfield-only-at-K)
+(run output-hfield-z-only-at-K)

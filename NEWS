@@ -1,4 +1,4 @@
-  * Added output-hfieldx, output-dfieldy, etcetera, functions for
+  * Added output-hfield-x, output-dfield-y, etcetera, functions for
     outputting only specific field components (see manual reference section).
 
   * Sped up HDF5 field output routines.

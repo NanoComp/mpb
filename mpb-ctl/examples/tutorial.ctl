@@ -23,10 +23,10 @@
 (run-tm)
 
 (display "********** Square lattice of rods: TM, w/efield **********\n")
-(run-tm output-efield)
+(run-tm output-efield-z)
 
 (display "********** Square lattice of rods: TE, w/hfield & dpwr **********\n")
-(run-te output-hfield output-dpwr)
+(run-te output-hfield-z output-dpwr)
 
 ; *** Bands of a Triangular Lattice ***
 
@@ -82,7 +82,7 @@
 (set! num-bands 50)
 (run-tm)
 
-(output-efield 25)
+(output-efield-z 25)
 (get-dfield 25)  ; compute the D field for band 25
 (compute-field-energy)  ; compute the energy density from D
 (display-many
