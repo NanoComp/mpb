@@ -306,9 +306,13 @@ void Cop(evectmatrix Xin, evectmatrix Xout, void *data,
 	  
 	  for (ip = 0; ip < Xout.p; ++ip) {
 	       scalar scale;
-	       ASSIGN_SCALAR(scale,
-			     SCALAR_RE(diag) - 0*eigenvals[ip],
-			     SCALAR_IM(diag));
+	       if (eigenvals) {
+		    ASSIGN_SCALAR(scale,
+				  SCALAR_RE(diag) - 0*eigenvals[ip],
+				  SCALAR_IM(diag));
+	       }
+	       else
+		    scale = diag;
 	       ASSIGN_DIV(Xout.data[in * Xout.p + ip],
 			  Xout.data[in * Xout.p + ip],
 			  scale);
