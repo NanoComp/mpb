@@ -231,7 +231,8 @@ void spherical_quadrature_points(real *x, real *y, real *z,
 	     Integrals" (Prentice Hall, 1971) (formula number U3:11-1). 
 
 	     This code was written with the help of example code by
-	     John Burkardt (http://www.psc.edu/~burkardt/stroud.html). */
+	     John Burkardt: 
+	           http://www.psc.edu/~burkardt/src/stroud/stroud.html */
      
 	  x0 = 1; y0 = z0 = 0;
 	  w = 9216 / 725760.0;
