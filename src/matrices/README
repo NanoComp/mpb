@@ -4,7 +4,7 @@ block eigensolver algorithm itself is implemented in eigensolver.c.
 
 Such algorithms solve for the first p eigenstates of an n x n (sparse)
 matrix A.  This corresponds to minimizing Yt*A*Y under the constraint
-Yt*Y==1, where Y is an n x p matrix whose rows are the eigenvectors
+Yt*Y==1, where Y is an n x p matrix whose columns are the eigenvectors
 and Yt is its adjoint.  The components of Y are, in general, complex
 vectors of length c.
 
