@@ -1,4 +1,4 @@
-Fix convergence bug when running e.g. tst2.ctl!!!
+Fix convergence bug when running e.g. tst2.ctl!!!  [ fixed? ]
 
 dimensions < true_rank should make grid sizes 1 in extra dimensions.
 

@@ -332,7 +332,7 @@ that of a square lattice, so we'll need to modify the
 
 <pre>
 (set! k-points (list (vector3 0 0 0)          ; Gamma
-                     (vector3 0.5 0 0)        ; M
+                     (vector3 0 0.5 0)        ; M
                      (vector3 (/ -3) (/ 3) 0) ; K
                      (vector3 0 0 0)))        ; Gamma
 (set! k-points (interpolate 4 k-points))
@@ -345,18 +345,22 @@ Scheme shorthand <code>(/ 3)</code>, which is the same as <code>(/ 1
 
 <p>All of the other parameters (<code>geometry</code>,
 <code>num-bands</code>, and <code>grid-size</code>) can remain the
-same as in the previous subsection, so we are ready to run
-<code>(run-tm)</code> to compute the bands.
+same as in the previous subsection, so we can now call
+<code>(run-tm)</code> to compute the bands.  As it turns out, this
+structure has an even larger gap than the square lattice:
 
-
+<pre>
+Gap from band 1 (0.274980022414798) to band 2 (0.445978482897611), 47.436422269189%
+</pre>
 
 <h2>Maximizing the First TM Gap</h2>
 
 <p>Just for fun, we will now show you a more sophisticated example,
 utilizing the programming capabilities of Scheme: we will write a
-script to choose the cylinder radius that maximizes the TM gap.  All
-of the Scheme syntax here won't be explained, but this should give you
-a flavor of what is possible.
+script to choose the cylinder radius that maximizes the first TM gap
+of the triangular lattice of rods from above.  All of the Scheme
+syntax here won't be explained, but this should give you a flavor of
+what is possible.
 
 <p>First, we will write the function that want to maximize, a function
 that takes a dielectric constant and returns the size of the first TM
@@ -397,22 +401,18 @@ searching in the range of radii from 0.1 to 0.5, with a tolerance of 0.1:
 
 <p>(<code>display-many</code> is a function defined by libctl to apply
 the built-in <code>display</code> function to zero or more arguments.)
-After four iterations, the output is:
+After five iterations, the output is:
 
 <pre>
-radius at maximum: 0.194032622475023
-gap size at maximum: 39.0708640486507
+radius at maximum: 0.176393202250021
+gap size at maximum: 48.6242664930546
 </pre>
 
-<p>Note that this gap is only slightly bigger than the gap we found
-previously for a radius of 0.2; that's not surprising, since the
-radius of 0.2 is actually a canonical value for this structure, chosen
-to maximize the gap. The tolerance of 0.1 that we specified means that
-the true maximum is within 0.1 * 0.194032622475023, or about 0.02, of
-the radius found here.  In the case of the radius, it doesn't make
-much sense to specify a lower tolerance, since the discretization of
-the grid means that the code can't distinguish small differences in
-radius.
+<p>The tolerance of 0.1 that we specified means that the true maximum
+is within 0.1 * 0.176393202250021, or about 0.02, of the radius found
+here.  It doesn't make much sense here to specify a lower tolerance,
+since the discretization of the grid means that the code can't
+distinguish small differences in radius.
 
 <h2>Finding a Point-defect State</h2>
 
