@@ -455,20 +455,29 @@
 
 (define run-polarization run-parity) ; backwards compatibility
 
-(define (run . band-functions)
-  (apply run-parity
-	 (append (list NO-PARITY true) band-functions)))
+; a macro to create a run function with a given name and parity
+(defmacro-public define-run (name parity)
+  `(define (,name . band-functions)
+     (apply run-parity (append (list ,parity true) band-functions))))
 
-(define (run-zeven . band-functions)
-  (apply run-parity (append (list EVEN-Z true) band-functions)))
-
-(define (run-zodd . band-functions)
-  (apply run-parity (append (list ODD-Z true) band-functions)))
+(define-run run NO-PARITY)
+(define-run run-zeven EVEN-Z)
+(define-run run-zodd ODD-Z)
+(define-run run-yeven EVEN-Y)
+(define-run run-yodd ODD-Y)
+(define-run run-yeven-zeven (+ EVEN-Y EVEN-Z))
+(define-run run-yeven-zodd (+ EVEN-Y ODD-Z))
+(define-run run-yodd-zeven (+ ODD-Y EVEN-Z))
+(define-run run-yodd-zodd (+ ODD-Y ODD-Z))
 
 (define run-even run-zeven) ; backwards compatibility
 (define run-odd run-zodd) ; backwards compatibility
 (define run-te run-zeven)
 (define run-tm run-zodd)
+(define run-te-yeven run-yeven-zeven)
+(define run-te-yodd run-yodd-zeven)
+(define run-tm-yeven run-yeven-zodd)
+(define run-tm-yodd run-yodd-zodd)
 
 ; ****************************************************************
 
