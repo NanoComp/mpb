@@ -82,6 +82,8 @@ ALL_OBJECTS = main.o ctl-io.o $(OBJECTS)
 
 all: $(PROGRAM_NAME)
 
+main.o: main.c ctl-io.h
+
 ctl-io.c ctl-io.h: $(SPECIFICATION_FILE)
 	$(GEN_CTL_IO) $(SPECIFICATION_FILE) $(LIBCTL_DIR)
 
