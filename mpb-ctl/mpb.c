@@ -566,10 +566,8 @@ void init_params(integer p, boolean reset_fields)
      mpi_one_printf("Initializing dielectric function...\n");
      {
 	  epsilon_func_data d;
-	  char *eps_filename = ctl_fix_path(epsilon_input_file);
-	  get_epsilon_file_func(eps_filename,
+	  get_epsilon_file_func(epsilon_input_file,
 				&d.eps_file_func, &d.eps_file_func_data);
-	  free(eps_filename);
 	  set_maxwell_dielectric(mdata, mesh, R, G, epsilon_func, &d);
 	  destroy_epsilon_file_func_data(d.eps_file_func_data);
      }

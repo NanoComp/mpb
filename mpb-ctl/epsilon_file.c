@@ -121,16 +121,19 @@ void get_epsilon_file_func(const char *fname,
 			   void **func_data)
 {
      if (fname && fname[0]) {
+	  char *eps_fname;
 	  matrixio_id file_id;
 	  epsilon_file_data *d;
 	  int rank = 3, dims[3];
 
-	  mpi_one_printf("Using background dielectric from file \"%s\"...\n",
-			 fname);
-
 	  CHK_MALLOC(d, epsilon_file_data, 1);
 	  
-	  file_id = matrixio_open(fname, 1);
+	  eps_fname = ctl_fix_path(fname);
+	  mpi_one_printf("Using background dielectric from file \"%s\"...\n",
+			 eps_fname);
+	  file_id = matrixio_open(eps_fname, 1);
+	  free(eps_fname);
+
 	  d->data = matrixio_read_real_data(file_id, NULL, &rank, dims,
 					    0,0,0, NULL);
 	  CHECK(d->data, "couldn't find dataset in dielectric file");
