@@ -4,7 +4,7 @@ SHELL = @SHELL@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
-CPPFLAGS = @CPPFLAGS@ -I../util -I../matrices -I.
+CPPFLAGS = -I../util -I../matrices -I. @CPPFLAGS@
 DEFS = @DEFS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@

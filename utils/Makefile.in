@@ -4,7 +4,7 @@ SHELL = @SHELL@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
-CPPFLAGS = @CPPFLAGS@ -I../src/util -I../src/matrices -I../src/matrixio
+CPPFLAGS = -I../src/util -I../src/matrices -I../src/matrixio @CPPFLAGS@
 DEFS = @DEFS@ -DMPB_VERSION='"'"@MPB_VERSION@"'"'
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@

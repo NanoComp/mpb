@@ -55,7 +55,7 @@ GEN_CTL_IO = @GEN_CTL_IO@
 
 CC = @CC@
 CFLAGS = @CFLAGS@
-CPPFLAGS = @CPPFLAGS@ -I. $(MY_CPPFLAGS)
+CPPFLAGS = -I. $(MY_CPPFLAGS) @CPPFLAGS@
 DEFS = @DEFS@ $(CTL_DEFS) $(MY_DEFS)
 
 ##############################################################################
