@@ -129,6 +129,35 @@ can put them in your <code>~/.cshrc</code> file (or
 <code>~/.profile</code>, or <code>~/.bash_profile</code>, depending on
 your shell).  
 
+<h2><a name="fortran">Fun with Fortran</a></h2>
+
+<p>MPB, and many of the libraries it calls, are written in C, but it
+also calls libraries such as BLAS and LAPACK (see below) that are
+usually compiled from Fortran.  This can cause some added difficulty
+because of the various linking schemes used by Fortran compilers.
+MPB's <code>configure</code> script attempts to detect the Fortran
+linking scheme automatically, but in order for this to work <em>you
+must use the same Fortran compiler and options with MPB as were used
+to compile BLAS/LAPACK</em>.
+
+<p>By default, MPB looks for a vendor Fortran compiler first
+(<code>f77</code>, <code>xlf</code>, etcetera) and then looks for GNU
+<code>g77</code>.  In order to manually specify a Fortran compiler
+<code>foobar</code> you would <a href="#mpb">configure MPB</a> with
+'<code>./configure F77=foobar ...</code>'.
+
+<p>If, when you compiled BLAS/LAPACK, you used compiler options that
+alter the linking scheme (e.g. <code>g77</code>'s
+<code>-fcase-upper</code> or <code>-fno-underscoring</code>), you will
+need to pass the same flags to MPB via '<code>./configure
+FFLAGS="...<i>flags</i>..." ...</code>'.
+
+<p>One final note: you may run into trouble if you use a C compiler by
+a different vendor than your Fortran compiler, due to incompatible
+libraries.  By default, MPB looks for a vendor C compiler
+(<code>cc</code>) first, but you can specify a different C compiler
+with '<code>./configure CC=foobar ...</code>'.
+
 <h2><a name="blas">BLAS</a></h2>
 
 <p>The first thing you must have on your system is a BLAS
