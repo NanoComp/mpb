@@ -159,19 +159,20 @@ design of MIT Photonic-Bands.
 
 <p>The first program of this sort that I came in contact with, and the
 code that was used in our group until the development of this package,
-was initially written around 1990 (in Fortran 77).  As this software
-grew organically over time, several problems became apparent.  First,
-the input format was very inflexible (difficult to add new features
-without breaking old simulations), sensitive to whitespace and other
-formatting, and required repeated entry of information that was often
-the same from file to file.  Often, pre- and post-processing steps
-were required using additional scripts and tools.  Second, there was
-no clear modularity or flow of control within the program, making it
-difficult to follow or modify substantially.  Parallelizing it, or
-removing constraints that it imposed like inversion symmetry, or even
-replacing the input format would be impractical. Besides, even reading
-code with variables named <code>gxgzco</code> (in common block
-<code>cabgv</code>) (honest!) is an ordeal.
+was initially written around 1990 (in Fortran 77) by R. D. Meade.  As
+this software grew organically over time, several problems became
+apparent.  First, the input format was inflexible (difficult to add
+new features without breaking old simulations), sensitive to
+whitespace and other formatting, and required repeated entry of
+information that was often the same from file to file.  Often, pre-
+and post-processing steps were required using additional scripts and
+tools.  Second, the many parts of the program had become intertwined,
+lacking modularity or a clear flow of control; this made it difficult
+to follow or modify substantially.  Parallelizing it, or removing
+constraints that it imposed like inversion symmetry, or even replacing
+the input format seemed impractical. Besides, even reading code with
+variables named <code>gxgzco</code> (in common block
+<code>cabgv</code>) (honest!) is a mind-altering experience.
 
 <p>After an initial experience in the Spring of 1996 at writing a code
 based on a wavelet, rather than a planewave, basis (which turned out
@@ -179,24 +180,25 @@ not to be practical), I set out to write a replacement for our Fortran
 eigensolver.  My main aims at this time (Fall 1996) were a more
 flexible and powerful input format and a code that would be amenable
 to parallelization.  I succeeded in achieving a working code with
-similar convergence to the old code, but I discovered several things.
-I had lots of fun learning to use <code>lex</code> and
-<code>yacc</code> (Yet Another Compiler-Compiler) to make a flexible,
-C-like input format with variables and other advanced features.
-Having input files that were almost, but not quite, like a programming
-language made me realize, however, that what I really wanted
-<em>was</em> a programming language--no matter how many features I
-added, I always wanted one more "simple" thing.  As far as
-parallelization, I quickly realized that I had a problem: I needed a
-parallel FFT, and the only ones that were available were proprietary
-(non-portable), used incompatible data distribution formats, and were
-often designed to be called only from special languages like HPF.
-That, plus my dissatisfaction with the available free FFTs, led me to
-embark on a side project (with my friend Matteo Frigo of MIT's
-Laboratory for Computer Science) to develop a new, free FFT library,
-<a href="http://www.fftw.org">FFTW</a>, that included portable
-parallel routines.  Also, I decided that attempting to support too
-many models of parallel programming (threads, MPI, Cray
+similar convergence to the old code (after <a
+href="http://prola.aps.org/abstract/PRB/v55/p15942_1">some pain</a>),
+but I discovered several things.  I had lots of fun learning to use
+<code>lex</code> and <code>yacc</code> (Yet Another Compiler-Compiler)
+to make a flexible, C-like input format with variables and other
+advanced features.  Having input files that were almost, but not
+quite, like a programming language made me realize, however, that what
+I really wanted <em>was</em> a programming language--no matter how
+many features I added, I always wanted one more "simple" thing.  As
+far as parallelization, I quickly realized that I had a problem: I
+needed a parallel FFT, and the only ones that were available were
+proprietary (non-portable), used incompatible data distribution
+formats, and were often designed to be called only from special
+languages like HPF.  That, plus my dissatisfaction with the available
+free FFTs, led me to embark on a side project (with my friend Matteo
+Frigo of MIT's Laboratory for Computer Science) to develop a new, free
+FFT library, <a href="http://www.fftw.org">FFTW</a>, that included
+portable parallel routines.  Also, I decided that attempting to
+support too many models of parallel programming (threads, MPI, Cray
 <code>shmem</code>) in one program resulted in a mess; it was better
 to stick with MPI (supporting running only a single process too, of
 course).  Another mistake I discovered was that I allowed the
