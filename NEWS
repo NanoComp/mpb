@@ -13,7 +13,7 @@
     Thanks to Karri Varris for the bug report.
 
   * Fixed trailing spaces in sed command, which were breaking 'make install'
-    on some systems.  (Thanks to Ron Chase for the bug report.)
+    on some systems.  Thanks to Ron Chase for the bug report.
 
 MPB 0.80.1 (11/22/1999)
 
