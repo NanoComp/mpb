@@ -146,6 +146,15 @@ void debug_free(void *p)
 
 #endif /* DEBUG */
 
+/* output current memory usage: */
+void debug_output_malloc_count(void)
+{
+#ifdef DEBUG_MALLOC
+     fprintf(stderr, "malloc: %d blocks, %g kB\n", 
+	     debug_malloc_cnt, debug_malloc_total / 1024.0);
+#endif
+}
+
 /* check for memory leaks when debugging */
 void debug_check_memory_leaks(void)
 {

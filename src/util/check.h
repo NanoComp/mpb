@@ -54,6 +54,7 @@ extern void debug_free(void *p);
    value.  Note that x != x if and only if x is a NaN. */
 #define BADNUM(x) ((x) != (x) || (x) > 1e50 || (x) < -1e50)
 
+extern void debug_output_malloc_count(void);
 extern void debug_check_memory_leaks(void);
 
 #define CHK_MALLOC(p, t, n) {                                 \
