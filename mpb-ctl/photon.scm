@@ -19,6 +19,9 @@
 (define-class material-type no-parent
   (define-property epsilon 'number no-default positive?))
 
+; Define an alias, "dielectric" for "material-type".
+(define dielectric material-type)
+
 ; use the solid geometry classes, variables, etcetera in libgeom:
 ; (one specifications file can include another specifications file)
 (include "../../libctl/utils/libgeom/geom.scm")

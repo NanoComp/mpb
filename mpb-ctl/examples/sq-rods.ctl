@@ -1,6 +1,6 @@
 (define-param norun false)
 
-(define Si (make material-type (epsilon 12.0)))
+(define Si (make dielectric (epsilon 12.0)))
 
 (set! geometry 
       (list

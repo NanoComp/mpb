@@ -4,7 +4,7 @@
 (set! geometry 
       (list
        (make cylinder 
-	 (material (make material-type (epsilon 9.0)))
+	 (material (make dielectric (epsilon 9.0)))
 	 (center (vector3 0)) (axis (vector3 1)) 
 	 (radius infinity) (height 0.25))))
 
