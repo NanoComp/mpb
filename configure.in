@@ -2,7 +2,7 @@
 AC_INIT(src/matrices/matrices.c)
 AC_CONFIG_HEADER(src/config.h)
 
-MPB_VERSION=0.8b1
+MPB_VERSION=0.8b2
 AC_SUBST(MPB_VERSION)
 
 AC_ARG_ENABLE(single, [  --enable-single         compile for single precision], enable_single=$enableval, enable_single=no)
