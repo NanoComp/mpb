@@ -346,8 +346,9 @@ matrixio_id matrixio_create(const char *fname)
 
      return id;
 #else
-     fprintf(stderr, "matrixio: cannot output \"%s\" (compiled without HDF)\n",
-	     fname);
+     mpi_one_fprintf(stderr,
+		     "matrixio: cannot output \"%s\" (compiled without HDF)\n",
+		     fname);
      return 0;
 #endif
 }
