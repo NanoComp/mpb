@@ -76,14 +76,36 @@ if test -z "`echo $LIBS | grep fftw`"; then
 	AC_CHECK_LIB(rfftw, rfftw)
 fi
 
-dnl Checks for BLAS & LAPACK libraries:
-AC_CHECK_LIB(blasppro1,main)
-AC_CHECK_LIB(blas, main)
-AC_CHECK_LIB(lapack, main)
+dnl Checks for BLAS libraries:
 
 dnl Checks for BLAS dgemm/sgemm libraries (produced by PhiPACK):
 AC_CHECK_LIB(dgemm, main)
 AC_CHECK_LIB(sgemm, main)
+
+dnl Optimized BLAS for Pentium Pro?
+AC_CHECK_LIB(blasppro1,main)
+
+dnl BLAS in Alpha DXML library?
+AC_CHECK_LIB(dxml, dgemm_)
+AC_CHECK_LIB(for, for_stop)
+
+dnl Check for BLAS in Sun Performance library:
+dnl AC_CHECK_LIB(SUNWPro_lic, __lsp_rethread_mn_ph_)
+AC_CHECK_LIB(sunmath, acosp)
+AC_CHECK_LIB(F77, ishft_)
+AC_CHECK_LIB(f90, _F90_STOP)
+AC_CHECK_LIB(sunperf, dgemm_,
+        [LIBS="-xlic_lib=sunperf $LIBS"; AC_DEFINE(HAVE_LIBSUNPERF)])
+AC_CHECK_LIB(M77, __pow_ri)
+
+dnl Check for BLAS in SGIMATH library:
+AC_CHECK_LIB(complib.sgimath, dgemm)
+
+dnl Generic BLAS:
+AC_CHECK_LIB(blas, main)
+
+dnl Checks for LAPACK library
+AC_CHECK_LIB(lapack, main)
 
 dnl Checks for IBM ESSL library: -lessl
 AC_CHECK_LIB(essl, dcft)
