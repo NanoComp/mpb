@@ -1,10 +1,15 @@
 Finish tuning maxwell preconditioner.
 
+Is the preconditioner screwing up convergence?  Sometimes it seems to
+converge to a slightly wrong value!
+
 Profile--where is the performance going?
 
 Optimize multiplications by diagonal matrices?
 
 Check which order to link in -lblas and -ldgemm.
+
+Fix linking with -lessl on AIX...what is going on there?
 
 Allow real-complex transforms for structures with inversion symmetry.
 

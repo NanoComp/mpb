@@ -9,6 +9,28 @@
 
 #include "eigensolver.h"
 
+/* Check if we have converged yet, by seeing if fractional change
+   in eigenvals (or their trace E) does not exceed the tolerance. */
+static int check_converged(real E, real *eigenvals,
+			   real prev_E, real *prev_eigenvals,
+			   int num_bands,
+			   real tolerance)
+{
+     if (!eigenvals || !prev_eigenvals)
+	return(fabs(E - prev_E) < tolerance * 0.5 * (fabs(E) + fabs(prev_E)));
+     else {
+	  int i;
+
+	  for (i = 0; i < num_bands; ++i) {
+	  if (fabs(eigenvals[i] - prev_eigenvals[i]) >
+	      tolerance * 0.5 * (fabs(eigenvals[i]) + fabs(prev_eigenvals[i])))
+	       return 0;
+	  }
+	  
+	  return 1;
+     }
+}
+
 #define STRINGIZEx(x) #x /* a hack so that we can stringize macro values */
 #define STRINGIZE(x) STRINGIZEx(x)
 #define EIGENSOLVER_MAX_ITERATIONS 10000
@@ -16,6 +38,7 @@
 #define NORMALIZE_FIRST_STEP 0
 #define DIAGONALIZE_EACH_STEP 1
 #define PROJECT_PRECONDITIONING 0
+#define CONVERGE_EACH_EIGENVALUE 1
 
 /* Preconditioned eigensolver.  Finds the lowest Y.p eigenvectors
    and eigenvalues of the operator A, and returns them in Y and
@@ -62,6 +85,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      sqmatrix U, Usqrt, YtAYU, UYtAYU;
      short usingConjugateGradient = 0;
      real E, E2, prev_E = 0.0;
+     real *prev_eigenvals = NULL;
      real dE = 0.0, d2E, traceGtX, prev_traceGtX = 0.0;
      real lambda, prev_lambda = 0.001;
      int i, iteration = 0;
@@ -91,6 +115,13 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      YtAYU = create_sqmatrix(Y.p);
      UYtAYU = create_sqmatrix(Y.p);
      
+#if DIAGONALIZE_EACH_STEP && CONVERGE_EACH_EIGENVALUE
+     prev_eigenvals = (real*) malloc(sizeof(real) * Y.p);
+     CHECK(prev_eigenvals, "out of memory");
+     for (i = 0; i < Y.p; ++i)
+	  prev_eigenvals[i] = 0.0;
+#endif
+
      for (i = 0; i < Y.p; ++i)
 	  eigenvals[i] = 0.0;
 
@@ -170,8 +201,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  CHECK(!BADNUM(E), "crazy number detected in trace!!\n");
 
-	  if (iteration > 0 &&
-	      fabs(E - prev_E) < tolerance * 0.5 * (fabs(E) + fabs(prev_E)))
+	  if (iteration > 0 && check_converged(E, eigenvals, 
+					       prev_E, prev_eigenvals, Y.p,
+					       tolerance))
 	       break; /* convergence!  hooray! */
 
 #if DIAGONALIZE_EACH_STEP
@@ -276,6 +308,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  prev_traceGtX = traceGtX;
 	  prev_lambda = lambda;
 	  prev_E = E;
+
+	  if (prev_eigenvals)
+	       for (i = 0; i < Y.p; ++i)
+		    prev_eigenvals[i] = eigenvals[i];
      } while (++iteration < EIGENSOLVER_MAX_ITERATIONS);
      
      CHECK(iteration < EIGENSOLVER_MAX_ITERATIONS,
@@ -303,4 +339,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      destroy_sqmatrix(Usqrt);
      destroy_sqmatrix(YtAYU);
      destroy_sqmatrix(UYtAYU);
+
+     if (prev_eigenvals)
+	  free(prev_eigenvals);
 }
+
