@@ -1001,8 +1001,18 @@ to be 1.  For vector fields, <code>output-field</code> outputs all of
 the components, while the other variants output only one component.
 
 <p><dt><code>(output-epsilon <i>[ nx [ ny [ nz ] ] ]</i>)</code>
+
 <dd>A shortcut for calling <code>get-epsilon</code> followed by
-<code>output-field</code>.
+<code>output-field</code>.  Note that, because epsilon is a tensor, a
+number of datasets are outputted in <code>"epsilon.h5"</code>:
+
+<ul>
+<li><code>"data"</code>: 3/trace(1/epsilon)
+<li><code>"epsilon.{xx,xy,xz,yy,yz,zz}"</code>: the components of the
+(symmetric) dielectric tensor.
+<li><code>"epsilon_inverse.{xx,xy,xz,yy,yz,zz}"</code>: the components of the
+(symmetric) inverse dielectric tensor.
+</ul>
 
 </dl>
 

@@ -368,9 +368,21 @@ void handle_file(const char *fname, const char *out_fname,
      real *R, *kvector, *copies;
      int dims[2], rank;
      matrix3x3 Rin = {{1,0,0},{0,1,0},{0,0,1}}, Rout, coord_map;
-#define NUM_DATANAMES 4
+#define NUM_DATANAMES 16
      char datanames[NUM_DATANAMES][30] = {
 	  "data", "x", "y", "z",
+	  "epsilon.xx", 
+	  "epsilon.xy", 
+	  "epsilon.xz", 
+	  "epsilon.yy", 
+	  "epsilon.yz", 
+	  "epsilon.zz", 
+	  "epsilon_inverse.xx", 
+	  "epsilon_inverse.xy", 
+	  "epsilon_inverse.xz", 
+	  "epsilon_inverse.yy", 
+	  "epsilon_inverse.yz", 
+	  "epsilon_inverse.zz"
      };
      int i;
 

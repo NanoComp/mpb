@@ -85,6 +85,7 @@ extern void fieldio_write_real_vals(real *vals,
 				    const int start[3],
 				    matrixio_id file_id,
 				    int append,
+				    const char *dataname,
 				    matrixio_id *data_id);
 
 #endif /* MATRIXIO_H */

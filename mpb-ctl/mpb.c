@@ -27,6 +27,7 @@
 #include <time.h>
 #include <math.h>
 #include <ctype.h>
+#include <stddef.h>
 
 /* GNU Guile library header file: */
 #include <guile/gh.h>
@@ -1138,6 +1139,71 @@ void get_epsilon(void)
 		    100.0 * (eps_mean-eps_low) / (eps_high-eps_low));
 }
 
+/* get the specified component of the dielectric tensor,
+   or the inverse tensor if inv != 0 */
+void get_epsilon_tensor(int c1, int c2, int imag, int inv)
+{
+     int i, N;
+     real *epsilon;
+     int conj = 0, offset;
+
+     curfield_type = '-'; /* only used internally, for now */
+     epsilon = (real *) mdata->fft_data;
+     N = mdata->fft_output_size;
+
+     switch (c1 * 3 + c2) {
+	 case 0:
+	      offset = offsetof(symmetric_matrix, m00);
+	      break;
+	 case 1:
+	      offset = offsetof(symmetric_matrix, m01);
+	      break;
+	 case 2:
+	      offset = offsetof(symmetric_matrix, m02);
+	      break;
+	 case 3:
+	      offset = offsetof(symmetric_matrix, m01); /* = conj(m10) */
+	      conj = imag;
+	      break;
+	 case 4:
+	      offset = offsetof(symmetric_matrix, m11);
+	      break;
+	 case 5:
+	      offset = offsetof(symmetric_matrix, m12);
+	      break;
+	 case 6:
+	      offset = offsetof(symmetric_matrix, m02); /* = conj(m20) */
+	      conj = imag;
+	      break;
+	 case 7:
+	      offset = offsetof(symmetric_matrix, m12); /* = conj(m21) */
+	      conj = imag;
+	      break;
+	 case 8:
+	      offset = offsetof(symmetric_matrix, m22);
+	      break;
+     }
+
+#ifdef WITH_HERMITIAN_EPSILON
+     if (c1 != c2 && imag)
+	  offset += offsetof(scalar_complex, im);
+#endif
+
+     for (i = 0; i < N; ++i) {
+	  if (inv) {
+	       epsilon[i] = 
+		    *((real *) (((char *) &mdata->eps_inv[i]) + offset));
+	  }
+	  else {
+	       symmetric_matrix eps;
+	       maxwell_sym_matrix_invert(&eps, &mdata->eps_inv[i]);
+	       epsilon[i] = *((real *) (((char *) &eps) + offset));
+	  }
+	  if (conj)
+	       epsilon[i] = -epsilon[i];
+     }     
+}
+
 /**************************************************************************/
 
 /* Replace curfield (either d or h) with the scalar energy density function,
@@ -1457,6 +1523,65 @@ static char *fix_fname(const char *fname, const char *prefix,
      return s;
 }
 
+static void output_scalarfield(real *vals,
+			       const int dims[3],
+			       const int local_dims[3],
+			       const int start[3],
+			       matrixio_id file_id,
+			       const char *dataname,
+			       int last_dim_index,
+			       int last_dim_start, int last_dim_size,
+			       int first_dim_start, int first_dim_size,
+			       int write_start0_special)
+{
+     matrixio_id data_id = -1;
+
+     fieldio_write_real_vals(vals, 3, dims, 
+			     local_dims, start, file_id, 0, 
+			     dataname, &data_id);
+     
+#ifndef SCALAR_COMPLEX
+     {
+	  int start_new[3], local_dims_new[3];
+
+	  start_new[0] = start[0];
+	  start_new[1] = start[1];
+	  start_new[2] = start[2];
+	  local_dims_new[0] = local_dims[0];
+	  local_dims_new[1] = local_dims[1];
+	  local_dims_new[2] = local_dims[2];
+
+	  maxwell_scalarfield_otherhalf(mdata, vals);
+	  start_new[last_dim_index] = last_dim_start;
+	  local_dims_new[last_dim_index] = last_dim_size;
+	  start_new[0] = first_dim_start;
+	  local_dims_new[0] = first_dim_size;
+	  if (write_start0_special) {
+	       /* The conjugated array half may be discontiguous.
+		  First, write the part not containing start_new[0], and
+		  then write the start_new[0] slab. */
+	       fieldio_write_real_vals(vals +
+				       local_dims_new[1] * local_dims_new[2],
+				       3, dims, local_dims_new, start_new, 
+				       file_id, 1, dataname, &data_id);
+	       local_dims_new[0] = 1;
+	       start_new[0] = 0;
+	       fieldio_write_real_vals(vals, 3, dims, 
+				       local_dims_new, start_new,
+				       file_id, 1, dataname, &data_id);
+	  }
+	  else {
+	       fieldio_write_real_vals(vals, 3, dims, 
+				       local_dims_new, start_new, 
+				       file_id, 1, dataname, &data_id);
+	  }
+     }
+#endif
+
+     if (data_id >= 0)
+	  matrixio_close_dataset(data_id);
+}
+
 /* given the field in curfield, store it to HDF (or whatever) using
    the matrixio (fieldio) routines.  Allow the component to be specified
    (which_component 0/1/2 = x/y/z, -1 = all) for vector fields. 
@@ -1469,12 +1594,12 @@ void output_field_to_file(integer which_component, string filename_prefix)
      int attr_dims[2] = {3, 3};
      real output_k[3]; /* kvector in reciprocal lattice basis */
      real output_R[3][3];
-#ifndef SCALAR_COMPLEX     
-     /* where to put "otherhalf" block of output: */
-     int last_dim_index;
-     int first_dim_start, first_dim_size, last_dim_start, last_dim_size;
+
+     /* where to put "otherhalf" block of output, only used for real scalars */
+     int last_dim_index = 0;
+     int last_dim_start = 0, last_dim_size = 0;
+     int first_dim_start = 0, first_dim_size = 0;
      int write_start0_special = 0;
-#endif
 
      if (!curfield) {
 	  mpi_one_fprintf(stderr, 
@@ -1617,8 +1742,6 @@ void output_field_to_file(integer which_component, string filename_prefix)
 				   output_k, 1, attr_dims);
      }
      else if (strchr("DHn", curfield_type)) { /* scalar field */
-	  matrixio_id data_id = -1;
-
 	  if (curfield_type == 'n') {
 	       sprintf(fname, "epsilon");
 	       sprintf(description, "dielectric function, epsilon");
@@ -1638,38 +1761,53 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  mpi_one_printf("Outputting %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
 	  free(fname2);
-	  fieldio_write_real_vals((real *) curfield, 3, dims, 
-				  local_dims, start, file_id, 0, &data_id);
 
-#ifndef SCALAR_COMPLEX
-	  maxwell_scalarfield_otherhalf(mdata, (real *) curfield);
-	  start[last_dim_index] = last_dim_start;
-	  local_dims[last_dim_index] = last_dim_size;
-	  start[0] = first_dim_start;
-	  local_dims[0] = first_dim_size;
-	  if (write_start0_special) {
-	       /* The conjugated array half may be discontiguous.
-		  First, write the part not containing start[0], and
-		  then write the start[0] slab. */
-	       fieldio_write_real_vals(((real *) curfield) +
-				       local_dims[1] * local_dims[2],
-				       3, dims, local_dims, start, 
-				       file_id, 1, &data_id);
-	       local_dims[0] = 1;
-	       start[0] = 0;
-	       fieldio_write_real_vals((real *) curfield, 3, dims, 
-				       local_dims, start,
-				       file_id, 1, &data_id);
-	  }
-	  else {
-	       fieldio_write_real_vals((real *) curfield, 3, dims, 
-				       local_dims, start, 
-				       file_id, 1, &data_id);
-	  }
+	  output_scalarfield((real *) curfield, dims, 
+			     local_dims, start, file_id, "data",
+			     last_dim_index, last_dim_start, last_dim_size,
+			     first_dim_start, first_dim_size,
+			     write_start0_special);
+
+	  if (curfield_type == 'n') {
+	       int c1, c2, inv;
+	       char dataname[100];
+
+	       for (inv = 0; inv < 2; ++inv)
+		    for (c1 = 0; c1 < 3; ++c1)
+			 for (c2 = c1; c2 < 3; ++c2) {
+			      get_epsilon_tensor(c1,c2, 0, inv);
+			      sprintf(dataname, "%s.%c%c",
+				      inv ? "epsilon_inverse" : "epsilon",
+				      c1 + 'x', c2 + 'x');
+			      output_scalarfield((real *) curfield, dims,
+						 local_dims, start,
+						 file_id, dataname,
+						 last_dim_index,
+						 last_dim_start, last_dim_size,
+						 first_dim_start,
+						 first_dim_size,
+						 write_start0_special);
+#if defined(WITH_HERMITIAN_EPSILON)
+			      if (c1 != c2) {
+				   get_epsilon_tensor(c1,c2, 1, inv);
+				   strcat(dataname, ".i");
+#ifndef SCALAR_COMPLEX /* scalarfield_otherhalf isn't right */
+				   strcat(dataname, ".screwy");
 #endif
+				   output_scalarfield((real *) curfield, dims,
+						      local_dims, start,
+						      file_id, dataname,
+						      last_dim_index,
+						      last_dim_start,
+						      last_dim_size,
+						      first_dim_start,
+						      first_dim_size,
+						      write_start0_special);
+			      }
+#endif
+			 }
+	  }
 
-	  if (data_id >= 0)
-	       matrixio_close_dataset(data_id);
      }
      else
 	  mpi_one_fprintf(stderr, "unknown field type!\n");

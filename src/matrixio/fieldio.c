@@ -134,12 +134,14 @@ void fieldio_write_real_vals(real *vals,
 			     const int start[3],
 			     matrixio_id file_id,
 			     int append,
+			     const char *dataname,
 			     matrixio_id *data_id)
 {
      rank = dims[2] == 1 ? (dims[1] == 1 ? 1 : 2) : 3;
 
-     if (!append)
-	  *data_id = matrixio_create_dataset(file_id, "data", NULL, rank,dims);
+     if (!append || *data_id < 0)
+	  *data_id = matrixio_create_dataset(file_id, dataname, 
+					     NULL, rank,dims);
 
      matrixio_write_real_data(*data_id,local_dims,start,1,vals);
 }
