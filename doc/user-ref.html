@@ -287,7 +287,9 @@ in the future there may be others.
 <dd>A uniform, isotropic, linear dielectric material, with one property:
 <dl>
 <dt><code>epsilon</code> [<code>number</code>]
-<dd>The dielectric constant (must be positive).  No default value.
+<dd>The dielectric constant (must be positive).  No default value.  You
+can also use <code>(index <i>n</i>)</code> as a synonym for
+<code>(epsilon (* <i>n n</i>))</code>.
 </dl>
 
 <p><dt><code>dielectric-anisotropic</code>
