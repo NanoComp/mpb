@@ -1111,9 +1111,9 @@ cnumber compute_field_integral(function f)
 		    cnumber integrand;
 
 		    phase_phi = TWOPI * 
-			 (kvector.x * (p.x/geometry_lattice.size.x+0.5) +
-			  kvector.y * (p.y/geometry_lattice.size.y+0.5) +
-			  kvector.z * (p.z/geometry_lattice.size.z+0.5));
+			 (kvector.x * (p.x/geometry_lattice.size.x) +
+			  kvector.y * (p.y/geometry_lattice.size.y) +
+			  kvector.z * (p.z/geometry_lattice.size.z));
 		    CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
 		    CASSIGN_MULT_RE(F.x.re, curfield[3*index+0], phase);
 		    CASSIGN_MULT_IM(F.x.im, curfield[3*index+0], phase);
@@ -1171,11 +1171,11 @@ cnumber compute_field_integral(function f)
 
 			      phase_phi = TWOPI * 
 				   (kvector.x 
-				    * (p.x/geometry_lattice.size.x+0.5) +
+				    * (p.x/geometry_lattice.size.x) +
 				    kvector.y 
-				    * (p.y/geometry_lattice.size.y+0.5) +
+				    * (p.y/geometry_lattice.size.y) +
 				    kvector.z 
-				    * (p.z/geometry_lattice.size.z+0.5));
+				    * (p.z/geometry_lattice.size.z));
 			      CASSIGN_SCALAR(phase, 
 					     cos(phase_phi), sin(phase_phi));
 			      CASSIGN_MULT_RE(F.x.re, Fx, phase);

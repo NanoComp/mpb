@@ -777,9 +777,9 @@ cvector3 get_field_point(vector3 p)
 
      if (curfield_type != 'v') {
 	  double phase_phi = TWOPI * 
-	       (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
-		cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
-		cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+	       (cur_kvector.x * (p.x/geometry_lattice.size.x) +
+		cur_kvector.y * (p.y/geometry_lattice.size.y) +
+		cur_kvector.z * (p.z/geometry_lattice.size.z));
 	  CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
 	  CASSIGN_MULT(field[0], field[0], phase);
 	  CASSIGN_MULT(field[1], field[1], phase);
@@ -812,9 +812,9 @@ cnumber get_cscalar_point(vector3 p)
      if (curfield_type == 'C') {
 	  scalar_complex phase;
 	  double phase_phi = TWOPI * 
-	       (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
-		cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
-		cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+	       (cur_kvector.x * (p.x/geometry_lattice.size.x) +
+		cur_kvector.y * (p.y/geometry_lattice.size.y) +
+		cur_kvector.z * (p.z/geometry_lattice.size.z));
 	  CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
 	  CASSIGN_MULT(s, s, phase);
      }
@@ -861,9 +861,9 @@ cvector3 cvector_field_get_point(SCM fo, vector3 p)
      if (f->type_char != 'v') { /* v fields have no kvector */
 	  scalar_complex phase;
 	  double phase_phi = TWOPI * 
-	       (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
-		cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
-		cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+	       (cur_kvector.x * (p.x/geometry_lattice.size.x) +
+		cur_kvector.y * (p.y/geometry_lattice.size.y) +
+		cur_kvector.z * (p.z/geometry_lattice.size.z));
 	  CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
 	  CASSIGN_MULT(field[0], field[0], phase);
 	  CASSIGN_MULT(field[1], field[1], phase);
@@ -896,9 +896,9 @@ cnumber cscalar_field_get_point(SCM fo, vector3 p)
      if (f->type_char == 'C') { /* have kvector */
 	  scalar_complex phase;
 	  double phase_phi = TWOPI * 
-	       (cur_kvector.x * (p.x/geometry_lattice.size.x+0.5) +
-		cur_kvector.y * (p.y/geometry_lattice.size.y+0.5) +
-		cur_kvector.z * (p.z/geometry_lattice.size.z+0.5));
+	       (cur_kvector.x * (p.x/geometry_lattice.size.x) +
+		cur_kvector.y * (p.y/geometry_lattice.size.y) +
+		cur_kvector.z * (p.z/geometry_lattice.size.z));
 	  CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
 	  CASSIGN_MULT(s, s, phase);
      }
@@ -1624,9 +1624,9 @@ cnumber compute_field_integral(function f)
 		    cnumber integrand;
 
 		    phase_phi = TWOPI * 
-			 (kvector.x * (p.x/geometry_lattice.size.x+0.5) +
-			  kvector.y * (p.y/geometry_lattice.size.y+0.5) +
-			  kvector.z * (p.z/geometry_lattice.size.z+0.5));
+			 (kvector.x * (p.x/geometry_lattice.size.x) +
+			  kvector.y * (p.y/geometry_lattice.size.y) +
+			  kvector.z * (p.z/geometry_lattice.size.z));
 		    CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
 		    CASSIGN_MULT_RE(F.x.re, curfield[3*index+0], phase);
 		    CASSIGN_MULT_IM(F.x.im, curfield[3*index+0], phase);
@@ -1684,11 +1684,11 @@ cnumber compute_field_integral(function f)
 
 			      phase_phi = TWOPI * 
 				   (kvector.x 
-				    * (p.x/geometry_lattice.size.x+0.5) +
+				    * (p.x/geometry_lattice.size.x) +
 				    kvector.y 
-				    * (p.y/geometry_lattice.size.y+0.5) +
+				    * (p.y/geometry_lattice.size.y) +
 				    kvector.z 
-				    * (p.z/geometry_lattice.size.z+0.5));
+				    * (p.z/geometry_lattice.size.z));
 			      CASSIGN_SCALAR(phase, 
 					     cos(phase_phi), sin(phase_phi));
 			      CASSIGN_MULT_RE(F.x.re, Fx, phase);
