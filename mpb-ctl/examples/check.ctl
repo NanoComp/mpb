@@ -15,7 +15,7 @@
 (define num-err 0)
 
 ; function to check if two results are sufficently close:
-(define check-tolerance 1e-4)
+(define-param check-tolerance 1e-4)
 (define (almost-equal? x y)
   (if (> (abs x) 1e-3)
       (let ((err (/ (abs (- x y)) (* 0.5 (+ (abs x) (abs y))))))
