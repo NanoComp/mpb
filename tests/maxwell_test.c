@@ -147,7 +147,7 @@ void usage(void)
 	    "   -z <nz>      Use nz points in z direction [dflt. = %d]\n"
 	    "   -e           Solve for TE polarization only.\n"
 	    "   -m           Solve for TM polarization only.\n"
-	    "   -t <freq>    Set target frequency [dflt. none].\n",
+	    "   -t <freq>    Set target frequency [dflt. none].\n"
 	    "   -c <tol>     Set convergence tolerance [dflt. %e].\n",
 	    KX, NUM_BANDS, sqrt(EPS_HIGH), EPS_HIGH_X, NX, NY, NZ,
 	    ERROR_TOL);
