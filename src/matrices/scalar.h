@@ -29,7 +29,7 @@ typedef struct {
 #define SCALAR_IM(a) ((a).im)
 
 #define ASSIGN_REAL(a, c) { (a).re = (c); (a).im = 0.0; }
-#define ASSIGN_SCALAR(a, re, im) { (a).re = (re); (a).im = (im); }
+#define ASSIGN_SCALAR(a, real, imag) { (a).re = (real); (a).im = (imag); }
 
 #define SCALAR_NORMSQR(a) ((a).re * (a).re + (a).im * (a).im)
 
@@ -51,7 +51,7 @@ typedef real scalar;
 #define SCALAR_IM(a) 0.0
 
 #define ASSIGN_REAL(a, c) (a) = (c);
-#define ASSIGN_SCALAR(a, re, im) (a) = (re);
+#define ASSIGN_SCALAR(a, real, imag) (a) = (real);
 
 #define SCALAR_NORMSQR(a) ((a) * (a))
 
