@@ -20,20 +20,20 @@
   * Eliminated output-copies input variable; if you want to visualize
     multiple unit cells, you should use mpb-data.
 
-  * Added new "nothing" material type that punches a hole through other
+  * Added new "nothing" material that punches a hole through other
     objects to the background.  (This is distinct from default-material
     when epsilon-input-file is used, or for compute-energy-in-objects.)
 
   * Fixed inability of MPB 0.13 to run under an old version (1.2) of Guile.
 
-  * Give error if k-point or dielectric tensor is incompatible with
+  * Now gives an error if k-point or dielectric tensor is incompatible with
     run-te/run-tm, or if the dielectric tensor is not positive-definite.
 
   * Default to vendor cc instead of gcc, so that C and Fortran compilers
-    are in sync.  (We default to the vendor f77 because it was
-    probably used to compile LAPACK/BLAS, and Fortran libraries are picky.)
+    are in sync.  (We default to the vendor f77 because it was probably
+    used to compile LAPACK/BLAS, and Fortran libraries are picky.)
 
-  * Manual now cites our recent publication on the methods behind MPB.
+  * The manual now cites our recent publication on the methods behind MPB.
 
   * Bug fix in compute-energy-in-object-list for non-orthogonal lattices.
 
