@@ -284,6 +284,10 @@ void init_params(int p, boolean reset_fields)
      destroy_geom_box_tree(geometry_tree);  /* destroy any tree from
 					       previous runs */
      geometry_tree =  create_geom_box_tree();
+     if (verbose) {
+	  printf("Geometry object bounding box tree:\n");
+	  display_geom_box_tree(5, geometry_tree);
+     }
      geom_box_tree_stats(geometry_tree, &tree_depth, &tree_nobjects);
      printf("Geometric object tree has depth %d and %d object nodes"
 	    " (vs. %d actual objects)\n",
