@@ -4,7 +4,7 @@
     Clarendon Photonics for funding this work.
 
   * Fixed bug in mpbi where artifacts could be introduced in 3d field
-    and dielectric function output files.  (This only affected the
+    and dielectric-function output files.  (This only affected the
     output files, not the frequency eigenvalues, etcetera.)  Thanks
     to Michelle Povinelli for the bug report.
 
