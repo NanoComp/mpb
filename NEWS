@@ -13,7 +13,7 @@ MPB 1.2 (11/15/00)
     to Mischa Megens for bugging me.
 
   * Now outputs D and H in consistent units (previously, D was multiplied
-    by a factor of i/frequency).  Thanks to Michelle Povinelli for worrying.
+    by a factor of -frequency).  Thanks to Michelle Povinelli for worrying.
 
   * epsilon.h5 file now includes extra datasets for all components of the
     effective dielectric tensor.  (This feature is not yet supported if
