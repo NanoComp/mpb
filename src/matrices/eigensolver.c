@@ -41,6 +41,15 @@ extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
 
+/* Evalutate op, and set t to the elapsed time (in seconds). */
+#define TIME_OP(t, op) { \
+     mpiglue_clock_t xxx_time_op_start_time = MPIGLUE_CLOCK; \
+     { \
+	  op; \
+     } \
+     (t) = MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, xxx_time_op_start_time); \
+}
+
 /**************************************************************************/
 
 #define EIGENSOLVER_MAX_ITERATIONS 10000
@@ -51,6 +60,32 @@ extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
    Is there a better basis?  Should this change with the problem
    size?) */
 #define CG_RESET_ITERS 70
+
+/**************************************************************************/
+
+/* estimated times/iteration for different iteration schemes, based
+   on the measure times for various operations and the operation counts: */
+
+#define EXACT_LINMIN_TIME(t_AZ, t_KZ, t_ZtW, t_ZS, t_ZtZ, t_linmin) \
+     ((t_AZ)*2 + (t_KZ) + (t_ZtW)*4 + (t_ZS)*2 + (t_ZtZ)*2 + (t_linmin))
+
+#define APPROX_LINMIN_TIME(t_AZ, t_KZ, t_ZtW, t_ZS, t_ZtZ) \
+     ((t_AZ)*2 + (t_KZ) + (t_ZtW)*2 + (t_ZS)*2 + (t_ZtZ)*2)
+
+/* Guess for the convergence slowdown factor due to the approximate
+   line minimization.  It is probably best to be conservative, as the
+   exact line minimization is more reliable and we only want to
+   abandon it if there is a big speed gain. */
+#define APPROX_LINMIN_SLOWDOWN_GUESS 2.0
+
+/* We also don't want to use the approximate line minimization if
+   the exact line minimization makes a big difference in the value
+   of the trace that's achieved (i.e. if one step of Newton's method
+   on the trace derivative does not do a good job).  The following
+   is the maximum improvement by the exact line minimization (over
+   one step of Newton) at which we'll allow the use of approximate line
+   minimization. */
+#define APPROX_LINMIN_IMPROVEMENT_THRESHOLD 0.05
 
 /**************************************************************************/
 
@@ -253,6 +288,8 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      real theta, prev_theta = 0.5;
      int i, iteration = 0;
      mpiglue_clock_t prev_feedback_time;
+     double time_AZ, time_KZ, time_ZtZ, time_ZtW, time_ZS, time_linmin;
+     real linmin_improvement;
      sqmatrix YtAYU, DtAD, symYtAD, YtY, U, DtD, symYtD, S1, S2, S3;
      trace_func_data tfd;
 
@@ -313,7 +350,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      do {
 	  real y_norm, d_norm;
 
-	  evectmatrix_XtX(YtY, Y);
+	  TIME_OP(time_ZtZ, evectmatrix_XtX(YtY, Y));
 
 	  y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtY)) / Y.p);
 	  blasglue_scal(Y.p * Y.n, 1/y_norm, Y.data, 1);
@@ -323,10 +360,12 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  sqmatrix_invert(U);
 
-	  A(Y, X, Adata, 1, G); /* X = AY; G is scratch */
-	  evectmatrix_XeYS(G, X, U, 1); /* G = AYU; note that U is Hermitian */
-	  evectmatrix_XtY(YtAYU, Y, G);
+	  TIME_OP(time_AZ, A(Y, X, Adata, 1, G)); /* X = AY; G is scratch */
 
+	  /* G = AYU; note that U is Hermitian: */
+	  TIME_OP(time_ZS, evectmatrix_XeYS(G, X, U, 1));
+
+	  TIME_OP(time_ZtW, evectmatrix_XtY(YtAYU, Y, G));
 	  E = SCALAR_RE(sqmatrix_trace(YtAYU));
 	  CHECK(!BADNUM(E), "crazy number detected in trace!!\n");
 
@@ -349,10 +388,11 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  evectmatrix_XpaYS(G, -1.0, Y, S1);
 
 	  /* set X = precondition(G): */
-	  if (K != NULL)
-	       K(G, X, Kdata, 
-		 Y, NULL /* no eigenvals; not diagonalized */, 
-		 YtY);  
+	  if (K != NULL) {
+	       TIME_OP(time_KZ, K(G, X, Kdata, Y, NULL, YtY));
+	       /* Note: we passed NULL for eigenvals since we haven't
+                  diagonalized YAY (nor are the Y's orthonormal). */
+	  }
 	  else
                evectmatrix_copy(X, G);  /* preconditioner is identity */
 	  
@@ -404,12 +444,63 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	  /* Minimize the trace along Y + lamba*D: */
 
+	  if (!use_linmin) {
+	       real dE, E2, d2E, t;
+
+	       /* Here, we do an approximate line minimization along D
+		  by evaluating dE (the derivative) at the current point,
+		  and the trace E2 at a second point, and then approximating
+		  the second derivative d2E by finite differences.  Then,
+		  we use one step of Newton's method on the derivative.
+	          This has the advantage of requiring two fewer O(np^2)
+	          matrix multiplications compared to the exact linmin. */
+
+	       d_norm = sqrt(SCALAR_RE(evectmatrix_traceXtY(D,D)) / Y.p);
+
+	       /* dE = 2 * tr Gt D.  (Use prev_G instead of G so that
+		  it works even when we are using Polak-Ribiere.) */
+	       dE = 2.0 * SCALAR_RE(evectmatrix_traceXtY(prev_G, D)) / d_norm;
+
+	       /* shift Y by prev_theta along D, in the downhill direction: */
+	       t = dE < 0 ? -fabs(prev_theta) : fabs(prev_theta);
+	       evectmatrix_aXpbY(1.0, Y, t / d_norm, D);
+
+	       evectmatrix_XtX(U, Y);
+	       sqmatrix_invert(U);  /* U = 1 / (Yt Y) */
+	       A(Y, G, Adata, 1, X); /* G = AY; X is scratch */
+	       evectmatrix_XtY(S1, Y, G);  /* S1 = Yt A Y */
+	       
+	       E2 = SCALAR_RE(sqmatrix_traceAtB(S1, U));
+
+	       /* Get finite-difference approximation for the 2nd derivative
+		  of the trace.  Equivalently, fit to a quadratic of the
+		  form:  E(theta) = E + dE theta + 1/2 d2E theta^2 */
+	       d2E = (E2 - E - dE * t) / (0.5 * t * t);
+
+	       theta = -dE/d2E;
+
+	       /* If the 2nd derivative is negative, or a big shift
+		  in the trace is predicted (compared to the previous
+		  iteration), then this approximate line minimization is
+		  probably not very good; switch back to the exact
+		  line minimization.  Hopefully, we won't have to
+		  abort like this very often, as it wastes operations. */
+	       if (d2E < 0 || -0.5*dE*theta > 20.0 * fabs(E-prev_E)) {
+		    if (flags & EIGS_VERBOSE)
+			 printf("    switching back to exact "
+				"line minimization\n");
+		    printf("dE = %g, dE2 = %g, theta = %g\n", dE, d2E, theta);
+		    use_linmin = 1;
+		    evectmatrix_aXpbY(1.0, Y, -t / d_norm, D);
+	       }
+	       else {
+		    /* Shift Y by theta, hopefully minimizing the trace: */
+		    evectmatrix_aXpbY(1.0, Y, (theta - t) / d_norm, D);
+	       }
+	  }
 	  if (use_linmin) {
 	       real dE, d2E;
 	       real d_norm2;
-	       real improvement;
-
-	  linmin:
 
 	       A(D, G, Adata, 0, X); /* G = A D; X is scratch */
 	       evectmatrix_XtX(DtD, D);
@@ -460,71 +551,13 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		  (tfd.YtAY == S1). */
 	       sqmatrix_AeBC(S1, YtAYU, 0, YtY, 1);
 
-	       theta = linmin(&improvement,
-			      0, E, dE, dE > 0 ? -K_PI : K_PI, theta,
-			      tolerance, trace_func, &tfd);
-
-	       if (improvement > 0 && improvement < tolerance &&
-		   !(flags & EIGS_ALWAYS_EXACT_LINMIN)) {
-		    use_linmin = 0;
-		    if (flags & EIGS_VERBOSE)
-			 printf("    switching to approximate "
-				"line minimization\n");
-	       }
+	       TIME_OP(time_linmin,
+		       theta = linmin(&linmin_improvement,
+				      0, E, dE, dE > 0 ? -K_PI : K_PI, theta,
+				      tolerance, trace_func, &tfd));
 
 	       /* Shift Y to new location minimizing the trace along D: */
 	       evectmatrix_aXpbY(cos(theta), Y, sin(theta) / d_norm, D);
-	  }
-	  else { /* approximate line minimization */
-	       real dE, E2, d2E, t;
-
-	       /* Here, we do an approximate line minimization along D
-		  by evaluating dE (the derivative) at the current point,
-		  and the trace E2 at a second point, and then approximating
-		  the second derivative d2E by finite differences.  Then,
-		  we use one step of Newton's method on the derivative. */
-
-	       d_norm = sqrt(SCALAR_RE(evectmatrix_traceXtY(D,D)) / Y.p);
-
-	       /* dE = 2 * tr Gt D.  (Use prev_G instead of G so that
-		  it works even when we are using Polak-Ribiere.) */
-	       dE = 2.0 * SCALAR_RE(evectmatrix_traceXtY(prev_G, D)) / d_norm;
-
-	       /* shift Y by prev_theta along D, in the downhill direction: */
-	       t = dE < 0 ? -fabs(prev_theta) : fabs(prev_theta);
-	       evectmatrix_aXpbY(1.0, Y, t / d_norm, D);
-
-	       evectmatrix_XtX(U, Y);
-	       sqmatrix_invert(U);  /* U = 1 / (Yt Y) */
-	       A(Y, X, Adata, 1, G); /* X = AY; G is scratch */
-	       evectmatrix_XtY(S1, Y, X);  /* S1 = Yt A Y */
-	       
-	       E2 = SCALAR_RE(sqmatrix_traceAtB(S1, U));
-
-	       /* Get finite-difference approximation for the 2nd derivative
-		  of the trace.  Equivalently, fit to a quadratic of the
-		  form:  E(theta) = E + dE theta + 1/2 d2E theta^2 */
-	       d2E = (E2 - E - dE * t) / (0.5 * t * t);
-
-	       theta = -dE/d2E;
-
-	       /* If the 2nd derivative is negative, or a big shift
-		  in the trace is predicted (compared to the previous
-		  iteration), then this approximate line minimization is
-		  probably not very good; switch back to the exact
-		  line minimization.  Hopefully, we won't have to
-		  abort like this very often, as it wastes operations. */
-	       if (d2E < 0 || -0.5*dE*theta > 10.0 * fabs(E-prev_E)) {
-		    if (flags & EIGS_VERBOSE)
-			 printf("    switching back to exact "
-				"line minimization\n");
-		    use_linmin = 1;
-		    evectmatrix_aXpbY(1.0, Y, -t / d_norm, D);
-		    goto linmin;
-	       }
-
-	       /* Shift Y to new location, hopefully minimizing the trace: */
-               evectmatrix_aXpbY(1.0, Y, (theta - t) / d_norm, D);
 	  }
 
 	  if (constraint)
@@ -533,6 +566,32 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  prev_traceGtX = traceGtX;
           prev_theta = theta;
           prev_E = E;
+
+	  /* Finally, we use the times for the various operations to
+	     help us pick an algorithm for the next iteration: */
+	  {
+	       double t_exact, t_approx;
+	       t_exact = EXACT_LINMIN_TIME(time_AZ, time_KZ, time_ZtW,
+					   time_ZS, time_ZtZ, time_linmin);
+	       t_approx = APPROX_LINMIN_TIME(time_AZ, time_KZ, time_ZtW,
+					     time_ZS, time_ZtZ);
+	       if (!(flags & EIGS_ALWAYS_EXACT_LINMIN) &&
+		   linmin_improvement > 0 &&
+		   linmin_improvement <= APPROX_LINMIN_IMPROVEMENT_THRESHOLD &&
+		   t_exact > t_approx * APPROX_LINMIN_SLOWDOWN_GUESS) {
+		    if ((flags & EIGS_VERBOSE) && use_linmin)
+			 printf("    switching to approximate "
+				"line minimization (decrease time by %g%%)\n",
+				(t_exact - t_approx) * 100.0 / t_exact);
+		    use_linmin = 0;
+	       }
+	       else {
+		    if ((flags & EIGS_VERBOSE) && !use_linmin)
+			 printf("    switching back to exact "
+				"line minimization\n");
+		    use_linmin = 1;
+	       }
+	  }
      } while (++iteration < EIGENSOLVER_MAX_ITERATIONS);
 
      CHECK(iteration < EIGENSOLVER_MAX_ITERATIONS,
