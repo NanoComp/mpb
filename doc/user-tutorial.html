@@ -265,9 +265,8 @@ Gap from band 4 (0.715678780635625) to band 5 (0.743689685572616), 3.83877075400
 
 <p>This data is also stored in the variable <code>gap-list</code>,
 which is a list of <code>(<i>gap-percent gap-min gap-max</i>)</code>
-lists.  We will use this data later to write a script to maximize the
-first TM gap.  It is important to realize, however, that this band-gap
-data may include "false positives," from two possible sources:
+lists.  It is important to realize, however, that this band-gap data
+may include "false positives," from two possible sources:
 
 <ul>
 
@@ -450,9 +449,7 @@ radius, run the calculation, and return the size of the first gap:
 			 (center 0 0 0) (radius r) (height infinity)
 			 (material (make dielectric (epsilon 12))))))
   (run-tm)
-  (if (null? gap-list)
-      0.0  ; no gaps, return 0
-      (caar gap-list))) ; the first element of the first list in gap-list
+  (retrieve-gap 1)) ; return the gap from TM band 1 to TM band 2
 </pre>
 
 <p>We'll leave most of the other parameters the same as in the
@@ -494,7 +491,7 @@ After five iterations, the output is:
 
 <pre>
 radius at maximum: 0.176393202250021
-gap size at maximum: 48.6242646890146
+gap size at maximum: 48.6252831449909
 </pre>
 
 <p>The tolerance of 0.1 that we specified means that the true maximum

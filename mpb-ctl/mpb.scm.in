@@ -319,7 +319,7 @@
 ; minimum of the upper band.  (The gap is computed from the
 ; band-range-data of the previous run.)
 (define (retrieve-gap lower-band)
-  (if (> (+ lower-band 1) (length (band-range-data)))
+  (if (> (+ lower-band 1) (length band-range-data))
       (error "retrieve-gap called for higher band than was calculated")
       (let ((f1 (cadr (list-ref band-range-data (- lower-band 1))))
 	    (f2 (caar (list-ref band-range-data lower-band))))

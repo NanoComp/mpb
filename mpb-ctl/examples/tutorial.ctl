@@ -53,9 +53,7 @@
                          (center 0 0 0) (radius r) (height infinity)
                          (material (make dielectric (epsilon 12))))))
   (run-tm)
-  (if (null? gap-list)
-      0.0  ; no gaps, return 0
-      (caar gap-list))) ; the first element of the first list in gap-list
+  (retrieve-gap 1)) ; return the gap from TM band 1 to TM band 2
 
 (set! num-bands 2)
 (set! mesh-size 7) ; increase from default value of 3

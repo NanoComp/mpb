@@ -879,7 +879,21 @@ dielectric function that is output automatically by <code>run</code>.
 <p>This, of course, doesn't affect any band functions that you write
 "manually" using the <code>output-field</code> function below.
 
-<h3><a name="group-vel">Group velocity calculation</a></h3>
+<h3><a name="misc">Miscellaneous functions</a></h3>
+
+<dl>
+
+<p><dt><code>(retrieve-gap <i>lower-band</i>)</code>
+<dd>Return the frequency gap from the band
+#<code><i>lower-band</i></code> to the band
+#(<code><i>lower-band</i></code>+1), as a percentage of mid-gap
+frequency.  The "gap" may be negative if the maximum of the lower band
+is higher than the minimum of the upper band.  (The gap is computed
+from the <code>band-range-data</code> of the previous run.)
+
+</dl>
+
+<h4>Group velocities</h4>
 
 <p>Given a set of eigenstates at a given k-point, MPB can compute
 their group velocities (the derivative of frequency with respect to
@@ -889,16 +903,16 @@ highest-level to lowest-level.
 
 <dl>
 
-<dt><code>display-group-velocities</code>
+<p><dt><code>display-group-velocities</code>
 <dd>This is a band function, designed to be passed to
 <code>(run)</code>, which outputs all of the group velocity vectors
 (in the Cartesian basis, in units of <i>c</i>) at each k-point.
 
-<dt><code>(compute-group-velocities)</code>
+<p><dt><code>(compute-group-velocities)</code>
 <dd>Returns a list of group-velocity vectors (in the Cartesian basis,
 units of <i>c</i>) for the bands at the last-computed k-point.
 
-<dt><code>(compute-group-velocity-component <i>direction</i>)</code>
+<p><dt><code>(compute-group-velocity-component <i>direction</i>)</code>
 <dd>Returns a list of the group-velocity components (units of
 <i>c</i>) in the given <i>direction</i>, one for each band at the
 last-computed k-point.  <i>direction</i> is a vector in the
