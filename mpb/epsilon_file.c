@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "../src/config.h"
+#include "config.h"
 #include <check.h>
 #include <mpi_utils.h>
 #include <matrices.h>

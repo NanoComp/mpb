@@ -18,7 +18,7 @@
 #ifndef EIGENSOLVER_H
 #define EIGENSOLVER_H
 
-#include <matrices.h>
+#include "matrices.h"
 
 typedef void (*evectoperator) (evectmatrix Xin, evectmatrix Xout,
 			       void *data, int is_current_eigenvector,

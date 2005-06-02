@@ -1,9 +1,20 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT
+AC_INIT(mpb, 1.5, stevenj@alum.mit.edu)
 AC_CONFIG_SRCDIR([src/matrices/matrices.c])
-AC_CONFIG_HEADER(src/config.h)
+AC_CONFIG_HEADER([config.h])
 
-MPB_VERSION=1.4.2
+# Shared-library version number; indicates api compatibility, and is
+# not the same as the "public" version number.  (Don't worry about this
+# except for public releases.)
+SHARED_VERSION_INFO="0:0:0"
+
+AM_INIT_AUTOMAKE(1.6)
+AC_SUBST(SHARED_VERSION_INFO)
+AM_ENABLE_SHARED(no) dnl shared libs cause too many headaches to be default
+AC_PROG_LIBTOOL
+
+###########################################################################
+MPB_VERSION=$PACKAGE_VERSION
 AC_SUBST(MPB_VERSION)
 
 AC_MSG_CHECKING([for vendor f77 to be used instead of g77])
@@ -16,14 +27,6 @@ AC_MSG_CHECKING([for vendor cc to be used instead of gcc])
 AC_MSG_RESULT()
 AC_CHECK_PROGS(CC, cc xlc) # prefer vendor cc, to stay in sync with Fortran
 AC_PROG_CC
-
-# Checks for programs.
-AC_PROG_RANLIB
-AC_PROG_INSTALL
-AC_PROG_MAKE_SET
-
-# check how to transform the name of the installed program:
-AC_ARG_PROGRAM
 
 AC_ARG_ENABLE(single, [AC_HELP_STRING([--enable-single],[compile for single precision])], enable_single=$enableval, enable_single=no)
 if test "$enable_single" = "yes"; then
@@ -53,12 +56,6 @@ if test "$ok" = "no"; then
 	AC_DEFINE(CHECK_DISABLE,1,[Define to disable sanity checks in code])
 fi
 
-BUILD_MPB_DATA=mpb-data  # mpb-data program to build, if any
-AC_SUBST(BUILD_MPB_DATA)
-
-INSTALL_MPB_SPLIT=install-mpb-split  # mpb-split target to install, if any
-AC_SUBST(INSTALL_MPB_SPLIT)
-
 AC_ARG_WITH(inv-symmetry,[AC_HELP_STRING([--with-inv-symmetry],[take advantage of (and require) inv. sym.])], inv_sym=$withval, inv_sym=no)
 if test "$inv_sym" = "no"; then
         AC_DEFINE(SCALAR_COMPLEX,1,[Define to use complex fields and
@@ -67,7 +64,7 @@ if test "$inv_sym" = "no"; then
 else
 	SCALAR_TYPE=real
 	# Make installed program mpbi instead of mpb, but don't change mpb-data
-	program_transform_name='s,^mpb$$,mpbi,'";$program_transform_name"
+	MPB_SUFFIX="i"
 	echo "*********************** INVERSION SYM. ***********************"
 fi
 AC_SUBST(SCALAR_TYPE)
@@ -143,9 +140,6 @@ fi
 ##############################################################################
 # Checks for BLAS and LAPACK libraries:
 
-sinclude(acx_blas.m4)
-sinclude(acx_lapack.m4)
-
 ACX_BLAS([], [AC_MSG_ERROR([BLAS was not found!])])
 ACX_LAPACK([], [AC_MSG_ERROR([LAPACK was not found!])])
 
@@ -157,17 +151,12 @@ LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
 AC_ARG_WITH(mpi, [AC_HELP_STRING([--with-mpi],[enable MPI parallelization])], with_mpi=$withval, with_mpi=no)
 
 if test "x$with_mpi" = "xyes"; then
-	sinclude(acx_mpi.m4)
 	ACX_MPI([], [AC_MSG_ERROR(could not find mpi library for --with-mpi)])
         CC="$MPICC"
 	LIBS="$MPILIBS $LIBS"
 
-	# Make installed program mpb_mpi instead of mpb
-        if test x"$inv_sym" = xyes; then
-	        program_transform_name='s,^mpb$$,mpbi-mpi,'";$program_transform_name"
-	else
-	        program_transform_name='s,^mpb$$,mpb-mpi,'";$program_transform_name"
-	fi
+	# Make installed program mpb-mpi instead of mpb
+	MPB_SUFFIX="${MPB_SUFFIX}-mpi"
 
 	# Check for fftw_mpi library.
 	if test "$enable_single" = "yes"; then
@@ -197,11 +186,9 @@ if test "x$with_mpi" = "xyes"; then
 	fi
 
 	AC_DEFINE(HAVE_MPI,1,[Define if you have & link an MPI library.])
-
-	BUILD_MPB_DATA="" # don't build/install MPI-linked mpb-data
-	INSTALL_MPB_SPLIT="" # don't install mpb-split, since we don't know
-	                     # how to run mpb-mpi in general
 fi
+
+AM_CONDITIONAL(MPI, test "x$with_mpi" = "xyes")
 
 ##############################################################################
 # Check for HDF5 library
@@ -425,6 +412,43 @@ AC_TRY_COMPILE([#include <stdio.h>
 AC_MSG_RESULT($feenableexcept_decl_ok)
 
 ##############################################################################
+# The following function is used only for debugging.  Note that
+# we must test for it *after* setting the compiler flags (which
+# affect whether it is declared, as it is a GNU extension).
+# We need to #include <stdio.h> because that somehow affects whether
+# the function is declared with older gcc versions.  We need
+# to use AC_TRY_COMPILE because the test in AC_HAVE_DECL seems
+# to be optimized out.
 
-AC_CONFIG_FILES([Makefile tests/Makefile src/util/Makefile src/matrices/Makefile src/matrixio/Makefile src/maxwell/Makefile mpb-ctl/Makefile mpb-ctl/mpb.scm mpb-ctl/mpb-split utils/Makefile meb/Makefile meb/meb.scm meb/meb-split])
+AC_CHECK_FUNCS(feenableexcept) dnl GNU libc fp exception control function
+AC_MSG_CHECKING([whether feenableexcept declaration is usable])
+feenableexcept_decl_ok=yes
+AC_TRY_COMPILE([#include <stdio.h>
+#define _GNU_SOURCE 1
+#include <fenv.h>], [feenableexcept(0);],
+[AC_DEFINE([HAVE_DECL_FEENABLEEXCEPT],[1],[Define if fenv.h declares this.])],
+[feenableexcept_decl_ok=no])
+AC_MSG_RESULT($feenableexcept_decl_ok)
+
+##############################################################################
+AC_SUBST(MPB_SUFFIX)
+
+##############################################################################
+
+AC_CONFIG_FILES([
+	Makefile
+	tests/Makefile
+	src/Makefile
+	src/util/Makefile
+	src/matrices/Makefile
+	src/matrixio/Makefile
+	src/maxwell/Makefile
+	mpb/Makefile
+	mpb/mpb.scm
+	mpb/mpb-split-preinstall
+	utils/Makefile
+])
+#	meb/Makefile
+#	meb/meb.scm
+#	meb/meb-split-preinstall
 AC_OUTPUT

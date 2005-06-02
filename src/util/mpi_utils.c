@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "../config.h"
+#include "config.h"
 #include <check.h>
 #include <mpiglue.h>
 

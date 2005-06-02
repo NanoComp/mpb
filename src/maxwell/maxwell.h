@@ -18,35 +18,8 @@
 #ifndef MAXWELL_H
 #define MAXWELL_H
 
-#include <scalar.h>
-#include <matrices.h>
-
-#if defined(HAVE_LIBFFTW)
-#  include <fftw.h>
-#  include <rfftw.h>
-#  ifdef HAVE_MPI
-#    include <fftw_mpi.h>
-#    include <rfftw_mpi.h>
-#  endif
-#elif defined(HAVE_LIBDFFTW)
-#  include <dfftw.h>
-#  include <drfftw.h>
-#  ifdef HAVE_MPI
-#    include <dfftw_mpi.h>
-#    include <drfftw_mpi.h>
-#  endif
-#elif defined(HAVE_LIBSFFTW)
-#  include <sfftw.h>
-#  include <srfftw.h>
-#  ifdef HAVE_MPI
-#    include <sfftw_mpi.h>
-#    include <srfftw_mpi.h>
-#  endif
-#endif
-
-#if defined(HAVE_LIBFFTW) || defined(HAVE_LIBDFFTW) || defined(HAVE_LIBSFFTW)
-#  define HAVE_FFTW 1
-#endif
+#include "scalar.h"
+#include "matrices.h"
 
 /* This data structure is designed to hold k+G related data at a given
    point.  kmag is the length of the k+G vector.  The m and n vectors are
@@ -104,22 +77,7 @@ typedef struct {
      real current_k[3];  /* (in cartesian basis) */
      int parity;
 
-#ifdef HAVE_FFTW
-#  ifdef HAVE_MPI
-#    ifdef SCALAR_COMPLEX
-     fftwnd_mpi_plan plan, iplan;
-#    else
-     rfftwnd_mpi_plan plan, iplan;
-#    endif
-#  else
-#    ifdef SCALAR_COMPLEX
-     fftwnd_plan plan, iplan;
-#    else
-     rfftwnd_plan plan, iplan;
-#    endif
-#  endif
-#endif
-
+     void *plan, *iplan;
      scalar *fft_data;
      
      int zero_k;  /* non-zero if k is zero (handled specially) */

@@ -20,7 +20,7 @@
 #include <time.h>
 #include <math.h>
 
-#include "../src/config.h"
+#include "config.h"
 #include <check.h>
 #include <blasglue.h>
 #include <matrices.h>

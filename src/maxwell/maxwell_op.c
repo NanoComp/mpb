@@ -19,10 +19,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "../config.h"
+#include "imaxwell.h"
 #include <check.h>
-
-#include "maxwell.h"
 
 /**************************************************************************/
 
@@ -164,7 +162,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 
 #    ifndef HAVE_MPI
 
-     fftwnd(dir < 0 ? d->plan : d->iplan,
+     fftwnd((fftplan) (dir < 0 ? d->plan : d->iplan),
 	    howmany,
 	    (fftw_complex *) array, stride, dist,
 	    0, 0, 0);
@@ -173,8 +171,8 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 
      CHECK(stride == howmany && dist == 1,
 	   "weird strides and dists don't work with fftwnd_mpi");
-
-     fftwnd_mpi(dir < 0 ? d->plan : d->iplan,
+     
+     fftwnd_mpi((fftplan) (dir < 0 ? d->plan : d->iplan),
 		howmany,
 		(fftw_complex *) array, (fftw_complex *) NULL,
 		FFTW_TRANSPOSED_ORDER);
@@ -186,12 +184,12 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 #    ifndef HAVE_MPI
 
      if (dir > 0)
-	  rfftwnd_real_to_complex(d->iplan,
+	  rfftwnd_real_to_complex((fftplan) (d->iplan),
 				  howmany,
 				  (fftw_real *) array, stride, dist,
 				  0, 0, 0);
      else
-	  rfftwnd_complex_to_real(d->plan,
+	  rfftwnd_complex_to_real((fftplan) (d->plan),
 				  howmany,
 				  (fftw_complex *) array, stride, dist,
 				  0, 0, 0);
@@ -201,7 +199,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
      CHECK(stride == howmany && dist == 1,
 	   "weird strides and dists don't work with rfftwnd_mpi");
      
-     rfftwnd_mpi(dir < 0 ? d->plan : d->iplan,
+     rfftwnd_mpi((fftplan) (dir < 0 ? d->plan : d->iplan),
 		 howmany, array, (scalar *) NULL,
 		 FFTW_TRANSPOSED_ORDER);
 

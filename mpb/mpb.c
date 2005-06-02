@@ -34,7 +34,7 @@
 #include <guile/gh.h>
 
 /* Header files for my eigensolver routines: */
-#include "../src/config.h"
+#include "config.h"
 #include <mpiglue.h>
 #include <mpi_utils.h>
 #include <check.h>
@@ -57,6 +57,16 @@
 #include "matrix-smob.h"
 #include "field-smob.h"
 
+#if defined(DEBUG) && defined(HAVE_FEENABLEEXCEPT)
+#  ifndef _GNU_SOURCE
+#    define _GNU_SOURCE 1
+#  endif
+#  include <fenv.h>
+#  if !HAVE_DECL_FEENABLEEXCEPT
+int feenableexcept (int EXCEPTS);
+#  endif
+#endif
+
 /**************************************************************************/
 
 /* use Guile malloc function instead of plain malloc, to force use
@@ -74,6 +84,10 @@ void ctl_start_hook(int *argc, char ***argv)
 {
      my_malloc_hook = malloc_hook;
      MPI_Init(argc, argv);
+
+#if defined(DEBUG) && defined(HAVE_FEENABLEEXCEPT)
+     feenableexcept(FE_INVALID | FE_OVERFLOW); /* crash on NaN/overflow */
+#endif
 }
 
 void ctl_stop_hook(void)

@@ -20,12 +20,22 @@
 #include <time.h>
 #include <math.h>
 
-#include "../src/config.h"
+#include "config.h"
 #include <check.h>
 #include <blasglue.h>
 #include <matrices.h>
 #include <eigensolver.h>
 #include <maxwell.h>
+
+#if defined(DEBUG) && defined(HAVE_FEENABLEEXCEPT)
+#  ifndef _GNU_SOURCE
+#    define _GNU_SOURCE 1
+#  endif
+#  include <fenv.h>
+#  if !HAVE_DECL_FEENABLEEXCEPT
+int feenableexcept (int EXCEPTS);
+#  endif
+#endif
 
 #if defined(HAVE_GETOPT_H)
 #  include <getopt.h>
@@ -248,6 +258,11 @@ int main(int argc, char **argv)
      double max_err = 1e20;
 
      srand(time(NULL));
+
+#if defined(DEBUG) && defined(HAVE_FEENABLEEXCEPT)
+     feenableexcept(FE_INVALID | FE_OVERFLOW); /* crash on NaN/overflow */
+#endif
+
 
      ed.eps_high = EPS_HIGH;
      ed.eps_low = EPS_LOW;

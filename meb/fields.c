@@ -21,7 +21,7 @@
 #include <ctype.h>
 #include <stddef.h>
 
-#include "../src/config.h"
+#include "config.h"
 #include <mpiglue.h>
 #include <mpi_utils.h>
 #include <check.h>

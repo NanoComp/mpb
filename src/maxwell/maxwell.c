@@ -19,10 +19,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "../config.h"
-#include <check.h>
-
-#include "maxwell.h"
+#include "imaxwell.h"
+#include "check.h"
 
 /* This file is has too many #ifdef's...blech. */
 
@@ -202,19 +200,19 @@ void destroy_maxwell_data(maxwell_data *d)
 #ifdef HAVE_FFTW
 #  ifdef HAVE_MPI
 #    ifdef SCALAR_COMPLEX
-	  fftwnd_mpi_destroy_plan(d->plan);
-	  fftwnd_mpi_destroy_plan(d->iplan);
+	  fftwnd_mpi_destroy_plan((fftplan) (d->plan));
+	  fftwnd_mpi_destroy_plan((fftplan) (d->iplan));
 #    else /* not SCALAR_COMPLEX */
-	  rfftwnd_mpi_destroy_plan(d->plan);
-	  rfftwnd_mpi_destroy_plan(d->iplan);
+	  rfftwnd_mpi_destroy_plan((fftplan) (d->plan));
+	  rfftwnd_mpi_destroy_plan((fftplan) (d->iplan));
 #    endif /* not SCALAR_COMPLEX */
 #  else /* not HAVE_MPI */
 #    ifdef SCALAR_COMPLEX
-	  fftwnd_destroy_plan(d->plan);
-	  fftwnd_destroy_plan(d->iplan);
+	  fftwnd_destroy_plan((fftplan) (d->plan));
+	  fftwnd_destroy_plan((fftplan) (d->iplan));
 #    else /* not SCALAR_COMPLEX */
-	  rfftwnd_destroy_plan(d->plan);
-	  rfftwnd_destroy_plan(d->iplan);
+	  rfftwnd_destroy_plan((fftplan) (d->plan));
+	  rfftwnd_destroy_plan((fftplan) (d->iplan));
 #    endif /* not SCALAR_COMPLEX */
 #  endif /* not HAVE_MPI */
 #endif /* HAVE FFTW */

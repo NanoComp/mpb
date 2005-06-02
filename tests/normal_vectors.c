@@ -3,7 +3,7 @@
 #include <math.h>
 #include <time.h>
 
-#include "../src/config.h"
+#include "config.h"
 #include <check.h>
 
 #include <maxwell.h>

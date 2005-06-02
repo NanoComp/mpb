@@ -34,7 +34,7 @@
 #include <guile/gh.h>
 
 /* Header files for my eigensolver routines: */
-#include "../src/config.h"
+#include "config.h"
 #include <mpiglue.h>
 #include <mpi_utils.h>
 #include <check.h>

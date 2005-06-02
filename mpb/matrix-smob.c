@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../src/config.h"
+#include "config.h"
 
 #include <check.h>
 #include <blasglue.h>

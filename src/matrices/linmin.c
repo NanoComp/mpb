@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "../config.h"
+#include "config.h"
 #include <mpi_utils.h>
 #include <check.h>
 

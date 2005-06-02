@@ -71,7 +71,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "../config.h"
+#include "config.h"
 
 /* Definitions so that we don't need -lf2c or f2c.h: */
 

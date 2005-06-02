@@ -23,10 +23,10 @@
 
 #include <ctl.h>
 
-#include "../src/config.h"
+#include "config.h"
 
-#include <check.h>
-#include <matrixio.h>
+#include "check.h"
+#include "matrixio.h"
 
 int verbose = 0;
 
@@ -769,7 +769,7 @@ int main(int argc, char **argv)
                    usage(stdout);
                    return EXIT_SUCCESS;
               case 'V':
-                   printf("mpb-data " MPB_VERSION " by Steven G. Johnson.\n"
+                   printf("mpb-data " PACKAGE_VERSION " by Steven G. Johnson.\n"
 "Copyright (C) 1999, 2000, 2001, 2002, Massachusetts Institute of Technology.\n"
 "This is free software, and you are welcome to redistribute it under the\n"
 "terms of the GNU General Public License (GPL).  mpb-data comes with\n"

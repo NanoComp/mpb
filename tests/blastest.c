@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "../src/config.h"
+#include "config.h"
 #include <blasglue.h>
 #include <check.h>
 
