@@ -19,11 +19,21 @@ maxwell_test_LDADD = $(LIBMPB)
 normal_vectors_SOURCES = normal_vectors.c
 normal_vectors_LDADD = $(LIBMPB)
 
-check-local: blastest maxwell_test # malloctest eigs_test normal_vectors
-	rm -f blastest.out.test
-	./blastest | sed 's/\-0\.000\([ ,)]\)/ 0.000\1/g' | sed 's/\-0\.000$$/ 0.000/g' > blastest.out.test
-	diff $(srcdir)/blastest.@SCALAR_TYPE@.out blastest.out.test
-	./maxwell_test -1 -c 1e-9 -x 256 -E 1e-3
+blastest.out: blastest
+	./blastest | sed 's/\-0\.000\([ ,)]\)/ 0.000\1/g' | sed 's/\-0\.000$$/ 0.000/g' > $@
+	diff $(srcdir)/blastest.@SCALAR_TYPE@.out $@
+
+maxwell_test.out: maxwell_test
+	./maxwell_test -1 -c 1e-9 -x 256 -E 1e-3 > $@
+
+if !MPI
+MAXWELL_TEST_OUT=maxwell_test.out
+endif
+
+check-local: blastest.out $(MAXWELL_TEST_OUT)
 	@echo "**********************************************************"
 	@echo "                       PASSED tests."
 	@echo "**********************************************************"
+
+clean-local:
+	rm -f blastest.out maxwell_test.out
