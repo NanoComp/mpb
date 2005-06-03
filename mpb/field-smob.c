@@ -28,8 +28,10 @@
 
 #include "mpb.h"
 
+#ifndef HAVE_SCM_MAKE_SMOB_TYPE
 /* null mark function, for smobs containing no SCM objects */
 static SCM mark_null(SCM obj) { (void) obj; return SCM_BOOL_F; }
+#endif
 
 /*************************************************************************/
 
@@ -577,7 +579,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 			 arg_list = SCM_EOL;
 			 for (ifield = fields.num_items - 1; 
 			      ifield >= 0; --ifield) {
-			      SCM item;
+			      SCM item = SCM_UNDEFINED;
 			      switch (pf[ifield]->type) {
 				  case RSCALAR_FIELD_SMOB:
 				       item = gh_double2scm(

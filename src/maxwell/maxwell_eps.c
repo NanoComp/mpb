@@ -36,8 +36,8 @@
 #  define HEEV F77_FUNC(zheev,ZHEEV)
 #  define SYEV F77_FUNC(dsyev,DSYEV)
 #endif
-extern void HEEV(char *, char *, int *, scalar *, int *, real *,
-		 scalar *, int *, real *, int *);
+extern void HEEV(char *, char *, int *, scalar_complex *, int *, real *,
+		 scalar_complex *, int *, real *, int *);
 extern void SYEV(char *, char *, int *, real *, int *, real *,
 		 real *, int *, int *);
 
@@ -46,7 +46,8 @@ void maxwell_sym_matrix_eigs(real eigs[3], const symmetric_matrix *V)
 {
      int n = 3, nw = 9, info;
 #if defined(WITH_HERMITIAN_EPSILON)
-     scalar_complex Vm[3][3], W[9], W2[9];
+     scalar_complex Vm[3][3], W[9];
+     real W2[9];
      CASSIGN_SCALAR(Vm[0][0], V->m00, 0);
      CASSIGN_SCALAR(Vm[1][1], V->m11, 0);
      CASSIGN_SCALAR(Vm[2][2], V->m22, 0);
@@ -584,6 +585,8 @@ void set_maxwell_dielectric(maxwell_data *md,
 #else /* not SCALAR_COMPLEX */
 
 #  ifndef HAVE_MPI
+
+     (void) k; /* unused */
 
      n_other = md->other_dims;
      n_last = md->last_dim_size / 2;

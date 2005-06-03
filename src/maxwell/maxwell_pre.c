@@ -41,6 +41,10 @@ void maxwell_simple_precondition(evectmatrix X, void *data, real *eigenvals)
      int i, c, b;
      real *kpGn2 = d->k_plus_G_normsqr;
 
+#if !PRECOND_SUBTR_EIGS
+     (void) eigenvals; /* unused */
+#endif
+
      for (i = 0; i < X.localN; ++i) {
 	  for (c = 0; c < X.c; ++c) {
 	       for (b = 0; b < X.p; ++b) {
@@ -71,6 +75,7 @@ void maxwell_simple_precondition(evectmatrix X, void *data, real *eigenvals)
 void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout, void *data,
 			    evectmatrix Y, real *eigenvals, sqmatrix YtY)
 {
+     (void) Y; /* unused */
      evectmatrix_XeYS(Xout, Xin, YtY, 1);
      maxwell_simple_precondition(Xout, data, eigenvals);
 }
@@ -82,9 +87,16 @@ void maxwell_target_preconditioner(evectmatrix Xin, evectmatrix Xout,
 {
      maxwell_target_data *td = (maxwell_target_data *) data;
      maxwell_data *d = td->d;
+#if PRECOND_SUBTR_EIGS
      real omega_sqr = td->target_frequency * td->target_frequency;
+#endif
      int i, c, b;
      real *kpGn2 = d->k_plus_G_normsqr;
+
+     (void) Y; /* unused */
+#if !PRECOND_SUBTR_EIGS
+     (void) eigenvals; /* unused */
+#endif
 
      evectmatrix_XeYS(Xout, Xin, YtY, 1);
 
@@ -207,6 +219,9 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
      scalar_complex *cdata;
      real scale;
      int i, j, b;
+
+     (void) Y; /* unused */
+     (void) eigenvals; /* unused */
 
      CHECK(d, "null maxwell data pointer!");
      CHECK(Xin.c == 2, "fields don't have 2 components!");

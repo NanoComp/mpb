@@ -444,7 +444,7 @@ void compute_field_divergence(void)
      }
 
      /* convert back to Fourier space */
-     maxwell_compute_fft(-1, mdata, curfield, 3, 3, 1);
+     maxwell_compute_fft(-1, mdata, field, 3, 3, 1);
 
      /* compute (k+G) dot field */
      for (i = 0; i < mdata->other_dims; ++i)
@@ -465,7 +465,7 @@ void compute_field_divergence(void)
 	  }
 
      /* convert scalar field back to position space */
-     maxwell_compute_fft(+1, mdata, curfield, 1, 1, 1);
+     maxwell_compute_fft(+1, mdata, field, 1, 1, 1);
 
      /* multiply by i (from divergence) and normalization (from FFT)
         and 2*pi (from k+G) */

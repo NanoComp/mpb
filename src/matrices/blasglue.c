@@ -299,6 +299,7 @@ void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
 #ifdef SCALAR_COMPLEX
      F(heev,HEEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, rwork, &info);
 #else
+     (void) rwork; /* unused */
      F(syev,SYEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
 #endif
 

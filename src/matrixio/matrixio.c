@@ -79,7 +79,7 @@
    as an ordinary dataset.  Ugh. */
 
 static void write_attr(matrixio_id id, matrixio_id type_id,
-		       matrixio_id space_id, const char *name, void *val)
+		       matrixio_id space_id, const char *name, const void *val)
 {
 #if defined(HAVE_HDF5)
      hid_t attr_id;
@@ -169,7 +169,7 @@ void matrixio_write_string_attr(matrixio_id id, const char *name,
      type_id = H5Tcopy(H5T_C_S1);
      H5Tset_size(type_id, strlen(val) + 1);
      space_id = H5Screate(H5S_SCALAR);
-     write_attr(id, type_id, space_id, name, (void*) val);
+     write_attr(id, type_id, space_id, name, val);
      H5Sclose(space_id);
      H5Tclose(type_id);
 #endif
@@ -204,7 +204,7 @@ void matrixio_write_data_attr(matrixio_id id, const char *name,
 	  space_id = H5Screate(H5S_SCALAR);
      }
 
-     write_attr(id, type_id, space_id, name, (void*) val);
+     write_attr(id, type_id, space_id, name, val);
      H5Sclose(space_id);
 #endif
 }
@@ -233,7 +233,7 @@ char *matrixio_read_string_attr(matrixio_id id, const char *name)
 	  H5Tset_size(type_id, len);
 	  
 	  CHK_MALLOC(s, char, len);
-	  read_attr(id, attr_id, type_id, (void*) s);
+	  read_attr(id, attr_id, type_id, s);
      }
 
      H5Tclose(type_id);
@@ -280,7 +280,7 @@ real *matrixio_read_data_attr(matrixio_id id, const char *name,
 	       free(space_dims);
 	  }
 	  CHK_MALLOC(d, real, H5Sget_simple_extent_npoints(space_id));
-          read_attr(id, attr_id, mem_type_id, (void*) d);
+          read_attr(id, attr_id, mem_type_id, d);
      }
 
      H5Tclose(type_id);
@@ -676,7 +676,7 @@ void matrixio_write_real_data(matrixio_id data_id,
 
      if (do_write)
 	  H5Dwrite(data_id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
-		   (void*) data_copy);
+		   data_copy);
 
      if (free_data_copy)
 	  free(data_copy);
@@ -845,7 +845,7 @@ real *matrixio_read_real_data(matrixio_id id,
      /* Read the data, then free all the H5 identifiers. */
 
      CHECK(H5Dread(data_id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
-		   (void*) data) >= 0,
+		   data) >= 0,
 	   "error reading HDF5 dataset");
 
      if (mem_space_id != H5S_ALL)

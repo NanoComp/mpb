@@ -28,7 +28,9 @@
 /* Simple operations on sqmatrices.  Also, some not-so-simple operations,
    like inversion and eigenvalue decomposition. */
 
+#ifdef DEBUG
 static double max2(double a, double b) { return a > b ? a : b; }
+#endif
 
 void sqmatrix_assert_hermitian(sqmatrix A)
 {
@@ -50,6 +52,8 @@ void sqmatrix_assert_hermitian(sqmatrix A)
 	  }
      }
      CHECK(err < 1e-10, "sqmatrix_assert_hermitian failed");
+#else
+     (void) A; /* unused */
 #endif
 }
 

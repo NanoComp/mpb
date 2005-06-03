@@ -326,7 +326,7 @@ AC_CHECK_LIB(ctl, ctl_get_vector3, [], [AC_MSG_ERROR([Couldn't find the required
 AC_CHECK_HEADER(ctl.h, [], [AC_MSG_ERROR([Couldn't find the libctl header.])])
 
 # Check libctl version >= LIBCTL_MAJOR.LIBCTL_MINOR.LIBCTL_BUGFIX
-LIBCTL_MAJOR=2; LIBCTL_MINOR=1; LIBCTL_BUGFIX=1
+LIBCTL_MAJOR=3; LIBCTL_MINOR=0; LIBCTL_BUGFIX=0
 AC_MSG_CHECKING([whether libctl version is at least ${LIBCTL_MAJOR}.${LIBCTL_MINOR}.${LIBCTL_BUGFIX}])
 AC_EGREP_CPP(yes, [[
 #include <ctl.h>

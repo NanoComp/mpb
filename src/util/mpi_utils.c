@@ -77,6 +77,8 @@ void mpi_assert_equal(double x)
      mpi_allreduce(&x, &xmin, 1, double, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
      mpi_allreduce(&x, &xmax, 1, double, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
      CHECK(xmin == x && xmax == x, "mpi_assert_equal failure");
+#else
+     (void) x; /* unused */
 #endif
 }
 

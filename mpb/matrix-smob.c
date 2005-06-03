@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "config.h"
 
@@ -29,8 +30,10 @@
 
 #include "mpb.h"
 
+#ifndef HAVE_SCM_MAKE_SMOB_TYPE
 /* null mark function, for smobs containing no SCM objects */
 static SCM mark_null(SCM obj) { (void) obj; return SCM_BOOL_F; }
+#endif
 
 /*************************************************************************/
 
