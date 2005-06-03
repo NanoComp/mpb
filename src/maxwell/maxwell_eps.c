@@ -540,9 +540,9 @@ void set_maxwell_dielectric(maxwell_data *md,
      s1 = 1.0 / n1;
      s2 = 1.0 / n2;
      s3 = 1.0 / n3;
-     m1 = s1 / MAX2(1, mesh_size[0] - 1);
-     m2 = s2 / MAX2(1, mesh_size[1] - 1);
-     m3 = s3 / MAX2(1, mesh_size[2] - 1);
+     m1 = s1 / MAX2(1, mesh_size[0]);
+     m2 = s2 / MAX2(1, mesh_size[1]);
+     m3 = s3 / MAX2(1, mesh_size[2]);
 
      /* Here we have different loops over the coordinates, depending
 	upon whether we are using complex or real and serial or
