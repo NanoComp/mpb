@@ -75,10 +75,10 @@ main.c: $(LIBCTL_DIR)/base/main.c
 geom.c: $(LIBCTL_DIR)/utils/geom.c
 	cp -f $(LIBCTL_DIR)/utils/geom.c $@
 
-ctl-io.c: $(SPECIFICATION_FILE)
+ctl-io.c: $(SPECIFICATION_FILE) $(LIBCTL_DIR)/utils/geom.scm
 	$(GEN_CTL_IO) --code -o $@ $(srcdir)/$(SPECIFICATION_FILE) $(LIBCTL_DIR)
 
-ctl-io.h: $(SPECIFICATION_FILE)
+ctl-io.h: $(SPECIFICATION_FILE) $(LIBCTL_DIR)/utils/geom.scm
 	$(GEN_CTL_IO) --header -o $@ $(srcdir)/$(SPECIFICATION_FILE) $(LIBCTL_DIR)
 
 clean-local:
