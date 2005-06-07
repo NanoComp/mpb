@@ -256,7 +256,7 @@ void init_epsilon(void)
 	  epsilon_func_data d;
 	  get_epsilon_file_func(epsilon_input_file,
 				&d.eps_file_func, &d.eps_file_func_data);
-	  set_maxwell_dielectric(mdata, mesh, R, G, epsilon_func, &d);
+	  set_maxwell_dielectric(mdata, mesh, R, G, epsilon_func, 0, &d);
 	  destroy_epsilon_file_func_data(d.eps_file_func_data);
      }
 }

@@ -329,6 +329,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 			    const int mesh_size[3],
 			    real R[3][3], real G[3][3],
 			    maxwell_dielectric_function epsilon,
+			    maxwell_dielectric_mean_function mepsilon,
 			    void *epsilon_data)
 {
      real s1, s2, s3, m1, m2, m3;  /* grid/mesh steps */
@@ -340,6 +341,7 @@ void set_maxwell_dielectric(maxwell_data *md,
      int mesh_prod;
      real mesh_prod_inv;
      int size_moment_mesh = 0;
+     real meshR;
      int n1, n2, n3;
 #ifdef HAVE_MPI
      int local_n2, local_y_start, local_n3;
@@ -353,6 +355,9 @@ void set_maxwell_dielectric(maxwell_data *md,
      get_mesh(n1, n2, n3, mesh_size, R, G, 
 	      mesh_center, &mesh_prod, moment_mesh, moment_mesh_weights,
 	      &size_moment_mesh);
+     meshR = sqrt(moment_mesh[0][0] * moment_mesh[0][0] +
+		  moment_mesh[0][1] * moment_mesh[0][1] +
+		  moment_mesh[0][2] * moment_mesh[0][2]);
      mesh_prod_inv = 1.0 / mesh_prod;
 
 #ifdef DEBUG
@@ -468,7 +473,27 @@ void set_maxwell_dielectric(maxwell_data *md,
 	  real norm_len;
 	  real norm0, norm1, norm2;
 	  short means_different_p, diag_eps_p;
-	  
+
+	  {
+	       real r[3], normal[3];
+	       r[0] = i2 * s1;
+	       r[0] = j2 * s2;
+	       r[0] = k2 * s3;
+	       /* NOTE: mepsilon must not modify eps_mean or
+		  eps_inv_mean unless it returns true */
+	       if (mepsilon && mepsilon(&eps_mean, &eps_inv_mean, normal,
+					meshR, s1, s2, s3,
+					r, epsilon_data)) {
+		    norm0 = normal[0];
+		    norm1 = normal[1];
+		    norm2 = normal[2];
+		    means_different_p = 1;
+		    diag_eps_p = DIAG_SYMMETRIC_MATRIX(eps_mean);
+		    maxwell_sym_matrix_invert(&eps_mean_inv, &eps_mean);
+		    goto got_mean;
+	       }
+	  }
+
 	  for (mi = 0; mi < mesh_size[0]; ++mi)
 	       for (mj = 0; mj < mesh_size[1]; ++mj)
 		    for (mk = 0; mk < mesh_size[2]; ++mk) {
@@ -596,6 +621,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 	       norm1 = R[0][1]*moment0 + R[1][1]*moment1 + R[2][1]*moment2;
 	       norm2 = R[0][2]*moment0 + R[1][2]*moment1 + R[2][2]*moment2;
 	  
+	  got_mean:
 	       norm_len = sqrt(norm0*norm0 + norm1*norm1 + norm2*norm2);
 	  }
 	  

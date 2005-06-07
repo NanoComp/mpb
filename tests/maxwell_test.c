@@ -373,7 +373,7 @@ int main(int argc, char **argv)
 
      printf("Initializing dielectric...\n");
      /* set up dielectric function (a simple Bragg mirror) */
-     set_maxwell_dielectric(mdata, mesh, R, G, epsilon, &ed);
+     set_maxwell_dielectric(mdata, mesh, R, G, epsilon, 0, &ed);
 
      if (verbose && ny == 1 && nz == 1) {
 	  printf("dielectric function:\n");
