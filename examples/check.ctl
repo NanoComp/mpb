@@ -11,18 +11,23 @@
 ; keep track of some error statistics:
 (define min-err infinity)
 (define max-err 0)
+(define max-abs-err 0)
 (define sum-err 0)
+(define sum-abs-err 0)
 (define num-err 0)
 
 ; function to check if two results are sufficently close:
 (define-param check-tolerance 1e-4)
 (define (almost-equal? x y)
   (if (> (abs x) 1e-3)
-      (let ((err (/ (abs (- x y)) (* 0.5 (+ (abs x) (abs y))))))
+      (let ((err (/ (abs (- x y)) (* 0.5 (+ (abs x) (abs y)))))
+	    (abserr (abs (- x y))))
 	(set! min-err (min min-err err))
 	(set! max-err (max max-err err))
+	(set! max-abs-err (max max-abs-err abserr))
 	(set! num-err (+ num-err 1))
-	(set! sum-err (+ sum-err err))))
+	(set! sum-err (+ sum-err err))
+	(set! sum-abs-err (+ sum-abs-err abserr))))
   (or 
    (< (abs (- x y)) (* 0.5 check-tolerance (+ (abs x) (abs y))))
    (and (< (abs x) 1e-3) (< (abs (- x y)) 1e-3))))
@@ -234,4 +239,6 @@
 (display-eigensolver-stats)
 (print "Relative error ranged from " min-err " to " max-err
 	      ", with a mean of " (/ sum-err num-err) "\n")
+(print "Absolute error ranged to " max-abs-err
+	      ", with a mean of " (/ sum-abs-err num-err) "\n")
 (print "PASSED all tests.\n")
