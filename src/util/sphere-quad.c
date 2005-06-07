@@ -238,7 +238,7 @@ int main(void)
 
      printf("static const double sphere_quad[3][NQUAD][4] = {\n");
 
-     printf("    { {0,0,1,0.5}, {0,0,-1,0.5} },\n");
+     printf("    { {1,0,0,0.5}, {-1,0,0,0.5} },\n");
 
      for (i = 0; i < NQUAD2; ++i) {
        if (i == 0) { x2[i] = 1; y2[i] = 0; }
