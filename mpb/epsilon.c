@@ -30,6 +30,8 @@
 
 #include "mpb.h"
 
+static int no_size_x = 0, no_size_y = 0, no_size_z = 0;
+
 #define USE_GEOMETRY_TREE 1
 static geom_box_tree geometry_tree = NULL; /* recursive tree of geometry 
 					      objects for fast searching */
@@ -41,6 +43,66 @@ typedef struct {
      void *eps_file_func_data;
 } epsilon_func_data;
 
+static void material_eps(material_type material,
+			 symmetric_matrix *eps, symmetric_matrix *eps_inv)
+{
+     switch (material.which_subclass) {
+	 case DIELECTRIC:
+	 {
+	      real eps_val = material.subclass.dielectric_data->epsilon;
+	      eps->m00 = eps->m11 = eps->m22 = eps_val;
+	      eps_inv->m00 = eps_inv->m11 = eps_inv->m22 = 1.0 / eps_val;
+#ifdef WITH_HERMITIAN_EPSILON
+	      CASSIGN_ZERO(eps->m01);
+	      CASSIGN_ZERO(eps->m02);
+	      CASSIGN_ZERO(eps->m12);
+	      CASSIGN_ZERO(eps_inv->m01);
+	      CASSIGN_ZERO(eps_inv->m02);
+	      CASSIGN_ZERO(eps_inv->m12);
+#else
+	      eps->m01 = eps->m02 = eps->m12 = 0.0;
+	      eps_inv->m01 = eps_inv->m02 = eps_inv->m12 = 0.0;
+#endif
+	      break;
+	 }
+	 case DIELECTRIC_ANISOTROPIC:
+	 {
+	      dielectric_anisotropic *d =
+		   material.subclass.dielectric_anisotropic_data;
+	      eps->m00 = d->epsilon_diag.x;
+	      eps->m11 = d->epsilon_diag.y;
+	      eps->m22 = d->epsilon_diag.z;
+#ifdef WITH_HERMITIAN_EPSILON
+	      CASSIGN_SCALAR(eps->m01, d->epsilon_offdiag.x.re,
+			     d->epsilon_offdiag.x.im +
+			     d->epsilon_offdiag_imag.x);
+	      CASSIGN_SCALAR(eps->m02, d->epsilon_offdiag.y.re,
+			     d->epsilon_offdiag.y.im +
+			     d->epsilon_offdiag_imag.y);
+	      CASSIGN_SCALAR(eps->m12, d->epsilon_offdiag.z.re,
+			     d->epsilon_offdiag.z.im +
+			     d->epsilon_offdiag_imag.z);
+#else
+	      eps->m01 = d->epsilon_offdiag.x.re;
+	      eps->m02 = d->epsilon_offdiag.y.re;
+	      eps->m12 = d->epsilon_offdiag.z.re;
+	      CHECK(vector3_norm(vector3_plus(
+		   cvector3_im(d->epsilon_offdiag),
+		   d->epsilon_offdiag_imag)) == 0.0,
+		    "imaginary epsilon-offdiag is only supported when MPB is configured --with-hermitian-eps");
+#endif
+	      maxwell_sym_matrix_invert(eps_inv, eps);
+	      break;
+	 }
+	 case MATERIAL_FUNCTION:
+	      CHECK(0, "invalid use of material-function");
+	      break;
+	 case MATERIAL_TYPE_SELF:
+	      CHECK(0, "invalid use of material-type");
+	      break;
+     }
+}
+
 /* Given a position r in the basis of the lattice vectors, return the
    corresponding dielectric tensor and its inverse.  Should be
    called from within init_params (or after init_params), so that the
@@ -50,7 +112,7 @@ typedef struct {
    the dielectric tensor array for eigenvector calculations. */
 
 static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
-			 real r[3], void *edata)
+			 const real r[3], void *edata)
 {
      epsilon_func_data *d = (epsilon_func_data *) edata;
      material_type material;
@@ -60,9 +122,9 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      /* p needs to be in the lattice *unit* vector basis, while r is
 	in the lattice vector basis.  Also, shift origin to the center
         of the grid. */
-     p.x = (r[0] - 0.5) * geometry_lattice.size.x;
-     p.y = dimensions <= 1 ? 0 : (r[1] - 0.5) * geometry_lattice.size.y;
-     p.z = dimensions <= 2 ? 0 : (r[2] - 0.5) * geometry_lattice.size.z;
+     p.x = no_size_x ? 0 : (r[0] - 0.5) * geometry_lattice.size.x;
+     p.y = no_size_y ? 0 : (r[1] - 0.5) * geometry_lattice.size.y;
+     p.z = no_size_z ? 0 : (r[2] - 0.5) * geometry_lattice.size.z;
 
      /* call search routine from libctl/utils/libgeom/geom.c: */
 #if USE_GEOMETRY_TREE
@@ -110,64 +172,198 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 	       destroy_material = 1;
 	  }
 	       
-	  switch (material.which_subclass) {
-	      case DIELECTRIC:
-	      {
-		   real eps_val = material.subclass.dielectric_data->epsilon;
-		   eps->m00 = eps->m11 = eps->m22 = eps_val;
-		   eps_inv->m00 = eps_inv->m11 = eps_inv->m22 = 1.0 / eps_val;
-#ifdef WITH_HERMITIAN_EPSILON
-		   CASSIGN_ZERO(eps->m01);
-		   CASSIGN_ZERO(eps->m02);
-		   CASSIGN_ZERO(eps->m12);
-		   CASSIGN_ZERO(eps_inv->m01);
-		   CASSIGN_ZERO(eps_inv->m02);
-		   CASSIGN_ZERO(eps_inv->m12);
-#else
-		   eps->m01 = eps->m02 = eps->m12 = 0.0;
-		   eps_inv->m01 = eps_inv->m02 = eps_inv->m12 = 0.0;
-#endif
-		   break;
-	      }
-	      case DIELECTRIC_ANISOTROPIC:
-	      {
-		   dielectric_anisotropic *d =
-			material.subclass.dielectric_anisotropic_data;
-		   eps->m00 = d->epsilon_diag.x;
-		   eps->m11 = d->epsilon_diag.y;
-		   eps->m22 = d->epsilon_diag.z;
-#ifdef WITH_HERMITIAN_EPSILON
-		   CASSIGN_SCALAR(eps->m01, d->epsilon_offdiag.x.re,
-				  d->epsilon_offdiag.x.im +
-				  d->epsilon_offdiag_imag.x);
-		   CASSIGN_SCALAR(eps->m02, d->epsilon_offdiag.y.re,
-				  d->epsilon_offdiag.y.im +
-				  d->epsilon_offdiag_imag.y);
-		   CASSIGN_SCALAR(eps->m12, d->epsilon_offdiag.z.re,
-				  d->epsilon_offdiag.z.im +
-				  d->epsilon_offdiag_imag.z);
-#else
-		   eps->m01 = d->epsilon_offdiag.x.re;
-		   eps->m02 = d->epsilon_offdiag.y.re;
-		   eps->m12 = d->epsilon_offdiag.z.re;
-		   CHECK(vector3_norm(vector3_plus(
-			     cvector3_im(d->epsilon_offdiag),
-			     d->epsilon_offdiag_imag)) == 0.0,
-			 "imaginary epsilon-offdiag is only supported when MPB is configured --with-hermitian-eps");
-#endif
-		   maxwell_sym_matrix_invert(eps_inv, eps);
-		   break;
-	      }
-	      case MATERIAL_FUNCTION:
-		   CHECK(0, "invalid use of material-function");
-		   break;
-	      case MATERIAL_TYPE_SELF:
-		   CHECK(0, "invalid use of material-type");
-		   break;
-	  }
+	  material_eps(material, eps, eps_inv);
 	  if (destroy_material)
 	       material_type_destroy(material);
      }
+}
+
+static int mean_epsilon_func(symmetric_matrix *meps, 
+			     symmetric_matrix *meps_inv,
+			     real n[3],
+			     real d1, real d2, real d3, real tol,
+			     const real r[3], void *edata)
+{
+#if USE_GEOMETRY_TREE
+     epsilon_func_data *d = (epsilon_func_data *) edata;
+     vector3 p;
+     const geometric_object *o1 = 0, *o2 = 0;
+     vector3 shiftby1, shiftby2, normal;
+     geom_box pixel;
+     double fill;
+     material_type mat1, mat2;
+     int id1 = -1, id2 = -1;
+     int i;
+     const int num_neighbors[3] = { 3, 5, 9 };
+     const int neighbors[3][9][3] = { 
+	  { {0,0,0}, {-1,0,0}, {1,0,0}, 
+	    {0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0} },
+	  { {0,0,0},
+	    {-1,-1,0}, {1,1,0}, {-1,1,0}, {1,-1,0},
+	    {0,0,0},{0,0,0},{0,0,0},{0,0,0} },
+	  { {0,0,0},
+	    {1,1,1},{1,1,-1},{1,-1,1},{1,-1,-1},
+	    {-1,1,1},{-1,1,-1},{-1,-1,1},{-1,-1,-1} }
+     };
+
+     /* p needs to be in the lattice *unit* vector basis, while r is
+        in the lattice vector basis.  Also, shift origin to the center
+        of the grid. */
+     p.x = no_size_x ? 0 : (r[0] - 0.5) * geometry_lattice.size.x;
+     p.y = no_size_y ? 0 : (r[1] - 0.5) * geometry_lattice.size.y;
+     p.z = no_size_z ? 0 : (r[2] - 0.5) * geometry_lattice.size.z;
+     d1 *= no_size_x ? 0 : geometry_lattice.size.x * 0.5;
+     d2 *= no_size_y ? 0 : geometry_lattice.size.y * 0.5;
+     d3 *= no_size_z ? 0 : geometry_lattice.size.z * 0.5;
+
+     for (i = 0; i < num_neighbors[dimensions - 1]; ++i) {
+	  const geometric_object *o;
+	  vector3 q, shiftby;
+	  int id;
+	  q.x = p.x + neighbors[dimensions - 1][i][0] * d1;
+	  q.y = p.y + neighbors[dimensions - 1][i][1] * d2;
+	  q.z = p.z + neighbors[dimensions - 1][i][2] * d3;
+	  o = object_of_point_in_tree(q, geometry_tree, &shiftby, &id);
+	  if (id == id1 || id == id2)
+	       continue;
+	  if (id1 == -1) {
+	       o1 = o;
+	       shiftby1 = shiftby;
+	       id1 = id;
+	  }
+	  else if (id2 == -1) {
+	       o2 = o;
+	       shiftby2 = shiftby;
+	       id2 = id;
+	  }
+	  else
+	       return 0; /* too many nearby objects for analysis */
+     }
+
+     CHECK(id1 > -1, "bug in object_of_point_in_tree?");
+     if (id2 == -1) { /* only one nearby object/material */
+	  id2 = id1;
+	  o2 = o1;
+	  shiftby2 = shiftby1;
+     }
+
+     if ((o1 && o1->material.which_subclass == MATERIAL_FUNCTION) ||
+	 (o2 && o2->material.which_subclass == MATERIAL_FUNCTION) ||
+	 ((default_material.which_subclass == MATERIAL_FUNCTION
+	   || d->eps_file_func)
+	  && (id1 == 0 || id2 == 0 ||
+	      o1->material.which_subclass == MATERIAL_TYPE_SELF ||
+	      o2->material.which_subclass == MATERIAL_TYPE_SELF)))
+	  return 0; /* arbitrary material functions are non-analyzable */
+	      
+     mat1 = (o1 && o1->material.which_subclass != MATERIAL_TYPE_SELF)
+	  ? o1->material : default_material;
+     material_eps(mat1, meps, meps_inv);
+
+     if (id1 == id2) { /* only one object, trivial average */
+	  n[0] = n[1] = n[2] = 0;
+	  return 1;
+     }
+
+     mat2 = (o2 && o2->material.which_subclass != MATERIAL_TYPE_SELF)
+	  ? o2->material : default_material;
+
+     if (id1 > id2)
+	  normal = normal_to_fixed_object(vector3_minus(p, shiftby1), *o1);
+     else
+	  normal = normal_to_fixed_object(vector3_minus(p, shiftby2), *o2);
+
+     n[0] = no_size_x ? 0 : normal.x / geometry_lattice.size.x;
+     n[1] = no_size_y ? 0 : normal.y / geometry_lattice.size.y;
+     n[2] = no_size_z ? 0 : normal.z / geometry_lattice.size.z;
+
+     pixel.low.x = p.x - d1;
+     pixel.high.x = p.x + d1;
+     if (dimensions > 1) {
+	  pixel.low.y = p.y - d1;
+	  pixel.high.y = p.y + d1;
+	  if (dimensions == 3) {
+	       pixel.low.z = p.z - d1;
+	       pixel.high.z = p.z + d1;
+	  }
+	  else
+	       pixel.low.z = pixel.high.z = p.z;
+     }
+     else
+	  pixel.low.y = pixel.high.y = pixel.low.z = pixel.high.z = p.z;
+
+     tol = tol > 0.01 ? 0.01 : tol;
+     if (id1 > id2) {
+	  pixel.low = vector3_minus(pixel.low, shiftby1);
+	  pixel.high = vector3_minus(pixel.high, shiftby1);
+	  fill = box_overlap_with_object(pixel, *o1, tol, 100/tol);
+     }
+     else {
+	  pixel.low = vector3_minus(pixel.low, shiftby2);
+	  pixel.high = vector3_minus(pixel.high, shiftby2);
+	  fill = 1 - box_overlap_with_object(pixel, *o2, tol, 100/tol);
+     }
+
+     {
+	  symmetric_matrix eps2, epsinv2;
+	  material_eps(mat2, &eps2, &epsinv2);
+
+	  meps->m00 = fill * (meps->m00 - eps2.m00) + eps2.m00;
+	  meps->m11 = fill * (meps->m11 - eps2.m11) + eps2.m11;
+	  meps->m22 = fill * (meps->m22 - eps2.m22) + eps2.m22;
+#ifdef WITH_HERMITIAN_EPSILON
+	  CASSIGN_SCALAR(meps->m01, 
+			 fill * (CSCALAR_RE(meps->m01) -
+				 CSCALAR_RE(eps2.m01)) + CSCALAR_RE(eps2.m01),
+			 fill * (CSCALAR_IM(meps->m01) -
+				 CSCALAR_IM(eps2.m01)) + CSCALAR_IM(eps2.m01));
+	  CASSIGN_SCALAR(meps->m02, 
+			 fill * (CSCALAR_RE(meps->m02) -
+				 CSCALAR_RE(eps2.m02)) + CSCALAR_RE(eps2.m02),
+			 fill * (CSCALAR_IM(meps->m02) -
+				 CSCALAR_IM(eps2.m02)) + CSCALAR_IM(eps2.m02));
+	  CASSIGN_SCALAR(meps->m12, 
+			 fill * (CSCALAR_RE(meps->m12) -
+				 CSCALAR_RE(eps2.m12)) + CSCALAR_RE(eps2.m12),
+			 fill * (CSCALAR_IM(meps->m12) -
+				 CSCALAR_IM(eps2.m12)) + CSCALAR_IM(eps2.m12));
+#else
+	  meps->m01 = fill * (meps->m01 - eps2.m01) + eps2.m01;
+	  meps->m02 = fill * (meps->m02 - eps2.m02) + eps2.m02;
+	  meps->m12 = fill * (meps->m12 - eps2.m12) + eps2.m12;
+#endif
+
+	  meps_inv->m00 = fill * (meps_inv->m00 - epsinv2.m00) + epsinv2.m00;
+	  meps_inv->m11 = fill * (meps_inv->m11 - epsinv2.m11) + epsinv2.m11;
+	  meps_inv->m22 = fill * (meps_inv->m22 - epsinv2.m22) + epsinv2.m22;
+#ifdef WITH_HERMITIAN_EPSILON
+	  CASSIGN_SCALAR(meps_inv->m01, 
+			 fill * (CSCALAR_RE(meps_inv->m01) -
+			   CSCALAR_RE(epsinv2.m01)) + CSCALAR_RE(epsinv2.m01),
+			 fill * (CSCALAR_IM(meps_inv->m01) -
+			   CSCALAR_IM(epsinv2.m01)) + CSCALAR_IM(epsinv2.m01));
+	  CASSIGN_SCALAR(meps_inv->m02, 
+			 fill * (CSCALAR_RE(meps_inv->m02) -
+			   CSCALAR_RE(epsinv2.m02)) + CSCALAR_RE(epsinv2.m02),
+			 fill * (CSCALAR_IM(meps_inv->m02) -
+			   CSCALAR_IM(epsinv2.m02)) + CSCALAR_IM(epsinv2.m02));
+	  CASSIGN_SCALAR(meps_inv->m12, 
+			 fill * (CSCALAR_RE(meps_inv->m12) -
+			   CSCALAR_RE(epsinv2.m12)) + CSCALAR_RE(epsinv2.m12),
+			 fill * (CSCALAR_IM(meps_inv->m12) -
+			   CSCALAR_IM(epsinv2.m12)) + CSCALAR_IM(epsinv2.m12));
+#else
+	  meps_inv->m01 = fill * (meps_inv->m01 - epsinv2.m01) + epsinv2.m01;
+	  meps_inv->m02 = fill * (meps_inv->m02 - epsinv2.m02) + epsinv2.m02;
+	  meps_inv->m12 = fill * (meps_inv->m12 - epsinv2.m12) + epsinv2.m12;
+#endif
+
+     }
+
+     return 1;
+#else
+     return 0;
+#endif
 }
 
 /**************************************************************************/
@@ -191,14 +387,15 @@ void init_epsilon(void)
      mesh[1] = (dimensions > 1) ? mesh_size : 1;
      mesh[2] = (dimensions > 2) ? mesh_size : 1;
 
-     Rm.c0 = vector3_scale(geometry_lattice.size.x <= no_size ? 
-			   1 : geometry_lattice.size.x, 
+     no_size_x = geometry_lattice.size.x <= no_size;
+     no_size_y = geometry_lattice.size.y <= no_size || dimensions < 2;
+     no_size_z = geometry_lattice.size.z <= no_size || dimensions < 3;
+
+     Rm.c0 = vector3_scale(no_size_x ? 1 : geometry_lattice.size.x, 
 			   geometry_lattice.basis.c0);
-     Rm.c1 = vector3_scale(geometry_lattice.size.y <= no_size ? 
-			   1 : geometry_lattice.size.y, 
+     Rm.c1 = vector3_scale(no_size_y ? 1 : geometry_lattice.size.y, 
 			   geometry_lattice.basis.c1);
-     Rm.c2 = vector3_scale(geometry_lattice.size.z <= no_size ? 
-			   1 : geometry_lattice.size.z, 
+     Rm.c2 = vector3_scale(no_size_z ? 1 : geometry_lattice.size.z, 
 			   geometry_lattice.basis.c2);
      mpi_one_printf("Lattice vectors:\n");
      mpi_one_printf("     (%g, %g, %g)\n", Rm.c0.x, Rm.c0.y, Rm.c0.z);  
@@ -256,7 +453,8 @@ void init_epsilon(void)
 	  epsilon_func_data d;
 	  get_epsilon_file_func(epsilon_input_file,
 				&d.eps_file_func, &d.eps_file_func_data);
-	  set_maxwell_dielectric(mdata, mesh, R, G, epsilon_func, 0, &d);
+	  set_maxwell_dielectric(mdata, mesh, R, G, 
+				 epsilon_func, mean_epsilon_func, &d);
 	  destroy_epsilon_file_func_data(d.eps_file_func_data);
      }
 }

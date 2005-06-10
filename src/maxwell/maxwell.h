@@ -104,13 +104,14 @@ extern void set_maxwell_data_parity(maxwell_data *d, int parity);
 
 typedef void (*maxwell_dielectric_function) (symmetric_matrix *eps,
 					     symmetric_matrix *eps_inv,
-					     real r[3], void *epsilon_data);
+					     const real r[3],
+					     void *epsilon_data);
 typedef int (*maxwell_dielectric_mean_function) (symmetric_matrix *meps,
 						 symmetric_matrix *meps_inv,
 						 real n[3],
-						 real R,
 						 real d1, real d2, real d3,
-						 real r[3],
+						 real tol,
+						 const real r[3],
 						 void *epsilon_data);
 
 extern void set_maxwell_dielectric(maxwell_data *md,
