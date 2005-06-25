@@ -1,4 +1,4 @@
-SUBDIRS = matrices matrixio maxwell util
+SUBDIRS = util matrices matrixio maxwell
 
 lib_LTLIBRARIES = libmpb@MPB_SUFFIX@.la
 
