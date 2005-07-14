@@ -19,7 +19,7 @@ SPECIFICATION_FILE = mpb.scm
 EXTRA_DIST = mpb.scm.in
 
 MY_SOURCES = epsilon.c epsilon_file.c field-smob.c fields.c	\
-matrix-smob.c mpb.c field-smob.h matrix-smob.h mpb.h my-smob.h
+material_grid.c matrix-smob.c mpb.c field-smob.h matrix-smob.h mpb.h my-smob.h
 
 MY_LIBS = $(top_builddir)/src/matrixio/libmatrixio.a $(top_builddir)/src/libmpb@MPB_SUFFIX@.la
 MY_CPPFLAGS = -I$(top_srcdir)/src/util -I$(top_srcdir)/src/matrices -I$(top_srcdir)/src/matrixio -I$(top_srcdir)/src/maxwell

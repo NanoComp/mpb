@@ -86,7 +86,7 @@ real linear_interpolate(real rx, real ry, real rz,
 }
 
 static void epsilon_file_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
-			      real r[3], void *edata)
+			      const real r[3], void *edata)
 {
      epsilon_file_data *d = (epsilon_file_data *) edata;
      real rx, ry, rz;

@@ -19,6 +19,8 @@
 #define MPB_H
 
 #include <maxwell.h>
+#include <ctl-io.h>
+#include <ctlgeom.h>
 
 /* this integer flag is defined by main.c from libctl, and is
    set when the user runs the program with --verbose */
@@ -78,8 +80,21 @@ extern cvector3 cscalar32cvector3(const scalar_complex *cs);
 extern void cvector32cscalar3(scalar_complex *cs, cvector3 v);
 
 /**************************************************************************/
+/* in epsilon.c */
 
+extern int no_size_x, no_size_y, no_size_z;
+extern geom_box_tree geometry_tree;
 extern void init_epsilon(void);
+
+/**************************************************************************/
+/* material_grid.c */
+
+extern real material_grid_val(vector3 p, material_grid *g);
+extern double matgrid_valprod(vector3 p, geom_box_tree tp, int oi,
+                              const material_grid *mg);
+
+/**************************************************************************/
+
 extern const char *parity_string(maxwell_data *d);
 
 #endif /* MPB_H */

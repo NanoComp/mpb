@@ -23,18 +23,13 @@
 #include <mpiglue.h>
 #include <mpi_utils.h>
 #include <check.h>
-#include <maxwell.h>
-
-#include <ctl-io.h>
-#include <ctlgeom.h>
 
 #include "mpb.h"
 
-static int no_size_x = 0, no_size_y = 0, no_size_z = 0;
+int no_size_x = 0, no_size_y = 0, no_size_z = 0;
 
-#define USE_GEOMETRY_TREE 1
-static geom_box_tree geometry_tree = NULL; /* recursive tree of geometry 
-					      objects for fast searching */
+geom_box_tree geometry_tree = NULL; /* recursive tree of geometry 
+				       objects for fast searching */
 
 /**************************************************************************/
 
@@ -42,6 +37,15 @@ typedef struct {
      maxwell_dielectric_function eps_file_func;
      void *eps_file_func_data;
 } epsilon_func_data;
+
+static material_type make_dielectric(double epsilon)
+{
+     material_type m;
+     m.which_subclass = DIELECTRIC;
+     CHK_MALLOC(m.subclass.dielectric_data, dielectric, 1);
+     m.subclass.dielectric_data->epsilon = epsilon;
+     return m;
+}
 
 static void material_eps(material_type material,
 			 symmetric_matrix *eps, symmetric_matrix *eps_inv)
@@ -94,6 +98,9 @@ static void material_eps(material_type material,
 	      maxwell_sym_matrix_invert(eps_inv, eps);
 	      break;
 	 }
+	 case MATERIAL_GRID:
+	      CHECK(0, "invalid use of material-grid");
+	      break;
 	 case MATERIAL_FUNCTION:
 	      CHECK(0, "invalid use of material-function");
 	      break;
@@ -115,6 +122,8 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 			 const real r[3], void *edata)
 {
      epsilon_func_data *d = (epsilon_func_data *) edata;
+     geom_box_tree tp;
+     int oi;
      material_type material;
      vector3 p;
      boolean inobject;
@@ -126,15 +135,20 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      p.y = no_size_y ? 0 : (r[1] - 0.5) * geometry_lattice.size.y;
      p.z = no_size_z ? 0 : (r[2] - 0.5) * geometry_lattice.size.z;
 
-     /* call search routine from libctl/utils/libgeom/geom.c: */
-#if USE_GEOMETRY_TREE
-     material = material_of_point_in_tree_inobject(p, geometry_tree, 
-						   &inobject);
-#else
-     material = material_of_point_inobject(p, &inobject);
-#endif
+     /* call search routine from libctl/utils/libgeom/geom.c: 
+        (we have to use the lower-level geom_tree_search to
+         support material-grid types, which have funny semantics) */
+     tp = geom_tree_search(p, geometry_tree, &oi);
+     if (tp) {
+	  inobject = 1;
+	  material = tp->objects[oi].o->material;
+     }
+     else {
+	  inobject = 0;
+	  material = default_material;
+     }
 
-#if defined(DEBUG_GEOMETRY_TREE) && USE_GEOMETRY_TREE
+#ifdef DEBUG_GEOMETRY_TREE
      {
 	  material_type m2 = material_of_point_inobject(p, &inobject);
 	  CHECK(m2.which_subclass == material.which_subclass &&
@@ -146,7 +160,7 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 
      if (material.which_subclass == MATERIAL_TYPE_SELF) {
 	  material = default_material;
-	  inobject = 0;  /* treat as a "nothing" object */
+	  tp = 0; inobject = 0;  /* treat as a "nothing" object */
      }
 
      /* if we aren't in any geometric object and we have an epsilon
@@ -171,11 +185,36 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 	       material = m;
 	       destroy_material = 1;
 	  }
+
+	  /* For a material grid, we interpolate the point (in "object"
+	     coordinates) into the grid.  More than that, however,
+	     we check if the same point intersects the *same* material grid
+	     from multiple objects -- if so, we take the product of
+	     the interpolated grid values. */
+	  if (material.which_subclass == MATERIAL_GRID) {
+	       material_type mat_eps;
+	       mat_eps = make_dielectric(
+		    matgrid_valprod(p, tp, oi, 
+				    material.subclass.material_grid_data)
+		    * (material.subclass.material_grid_data->epsilon_max -
+		       material.subclass.material_grid_data->epsilon_min) +
+		    material.subclass.material_grid_data->epsilon_min);
+	       if (destroy_material)
+		    material_type_destroy(material);
+	       material = mat_eps;
+	       destroy_material = 1;
+	  }
 	       
 	  material_eps(material, eps, eps_inv);
 	  if (destroy_material)
 	       material_type_destroy(material);
      }
+}
+
+static int variable_material(int which_subclass)
+{
+     return (which_subclass == MATERIAL_GRID ||
+	     which_subclass == MATERIAL_FUNCTION);
 }
 
 static int mean_epsilon_func(symmetric_matrix *meps, 
@@ -184,7 +223,6 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 			     real d1, real d2, real d3, real tol,
 			     const real r[3], void *edata)
 {
-#if USE_GEOMETRY_TREE
      epsilon_func_data *d = (epsilon_func_data *) edata;
      vector3 p;
      const geometric_object *o1 = 0, *o2 = 0;
@@ -247,9 +285,9 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 	  shiftby2 = shiftby1;
      }
 
-     if ((o1 && o1->material.which_subclass == MATERIAL_FUNCTION) ||
-	 (o2 && o2->material.which_subclass == MATERIAL_FUNCTION) ||
-	 ((default_material.which_subclass == MATERIAL_FUNCTION
+     if ((o1 && variable_material(o1->material.which_subclass)) ||
+	 (o2 && variable_material(o2->material.which_subclass)) ||
+	 ((variable_material(default_material.which_subclass)
 	   || d->eps_file_func)
 	  && (id1 == 0 || id2 == 0 ||
 	      o1->material.which_subclass == MATERIAL_TYPE_SELF ||
@@ -361,9 +399,6 @@ static int mean_epsilon_func(symmetric_matrix *meps,
      }
 
      return 1;
-#else
-     return 0;
-#endif
 }
 
 /**************************************************************************/
@@ -375,9 +410,7 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 void init_epsilon(void)
 {
      int mesh[3], i;
-#if USE_GEOMETRY_TREE
      int tree_depth, tree_nobjects;
-#endif
      number no_size; 
 
      no_size = 2.0 / ctl_get_number("infinity");
@@ -434,7 +467,6 @@ void init_epsilon(void)
 			   subclass.dielectric_data->epsilon);
 	  }
 
-#if USE_GEOMETRY_TREE
      destroy_geom_box_tree(geometry_tree);  /* destroy any tree from
 					       previous runs */
      geometry_tree =  create_geom_box_tree();
@@ -446,7 +478,6 @@ void init_epsilon(void)
      mpi_one_printf("Geometric object tree has depth %d and %d object nodes"
 	    " (vs. %d actual objects)\n",
 	    tree_depth, tree_nobjects, geometry.num_items);
-#endif
 
      mpi_one_printf("Initializing dielectric function...\n");
      {
