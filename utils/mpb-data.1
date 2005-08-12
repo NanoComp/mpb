@@ -84,6 +84,11 @@ As the \fB\-r\fR option, but also make the first axis of the output along
 the \fIx,y,z\fR direction (in Cartesian coordinates) instead of along
 the first lattice vector as for \fB\-r\fR.
 .TP
+\fB\-P\fR \fIphaseangle\fR
+For complex-valued datasets, this option causes the output values to
+be rotated by \fIphaseangle\fR degrees in the complex plane.  That is,
+they are multiplied by exp(2 pi i \fIphaseangle\fR / 360).
+.TP
 \fB\-n\fR \fIn\fR
 Output
 .I n

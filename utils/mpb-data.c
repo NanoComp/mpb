@@ -249,7 +249,8 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 void handle_dataset(matrixio_id in_file, matrixio_id out_file, 
 		    const char *name_re, const char *name_im,
 		    matrix3x3 Rout, matrix3x3 coord_map,
-		    real *kvector, double resolution, real multiply_size[3],
+		    real *kvector, double resolution, 
+		    scalar_complex scaleby, real multiply_size[3],
 		    int pick_nearest, int transpose)
 {
      real *d_in_re = NULL, *d_in_im = NULL, *d_out_re = NULL, *d_out_im = NULL;
@@ -327,6 +328,16 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      map_data(d_in_re, d_in_im, in_dims, d_out_re, d_out_im, out_dims,
 	      coord_map, kvector, pick_nearest, transpose);
 
+     if (d_out_im) { /* multiply * scaleby for complex data */
+	  for (i = 0; i < N; ++i) {
+	       scalar_complex d;
+	       CASSIGN_SCALAR(d, d_out_re[i], d_out_im[i]);
+	       CASSIGN_MULT(d, scaleby, d);
+	       d_out_re[i] = CSCALAR_RE(d);
+	       d_out_im[i] = CSCALAR_IM(d);
+	  }
+     }
+
      strcpy(out_name, name_re);
      if (out_file == in_file)
 	  strcat(out_name, "-new");
@@ -363,7 +374,9 @@ void handle_cvector_dataset(matrixio_id in_file, matrixio_id out_file,
 			    matrix3x3 coord_map,
 			    matrix3x3 cart_map,
 			    real *kvector, 
-			    double resolution, real multiply_size[3],
+			    double resolution, 
+			    scalar_complex scaleby, 
+			    real multiply_size[3],
 			    int pick_nearest, int transpose)
 {
      real *d_in[3][2] = { {0,0},{0,0},{0,0} };
@@ -463,6 +476,14 @@ void handle_cvector_dataset(matrixio_id in_file, matrixio_id out_file,
 		   d_out_re, d_out_im, out_dims,
 		   coord_map, kvector, pick_nearest, transpose);
 
+	  for (i = 0; i < N; ++i) { /* multiply * scaleby */
+	       scalar_complex d;
+	       CASSIGN_SCALAR(d, d_out_re[i], d_out_im[i]);
+	       CASSIGN_MULT(d, scaleby, d);
+	       d_out_re[i] = CSCALAR_RE(d);
+	       d_out_im[i] = CSCALAR_IM(d);
+	  }
+
 	  nam[0] = 'x' + dim;
 	  if (out_file != in_file)
 	       nam[3] = 0;
@@ -501,19 +522,19 @@ void handle_cvector_dataset(matrixio_id in_file, matrixio_id out_file,
 	  nami[0] = 'x' + dim;
 	  handle_dataset(in_file, out_file, namr, nami,
 			 Rout, coord_map, kvector, resolution,
-			 multiply_size, pick_nearest, transpose);
+			 scaleby, multiply_size, pick_nearest, transpose);
 
 	  namr[1] = 0;
 	  handle_dataset(in_file, out_file, namr, NULL,
 			 Rout, coord_map, kvector, resolution,
-			 multiply_size, pick_nearest, transpose);
+			 scaleby, multiply_size, pick_nearest, transpose);
      }
 }
 
 void handle_file(const char *fname, const char *out_fname,
 		 const char *data_name,
-		 int rectify,  int have_ve, vector3 ve,
-		 double resolution, real multiply_size[3],
+		 int rectify,  int have_ve, vector3 ve, double resolution, 
+		 scalar_complex scaleby, real multiply_size[3],
 		 int pick_nearest, int transpose)
 {
      matrixio_id in_file, out_file;
@@ -677,13 +698,13 @@ void handle_file(const char *fname, const char *out_fname,
 	  strcpy(name_re, dname);
 	  handle_dataset(in_file, out_file, name_re, NULL,
 			 Rout, coord_map, kvector, resolution,
-			 multiply_size, pick_nearest, transpose);
+			 scaleby, multiply_size, pick_nearest, transpose);
 
 	  sprintf(name_re, "%s.r", dname);
 	  sprintf(name_im, "%s.i", dname);
 	  handle_dataset(in_file, out_file, name_re, name_im,
 			 Rout, coord_map, kvector, resolution,
-			 multiply_size, pick_nearest, transpose);
+			 scaleby, multiply_size, pick_nearest, transpose);
 
 	  if (data_name)
 	       break;
@@ -692,7 +713,7 @@ void handle_file(const char *fname, const char *out_fname,
      /* handle complex vector fields x.{ri}, y.{ri}, z.{ri} */
      handle_cvector_dataset(in_file, out_file,
 			    Rout, coord_map, cart_map, kvector, resolution,
-			    multiply_size, pick_nearest, transpose);
+			    scaleby, multiply_size, pick_nearest, transpose);
      
      free(kvector);
 
@@ -715,6 +736,7 @@ void usage(FILE *f)
 	     "    -x <mx>\n"
 	     "    -y <my>\n"
 	     "    -z <mx> : output mx/my/mz periods in the x/y/z directions\n"
+	     " -P <angle> : multiply phase shift of <angle> degrees\n"
 	     "     -m <s> : same as -x <s> -y <s> -z <s>\n"
 	     "         -T : transpose first two dimensions (x & y) of data\n"
 	     "         -p : pixellized output (no grid interpolation)\n"
@@ -755,6 +777,7 @@ int main(int argc, char **argv)
 {
      char *out_fname = NULL, *data_name = NULL;
      int rectify = 0, have_ve = 0;
+     double phaseangle = 0;
      double resolution = 0;
      vector3 ve = {1,0,0};
      real multiply_size[3] = {1,1,1};
@@ -762,8 +785,9 @@ int main(int argc, char **argv)
      int ifile, c;
      extern char *optarg;
      extern int optind;
+     scalar_complex scaleby = {1,0}, phase;
 
-     while ((c = getopt(argc, argv, "hVvo:x:y:z:m:d:n:prTe:")) != -1)
+     while ((c = getopt(argc, argv, "hVvo:x:y:z:m:d:n:prTe:P:")) != -1)
           switch (c) {
               case 'h':
                    usage(stdout);
@@ -811,6 +835,9 @@ int main(int argc, char **argv)
 		   CHECK(resolution > 0,
 			 "invalid resolution for -n (must be positive)");
                    break;
+              case 'P':
+                   phaseangle = atof(optarg);
+		   break;
               case 'p':
                    pick_nearest = 1;
                    break;
@@ -840,6 +867,11 @@ int main(int argc, char **argv)
           usage(stderr);
           return EXIT_FAILURE;
      }
+
+     CASSIGN_SCALAR(phase, 
+		    cos(TWOPI * phaseangle / 360.0),
+		    sin(TWOPI * phaseangle / 360.0));
+     CASSIGN_MULT(scaleby, scaleby, phase);
      
      for (ifile = optind; ifile < argc; ++ifile) {
 	  char *dname, *h5_fname;
@@ -849,7 +881,7 @@ int main(int argc, char **argv)
 
 	  handle_file(h5_fname, out_fname, dname, 
 		      rectify, have_ve, ve, resolution, 
-		      multiply_size, pick_nearest, transpose);
+		      scaleby, multiply_size, pick_nearest, transpose);
 	  
 	  if (out_fname)
                free(out_fname);
