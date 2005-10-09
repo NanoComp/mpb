@@ -78,5 +78,11 @@ ctl-io.c: $(SPECIFICATION_FILE) $(LIBCTL_DIR)/utils/geom.scm
 ctl-io.h: $(SPECIFICATION_FILE) $(LIBCTL_DIR)/utils/geom.scm
 	$(GEN_CTL_IO) --header -o $@ $(srcdir)/$(SPECIFICATION_FILE) $(LIBCTL_DIR)
 
+install-data-local:
+	$(INSTALL) -c -m 644 $(SPECIFICATION_FILE) $(prefix)/share/libctl/specs/$(SPECIFICATION_FILE)
+
+uninstall-local:
+	rm -f $(prefix)/share/libctl/specs/$(SPECIFICATION_FILE)
+
 clean-local:
 	rm -f ctl-io.* main.* geom.*
