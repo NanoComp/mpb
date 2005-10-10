@@ -305,10 +305,18 @@
 (set! default-material air)
 
 ; ****************************************************************
+; ****************************************************************
 
 ; The remainder of this file consists of Scheme convenience functions.
 
 ; ****************************************************************
+; ****************************************************************
+
+; Interpolate a list of k points, with an interpolation density
+; proportional to the distance in k-space
+(define (kinterpolate-uniform n ks)
+  (map cartesian->reciprocal
+       (interpolate-uniform n (map reciprocal->cartesian ks))))
 
 ; Function to convert a k-point k into an equivalent point in the
 ; first Brillouin zone (not necessarily the irreducible Brillouin zone):
@@ -333,6 +341,7 @@
   (let ((k0 (vector3- k (vector-map inexact->exact k))))
     (if (< (n k0) (n k)) (try-all&repeat k0) (try-all&repeat k))))
 
+; ****************************************************************
 ; functions to manipulate the fields; these are mainly convenient
 ; wrappers for the external functions defined previously.
 
@@ -345,22 +354,30 @@
   (compute-field-divergence))
 
 (define-param filename-prefix "")
+(define (get-filename-prefix)
+  (if (and (not (null? include-files))
+	   (string-null? filename-prefix))
+      (string-append
+       (strip-suffix ".scm"
+	(strip-suffix ".ctl" (cdr (split-pathname (car include-files)))))
+       "-")
+      filename-prefix))
 
 (define (output-field)
-  (output-field-to-file -1 filename-prefix))
+  (output-field-to-file -1 (get-filename-prefix)))
 
 (define (output-field-x)
-  (output-field-to-file 0 filename-prefix))
+  (output-field-to-file 0 (get-filename-prefix)))
 
 (define (output-field-y)
-  (output-field-to-file 1 filename-prefix))
+  (output-field-to-file 1 (get-filename-prefix)))
 
 (define (output-field-z)
-  (output-field-to-file 2 filename-prefix))
+  (output-field-to-file 2 (get-filename-prefix)))
 
 (define (output-epsilon)
   (get-epsilon)
-  (output-field-to-file -1 filename-prefix))
+  (output-field-to-file -1 (get-filename-prefix)))
 
 (define (compute-energy-in-objects . objects)
   (compute-energy-in-object-list objects))
@@ -621,7 +638,7 @@
 
 (define (output-charge-density which-band)
   (get-charge-density which-band)
-  (output-field-to-file -1 filename-prefix))
+  (output-field-to-file -1 (get-filename-prefix)))
 
 (define (get-poynting which-band)
   (get-efield which-band)                      ; put E in cur-field
@@ -633,16 +650,16 @@
     (cvector-field-nonbloch! cur-field)))
 (define (output-poynting which-band)
   (get-poynting which-band)
-  (output-field-to-file -1 (string-append filename-prefix "flux.")))
+  (output-field-to-file -1 (string-append (get-filename-prefix) "flux.")))
 (define (output-poynting-x which-band)
   (get-poynting which-band)
-  (output-field-to-file 0 (string-append filename-prefix "flux.")))
+  (output-field-to-file 0 (string-append (get-filename-prefix) "flux.")))
 (define (output-poynting-y which-band)
   (get-poynting which-band)
-  (output-field-to-file 1 (string-append filename-prefix "flux.")))
+  (output-field-to-file 1 (string-append (get-filename-prefix) "flux.")))
 (define (output-poynting-z which-band)
   (get-poynting which-band)
-  (output-field-to-file 2 (string-append filename-prefix "flux.")))
+  (output-field-to-file 2 (string-append (get-filename-prefix) "flux.")))
 
 (define (get-tot-pwr which-band)
   (get-dfield which-band)
@@ -657,7 +674,7 @@
     (field-load tot-pwr)))
 (define (output-tot-pwr which-band)
   (get-tot-pwr which-band)
-  (output-field-to-file -1 (string-append filename-prefix "tot.")))
+  (output-field-to-file -1 (string-append (get-filename-prefix) "tot.")))
 
 ; We need a special function to evaluate band functions, since
 ; band functions can either be a function of the band number or
@@ -795,6 +812,23 @@
 	     (scale-eigenvector i phase)
 	     (conj phase))
 	   (arith-sequence first-band 1 (length phases)) phases))))
+
+; ****************************************************************
+
+; find the smallest integer >= N that has prime factors all <= 7
+(define (next-factor2357 N)
+  (define (factor2357? N)
+    (define (divby N p)
+      (if (zero? (remainder N p))
+          (divby (quotient N p) p)
+          N))
+    (= 1 (divby (divby (divby (divby N 2) 3) 5) 7)))
+  (if (factor2357? N) N (next-factor2357 (+ N 1))))
+
+; Round the grid size to the next highly-composite size, for FFT efficiency
+(define (optimize-grid-size!)
+  (set! grid-size false)
+  (set! grid-size (vector-map next-factor2357 (get-grid-size))))
 
 ; ****************************************************************
 
