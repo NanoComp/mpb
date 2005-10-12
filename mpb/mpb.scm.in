@@ -356,6 +356,7 @@
 (define-param filename-prefix "")
 (define (get-filename-prefix)
   (if (and (not (null? include-files))
+	   (not (eq? filename-prefix false))
 	   (string-null? filename-prefix))
       (string-append
        (strip-suffix ".scm"
