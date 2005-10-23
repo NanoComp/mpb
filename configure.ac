@@ -156,7 +156,7 @@ if test "x$with_mpi" = "xyes"; then
 	LIBS="$MPILIBS $LIBS"
 
 	# Make installed program mpb-mpi instead of mpb
-	MPB_SUFFIX="${MPB_SUFFIX}-mpi"
+	MPB_SUFFIX="${MPB_SUFFIX}_mpi"
 
 	# Check for fftw_mpi library.
 	if test "$enable_single" = "yes"; then
@@ -432,9 +432,7 @@ AC_MSG_RESULT($feenableexcept_decl_ok)
 
 ##############################################################################
 AC_SUBST(MPB_SUFFIX)
-MPB_SUFFIX_=`echo $MPB_SUFFIX | tr '-' _`
-AC_SUBST(MPB_SUFFIX_)
-
+program_transform_name="s,_,-,g;$program_transform_name"
 ##############################################################################
 
 AC_CONFIG_FILES([

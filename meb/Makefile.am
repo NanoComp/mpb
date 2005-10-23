@@ -24,7 +24,7 @@ liboperator_a_SOURCES = operator.f
 MY_SOURCES = elastic.c elastic.h elastic_constraints.c			\
 elastic_materials.c elastic_op.c fields.c materials.c meb.c meb.h
 
-MY_LIBS = $(top_builddir)/src/matrixio/libmatrixio.a $(top_builddir)/src/libmpb@MPB_SUFFIX_@.la liboperator.a
+MY_LIBS = $(top_builddir)/src/matrixio/libmatrixio.a $(top_builddir)/src/libmpb@MPB_SUFFIX@.la liboperator.a
 MY_CPPFLAGS = -I$(top_srcdir)/src/util -I$(top_srcdir)/src/matrices -I$(top_srcdir)/src/matrixio -I$(top_srcdir)/src/maxwell
 MY_DEFS = -DHAVE_CTL_HOOKS=1 -DHAVE_CTL_EXPORT_HOOK=1
 
@@ -40,7 +40,7 @@ if !MPI
 bin_SCRIPTS = meb@MPB_SUFFIX@-split
 endif
 
-meb@MPB_SUFFIX_@_split: meb-split-preinstall
+meb@MPB_SUFFIX@_split: meb-split-preinstall
 	sed "s%\./meb%"$(prefix)/bin/"meb@MPB_SUFFIX@%g" \
             meb-split-preinstall > $@
 	chmod u+x $@
@@ -62,12 +62,12 @@ CTL_DEFS = -DCTL_SCM='"'$(LIBCTL_DIR)/base/ctl.scm'"' \
           -DSPEC_SCM='"'$(prefix)/share/libctl/specs/$(SPECIFICATION_FILE)'"' \
     -DVERSION_STRING='"'$(VERSION_STRING)'"'
 
-meb@MPB_SUFFIX_@_SOURCES = $(MY_SOURCES)
-nodist_meb@MPB_SUFFIX_@_SOURCES = main.c geom.c ctl-io.h ctl-io.c
-BUILT_SOURCES = $(nodist_meb@MPB_SUFFIX_@_SOURCES)
-meb@MPB_SUFFIX_@_LDADD = $(MY_LIBS)
-meb@MPB_SUFFIX_@_LDFLAGS = $(MY_LDFLAGS)
-meb@MPB_SUFFIX_@_CPPFLAGS = $(MY_CPPFLAGS) $(MY_DEFS) $(CTL_DEFS)
+meb@MPB_SUFFIX@_SOURCES = $(MY_SOURCES)
+nodist_meb@MPB_SUFFIX@_SOURCES = main.c geom.c ctl-io.h ctl-io.c
+BUILT_SOURCES = $(nodist_meb@MPB_SUFFIX@_SOURCES)
+meb@MPB_SUFFIX@_LDADD = $(MY_LIBS)
+meb@MPB_SUFFIX@_LDFLAGS = $(MY_LDFLAGS)
+meb@MPB_SUFFIX@_CPPFLAGS = $(MY_CPPFLAGS) $(MY_DEFS) $(CTL_DEFS)
 
 main.c: $(LIBCTL_DIR)/base/main.c
 	cp -f $(LIBCTL_DIR)/base/main.c $@
