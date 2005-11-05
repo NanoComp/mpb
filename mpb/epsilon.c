@@ -138,7 +138,7 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      /* call search routine from libctl/utils/libgeom/geom.c: 
         (we have to use the lower-level geom_tree_search to
          support material-grid types, which have funny semantics) */
-     tp = geom_tree_search(p, geometry_tree, &oi);
+     tp = geom_tree_search(shift_to_unit_cell(p), geometry_tree, &oi);
      if (tp) {
 	  inobject = 1;
 	  material = tp->objects[oi].o->material;
@@ -256,12 +256,14 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 
      for (i = 0; i < num_neighbors[dimensions - 1]; ++i) {
 	  const geometric_object *o;
-	  vector3 q, shiftby;
+	  vector3 q, z, shiftby;
 	  int id;
 	  q.x = p.x + neighbors[dimensions - 1][i][0] * d1;
 	  q.y = p.y + neighbors[dimensions - 1][i][1] * d2;
 	  q.z = p.z + neighbors[dimensions - 1][i][2] * d3;
-	  o = object_of_point_in_tree(q, geometry_tree, &shiftby, &id);
+	  z = shift_to_unit_cell(q);
+	  o = object_of_point_in_tree(z, geometry_tree, &shiftby, &id);
+	  shiftby = vector3_plus(shiftby, vector3_minus(q, z));
 	  if (id == id1 || id == id2)
 	       continue;
 	  if (id1 == -1) {
