@@ -176,6 +176,20 @@ static int sym_matrix_positive_definite(symmetric_matrix *V)
      return (m00 > 0.0 && det2 > 0.0 && det3 > 0.0);
 }
 
+#define EQ(x1,x2) (fabs((x1) - (x2)) < tol)
+static int sym_matrix_eq(symmetric_matrix V1, symmetric_matrix V2, double tol)
+{
+     if (!EQ(V1.m00,V2.m00) || !EQ(V1.m11,V2.m11) || !EQ(V1.m22,V2.m22))
+	  return 0;
+#if defined(WITH_HERMITIAN_EPSILON)
+     return(EQ(V1.m01.re,V2.m01.re) && EQ(V1.m01.im,V2.m01.im) &&
+	    EQ(V1.m02.re,V2.m02.re) && EQ(V1.m02.im,V2.m02.im) &&
+	    EQ(V1.m12.re,V2.m12.re) && EQ(V1.m12.im,V2.m12.im));
+#else
+     return(EQ(V1.m01,V2.m01) && EQ(V1.m02,V2.m02) && EQ(V1.m12,V2.m12));
+#endif
+}
+
 /**************************************************************************/
 
 int check_maxwell_dielectric(maxwell_data *d,
@@ -489,6 +503,29 @@ void set_maxwell_dielectric(maxwell_data *md,
 		    means_different_p = 1;
 		    diag_eps_p = DIAG_SYMMETRIC_MATRIX(eps_mean);
 		    maxwell_sym_matrix_invert(&eps_mean_inv, &eps_mean);
+
+#if !defined(SCALAR_COMPLEX) && 0 /* check inversion symmetry */
+		    {
+			 symmetric_matrix eps_mean2, eps_inv_mean2;
+			 real normal2[3], r2[3], nc[3];
+			 r2[0] = n1 == 0 ? r[0] : 1.0 - r[0];
+			 r2[1] = n2 == 0 ? r[1] : 1.0 - r[1];
+			 r2[2] = n3 == 0 ? r[2] : 1.0 - r[2];
+			 CHECK(mepsilon(&eps_mean2, &eps_inv_mean2, normal2,
+					s1, s2, s3, mesh_prod_inv,
+					r2, epsilon_data),
+			       "mepsilon symmetry is broken");
+			 CHECK(sym_matrix_eq(eps_mean,eps_mean2,1e-10) &&
+			       sym_matrix_eq(eps_inv_mean,eps_inv_mean2,1e-10),
+			       "inversion symmetry is broken");
+			 nc[0] = normal[1]*normal2[2] - normal[2]*normal2[1];
+			 nc[1] = normal[2]*normal2[0] - normal[0]*normal2[2];
+			 nc[2] = normal[0]*normal2[1] - normal[1]*normal2[0];
+			 CHECK(sqrt(nc[0]*nc[0]+nc[1]*nc[1]+nc[2]*nc[2])<1e-6,
+			       "normal-vector symmetry is broken");
+		    }
+#endif
+
 		    goto got_mean;
 	       }
 	  }

@@ -85,7 +85,8 @@ void ctl_start_hook(int *argc, char ***argv)
      my_malloc_hook = malloc_hook;
      MPI_Init(argc, argv);
 
-#if defined(DEBUG) && defined(HAVE_FEENABLEEXCEPT)
+     /* disable: Guile garbage collector sometimes triggers an fp exception */
+#if defined(DEBUG) && defined(HAVE_FEENABLEEXCEPT) && 0
      feenableexcept(FE_INVALID | FE_OVERFLOW); /* crash on NaN/overflow */
 #endif
 }

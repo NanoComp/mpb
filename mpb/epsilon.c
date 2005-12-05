@@ -256,6 +256,7 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 
      for (i = 0; i < num_neighbors[dimensions - 1]; ++i) {
 	  const geometric_object *o;
+	  material_type mat;
 	  vector3 q, z, shiftby;
 	  int id;
 	  q.x = p.x + neighbors[dimensions - 1][i][0] * d1;
@@ -264,19 +265,29 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 	  z = shift_to_unit_cell(q);
 	  o = object_of_point_in_tree(z, geometry_tree, &shiftby, &id);
 	  shiftby = vector3_plus(shiftby, vector3_minus(q, z));
-	  if (id == id1 || id == id2)
+	  if ((id == id1 && vector3_equal(shiftby, shiftby1)) ||
+	      (id == id2 && vector3_equal(shiftby, shiftby2)))
 	       continue;
+	  mat = (o && o->material.which_subclass != MATERIAL_TYPE_SELF)
+	       ? o->material : default_material;
 	  if (id1 == -1) {
 	       o1 = o;
 	       shiftby1 = shiftby;
 	       id1 = id;
+	       mat1 = mat;
 	  }
-	  else if (id2 == -1) {
+	  else if (id2 == -1 || ((id >= id1 && id >= id2) &&
+				 (id1 == id2 
+				  || material_type_equal(&mat1,&mat2)))) {
 	       o2 = o;
 	       shiftby2 = shiftby;
 	       id2 = id;
+	       mat2 = mat;
 	  }
-	  else
+	  else if (!(id1 < id2 && 
+		     (id1 == id || material_type_equal(&mat1,&mat))) &&
+		   !(id2 < id1 &&
+		     (id2 == id || material_type_equal(&mat2,&mat))))
 	       return 0; /* too many nearby objects for analysis */
      }
 
@@ -284,6 +295,7 @@ static int mean_epsilon_func(symmetric_matrix *meps,
      if (id2 == -1) { /* only one nearby object/material */
 	  id2 = id1;
 	  o2 = o1;
+	  mat2 = mat1;
 	  shiftby2 = shiftby1;
      }
 
@@ -291,22 +303,18 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 	 (o2 && variable_material(o2->material.which_subclass)) ||
 	 ((variable_material(default_material.which_subclass)
 	   || d->eps_file_func)
-	  && (id1 == 0 || id2 == 0 ||
+	  && (!o1 || !o2 ||
 	      o1->material.which_subclass == MATERIAL_TYPE_SELF ||
 	      o2->material.which_subclass == MATERIAL_TYPE_SELF)))
 	  return 0; /* arbitrary material functions are non-analyzable */
 	      
-     mat1 = (o1 && o1->material.which_subclass != MATERIAL_TYPE_SELF)
-	  ? o1->material : default_material;
      material_eps(mat1, meps, meps_inv);
 
-     if (id1 == id2) { /* only one object, trivial average */
+     /* check for trivial case of only one object/material */
+     if (id1 == id2 || material_type_equal(&mat1, &mat2)) { 
 	  n[0] = n[1] = n[2] = 0;
 	  return 1;
      }
-
-     mat2 = (o2 && o2->material.which_subclass != MATERIAL_TYPE_SELF)
-	  ? o2->material : default_material;
 
      if (id1 > id2)
 	  normal = normal_to_fixed_object(vector3_minus(p, shiftby1), *o1);
@@ -319,18 +327,10 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 
      pixel.low.x = p.x - d1;
      pixel.high.x = p.x + d1;
-     if (dimensions > 1) {
-	  pixel.low.y = p.y - d1;
-	  pixel.high.y = p.y + d1;
-	  if (dimensions == 3) {
-	       pixel.low.z = p.z - d1;
-	       pixel.high.z = p.z + d1;
-	  }
-	  else
-	       pixel.low.z = pixel.high.z = p.z;
-     }
-     else
-	  pixel.low.y = pixel.high.y = pixel.low.z = pixel.high.z = p.z;
+     pixel.low.y = p.y - d2;
+     pixel.high.y = p.y + d2;
+     pixel.low.z = p.z - d3;
+     pixel.high.z = p.z + d3;
 
      tol = tol > 0.01 ? 0.01 : tol;
      if (id1 > id2) {
@@ -471,7 +471,21 @@ void init_epsilon(void)
 
      destroy_geom_box_tree(geometry_tree);  /* destroy any tree from
 					       previous runs */
-     geometry_tree =  create_geom_box_tree();
+     {
+	  geom_box b0;
+	  b0.low = vector3_plus(geometry_center,
+				vector3_scale(-0.5, geometry_lattice.size));
+	  b0.high = vector3_plus(geometry_center,
+				 vector3_scale(0.5, geometry_lattice.size));
+	  /* pad tree boundaries to allow for sub-pixel averaging */
+	  b0.low.x -= geometry_lattice.size.x / mdata->nx;
+	  b0.low.y -= geometry_lattice.size.y / mdata->ny;
+	  b0.low.z -= geometry_lattice.size.z / mdata->nz;
+	  b0.high.x += geometry_lattice.size.x / mdata->nx;
+	  b0.high.y += geometry_lattice.size.y / mdata->ny;
+	  b0.high.z += geometry_lattice.size.z / mdata->nz;
+	  geometry_tree = create_geom_box_tree0(geometry, b0);
+     }
      if (verbose && mpi_is_master()) {
 	  printf("Geometry object bounding box tree:\n");
 	  display_geom_box_tree(5, geometry_tree);
