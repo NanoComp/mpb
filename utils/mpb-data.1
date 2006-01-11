@@ -137,6 +137,12 @@ to specify a different dataset for each file.
 You can use the
 .I h5ls
 command (included with hdf5) to find the names of datasets within a file.
+
+Note that this option is generally unnecessary, since mpb-data can
+already find the relevant dataset(s) for files created by MPB.  Also,
+note that mpb-data treats the dataset specified by this option as a
+real scalar dataset and does not include the exp(ikx) factors when
+extending the dataset to multiple periods.
 .SH BUGS
 Send bug reports to S. G. Johnson, stevenj@alum.mit.edu.
 .SH AUTHORS
