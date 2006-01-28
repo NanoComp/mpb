@@ -187,8 +187,10 @@ void matrixio_write_data_attr(matrixio_id id, const char *name,
      if (!val || !name || !name[0] || rank < 0 || !dims)
 	  return; /* don't try to create empty attributes */
      
-#ifdef SCALAR_SINGLE_PREC
+#if defined(SCALAR_SINGLE_PREC)
      type_id = H5T_NATIVE_FLOAT;
+#elif defined(SCALAR_LONG_DOUBLE_PREC)
+     type_id = H5T_NATIVE_LDOUBLE;
 #else
      type_id = H5T_NATIVE_DOUBLE;
 #endif
@@ -256,8 +258,10 @@ real *matrixio_read_data_attr(matrixio_id id, const char *name,
      if (!name || !name[0] || max_rank < 0 || !dims)
 	  return NULL; /* don't try to create empty attributes */
      
-#ifdef SCALAR_SINGLE_PREC
+#if defined(SCALAR_SINGLE_PREC)
      mem_type_id = H5T_NATIVE_FLOAT;
+#elif defined(SCALAR_LONG_DOUBLE_PREC)
+     mem_type_id = H5T_NATIVE_LDOUBLE;
 #else
      mem_type_id = H5T_NATIVE_DOUBLE;
 #endif
@@ -512,8 +516,10 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
 
      free(dims_copy);
 
-#ifdef SCALAR_SINGLE_PREC
+#if defined(SCALAR_SINGLE_PREC)
      type_id = H5T_NATIVE_FLOAT;
+#elif defined(SCALAR_LONG_DOUBLE_PREC)
+     type_id = H5T_NATIVE_LDOUBLE;
 #else
      type_id = H5T_NATIVE_DOUBLE;
 #endif
@@ -595,8 +601,10 @@ void matrixio_write_real_data(matrixio_id data_id,
 
      free(maxdims);
 
-#ifdef SCALAR_SINGLE_PREC
+#if defined(SCALAR_SINGLE_PREC)
      type_id = H5T_NATIVE_FLOAT;
+#elif defined(SCALAR_LONG_DOUBLE_PREC)
+     type_id = H5T_NATIVE_LDOUBLE;
 #else
      type_id = H5T_NATIVE_DOUBLE;
 #endif
@@ -788,8 +796,10 @@ real *matrixio_read_real_data(matrixio_id id,
 	  for (i = 0; i < *rank; ++i)
 	       dims[i] = dims_copy[i];
 
-#ifdef SCALAR_SINGLE_PREC
+#if defined(SCALAR_SINGLE_PREC)
      type_id = H5T_NATIVE_FLOAT;
+#elif defined(SCALAR_LONG_DOUBLE_PREC)
+     type_id = H5T_NATIVE_LDOUBLE;
 #else
      type_id = H5T_NATIVE_DOUBLE;
 #endif
