@@ -129,16 +129,16 @@ void maxwell_zparity_constraint(evectmatrix X, void *data)
    of the mirror flip operator, and will be +1/-1 for even/odd eigenstates
    and something in between for everything else.  Assumes that the
    columns of X are normalized to 1. */
-real *maxwell_zparity(evectmatrix X, maxwell_data *d)
+double *maxwell_zparity(evectmatrix X, maxwell_data *d)
 {
      int i, j, b, nxy, nz;
-     real *zparity, *zp_scratch;
+     double *zparity, *zp_scratch;
 
      CHECK(d, "null maxwell data pointer!");
      CHECK(X.c == 2, "fields don't have 2 components!");
 
-     CHK_MALLOC(zparity, real, X.p);
-     CHK_MALLOC(zp_scratch, real, X.p);
+     CHK_MALLOC(zparity, double, X.p);
+     CHK_MALLOC(zp_scratch, double, X.p);
      for (b = 0; b < X.p; ++b)
 	  zp_scratch[b] = 0.0;
 
@@ -170,7 +170,7 @@ real *maxwell_zparity(evectmatrix X, maxwell_data *d)
 	  }
 
      mpi_allreduce(zp_scratch, zparity, X.p,
-		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
      free(zp_scratch);
      
      return zparity;
@@ -238,16 +238,16 @@ void maxwell_yparity_constraint(evectmatrix X, void *data)
    of the mirror flip operator, and will be +1/-1 for even/odd eigenstates
    and something in between for everything else.  Assumes that the
    columns of X are normalized to 1. */
-real *maxwell_yparity(evectmatrix X, maxwell_data *d)
+double *maxwell_yparity(evectmatrix X, maxwell_data *d)
 {
      int i, j, k, b, nx, ny, nz;
-     real *yparity, *yp_scratch;
+     double *yparity, *yp_scratch;
 
      CHECK(d, "null maxwell data pointer!");
      CHECK(X.c == 2, "fields don't have 2 components!");
 
-     CHK_MALLOC(yparity, real, X.p);
-     CHK_MALLOC(yp_scratch, real, X.p);
+     CHK_MALLOC(yparity, double, X.p);
+     CHK_MALLOC(yp_scratch, double, X.p);
      for (b = 0; b < X.p; ++b)
 	  yp_scratch[b] = 0.0;
 
@@ -279,7 +279,7 @@ real *maxwell_yparity(evectmatrix X, maxwell_data *d)
      }
 
      mpi_allreduce(yp_scratch, yparity, X.p,
-		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
      free(yp_scratch);
      
      return yparity;

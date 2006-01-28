@@ -174,8 +174,8 @@ extern int maxwell_zero_k_num_const_bands(evectmatrix X, maxwell_data *d);
 extern void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d);
 extern void maxwell_zero_k_constraint(evectmatrix X, void *data);
 
-extern real *maxwell_zparity(evectmatrix X, maxwell_data *d);
-extern real *maxwell_yparity(evectmatrix X, maxwell_data *d);
+extern double *maxwell_zparity(evectmatrix X, maxwell_data *d);
+extern double *maxwell_yparity(evectmatrix X, maxwell_data *d);
 
 typedef struct {
      maxwell_data *d;
