@@ -18,9 +18,12 @@
 #ifndef SCALAR_H
 #define SCALAR_H
 
-#ifdef SCALAR_SINGLE_PREC
+#if defined(SCALAR_SINGLE_PREC)
 typedef float real;
 #define SCALAR_MPI_TYPE MPI_FLOAT
+#elif defined(SCALAR_LONG_DOUBLE_PREC)
+typedef long double real;
+#define SCALAR_MPI_TYPE MPI_LONG_DOUBLE
 #else
 typedef double real;
 #define SCALAR_MPI_TYPE MPI_DOUBLE
