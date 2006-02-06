@@ -26,6 +26,8 @@
 
 #include "linmin.h"
 
+#define double linmin_real
+
 extern int dcsrch(double *stp, double *f, double *g,
 		   double *ftol, double *gtol, double *xtol,
 		   char *task,

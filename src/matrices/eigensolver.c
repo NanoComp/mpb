@@ -43,6 +43,15 @@ extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
 
+#if defined(SCALAR_LONG_DOUBLE_PREC)
+#  define fabs fabsl
+#  define cos cosl
+#  define sin sinl
+#  define sqrt sqrtl
+#  define atan atanl
+#  define atan2 atan2l
+#endif
+
 /* Evalutate op, and set t to the elapsed time (in seconds). */
 #define TIME_OP(t, op) { \
      mpiglue_clock_t xxx_time_op_start_time = MPIGLUE_CLOCK; \
@@ -98,13 +107,13 @@ typedef struct {
      sqmatrix YtAY, DtAD, symYtAD, YtY, DtD, symYtD, S1, S2, S3;
 } trace_func_data;
 
-static double trace_func(double theta, double *trace_deriv, void *data)
+static linmin_real trace_func(linmin_real theta, linmin_real *trace_deriv, void *data)
 {
-     double trace;
+     linmin_real trace;
      trace_func_data *d = (trace_func_data *) data;
 
      {
-	  double c = cos(theta), s = sin(theta);
+	  linmin_real c = cos(theta), s = sin(theta);
 	  sqmatrix_copy(d->S1, d->YtY);
 	  sqmatrix_aApbB(c*c, d->S1, s*s, d->DtD);
 	  sqmatrix_ApaB(d->S1, 2*s*c, d->symYtD);
@@ -118,7 +127,7 @@ static double trace_func(double theta, double *trace_deriv, void *data)
      }
 
      if (trace_deriv) {
-	  double c2 = cos(2*theta), s2 = sin(2*theta);
+	  linmin_real c2 = cos(2*theta), s2 = sin(2*theta);
 	  
 	  sqmatrix_copy(d->S3, d->YtAY);
 	  sqmatrix_ApaB(d->S3, -1.0, d->DtAD);
@@ -300,9 +309,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	      ((flags & EIGS_VERBOSE) ||
 	       MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
 	       > FEEDBACK_TIME)) {
-               printf("    iteration %4d: "
-                      "trace = %0.16g (%g%% change)\n", iteration, E,
-		      convergence_history[iteration % EIG_HISTORY_SIZE]);
+               mpi_one_printf("    iteration %4d: "
+                      "trace = %0.16g (%g%% change)\n", iteration, (double)E,
+	           (double)convergence_history[iteration % EIG_HISTORY_SIZE]);
 	       if (flags & EIGS_VERBOSE)
 		    debug_output_malloc_count();
 	       fflush(stdout); /* make sure output appears */
@@ -549,11 +558,11 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       else if (-0.5*dE*theta > 2.0 * fabs(E-prev_E)) {
 		    if (flags & EIGS_VERBOSE)
 			 mpi_one_printf("    large trace change predicted "
-					"(%g%%)\n", -0.5*dE*theta/E * 100.0);
+					"(%g%%)\n", (double) (-0.5*dE*theta/E * 100.0));
 	       }
 	       if (fabs(theta) >= K_PI) {
 		    if (flags & EIGS_VERBOSE)
-			 mpi_one_printf("    large theta (%g)\n", theta);
+			 mpi_one_printf("    large theta (%g)\n", (double)theta);
 		    theta = dE > 0 ? -fabs(prev_theta) : fabs(prev_theta);
 	       }
 
@@ -564,7 +573,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	       mpi_assert_equal(theta);
 	       {
-		    double new_E, new_dE;
+		    linmin_real new_E, new_dE;
 		    TIME_OP(time_linmin,
 			    theta = linmin(&new_E, &new_dE, theta, E, dE,
 					   0.1, MIN2(tolerance, 1e-6), 1e-14,
@@ -618,7 +627,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 		    if ((flags & EIGS_VERBOSE) && use_linmin)
 			 mpi_one_printf("    switching to approximate "
 				"line minimization (decrease time by %g%%)\n",
-				(t_exact - t_approx) * 100.0 / t_exact);
+			    (double) ((t_exact - t_approx) * 100.0 / t_exact));
 		    use_linmin = 0;
 	       }
 	       else if (!(flags & EIGS_FORCE_APPROX_LINMIN)) {

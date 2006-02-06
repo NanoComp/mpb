@@ -73,6 +73,9 @@
 
 #include "config.h"
 
+#include "linmin.h"
+#define double linmin_real
+
 /* Definitions so that we don't need -lf2c or f2c.h: */
 
 typedef double doublereal;
@@ -98,7 +101,12 @@ static int strncmp(const char *s1, const char *s2, size_t n)
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
-#define ABS(x) fabs(x)
+#if defined(SCALAR_LONG_DOUBLE_PREC)
+#  define ABS(x) fabsl(x)
+#  define sqrt sqrtl
+#else
+#  define ABS(x) fabs(x)
+#endif
 #define s_cmp(s1, s2, len1, len2) strncmp(s1, s2, MIN(len1, len2))
 #define s_copy(s1, s2, len1, len2) strcpy(s1, s2)
 #define TRUE_ 1

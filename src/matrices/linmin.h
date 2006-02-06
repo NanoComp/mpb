@@ -18,12 +18,18 @@
 #ifndef LINMIN_H
 #define LINMIN_H
 
-typedef double (*linmin_func) (double x, double *deriv, void *data);
+#if defined(SCALAR_LONG_DOUBLE_PREC)
+typedef long double linmin_real;
+#else
+typedef double linmin_real;
+#endif
 
-extern double linmin(double *converged_f, double *converged_df,
-		     double x_guess, double f_0, double df_0,
-		     double f_tol, double df_tol, double x_tol,
-		     double x_min, double x_max,
+typedef linmin_real (*linmin_func) (linmin_real x, linmin_real *deriv, void *data);
+
+extern linmin_real linmin(linmin_real *converged_f, linmin_real *converged_df,
+		     linmin_real x_guess, linmin_real f_0, linmin_real df_0,
+		     linmin_real f_tol, linmin_real df_tol, linmin_real x_tol,
+		     linmin_real x_min, linmin_real x_max,
 		     linmin_func f, void *f_data, int verbose);
 
 #endif /* LINMIN_H */
