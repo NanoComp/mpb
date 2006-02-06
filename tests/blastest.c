@@ -32,9 +32,9 @@ void printmat(scalar *A, int m, int n)
   for (i = 0; i < m; ++i) {
     for (j = 0; j < n; ++j) {
 #ifdef SCALAR_COMPLEX
-      printf("  (%6.3f,%6.3f)", A[i*n + j].re, A[i*n + j].im);
+      printf("  (%6.3f,%6.3f)", (double)A[i*n + j].re, (double)A[i*n + j].im);
 #else
-      printf("  %6.3f", A[i*n + j]);
+      printf("  %6.3f", (double)A[i*n + j]);
 #endif
     }
     printf("\n");
@@ -49,9 +49,9 @@ void printmat_matlab(scalar *A, int m, int n)
   for (i = 0; i < m; ++i) {
     for (j = 0; j < n; ++j) {
 #ifdef SCALAR_COMPLEX
-         printf("  %g+%gi", A[i*n + j].re, A[i*n + j].im);
+         printf("  %g+%gi", (double)A[i*n + j].re, (double)A[i*n + j].im);
 #else
-         printf("  %g", A[i*n + j]);
+         printf("  %g", (double)A[i*n + j]);
 #endif
     }
     printf(";\n");
@@ -140,7 +140,7 @@ int main(void)
   }
   printf("\n[v,d] = eig(D);\n");
   printf("\ndiag(d)\n  ");
-  for (i = 0; i < 4; ++i) printf("  %6.3f", eigvals[i]);
+  for (i = 0; i < 4; ++i) printf("  %6.3f", (double)eigvals[i]);
   printf("\nv'\n");
   printmat(D,N,N);
   blasglue_gemm('C', 'N', N, N, N, 1.0, D, N, D, N, 0.0, C, N);

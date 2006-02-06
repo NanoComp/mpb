@@ -317,11 +317,8 @@ void get_epsilon_tensor(int c1, int c2, int imag, int inv)
 
 /**************************************************************************/
 
-/* Replace curfield (either d or h) with the scalar energy density function,
-   normalized to one.  While we're at it, compute some statistics about
-   the relative strength of different field components.  Also return
-   the integral of the energy density, which should be unity. */
-number_list compute_field_energy(void)
+/* internal function for compute_field_energy, below */
+double compute_field_energy_internal(real comp_sum[6])
 {
      int i, N, last_dim, last_dim_stored, nx, nz, local_y_start;
      real comp_sum2[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, comp_sum[6];

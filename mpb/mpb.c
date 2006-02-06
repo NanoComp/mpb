@@ -708,7 +708,7 @@ void solve_kpoint(vector3 kvector)
 
      mpi_one_printf("%sfreqs:, %d, %g, %g, %g, %g",
 		    parity,
-		    kpoint_index, k[0], k[1], k[2],
+		    kpoint_index, (double)k[0], (double)k[1], (double)k[2],
 		    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
      for (i = 0; i < num_bands; ++i) {
 	  freqs.items[i] =
@@ -751,7 +751,7 @@ number_list compute_yparities(void)
 number_list compute_group_velocity_component(vector3 d)
 {
      number_list group_v;
-     number *gv_scratch;
+     real *gv_scratch;
      real u[3];
      int i, ib;
 
@@ -774,7 +774,7 @@ number_list compute_group_velocity_component(vector3 d)
 
      group_v.num_items = num_bands;
      CHK_MALLOC(group_v.items, number, group_v.num_items);
-     CHK_MALLOC(gv_scratch, number, group_v.num_items);
+     CHK_MALLOC(gv_scratch, real, group_v.num_items * 2);
      
      /* now, compute group_v.items = diag Re <H| curl 1/eps i u x |H>: */
 
@@ -796,8 +796,13 @@ number_list compute_group_velocity_component(vector3 d)
 	  }
 
 	  maxwell_ucross_op(Hblock, W[0], mdata, u);
-	  evectmatrix_XtY_diag_real(Hblock, W[0],
-				    group_v.items + ib, gv_scratch);
+	  evectmatrix_XtY_diag_real(Hblock, W[0], gv_scratch,
+				    gv_scratch + group_v.num_items);
+	  {
+	       int ip;
+	       for (ip = 0; ip < Hblock.p; ++ip)
+		    group_v.items[ib + ip] = gv_scratch[ip];
+	  }
      }
 
      free(gv_scratch);

@@ -45,9 +45,16 @@
 #    include <sfftw_mpi.h>
 #    include <srfftw_mpi.h>
 #  endif
+#elif defined(HAVE_LIBXFFTW)
+#  include <xfftw.h>
+#  include <xrfftw.h>
+#  ifdef HAVE_MPI
+#    include <xfftw_mpi.h>
+#    include <xrfftw_mpi.h>
+#  endif
 #endif
 
-#if defined(HAVE_LIBFFTW) || defined(HAVE_LIBDFFTW) || defined(HAVE_LIBSFFTW)
+#if defined(HAVE_LIBFFTW) || defined(HAVE_LIBDFFTW) || defined(HAVE_LIBSFFTW) || defined(HAVE_LIBXFFTW)
 #  define HAVE_FFTW 1
 #endif
 

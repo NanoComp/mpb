@@ -34,6 +34,12 @@ if test "$enable_single" = "yes"; then
 	echo "*********************** SINGLE PRECISION ***********************"
 fi
 
+AC_ARG_ENABLE(long-double, [AC_HELP_STRING([--enable-long-double],[compile for long-double precision])], enable_long_double=$enableval, enable_long_double=no)
+if test "$enable_long_double" = "yes"; then
+        AC_DEFINE(SCALAR_LONG_DOUBLE_PREC,1,[Define to use long-double precision])
+	echo "****************** LONG-DOUBLE PRECISION ***********************"
+fi
+
 AC_ARG_ENABLE(debug, [AC_HELP_STRING([--enable-debug],[compile for debugging])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
 	CFLAGS="-g"
@@ -113,6 +119,11 @@ if test "$enable_single" = "yes"; then
 	if test x"$inv_sym" = xyes; then
 		AC_CHECK_LIB(srfftw, rfftw)
 	fi
+elif test "$enable_long_double" = "yes"; then
+	AC_CHECK_LIB(xfftw, fftw)
+	if test x"$inv_sym" = xyes; then
+		AC_CHECK_LIB(xrfftw, rfftw)
+	fi
 else
 	AC_CHECK_LIB(dfftw, fftw)
 	if test x"$inv_sym" = xyes; then
@@ -120,19 +131,19 @@ else
 	fi
 fi
 
-if test x = x"`echo $LIBS | egrep 'l[[ds]]fftw'`"; then
+if test x = x"`echo $LIBS | egrep 'l[[dsx]]fftw'`"; then
 	AC_CHECK_LIB(fftw, fftw)
 	if test x"$inv_sym" = xyes; then
 		AC_CHECK_LIB(rfftw, rfftw)
 	fi
 fi
 
-if test x = x"`echo $LIBS | egrep 'l[[ds]]*fftw'`"; then
+if test x = x"`echo $LIBS | egrep 'l[[dsx]]*fftw'`"; then
 	AC_MSG_ERROR([The FFTW libraries could not be found.  Make sure FFTW is installed, and that LDFLAGS and CPPFLAGS are set appropriately if necessary.])
 fi
 
 if test x"$inv_sym" = xyes; then
-	if test x = x"`echo $LIBS | egrep 'l[[ds]]*rfftw'`"; then
+	if test x = x"`echo $LIBS | egrep 'l[[dsx]]*rfftw'`"; then
 		AC_MSG_ERROR([The RFFTW libraries, which are required to compile MPB with inversion symmetry, could not be found.  These should have been installed as a part of FFTW.])
 	fi
 fi
@@ -163,6 +174,11 @@ if test "x$with_mpi" = "xyes"; then
         	AC_CHECK_LIB(sfftw_mpi, fftwnd_mpi)
 	        if test x"$inv_sym" = xyes; then
 	                AC_CHECK_LIB(srfftw_mpi, rfftwnd_mpi)
+	        fi
+	elif test "$enable_long_double" = "yes"; then
+        	AC_CHECK_LIB(xfftw_mpi, fftwnd_mpi)
+	        if test x"$inv_sym" = xyes; then
+	                AC_CHECK_LIB(xrfftw_mpi, rfftwnd_mpi)
 	        fi
 	else
 	        AC_CHECK_LIB(dfftw_mpi, fftwnd_mpi)
