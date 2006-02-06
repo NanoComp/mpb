@@ -18,6 +18,8 @@ bin_PROGRAMS = mpb@MPB_SUFFIX@
 SPECIFICATION_FILE = mpb.scm
 EXTRA_DIST = mpb.scm.in
 
+nodist_pkgdata_DATA = $(SPECIFICATION_FILE)
+
 MY_SOURCES = epsilon.c epsilon_file.c field-smob.c fields.c	\
 material_grid.c matrix-smob.c mpb.c field-smob.h matrix-smob.h mpb.h my-smob.h
 
@@ -56,7 +58,7 @@ GEN_CTL_IO = @GEN_CTL_IO@
 
 CTL_DEFS = -DCTL_SCM='"'$(LIBCTL_DIR)/base/ctl.scm'"' \
        -DINCLUDE_SCM='"'$(LIBCTL_DIR)/base/include.scm'"' \
-          -DSPEC_SCM='"'$(prefix)/share/libctl/specs/$(SPECIFICATION_FILE)'"' \
+          -DSPEC_SCM='"'$(pkgdatadir)/$(SPECIFICATION_FILE)'"' \
     -DVERSION_STRING='"'$(VERSION_STRING)'"'
 
 mpb@MPB_SUFFIX@_SOURCES = $(MY_SOURCES)
@@ -77,12 +79,6 @@ ctl-io.c: $(SPECIFICATION_FILE) $(LIBCTL_DIR)/utils/geom.scm
 
 ctl-io.h: $(SPECIFICATION_FILE) $(LIBCTL_DIR)/utils/geom.scm
 	$(GEN_CTL_IO) --header -o $@ $(SPECIFICATION_FILE) $(LIBCTL_DIR)
-
-install-data-local:
-	$(INSTALL) -c -m 644 $(SPECIFICATION_FILE) $(prefix)/share/libctl/specs/$(SPECIFICATION_FILE)
-
-uninstall-local:
-	rm -f $(prefix)/share/libctl/specs/$(SPECIFICATION_FILE)
 
 clean-local:
 	rm -f ctl-io.* main.* geom.*
