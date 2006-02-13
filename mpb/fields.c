@@ -320,16 +320,10 @@ void get_epsilon_tensor(int c1, int c2, int imag, int inv)
 /* internal function for compute_field_energy, below */
 double compute_field_energy_internal(real comp_sum[6])
 {
-     int i, N, last_dim, last_dim_stored, nx, nz, local_y_start;
-     real comp_sum2[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, comp_sum[6];
+    int i, N, last_dim, last_dim_stored, nx, nz, local_y_start;
+     real comp_sum2[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
      real energy_sum = 0.0;
      real *energy_density = (real *) curfield;
-     number_list retval = { 0, 0 };
-
-     if (!curfield || !strchr("dh", curfield_type)) {
-	  mpi_one_fprintf(stderr, "The D or H field must be loaded first.\n");
-	  return retval;
-     }
 
      N = mdata->fft_output_size;
      last_dim = mdata->last_dim;
@@ -344,13 +338,13 @@ double compute_field_energy_internal(real comp_sum[6])
 
 	  /* energy is either |curfield|^2 or |curfield|^2 / epsilon,
 	     depending upon whether it is H or D. */
-	  if (curfield_type == 'h') {
+	  if (curfield_type == 'd') 
+	       assign_symmatrix_vector(field, mdata->eps_inv[i], curfield+3*i);
+	  else {
 	       field[0] =   curfield[3*i];
 	       field[1] = curfield[3*i+1];
 	       field[2] = curfield[3*i+2];
 	  }
-	  else
-	       assign_symmatrix_vector(field, mdata->eps_inv[i], curfield+3*i);
 
 	  comp_sum2[0] += comp_sqr0 = field[0].re *   curfield[3*i].re;
 	  comp_sum2[1] += comp_sqr1 = field[0].im *   curfield[3*i].im;
@@ -396,6 +390,29 @@ double compute_field_energy_internal(real comp_sum[6])
      mpi_allreduce(comp_sum2, comp_sum, 6, real, SCALAR_MPI_TYPE,
                    MPI_SUM, MPI_COMM_WORLD);
 
+     /* remember that we now have energy density; denoted by capital D/H */
+     curfield_type = toupper(curfield_type);
+
+     return energy_sum;
+}
+
+/* Replace curfield (either d or h) with the scalar energy density function,
+   normalized to one.  While we're at it, compute some statistics about
+   the relative strength of different field components.  Also return
+   the integral of the energy density, which should be unity. */
+number_list compute_field_energy(void)
+{
+     int i;
+     real energy_sum, comp_sum[6];
+     number_list retval = { 0, 0 };
+
+     if (!curfield || !strchr("dh", curfield_type)) {
+	  mpi_one_fprintf(stderr, "The D or H field must be loaded first.\n");
+	  return retval;
+     }
+
+     energy_sum = compute_field_energy_internal(comp_sum);
+
      mpi_one_printf("%c-energy-components:, %d, %d",
 	    curfield_type, kpoint_index, curfield_band);
      for (i = 0; i < 6; ++i) {
@@ -405,11 +422,7 @@ double compute_field_energy_internal(real comp_sum[6])
      }
      mpi_one_printf("\n");
 
-
-     /* remember that we now have energy density; denoted by capital D/H */
-     curfield_type = toupper(curfield_type);
-
-     /* The return value is a list of 7 items: the total energy,
+      /* The return value is a list of 7 items: the total energy,
 	followed by the 6 elements of the comp_sum array (the fraction
 	of the energy in the real/imag. parts of each field component). */
 
@@ -422,6 +435,21 @@ double compute_field_energy_internal(real comp_sum[6])
 	  retval.items[i+1] = comp_sum[i];
 
      return retval;
+}
+
+/* compute |F|^2 for the current field, whether or not this is an
+   energy density */
+void compute_field_squared(void)
+{
+     real comp_sum[6]; /* unused */
+
+     if (!curfield || !strchr("dhecv", curfield_type)) {
+          mpi_one_fprintf(stderr, "A vector field must be loaded first.\n");
+     }
+
+     curfield_type = 'c';  /* force it to just square the field */
+     compute_field_energy_internal(comp_sum);
+     curfield_type = 'R'; /* generic real scalar field */
 }
 
 /**************************************************************************/
