@@ -351,6 +351,9 @@ AC_EGREP_CPP(yes, [[
 #endif
 ]], [AC_MSG_RESULT(ok)], [AC_MSG_ERROR([libctl version ${LIBCTL_MAJOR}.${LIBCTL_MINOR}.${LIBCTL_BUGFIX} or later is required])])
 
+# On IRIX, basename/dirname functions in libctl/main.c require -lgen
+AC_CHECK_LIB(gen, basename)
+
 ##############################################################################
 # Checks for header files.
 AC_HEADER_STDC
