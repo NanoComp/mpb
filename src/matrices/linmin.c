@@ -67,6 +67,11 @@ double linmin(double *converged_f, double *converged_df,
 	  *converged_df = -*converged_df;
 	  return(-x);
      }
+     else if (df_0 == 0) { /* already at minimum! */
+	  *converged_f = f_0;
+          *converged_df = df_0;
+          return 0;
+     }
      else {
 	  char task[300] = "START";
 	  int isave[2];
