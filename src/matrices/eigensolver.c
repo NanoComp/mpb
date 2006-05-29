@@ -105,15 +105,16 @@ extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
 
 typedef struct {
      sqmatrix YtAY, DtAD, symYtAD, YtY, DtD, symYtD, S1, S2, S3;
+     real lag, d_lag, trace_YtLY, trace_DtLD, trace_YtLD;
 } trace_func_data;
 
 static linmin_real trace_func(linmin_real theta, linmin_real *trace_deriv, void *data)
 {
      linmin_real trace;
      trace_func_data *d = (trace_func_data *) data;
+     linmin_real c = cos(theta), s = sin(theta);
 
      {
-	  linmin_real c = cos(theta), s = sin(theta);
 	  sqmatrix_copy(d->S1, d->YtY);
 	  sqmatrix_aApbB(c*c, d->S1, s*s, d->DtD);
 	  sqmatrix_ApaB(d->S1, 2*s*c, d->symYtD);
@@ -123,7 +124,9 @@ static linmin_real trace_func(linmin_real theta, linmin_real *trace_deriv, void 
 	  sqmatrix_aApbB(c*c, d->S2, s*s, d->DtAD);
 	  sqmatrix_ApaB(d->S2, 2*s*c, d->symYtAD);
 	  
-	  trace = SCALAR_RE(sqmatrix_traceAtB(d->S2, d->S1));
+	  trace = SCALAR_RE(sqmatrix_traceAtB(d->S2, d->S1))
+	       + (c*c * d->trace_YtLY + s*s * d->trace_DtLD
+		  + 2*s*c * d->trace_YtLD) * (c * d->lag + s * d->d_lag);
      }
 
      if (trace_deriv) {
@@ -144,6 +147,11 @@ static linmin_real trace_func(linmin_real theta, linmin_real *trace_deriv, void 
 	  
 	  *trace_deriv -= SCALAR_RE(sqmatrix_traceAtB(d->S2, d->S3));
 	  *trace_deriv *= 2;
+
+	  *trace_deriv += (-s2 * d->trace_YtLY + s2 * d->trace_DtLD
+		  + 2*c2 * d->trace_YtLD) * (c * d->lag + s * d->d_lag);
+	  *trace_deriv += (c*c * d->trace_YtLY + s*s * d->trace_DtLD
+		  + 2*s*c * d->trace_YtLD) * (-s * d->lag + c * d->d_lag);
      }
 
      return trace;
@@ -153,16 +161,31 @@ static linmin_real trace_func(linmin_real theta, linmin_real *trace_deriv, void 
 
 #define EIG_HISTORY_SIZE 5
 
-void eigensolver(evectmatrix Y, real *eigenvals,
-                 evectoperator A, void *Adata,
-                 evectpreconditioner K, void *Kdata,
-                 evectconstraint constraint, void *constraint_data,
-                 evectmatrix Work[], int nWork,
-                 real tolerance, int *num_iterations,
-                 int flags)
+/* find eigenvectors Y of A by minimizing Rayleigh quotient
+
+        tr [ Yt A Y / (Yt Y) ] + lag * tr [ Yt L Y ]
+
+   where lag is a Lagrange multiplier and L is a Hermitian operator
+   implementing some constraint tr [ Yt L Y ] = 0 on the eigenvectors
+   (if L is not NULL).
+
+   Constraints that commute with A (and L) are specified via the
+   "constraint" argument, which gives the projection operator for
+   the constraint(s).
+*/
+
+void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
+			  evectoperator A, void *Adata,
+			  evectpreconditioner K, void *Kdata,
+			  evectconstraint constraint, void *constraint_data,
+			  evectoperator L, void *Ldata, real *lag,
+			  evectmatrix Work[], int nWork,
+			  real tolerance, int *num_iterations,
+			  int flags)
 {
      real convergence_history[EIG_HISTORY_SIZE];
      evectmatrix G, D, X, prev_G;
+     real g_lag = 0, d_lag = 0, prev_g_lag = 0;
      short usingConjugateGradient = 0, use_polak_ribiere = 0,
 	   use_linmin = 1;
      real E, prev_E = 0.0;
@@ -302,6 +325,13 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  CHECK(!BADNUM(E), "crazy number detected in trace!!\n");
 	  mpi_assert_equal(E);
 
+	  if (L) {
+	       /* X = LY, no scratch */
+	       L(Y, X, Ldata, 1, X);
+	       g_lag = tfd.trace_YtLY = SCALAR_RE(evectmatrix_traceXtY(Y, X));
+	       E += *lag * g_lag;
+	  }
+
 	  convergence_history[iteration % EIG_HISTORY_SIZE] =
 	       200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E));
 	  
@@ -325,6 +355,10 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	  /* Compute gradient of functional: G = (1 - Y U Yt) A Y U */
 	  sqmatrix_AeBC(S1, U, 0, YtAYU, 0);
 	  evectmatrix_XpaYS(G, -1.0, Y, S1, 1);
+
+	  if (L) { /* include Lagrange gradient; note X = LY from above */
+	       evectmatrix_aXpbY(1.0, G, *lag, X);
+	  }
 
 	  /* set X = precondition(G): */
 	  if (K != NULL) {
@@ -353,7 +387,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	     any computations that we need with G.  (Yes, we're
 	     playing tricksy games here, but isn't it fun?) */
 
-	  mpi_assert_equal(traceGtX = SCALAR_RE(evectmatrix_traceXtY(G, X)));
+	  mpi_assert_equal(traceGtX = 
+			   SCALAR_RE(evectmatrix_traceXtY(G, X))
+			   + g_lag * g_lag);
 	  if (usingConjugateGradient) {
                if (use_polak_ribiere) {
                     /* assign G = G - prev_G and copy prev_G = G in the
@@ -365,6 +401,9 @@ void eigensolver(evectmatrix Y, real *eigenvals,
                          prev_G.data[i] = g;
                     }
                     gamma_numerator = SCALAR_RE(evectmatrix_traceXtY(G, X));
+
+		    { real g = g_lag; g_lag -= prev_g_lag; prev_g_lag = g; }
+		    gamma_numerator += g_lag * prev_g_lag;
                }
                else /* otherwise, use Fletcher-Reeves (ignore prev_G) */
                     gamma_numerator = traceGtX;
@@ -445,6 +484,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	       mpi_assert_equal(gamma * d_scale);
                evectmatrix_aXpbY(gamma * d_scale, D, 1.0, X);
+	       d_lag = gamma * d_scale * d_lag + g_lag;
           }
 
 	  d_scale = 1.0;
@@ -477,8 +517,15 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       sqmatrix_invert(U, 1, S2);  /* U = 1 / (Yt Y) */
 	       A(Y, G, Adata, 1, X); /* G = AY; X is scratch */
 	       evectmatrix_XtY(S1, Y, G, S2);  /* S1 = Yt A Y */
-	       
+
 	       E2 = SCALAR_RE(sqmatrix_traceAtB(S1, U));
+
+	       if (L) {
+		    *lag += (t / d_norm) * d_lag;
+		    L(Y, X, Ldata, 1, X);
+		    E2 += *lag * SCALAR_RE(evectmatrix_traceXtY(Y, X));
+	       }
+	       
 	       mpi_assert_equal(E2);
 
 	       /* Get finite-difference approximation for the 2nd derivative
@@ -505,6 +552,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 					     "line minimization\n");
 			 use_linmin = 1;
 			 evectmatrix_aXpbY(1.0, Y, -t / d_norm, D);
+			 if (L) *lag -= (t / d_norm) * d_lag;
 			 prev_theta = atan(prev_theta); /* convert to angle */
 			 /* don't do this again: */
 			 flags |= EIGS_FORCE_EXACT_LINMIN;
@@ -513,6 +561,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 	       else {
 		    /* Shift Y by theta, hopefully minimizing the trace: */
 		    evectmatrix_aXpbY(1.0, Y, (theta - t) / d_norm, D);
+		    if (L) *lag += ((theta - t) / d_norm) * d_lag;
 	       }
 	  }
 	  if (use_linmin) {
@@ -546,6 +595,24 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 			    SCALAR_RE(sqmatrix_traceAtB(YtAYU, S1)) -
 			    4.0 * SCALAR_RE(sqmatrix_traceAtB(U, S3)));
 	       
+	       if (L) {
+		    d_lag *= 1/d_scale;
+		    tfd.d_lag = d_lag;
+		    tfd.lag = *lag;
+		    /* note: tfd.trace_YtLY was set above */
+		    L(D, X, Ldata, 0, X);
+		    tfd.trace_DtLD = SCALAR_RE(evectmatrix_traceXtY(D, X));
+		    tfd.trace_YtLD = SCALAR_RE(evectmatrix_traceXtY(Y, X));
+		    dE += tfd.lag * 2.0 * tfd.trace_YtLD
+			 + tfd.d_lag * tfd.trace_YtLY;
+		    d2E += tfd.lag * 2.0 * tfd.trace_DtLD
+			 + tfd.d_lag * 4.0 * tfd.trace_YtLD;
+	       }
+	       else {
+		    tfd.d_lag = tfd.lag = tfd.trace_YtLY = 
+			 tfd.trace_DtLD = tfd.trace_YtLD = 0;
+	       }
+
 	       /* this is just Newton-Raphson to find a root of
 		  the first derivative: */
 	       theta = -dE/d2E;
@@ -588,6 +655,7 @@ void eigensolver(evectmatrix Y, real *eigenvals,
 
 	       /* Shift Y to new location minimizing the trace along D: */
 	       evectmatrix_aXpbY(cos(theta), Y, sin(theta), D);
+	       if (L) *lag = *lag * cos(theta) + d_lag * sin(theta);
 	  }
 
 	  /* In exact arithmetic, we don't need to do this, but in practice
@@ -662,4 +730,18 @@ void eigensolver(evectmatrix Y, real *eigenvals,
      destroy_sqmatrix(symYtAD);
      destroy_sqmatrix(DtAD);
      destroy_sqmatrix(YtAYU);
+}
+
+void eigensolver(evectmatrix Y, real *eigenvals,
+		 evectoperator A, void *Adata,
+		 evectpreconditioner K, void *Kdata,
+		 evectconstraint constraint, void *constraint_data,
+		 evectmatrix Work[], int nWork,
+		 real tolerance, int *num_iterations,
+		 int flags)
+{
+     eigensolver_lagrange(Y, eigenvals, A, Adata, K, Kdata,
+			  constraint, constraint_data,
+			  0, 0, 0,
+			  Work, nWork, tolerance, num_iterations, flags);
 }

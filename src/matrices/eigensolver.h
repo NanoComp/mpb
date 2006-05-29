@@ -39,6 +39,15 @@ extern void eigensolver(evectmatrix Y, real *eigenvals,
 			real tolerance, int *num_iterations,
 			int flags);
 
+extern void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
+			evectoperator A, void *Adata,
+			evectpreconditioner K, void *Kdata,
+			evectconstraint constraint, void *constraint_data,
+			evectoperator L, void *Ldata, real *lag,
+			evectmatrix Work[], int nWork,
+			real tolerance, int *num_iterations,
+			int flags);
+
 extern void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 				 evectoperator A, void *Adata,
 				 evectpreconditioner K, void *Kdata,

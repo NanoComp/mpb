@@ -119,6 +119,53 @@ void elastic_compute_u_from_v(elastic_data *d,
      }	  
 }
 
+/* compute momentum rho*u from v (i.e. multiply v by sqrt(rho)). */
+void elastic_compute_p_from_v(elastic_data *d,
+                              scalar_complex *field,
+                              int cur_num_bands)
+{
+     int i, b;
+
+     CHECK(d, "null elastic data pointer!");
+     CHECK(field, "null field input/output data!");
+
+     for (i = 0; i < d->fft_output_size; ++i) {
+          real sqrt_rho = 1.0 / d->sqrt_rhoinv[i];
+          for (b = 0; b < cur_num_bands; ++b) {
+               int ib = 3 * (i * cur_num_bands + b);
+               int k;
+               for (k = 0; k < 3; ++k)
+                    CASSIGN_SCALAR(field[ib + k],
+                                   CSCALAR_RE(field[ib + k]) * sqrt_rho,
+                                   CSCALAR_IM(field[ib + k]) * sqrt_rho)
+	  }
+     }
+}
+
+/* project onto nonsolid regions: multiply by 0 where ct != 0 and
+   by 1 where ct == 0 */
+void elastic_project_nonsolid_v(elastic_data *d,
+				scalar_complex *field,
+				int cur_num_bands)
+{
+     int i, b;
+
+     CHECK(d, "null elastic data pointer!");
+     CHECK(field, "null field input/output data!");
+
+     for (i = 0; i < d->fft_output_size; ++i) {
+          real proj = (d->rhoct2[i] == 0.0);
+          for (b = 0; b < cur_num_bands; ++b) {
+               int ib = 3 * (i * cur_num_bands + b);
+               int k;
+               for (k = 0; k < 3; ++k)
+                    CASSIGN_SCALAR(field[ib + k],
+                                   CSCALAR_RE(field[ib + k]) * proj,
+                                   CSCALAR_IM(field[ib + k]) * proj)
+	  }
+     }
+}
+
 /* Compute v field in position space from Vin.  */
 void elastic_compute_v_from_V(elastic_data *d, evectmatrix Vin, 
 			      scalar_complex *vfield,
@@ -134,8 +181,7 @@ void elastic_compute_v_from_V(elastic_data *d, evectmatrix Vin,
      CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Vin.p,
 	   "invalid range of bands for computing fields");
 
-     /* first, compute fft_data = Vin, with the vector field converted 
-	from transverse to cartesian basis: */
+     /* first, compute fft_data = Vin */
      for (i = 0; i < d->other_dims; ++i)
 	  for (j = 0; j < d->last_dim; ++j) {
 	       int ij = i * d->last_dim + j;
@@ -153,6 +199,84 @@ void elastic_compute_v_from_V(elastic_data *d, evectmatrix Vin,
      elastic_compute_fft(+1, d, fft_data,
 			 cur_num_bands*3, cur_num_bands*3, 1);
 }
+
+/* Compute V field in Fourier space from v.  */
+void elastic_compute_V_from_v(elastic_data *d, evectmatrix Vout, 
+			      scalar_complex *vfield,
+			      int cur_band_start, int cur_num_bands)
+{
+     scalar *fft_data = (scalar *) vfield;
+     int i, j, b;
+     real scale;
+
+     CHECK(Vout.c == 3, "fields don't have 3 components!");
+     CHECK(d, "null elastic data pointer!");
+     CHECK(vfield, "null field output data!");
+     CHECK(cur_num_bands <= d->num_fft_bands, "too many bands to FFT at once");
+     CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Vout.p,
+	   "invalid range of bands for computing fields");
+
+     /* first, convert from position space via FFT: */
+     elastic_compute_fft(-1, d, fft_data,
+			 cur_num_bands*3, cur_num_bands*3, 1);
+
+     /* now, compute Vout = fft_data * scale factor */
+     scale = 1.0 / Vout.N;
+     for (i = 0; i < d->other_dims; ++i)
+	  for (j = 0; j < d->last_dim; ++j) {
+	       int ij = i * d->last_dim + j;
+	       int ij2 = i * d->last_dim_size + j;
+	       int k;
+
+	       for (b = 0; b < cur_num_bands; ++b) 
+		    for (k = 0; k < 3; ++k) {
+			 int ijk = 3 * (ij2*cur_num_bands + b) + k;
+			 ASSIGN_SCALAR(
+			      Vout.data[(ij * 3 + k) * Vout.p + 
+					b + cur_band_start],
+			      scale * SCALAR_RE(fft_data[ijk]),
+			      scale * SCALAR_IM(fft_data[ijk]));
+		    }
+	  }
+
+}
+
+/* Compute v field in position space from curl Vin.  */
+void elastic_compute_v_from_curlV(elastic_data *d, evectmatrix Vin, 
+				  scalar_complex *vfield,
+				  int cur_band_start, int cur_num_bands)
+{
+     scalar *fft_data = (scalar *) vfield;
+     int i, j, b;
+
+     CHECK(Vin.c == 3, "fields don't have 3 components!");
+     CHECK(d, "null elastic data pointer!");
+     CHECK(vfield, "null field output data!");
+     CHECK(cur_num_bands <= d->num_fft_bands, "too many bands to FFT at once");
+     CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Vin.p,
+	   "invalid range of bands for computing fields");
+
+     /* first, compute fft_data = Vin */
+     for (i = 0; i < d->other_dims; ++i)
+	  for (j = 0; j < d->last_dim; ++j) {
+	       int ij = i * d->last_dim + j;
+	       int ij2 = i * d->last_dim_size + j;
+	       int k;
+
+	       /**** TODO ****/
+
+	       for (b = 0; b < cur_num_bands; ++b) 
+		    for (k = 0; k < 3; ++k)
+			 fft_data[3 * (ij2*cur_num_bands + b) + k] =
+			      Vin.data[(ij * 3 + k) * Vin.p + 
+				      b + cur_band_start];
+	  }
+
+     /* now, convert to position space via FFT: */
+     elastic_compute_fft(+1, d, fft_data,
+			 cur_num_bands*3, cur_num_bands*3, 1);
+}
+
 
 /**************************************************************************/
 
