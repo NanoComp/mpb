@@ -39,7 +39,7 @@ if !MPI
 bin_SCRIPTS = mpb@MPB_SUFFIX@-split
 endif
 
-mpb@MPB_SUFFIX@_split: mpb-split-preinstall
+mpb@MPB_SUFFIX@-split: mpb-split-preinstall
 	sed "s%\./mpb%"$(prefix)/bin/"mpb@MPB_SUFFIX@%g" \
             mpb-split-preinstall > $@
 	chmod u+x $@
