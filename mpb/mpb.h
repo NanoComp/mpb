@@ -93,7 +93,7 @@ extern void init_epsilon(void);
 /**************************************************************************/
 /* material_grid.c */
 
-extern real material_grid_val(vector3 p, material_grid *g);
+extern real material_grid_val(vector3 p, const material_grid *g);
 extern double matgrid_valprod(vector3 p, geom_box_tree tp, int oi,
                               const material_grid *mg);
 
