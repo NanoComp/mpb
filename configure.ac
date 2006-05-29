@@ -466,8 +466,8 @@ AC_CONFIG_FILES([
 	mpb/mpb.scm
 	mpb/mpb-split-preinstall
 	utils/Makefile
+	meb/Makefile
+	meb/meb.scm
+	meb/meb-split-preinstall
 ])
-#	meb/Makefile
-#	meb/meb.scm
-#	meb/meb-split-preinstall
 AC_OUTPUT

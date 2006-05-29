@@ -70,6 +70,10 @@ extern real Vol; /* computational cell volume = |det Rm| */
 /* index of current kpoint, for labeling output */
 extern int kpoint_index;
 
+/* in fields.c */
+extern void compute_field_squared(void);
+void get_efield(integer which_band);
+
 /**************************************************************************/
 
 extern void vector3_to_arr(real arr[3], vector3 v);
