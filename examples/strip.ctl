@@ -32,8 +32,8 @@
        (make block (size infinity w h) (center 0 0 0) (material Si))))
 
 
-; The k (i.e. beta, i.e. wavenumber) points to look at, in units of 2*pi/um.
-; We'll look at num-k points from k-min to k-max.
+; The k (i.e. beta, i.e. propagation constant) points to look at, in
+; units of 2*pi/um.  We'll look at num-k points from k-min to k-max.
 (define-param num-k 9)
 (define-param k-min 0.1)
 (define-param k-max 3.0)
