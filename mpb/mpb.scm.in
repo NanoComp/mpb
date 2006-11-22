@@ -712,7 +712,7 @@
 (define (output-at-kpoint kpoint . band-funcs)
   (let ((band-func (apply combine-band-functions band-funcs)))
     (lambda (which-band)
-      (if (vector3= current-k kpoint)
+      (if (vector3-close? current-k kpoint (* 1e-8 (vector3-norm kpoint)))
 	  (band-func which-band)))))
 
 ; Band functions to pick a canonical phase for the eigenstate of the
