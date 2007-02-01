@@ -736,9 +736,11 @@
 ; Moreover, we save information gathered while finding the k's of
 ; higher bands to speed the computation for lower bands.
 
-(define (find-k p omega band-min band-max kdir
+(define (find-k p omega band-min band-max korig-and-kdir
 		tol kmag-guess kmag-min kmag-max . band-funcs)
   (define (ncdr n lst) (if (> n 0) (ncdr (- n 1) (cdr lst)) lst))
+  (define korig (if (pair? korig-and-kdir) (car korig-and-kdir) (vector3 0)))
+  (define kdir (if (pair? korig-and-kdir) (cdr korig-and-kdir) korig-and-kdir))
   (let ((num-bands-save num-bands) (k-points-save k-points)
 	(nb (- band-max band-min -1)) 
 	(kdir1 (cartesian->reciprocal (unit-vector3 (reciprocal->cartesian kdir))))
@@ -755,7 +757,7 @@
 	      (cdr tab-val))
 	    (begin ; otherwise, compute bands and cache results
 	      (set! num-bands b)
-	      (set! k-points (list (vector3-scale k kdir1)))
+	      (set! k-points (list (vector3+ korig (vector3-scale k kdir1))))
 	      (run-parity p false)
 	      (let ((v (compute-group-velocity-component kdir1)))
 		; cache computed values:
@@ -784,7 +786,7 @@
       (if (not (null? band-funcs))
 	  (map (lambda (b k)
 		 (set! num-bands b)
-		 (set! k-points (list (vector3-scale k kdir1)))
+		 (set! k-points (list (vector3+ korig (vector3-scale k kdir1))))
 		 (run-parity p false
 			     (lambda (b')
 			       (if (= b' b)
@@ -795,6 +797,7 @@
       (set! num-bands num-bands-save)
       (set! k-points k-points-save)
       (print parity "kvals:, " omega ", " band-min ", " band-max)
+      (vector-map (lambda (k) (print ", " k)) korig)
       (vector-map (lambda (k) (print ", " k)) kdir1)
       (map (lambda (k) (print ", " k)) ks) 
       (print "\n")
