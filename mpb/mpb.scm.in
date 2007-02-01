@@ -185,6 +185,7 @@
 (define-external-function using-mpi? false false 'boolean)
 (define-external-function mpi-num-procs false false 'integer)
 (define-external-function mpi-proc-index false false 'integer)
+(define-external-function mpi-max false false 'number 'number)
 
 (define-external-function get-kpoint-index false false 'integer)
 (define-external-function set-kpoint-index false false

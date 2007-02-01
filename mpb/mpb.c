@@ -137,6 +137,13 @@ integer mpi_proc_index(void)
      return proc_num;
 }
 
+number mpi_max(number num)
+{
+     double x = num, xmax;
+     mpi_allreduce(&x, &xmax, 1, double, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+     return xmax;
+}
+
 /**************************************************************************/
 
 /* a couple of utilities to convert libctl data types to the data
