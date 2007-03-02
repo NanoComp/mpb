@@ -356,14 +356,15 @@
 
 (define-param filename-prefix "")
 (define (get-filename-prefix)
-  (if (and (not (null? include-files))
-	   (not (eq? filename-prefix false))
-	   (string-null? filename-prefix))
-      (string-append
-       (strip-suffix ".scm"
-	(strip-suffix ".ctl" (cdr (split-pathname (car include-files)))))
-       "-")
-      filename-prefix))
+  (if (eq? filename-prefix false)
+      ""
+      (if (and (not (null? include-files))
+	       (string-null? filename-prefix))
+	  (string-append
+	   (strip-suffix ".scm"
+	     (strip-suffix ".ctl" (cdr (split-pathname (car include-files)))))
+	   "-")
+	  filename-prefix)))
 
 (define (output-field)
   (output-field-to-file -1 (get-filename-prefix)))
