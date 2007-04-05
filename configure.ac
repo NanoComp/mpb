@@ -62,6 +62,11 @@ if test "$ok" = "no"; then
 	AC_DEFINE(CHECK_DISABLE,1,[Define to disable sanity checks in code])
 fi
 
+AC_ARG_ENABLE(debug, [AC_HELP_STRING([--disable-kottke],[disable new anisotropic smoothing based on Kottke algorithm])], ok=$enableval, ok=yes)
+if test "$ok" = "yes"; then
+	AC_DEFINE(KOTTKE,1,[Define to enable Kottke anisotropic smoothing])
+fi
+
 AC_ARG_WITH(inv-symmetry,[AC_HELP_STRING([--with-inv-symmetry],[take advantage of (and require) inv. sym.])], inv_sym=$withval, inv_sym=no)
 if test "$inv_sym" = "no"; then
         AC_DEFINE(SCALAR_COMPLEX,1,[Define to use complex fields and

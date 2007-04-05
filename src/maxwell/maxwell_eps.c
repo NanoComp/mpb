@@ -190,6 +190,46 @@ static int sym_matrix_eq(symmetric_matrix V1, symmetric_matrix V2, double tol)
 #endif
 }
 
+/* rotate A by a unitary (real) rotation matrix R:
+      RAR = transpose(R) * A * R
+*/
+void maxwell_sym_matrix_rotate(symmetric_matrix *RAR,
+			       const symmetric_matrix *A_,
+			       const double R[3][3])
+{
+     int i,j;
+     double A[3][3], AR[3][3];
+     A[0][0] = A_->m00;
+     A[1][1] = A_->m11;
+     A[2][2] = A_->m22;
+     A[0][1] = A[1][0] = ESCALAR_RE(A_->m01);
+     A[0][2] = A[2][0] = ESCALAR_RE(A_->m02);
+     A[1][2] = A[2][1] = ESCALAR_RE(A_->m12);
+     for (i = 0; i < 3; ++i) for (j = 0; j < 3; ++j) 
+	  AR[i][j] = A[i][0]*R[0][j] + A[i][1]*R[1][j] + A[i][2]*R[2][j];
+     for (i = 0; i < 3; ++i) for (j = i; j < 3; ++j) 
+	  A[i][j] = R[0][i]*AR[0][j] + R[1][i]*AR[1][j] + R[2][i]*AR[2][j];
+     RAR->m00 = A[0][0];
+     RAR->m11 = A[1][1];
+     RAR->m22 = A[2][2];
+     ESCALAR_RE(RAR->m01) = A[0][1];
+     ESCALAR_RE(RAR->m02) = A[0][2];
+     ESCALAR_RE(RAR->m12) = A[1][2];
+#if defined(WITH_HERMITIAN_EPSILON)
+     A[0][0] = A[1][1] = A[2][2] = 0;
+     A[1][0] = -(A[0][1] = ESCALAR_IM(A_->m01));
+     A[2][0] = -(A[0][2] = ESCALAR_IM(A_->m02));
+     A[2][1] = -(A[1][2] = ESCALAR_IM(A_->m12));
+     for (i = 0; i < 3; ++i) for (j = 0; j < 3; ++j) 
+	  AR[i][j] = A[i][0]*R[0][j] + A[i][1]*R[1][j] + A[i][2]*R[2][j];
+     for (i = 0; i < 3; ++i) for (j = i; j < 3; ++j) 
+	  A[i][j] = R[0][i]*AR[0][j] + R[1][i]*AR[1][j] + R[2][i]*AR[2][j];
+     ESCALAR_IM(RAR->m01) = A[0][1];
+     ESCALAR_IM(RAR->m02) = A[0][2];
+     ESCALAR_IM(RAR->m12) = A[1][2];
+#endif
+}
+
 /**************************************************************************/
 
 int check_maxwell_dielectric(maxwell_data *d,
@@ -494,6 +534,13 @@ void set_maxwell_dielectric(maxwell_data *md,
 	       if (mepsilon && mepsilon(&eps_mean, &eps_inv_mean, normal,
 					s1, s2, s3, mesh_prod_inv,
 					r, epsilon_data)) {
+
+#ifdef KOTTKE /* mepsilon did new anisotropic smoothing w/Kottke algorithm */
+		    maxwell_sym_matrix_invert(md->eps_inv + eps_index, 
+					      &eps_mean);
+		    goto got_eps_inv;
+#endif
+
 		    norm0 = R[0][0] * normal[0] + R[1][0] * normal[1]
 			 + R[2][0] * normal[2];
 		    norm1 = R[0][1] * normal[0] + R[1][1] * normal[1]
@@ -758,6 +805,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 	  else { /* undetermined normal vector and/or constant eps */
 	       md->eps_inv[eps_index] = eps_mean_inv;
 	  }
+     got_eps_inv:
 	  
 	  eps_inv_total += (md->eps_inv[eps_index].m00 + 
 			    md->eps_inv[eps_index].m11 + 

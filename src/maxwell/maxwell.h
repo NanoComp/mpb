@@ -38,10 +38,22 @@ typedef struct {
 #ifdef WITH_HERMITIAN_EPSILON
      real m00, m11, m22;
      scalar_complex m01, m02, m12;
+#    define ESCALAR_RE(z) CSCALAR_RE(z)
+#    define ESCALAR_IM(z) CSCALAR_IM(z)
+#    define ESCALAR_NORMSQR(z) CSCALAR_NORMSQR(z)
+#    define ASSIGN_ESCALAR(z, re, im) ASSIGN_CSCALAR(z, re, im)
+#    define ESCALAR_MULT_CONJ_RE(a, b) CSCALAR_MULT_CONJ_RE(a, b)
+#    define ESCALAR_MULT_CONJ_IM(a, b) CSCALAR_MULT_CONJ_IM(a, b)
 #else
      real m00, m01, m02,
                m11, m12,
                     m22;
+#    define ESCALAR_RE(z) (z)
+#    define ESCALAR_IM(z) (0.0)
+#    define ESCALAR_NORMSQR(z) ((z) * (z))
+#    define ASSIGN_ESCALAR(z, re, im) (z) = (re);
+#    define ESCALAR_MULT_CONJ_RE(a, b) ((a) * (b))
+#    define ESCALAR_MULT_CONJ_IM(a, b) (0.0)
 #endif
 } symmetric_matrix;
 
@@ -124,6 +136,9 @@ extern void set_maxwell_dielectric(maxwell_data *md,
 extern void maxwell_sym_matrix_eigs(real eigs[3], const symmetric_matrix *V);
 extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
                                       const symmetric_matrix *V);
+extern void maxwell_sym_matrix_rotate(symmetric_matrix *RAR,
+				      const symmetric_matrix *A_,
+				      const double R[3][3]);
 
 extern void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 				int howmany, int stride, int dist);

@@ -346,6 +346,95 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 
      {
 	  symmetric_matrix eps2, epsinv2;
+#ifdef KOTTKE /* new anisotropic smoothing, based on Kottke algorithm */
+	  symmetric_matrix eps1, delta;
+	  double Rot[3][3], norm, n0, n1, n2;
+	  material_eps(mat2, &eps2, &epsinv2);
+	  eps1 = *meps;
+
+	  /* make Cartesian orthonormal frame relative to interface */
+	  n0 = R[0][0] * n[0] + R[1][0] * n[1] + R[2][0] * n[2];
+	  n1 = R[0][1] * n[0] + R[1][1] * n[1] + R[2][1] * n[2];
+	  n2 = R[0][2] * n[0] + R[1][2] * n[1] + R[2][2] * n[2];
+	  norm = 1.0 / sqrt(n0*n0 + n1*n1 + n2*n2);
+	  Rot[0][0] = n0 = n0 * norm;
+	  Rot[1][0] = n1 = n1 * norm;
+	  Rot[2][0] = n2 = n2 * norm;
+	  if (fabs(n0) > 1e-2 || fabs(n1) > 1e-2) { /* (z x n) */
+	       Rot[0][2] = n1;
+	       Rot[1][2] = -n0;
+	       Rot[2][2] = 0;
+	  }
+	  else { /* n is ~ parallel to z direction, use (x x n) instead */
+	       Rot[0][2] = 0;
+	       Rot[1][2] = -n2;
+	       Rot[2][2] = n1;
+	  }
+	  /* 1st column is 2nd column x 0th column */
+	  Rot[0][1] = Rot[1][2] * Rot[2][0] - Rot[2][2] * Rot[1][0];
+	  Rot[1][1] = Rot[2][2] * Rot[0][0] - Rot[0][2] * Rot[2][0];
+	  Rot[2][1] = Rot[0][2] * Rot[1][0] - Rot[1][2] * Rot[0][0];
+
+	  /* rotate epsilon tensors to surface parallel/perpendicular axes */
+	  maxwell_sym_matrix_rotate(&eps1, &eps1, Rot);
+	  maxwell_sym_matrix_rotate(&eps2, &eps2, Rot);
+
+#define AVG (fill * (EXPR(eps1)) + (1-fill) * (EXPR(eps2)))
+
+#define EXPR(eps) (-1 / eps.m00)
+	  delta.m00 = AVG;
+#undef EXPR
+#define EXPR(eps) (eps.m11 - ESCALAR_NORMSQR(eps.m01) / eps.m00)
+	  delta.m11 = AVG;
+#undef EXPR
+#define EXPR(eps) (eps.m22 - ESCALAR_NORMSQR(eps.m02) / eps.m00)
+	  delta.m22 = AVG;
+#undef EXPR
+
+#define EXPR(eps) (ESCALAR_RE(eps.m01) / eps.m00)
+	  ESCALAR_RE(delta.m01) = AVG;
+#undef EXPR
+#define EXPR(eps) (ESCALAR_RE(eps.m02) / eps.m00)
+	  ESCALAR_RE(delta.m02) = AVG;
+#undef EXPR
+#define EXPR(eps) (ESCALAR_RE(eps.m12) - ESCALAR_MULT_CONJ_RE(eps.m02, eps.m01) / eps.m00)
+	  ESCALAR_RE(delta.m12) = AVG;
+#undef EXPR
+
+#ifdef WITH_HERMITIAN_EPSILON
+#  define EXPR(eps) (ESCALAR_IM(eps.m01) / eps.m00)
+	  ESCALAR_IM(delta.m01) = AVG;
+#  undef EXPR
+#  define EXPR(eps) (ESCALAR_IM(eps.m02) / eps.m00)
+	  ESCALAR_IM(delta.m02) = AVG;
+#  undef EXPR
+#  define EXPR(eps) (ESCALAR_IM(eps.m12) - ESCALAR_MULT_CONJ_IM(eps.m02, eps.m01) / eps.m00)
+	  ESCALAR_IM(delta.m12) = AVG;
+#  undef EXPR
+#endif /* WITH_HERMITIAN_EPSILON */
+
+	  meps->m00 = -1/delta.m00;
+	  meps->m11 = delta.m11 - ESCALAR_NORMSQR(delta.m01) / delta.m00;
+	  meps->m22 = delta.m22 - ESCALAR_NORMSQR(delta.m02) / delta.m00;
+	  ASSIGN_ESCALAR(meps->m01, -ESCALAR_RE(delta.m01)/delta.m00,
+			-ESCALAR_IM(delta.m01)/delta.m00);
+	  ASSIGN_ESCALAR(meps->m02, -ESCALAR_RE(delta.m02)/delta.m00,
+			-ESCALAR_IM(delta.m02)/delta.m00);
+	  ASSIGN_ESCALAR(meps->m12, 
+			ESCALAR_RE(delta.m12) 
+			- ESCALAR_MULT_CONJ_RE(delta.m02, delta.m01)/delta.m00,
+			ESCALAR_IM(delta.m12) 
+			- ESCALAR_MULT_CONJ_IM(delta.m02, delta.m01)/delta.m00);
+
+#define SWAP(a,b) { double xxx = a; a = b; b = xxx; }	  
+	  /* invert rotation matrix = transpose */
+	  SWAP(Rot[0][1], Rot[1][0]);
+	  SWAP(Rot[0][2], Rot[2][0]);
+	  SWAP(Rot[2][1], Rot[1][2]);
+	  maxwell_sym_matrix_rotate(meps, meps, Rot); /* rotate back */
+#undef SWAP
+
+#else /* !KOTTKE, just compute mean epsilon and mean inverse epsilon */
 	  material_eps(mat2, &eps2, &epsinv2);
 
 	  meps->m00 = fill * (meps->m00 - eps2.m00) + eps2.m00;
@@ -397,7 +486,7 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 	  meps_inv->m02 = fill * (meps_inv->m02 - epsinv2.m02) + epsinv2.m02;
 	  meps_inv->m12 = fill * (meps_inv->m12 - epsinv2.m12) + epsinv2.m12;
 #endif
-
+#endif
      }
 
      return 1;

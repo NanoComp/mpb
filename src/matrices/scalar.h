@@ -68,6 +68,18 @@ typedef struct {
      CASSIGN_SCALAR(a, aaaa_tmp.re*aaaa_tmp_norm, aaaa_tmp.im*aaaa_tmp_norm); \
 }
 
+/* Re (b * c) */
+#define CSCALAR_MULT_RE(b, c) ((b).re * (c).re - (b).im * (c).im)
+
+/* IM (b * c) */
+#define CSCALAR_MULT_IM(b, c) ((b).re * (c).im + (b).im * (c).re)
+
+/* Re (b * conj(c)) */
+#define CSCALAR_MULT_CONJ_RE(b, c) ((b).re * (c).re + (b).im * (c).im)
+
+/* Im (b * conj(c)) */
+#define CSCALAR_MULT_CONJ_IM(b, c) ((b).im * (c).re - (b).re * (c).im)
+
 /* a = Re (b * c) */
 #define CASSIGN_MULT_RE(a, b, c) { \
      real bbbb_re = (b).re, bbbb_im = (b).im; \
@@ -131,6 +143,12 @@ typedef scalar_complex scalar;
 /* a = b / c = b * conj(c) / |c|^2 */
 #define ASSIGN_DIV(a, b, c) CASSIGN_DIV(a, b, c)
 
+#define SCALAR_MULT_RE(b, c) CSCALAR_MULT_RE(b, c) /* Re (b * c) */
+#define SCALAR_MULT_IM(b, c) CSCALAR_MULT_IM(b, c) /* Im (b * c) */
+
+#define SCALAR_MULT_CONJ_RE(b, c) CSCALAR_MULT_CONJ_RE(b, c)
+#define SCALAR_MULT_CONJ_IM(b, c) CSCALAR_MULT_CONJ_IM(b, c)
+
 /* a = Re (b * c) */
 #define ASSIGN_MULT_RE(a, b, c) CASSIGN_MULT_RE(a, b, c)
 
@@ -166,6 +184,12 @@ typedef real scalar;
 
 #define ASSIGN_MULT(a, b, c) (a) = (b) * (c);
 #define ASSIGN_DIV(a, b, c) (a) = (b) / (c);
+
+#define SCALAR_MULT_RE(b, c) ((b) * (c))
+#define SCALAR_MULT_IM(b, c) (0.0)
+
+#define SCALAR_MULT_CONJ_RE(b, c) ((b) * (c))
+#define SCALAR_MULT_CONJ_IM(b, c) (0.0)
 
 #define ASSIGN_MULT_RE(a, b, c) (a) = (b) * (c);
 #define ASSIGN_MULT_IM(a, b, c) (a) = 0.0;
