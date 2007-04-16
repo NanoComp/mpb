@@ -62,7 +62,7 @@ if test "$ok" = "no"; then
 	AC_DEFINE(CHECK_DISABLE,1,[Define to disable sanity checks in code])
 fi
 
-AC_ARG_ENABLE(debug, [AC_HELP_STRING([--disable-kottke],[disable new anisotropic smoothing based on Kottke algorithm])], ok=$enableval, ok=yes)
+AC_ARG_ENABLE(kottke, [AC_HELP_STRING([--disable-kottke],[disable new anisotropic smoothing based on Kottke algorithm])], ok=$enableval, ok=yes)
 if test "$ok" = "yes"; then
 	AC_DEFINE(KOTTKE,1,[Define to enable Kottke anisotropic smoothing])
 fi

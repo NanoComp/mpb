@@ -254,6 +254,22 @@ static int mean_epsilon_func(symmetric_matrix *meps,
      d2 *= no_size_y ? 0 : geometry_lattice.size.y * 0.5;
      d3 *= no_size_z ? 0 : geometry_lattice.size.z * 0.5;
 
+#if 0 /* no averaging */
+     {
+	  const geometric_object *o;
+          material_type mat;
+          vector3 z, shiftby;
+	  int id;
+          z = shift_to_unit_cell(p);
+          o = object_of_point_in_tree(z, geometry_tree, &shiftby, &id);
+	  mat = (o && o->material.which_subclass != MATERIAL_TYPE_SELF)
+               ? o->material : default_material;
+	  material_eps(mat, meps, meps_inv);
+	  n[0] = n[1] = n[2] = 0;
+	  return 1;
+     }
+#endif
+
      for (i = 0; i < num_neighbors[dimensions - 1]; ++i) {
 	  const geometric_object *o;
 	  material_type mat;
@@ -369,6 +385,13 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 	       Rot[0][2] = 0;
 	       Rot[1][2] = -n2;
 	       Rot[2][2] = n1;
+	  }
+	  { /* normalize second column */
+	       double s = Rot[0][2]*Rot[0][2]+Rot[1][2]*Rot[1][2]+Rot[2][2]*Rot[2][2];
+	       s = 1.0 / sqrt(s);
+	       Rot[0][2] *= s;
+	       Rot[1][2] *= s;
+	       Rot[2][2] *= s;
 	  }
 	  /* 1st column is 2nd column x 0th column */
 	  Rot[0][1] = Rot[1][2] * Rot[2][0] - Rot[2][2] * Rot[1][0];
