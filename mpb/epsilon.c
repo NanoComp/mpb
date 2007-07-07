@@ -372,7 +372,10 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 	  n0 = R[0][0] * n[0] + R[1][0] * n[1] + R[2][0] * n[2];
 	  n1 = R[0][1] * n[0] + R[1][1] * n[1] + R[2][1] * n[2];
 	  n2 = R[0][2] * n[0] + R[1][2] * n[1] + R[2][2] * n[2];
-	  norm = 1.0 / sqrt(n0*n0 + n1*n1 + n2*n2);
+	  norm = sqrt(n0*n0 + n1*n1 + n2*n2);
+	  if (norm == 0.0)
+	       return 0;
+	  norm = 1.0 / norm;
 	  Rot[0][0] = n0 = n0 * norm;
 	  Rot[1][0] = n1 = n1 * norm;
 	  Rot[2][0] = n2 = n2 * norm;
@@ -456,6 +459,12 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 	  SWAP(Rot[2][1], Rot[1][2]);
 	  maxwell_sym_matrix_rotate(meps, meps, Rot); /* rotate back */
 #undef SWAP
+
+#  ifdef DEBUG
+	  CHECK(negative_epsilon_okp 
+		|| maxwell_sym_matrix_positive_definite(meps),
+		"negative mean epsilon from Kottke algorithm");
+#  endif
 
 #else /* !KOTTKE, just compute mean epsilon and mean inverse epsilon */
 	  material_eps(mat2, &eps2, &epsinv2);

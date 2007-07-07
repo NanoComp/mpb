@@ -139,6 +139,7 @@ extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
 extern void maxwell_sym_matrix_rotate(symmetric_matrix *RAR,
 				      const symmetric_matrix *A_,
 				      const double R[3][3]);
+extern int maxwell_sym_matrix_positive_definite(symmetric_matrix *V);
 
 extern void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 				int howmany, int stride, int dist);

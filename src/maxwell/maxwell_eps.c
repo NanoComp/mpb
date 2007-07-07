@@ -154,7 +154,7 @@ void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
 }
 
 /* Returns whether or not V is positive-definite. */
-static int sym_matrix_positive_definite(symmetric_matrix *V)
+int maxwell_sym_matrix_positive_definite(symmetric_matrix *V)
 {
      real det2, det3;
      real m00 = V->m00, m11 = V->m11, m22 = V->m22;
@@ -241,7 +241,7 @@ int check_maxwell_dielectric(maxwell_data *d,
 
      for (i = 0; i < d->fft_output_size; ++i) {
 	  if (!negative_epsilon_okp &&
-	      !sym_matrix_positive_definite(d->eps_inv + i))
+	      !maxwell_sym_matrix_positive_definite(d->eps_inv + i))
 	       return 1;
 	  if (require_2d) {
 #if defined(WITH_HERMITIAN_EPSILON)
