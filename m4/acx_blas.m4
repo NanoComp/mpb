@@ -95,6 +95,13 @@ if test $acx_blas_ok = no; then
 	AC_CHECK_LIB(mkl, $sgemm, [acx_blas_ok=yes;BLAS_LIBS="-lmkl"])
 fi
 
+# BLAS in Apple vecLib library?
+if test $acx_blas_ok = no; then
+	save_LIBS="$LIBS"; LIBS="-framework vecLib $LIBS"
+	AC_CHECK_FUNC($sgemm, [acx_blas_ok=yes;BLAS_LIBS="-framework vecLib"])
+	LIBS="$save_LIBS"
+fi
+
 # BLAS in Alpha CXML library?
 if test $acx_blas_ok = no; then
 	AC_CHECK_LIB(cxml, $sgemm, [acx_blas_ok=yes;BLAS_LIBS="-lcxml"])
