@@ -66,7 +66,7 @@ nodist_mpb@MPB_SUFFIX@_SOURCES = main.c geom.c ctl-io.h ctl-io.c
 BUILT_SOURCES = $(nodist_mpb@MPB_SUFFIX@_SOURCES)
 mpb@MPB_SUFFIX@_LDADD = $(MY_LIBS)
 mpb@MPB_SUFFIX@_LDFLAGS = $(MY_LDFLAGS)
-mpb@MPB_SUFFIX@_CPPFLAGS = $(MY_CPPFLAGS) $(MY_DEFS) $(CTL_DEFS)
+mpb@MPB_SUFFIX@_CPPFLAGS = $(MY_CPPFLAGS) $(MY_DEFS) $(CTL_DEFS)  $(CTL_H_CPPFLAG)
 
 main.c: $(LIBCTL_DIR)/base/main.c
 	cp -f $(LIBCTL_DIR)/base/main.c $@
