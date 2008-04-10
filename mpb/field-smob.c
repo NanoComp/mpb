@@ -362,7 +362,6 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 		   break;
 	  }
      }
-     free(ps);
      if (src.num_items == 1 && ps[0]->type == pd->type)
 	  pd->type_char = ps[0]->type_char;
      else if (src.num_items > 1)
@@ -377,6 +376,7 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 		   pd->type_char = 'c'; 
 		   break;
 	  }
+     free(ps);
      update_curfield(pd);
 }
 
