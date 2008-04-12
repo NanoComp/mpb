@@ -372,6 +372,17 @@ AC_EGREP_CPP(yes, [[
 AC_CHECK_LIB(gen, basename)
 
 ##############################################################################
+# check for nlopt library and libctl support
+
+with_nlopt=no
+if test -r $LIBCTL_DIR/utils/nlopt.c -a -r $LIBCTL_DIR/utils/nlopt-constants.scm; then
+   AC_CHECK_LIB(nlopt, nlopt_minimize, [with_nlopt=yes
+				        NLOPT_CPPFLAG=-DHAVE_NLOPT])
+fi
+AC_SUBST(NLOPT_CPPFLAG)
+AM_CONDITIONAL(NLOPT, test "x$with_nlopt" = "xyes")
+
+##############################################################################
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h getopt.h)
