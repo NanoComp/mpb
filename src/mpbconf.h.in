@@ -1,0 +1,13 @@
+#ifndef MPB_H
+#define MPB_H 1
+
+#undef SCALAR_COMPLEX
+#undef SCALAR_LONG_DOUBLE_PREC
+#undef SCALAR_SINGLE_PREC
+#undef WITH_HERMITIAN_EPSILON
+
+#define MPB_REAL 1 /* avoid C++ conflict with MPB's "real" type */
+#include "mpb/eigensolver.h"
+#include "mpb/maxwell.h"
+
+#endif /* MPB_H */

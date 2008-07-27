@@ -18,6 +18,10 @@
 #ifndef EIGENSOLVER_H
 #define EIGENSOLVER_H
 
+#ifdef MPB_REAL
+#  define real mpb_real
+#endif
+
 #include "matrices.h"
 
 #ifdef __cplusplus
@@ -97,5 +101,9 @@ extern void evectconstraint_chain_func(evectmatrix X, void *data);
 #ifdef __cplusplus
 }  /* extern "C" */
 #endif /* __cplusplus */
+
+#ifdef MPB_REAL
+#  undef real
+#endif
 
 #endif /* EIGENSOLVER_H */

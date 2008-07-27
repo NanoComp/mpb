@@ -18,6 +18,10 @@
 #ifndef MAXWELL_H
 #define MAXWELL_H
 
+#ifdef MPB_REAL
+#  define real mpb_real
+#endif
+
 #include "scalar.h"
 #include "matrices.h"
 
@@ -235,5 +239,9 @@ extern int check_maxwell_dielectric(maxwell_data *d,
 #ifdef __cplusplus
 }  /* extern "C" */
 #endif /* __cplusplus */
+
+#ifdef MPB_REAL
+#  undef real
+#endif
 
 #endif /* MAXWELL_H */
