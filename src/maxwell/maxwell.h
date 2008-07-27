@@ -49,7 +49,7 @@ typedef struct {
 #    define ESCALAR_RE(z) CSCALAR_RE(z)
 #    define ESCALAR_IM(z) CSCALAR_IM(z)
 #    define ESCALAR_NORMSQR(z) CSCALAR_NORMSQR(z)
-#    define ASSIGN_ESCALAR(z, re, im) ASSIGN_CSCALAR(z, re, im)
+#    define ASSIGN_ESCALAR(z, re, im) CASSIGN_SCALAR(z, re, im)
 #    define ESCALAR_MULT_CONJ_RE(a, b) CSCALAR_MULT_CONJ_RE(a, b)
 #    define ESCALAR_MULT_CONJ_IM(a, b) CSCALAR_MULT_CONJ_IM(a, b)
 #else
