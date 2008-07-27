@@ -20,6 +20,10 @@
 
 #include "scalar.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef struct {
      int N, localN, Nstart, allocN;
      int c;
@@ -108,5 +112,9 @@ extern void sqmatrix_invert(sqmatrix U, short positive_definite,
 			    sqmatrix Work);
 extern void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W);
 extern void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W);
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* MATRICES_H */

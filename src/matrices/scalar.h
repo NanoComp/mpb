@@ -18,6 +18,10 @@
 #ifndef SCALAR_H
 #define SCALAR_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 #if defined(SCALAR_SINGLE_PREC)
 typedef float real;
 #define SCALAR_MPI_TYPE MPI_FLOAT
@@ -205,5 +209,9 @@ typedef real scalar;
 #define ASSIGN_CONJ(a, b) ASSIGN_SCALAR(a, SCALAR_RE(b), -SCALAR_IM(b))
 #define ACCUMULATE_SUM(sum, a) ACCUMULATE_SCALAR(sum,SCALAR_RE(a),SCALAR_IM(a))
 #define ACCUMULATE_DIFF(sum, a) ACCUMULATE_DIFF_SCALAR(sum,SCALAR_RE(a),SCALAR_IM(a))
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* SCALAR_H */

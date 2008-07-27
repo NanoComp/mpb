@@ -20,6 +20,10 @@
 
 #include "matrices.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 typedef void (*evectoperator) (evectmatrix Xin, evectmatrix Xout,
 			       void *data, int is_current_eigenvector,
 			       evectmatrix Work);
@@ -89,5 +93,9 @@ extern evectconstraint_chain *evect_add_constraint(evectconstraint_chain
 						   void *constraint_data);
 extern void evect_destroy_constraints(evectconstraint_chain *constraints);
 extern void evectconstraint_chain_func(evectmatrix X, void *data);
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* EIGENSOLVER_H */

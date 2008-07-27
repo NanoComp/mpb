@@ -21,6 +21,10 @@
 #include "scalar.h"
 #include "matrices.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* This data structure is designed to hold k+G related data at a given
    point.  kmag is the length of the k+G vector.  The m and n vectors are
    orthonormal vectors orthogonal to (kx,ky,kz).  These are used
@@ -227,5 +231,9 @@ extern void spherical_quadrature_points(real *x, real *y, real *z,
 
 extern int check_maxwell_dielectric(maxwell_data *d,
 				    int negative_epsilon_okp);
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif /* __cplusplus */
 
 #endif /* MAXWELL_H */
