@@ -73,6 +73,8 @@ typedef struct {
 #define EVEN_Y_PARITY (1<<2)
 #define ODD_Y_PARITY (1<<3)
 
+#define MAX_NPLANS 32
+
 typedef struct {
      int nx, ny, nz;
      int local_nx, local_ny;
@@ -89,7 +91,9 @@ typedef struct {
      real current_k[3];  /* (in cartesian basis) */
      int parity;
 
-     void *plan, *iplan;
+     void *plans[MAX_NPLANS], *iplans[MAX_NPLANS];
+     int nplans, plans_howmany[MAX_NPLANS], plans_stride[MAX_NPLANS], plans_dist[MAX_NPLANS];
+
      scalar *fft_data;
      
      int zero_k;  /* non-zero if k is zero (handled specially) */

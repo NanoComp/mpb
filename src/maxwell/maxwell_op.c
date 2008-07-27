@@ -156,13 +156,75 @@ static void assign_ucross_t2c(scalar *a, const real u[3], const k_data k,
 void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array, 
 			 int howmany, int stride, int dist)
 {
-#ifdef HAVE_FFTW
+#if defined(HAVE_FFTW3)
+#   ifdef HAVE_MPI
+#     error FFTW3 MPI plans not supported yet; use FFTW2 for MPI
+#   endif
+     FFTW(plan) plan, iplan;
+     FFTW(complex) *carray = (FFTW(complex) *) array;
+     real *rarray = (real *) array;
+     int ip;
+     for (ip = 0; ip < d->nplans && (howmany != d->plans_howmany[ip] ||
+				     stride != d->plans_stride[ip] ||
+				     dist != d->plans_dist[ip]); ++ip);
+     if (ip < d->nplans) {
+	  plan = (FFTW(plan)) d->plans[ip];
+	  iplan = (FFTW(plan)) d->iplans[ip];
+     }
+     else { /* create new plans */
+	  int n[3]; n[0] = d->nx; n[1] = d->ny; n[2] = d->nz;
+#  ifdef SCALAR_COMPLEX
+	  plan = FFTW(plan_many_dft)(3, n, howmany, carray, 0, stride, dist,
+				     carray, 0, stride, dist,
+				     FFTW_BACKWARD, FFTW_ESTIMATE);
+	  iplan = FFTW(plan_many_dft)(3, n, howmany, carray, 0, stride, dist,
+				      carray, 0, stride, dist,
+				      FFTW_FORWARD, FFTW_ESTIMATE);
+#  else
+	  plan = FFTW(plan_many_dft_c2r)(3, n, howmany,
+					 carray, 0, stride, dist,
+					 rarray, 0, stride*2, dist*2,
+					 FFTW_ESTIMATE);
+	  iplan = FFTW(plan_many_dft_r2c)(3, n, howmany,
+					  rarray, 0, stride*2, dist*2,
+					  carray, 0, stride, dist,
+					  FFTW_ESTIMATE);
+#  endif
+	  CHECK(plan && iplan, "Failure creating FFTW3 plans");
+     }
+
+     /* note that the new-array execute functions should be safe
+	since we only apply maxwell_compute_fft to fftw_malloc'ed data 
+	(so we don't ever have misaligned arrays), and we check above
+	that the strides etc. match */
+#  ifdef SCALAR_COMPLEX
+     FFTW(execute_dft)(dir < 0 ? plan : iplan, carray, carray);
+#  else
+     if (dir > 0)
+	  FFTW(execute_dft_r2c)(iplan, rarray, carray);
+     else
+	  FFTW(execute_dft_c2r)(plan, carray, rarray);
+#  endif
+
+     if (ip == MAX_NPLANS) { /* don't store too many plans */
+	  FFTW(destroy_plan)(plan);
+	  FFTW(destroy_plan)(iplan);
+     }
+     else if (ip == d->nplans) { /* save for later re-use */
+	  d->plans[ip] = plan;
+	  d->iplans[ip] = iplan;
+	  d->plans_howmany[ip] = howmany;
+	  d->plans_stride[ip] = stride;
+	  d->plans_dist[ip] = dist;
+	  d->nplans++;
+     }
+#elif defined(HAVE_FFTW)
 
 #  ifdef SCALAR_COMPLEX
 
 #    ifndef HAVE_MPI
 
-     fftwnd((fftplan) (dir < 0 ? d->plan : d->iplan),
+     fftwnd((fftplan) (dir < 0 ? d->plans[0] : d->iplans[0]),
 	    howmany,
 	    (fftw_complex *) array, stride, dist,
 	    0, 0, 0);
@@ -172,7 +234,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
      CHECK(stride == howmany && dist == 1,
 	   "weird strides and dists don't work with fftwnd_mpi");
      
-     fftwnd_mpi((fftplan) (dir < 0 ? d->plan : d->iplan),
+     fftwnd_mpi((fftplan) (dir < 0 ? d->plans[0] : d->iplans[0]),
 		howmany,
 		(fftw_complex *) array, (fftw_complex *) NULL,
 		FFTW_TRANSPOSED_ORDER);
@@ -184,12 +246,12 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 #    ifndef HAVE_MPI
 
      if (dir > 0)
-	  rfftwnd_real_to_complex((fftplan) (d->iplan),
+	  rfftwnd_real_to_complex((fftplan) (d->iplans[0]),
 				  howmany,
 				  (fftw_real *) array, stride, dist,
 				  0, 0, 0);
      else
-	  rfftwnd_complex_to_real((fftplan) (d->plan),
+	  rfftwnd_complex_to_real((fftplan) (d->plans[0]),
 				  howmany,
 				  (fftw_complex *) array, stride, dist,
 				  0, 0, 0);
@@ -199,7 +261,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
      CHECK(stride == howmany && dist == 1,
 	   "weird strides and dists don't work with rfftwnd_mpi");
      
-     rfftwnd_mpi((fftplan) (dir < 0 ? d->plan : d->iplan),
+     rfftwnd_mpi((fftplan) (dir < 0 ? d->plans[0] : d->iplans[0]),
 		 howmany, array, (scalar *) NULL,
 		 FFTW_TRANSPOSED_ORDER);
 

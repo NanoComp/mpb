@@ -118,25 +118,34 @@ fi
 # though, we do nothing (and wait for the compilation errors).
 
 ##############################################################################
+AC_ARG_WITH(mpi, [AC_HELP_STRING([--with-mpi],[enable MPI parallelization])], with_mpi=$withval, with_mpi=no)
+AC_ARG_WITH(fftw2, [AC_HELP_STRING([--with-fftw2],[prefer FFTW2 to FFTW3])], with_fftw2=$withval, with_fftw2=no)
+
 # Check for FFTW libraries
+fftw3_func=execute
+test "x$with_mpi" = xno || fftw3_func=notarealfunction # skip FFTW3 with MPI
+test "x$with_fftw2" = xyes && fftw3_func=notarealfunction # prefer FFTW2
 if test "$enable_single" = "yes"; then
+        AC_CHECK_LIB(fftw3f, fftwf_$fftw3_func, [], [
 	AC_CHECK_LIB(sfftw, fftw)
 	if test x"$inv_sym" = xyes; then
 		AC_CHECK_LIB(srfftw, rfftw)
-	fi
+	fi])
 elif test "$enable_long_double" = "yes"; then
+        AC_CHECK_LIB(fftw3l, fftwl_$fftw3_func, [], [
 	AC_CHECK_LIB(xfftw, fftw)
 	if test x"$inv_sym" = xyes; then
 		AC_CHECK_LIB(xrfftw, rfftw)
-	fi
+	fi])
 else
+        AC_CHECK_LIB(fftw3, fftw_$fftw3_func, [], [
 	AC_CHECK_LIB(dfftw, fftw)
 	if test x"$inv_sym" = xyes; then
 		AC_CHECK_LIB(drfftw, rfftw)
-	fi
+	fi])
 fi
 
-if test x = x"`echo $LIBS | egrep 'l[[dsx]]fftw'`"; then
+if test x = x"`echo $LIBS | egrep 'l[[dsx]]fftw|fftw3'`"; then
 	AC_CHECK_LIB(fftw, fftw)
 	if test x"$inv_sym" = xyes; then
 		AC_CHECK_LIB(rfftw, rfftw)
@@ -148,7 +157,7 @@ if test x = x"`echo $LIBS | egrep 'l[[dsx]]*fftw'`"; then
 fi
 
 if test x"$inv_sym" = xyes; then
-	if test x = x"`echo $LIBS | egrep 'l[[dsx]]*rfftw'`"; then
+	if test x = x"`echo $LIBS | egrep 'l[[dsx]]*rfftw|lfftw3'`"; then
 		AC_MSG_ERROR([The RFFTW libraries, which are required to compile MPB with inversion symmetry, could not be found.  These should have been installed as a part of FFTW.])
 	fi
 fi
@@ -163,8 +172,6 @@ LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
 
 ##############################################################################
 # Check for MPI library
-
-AC_ARG_WITH(mpi, [AC_HELP_STRING([--with-mpi],[enable MPI parallelization])], with_mpi=$withval, with_mpi=no)
 
 if test "x$with_mpi" = "xyes"; then
 	ACX_MPI([], [AC_MSG_ERROR(could not find mpi library for --with-mpi)])

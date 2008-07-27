@@ -40,11 +40,12 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      n[1] = ny;
      n[2] = nz;
 
-#ifndef HAVE_FFTW
+#if !defined(HAVE_FFTW) && !defined(HAVE_FFTW3)
 #  error Non-FFTW FFTs are not currently supported.
 #endif
      
-#ifdef HAVE_FFTW
+
+#if defined(HAVE_FFTW)
      CHECK(sizeof(fftw_real) == sizeof(real),
 	   "floating-point type is inconsistent with FFTW!");
 #endif
@@ -64,6 +65,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->last_dim_size = d->last_dim = n[rank - 1];
 
      /* ----------------------------------------------------- */
+     d->nplans = 1;
 #ifndef HAVE_MPI 
      d->local_nx = nx; d->local_ny = ny;
      d->local_x_start = d->local_y_start = 0;
@@ -73,16 +75,25 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
      d->fft_data = 0;  /* initialize it here for use in specific planner? */
 
-#  ifdef HAVE_FFTW
+#  if defined(HAVE_FFTW3)
+     d->nplans = 0; /* plans will be created as needed */
 #    ifdef SCALAR_COMPLEX
      d->fft_output_size = fft_data_size = nx * ny * nz;
-     d->plan = fftwnd_create_plan_specific(rank, n, FFTW_BACKWARD,
+#    else
+     d->last_dim_size = 2 * (d->last_dim / 2 + 1);
+     d->fft_output_size = (fft_data_size = d->other_dims * d->last_dim_size)/2;
+#    endif
+
+#  elif defined(HAVE_FFTW)
+#    ifdef SCALAR_COMPLEX
+     d->fft_output_size = fft_data_size = nx * ny * nz;
+     d->plans[0] = fftwnd_create_plan_specific(rank, n, FFTW_BACKWARD,
 					   FFTW_ESTIMATE | FFTW_IN_PLACE,
 					   (fftw_complex*) d->fft_data,
 					   3 * d->num_fft_bands,
 					   (fftw_complex*) d->fft_data,
 					   3 * d->num_fft_bands);
-     d->iplan = fftwnd_create_plan_specific(rank, n, FFTW_FORWARD,
+     d->iplans[0] = fftwnd_create_plan_specific(rank, n, FFTW_FORWARD,
 					    FFTW_ESTIMATE | FFTW_IN_PLACE,
 					    (fftw_complex*) d->fft_data,
 					    3 * d->num_fft_bands,
@@ -91,13 +102,13 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 #    else /* not SCALAR_COMPLEX */
      d->last_dim_size = 2 * (d->last_dim / 2 + 1);
      d->fft_output_size = (fft_data_size = d->other_dims * d->last_dim_size)/2;
-     d->plan = rfftwnd_create_plan_specific(rank, n, FFTW_COMPLEX_TO_REAL,
+     d->plans[0] = rfftwnd_create_plan_specific(rank, n, FFTW_COMPLEX_TO_REAL,
 					    FFTW_ESTIMATE | FFTW_IN_PLACE,
 					    (fftw_real*) d->fft_data,
 					    3 * d->num_fft_bands,
 					    (fftw_real*) d->fft_data,
 					    3 * d->num_fft_bands);
-     d->iplan = rfftwnd_create_plan_specific(rank, n, FFTW_REAL_TO_COMPLEX,
+     d->iplans[0] = rfftwnd_create_plan_specific(rank, n, FFTW_REAL_TO_COMPLEX,
 					     FFTW_ESTIMATE | FFTW_IN_PLACE,
 					     (fftw_real*) d->fft_data,
 					     3 * d->num_fft_bands,
@@ -109,18 +120,21 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 #else /* HAVE_MPI */
      /* ----------------------------------------------------- */
 
-#  ifdef HAVE_FFTW
+#  if defined(HAVE_FFTW3)
+#    error FFTW3 MPI plans not supported yet; use FFTW2 for MPI
+
+#  elif defined(HAVE_FFTW)
 
      CHECK(rank > 1, "rank < 2 MPI computations are not supported");
 
 #    ifdef SCALAR_COMPLEX
-     d->iplan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
+     d->iplans[0] = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
 				       FFTW_FORWARD,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
      {
 	  int nt[3]; /* transposed dimensions for reverse FFT */
 	  nt[0] = n[1]; nt[1] = n[0]; nt[2] = n[2]; 
-	  d->plan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, nt,
+	  d->plans[0] = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, nt,
 					   FFTW_BACKWARD,
 					   FFTW_ESTIMATE | FFTW_IN_PLACE);
      }
@@ -135,7 +149,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
      CHECK(rank > 1, "rank < 2 MPI computations are not supported");
 
-     d->iplan = rfftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
+     d->iplans[0] = rfftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
 					FFTW_REAL_TO_COMPLEX,
 					FFTW_ESTIMATE | FFTW_IN_PLACE);
 
@@ -143,7 +157,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 	the reverse transform here--we always pass the dimensions of the
 	original real array, and rfftwnd_mpi assumes that if one
 	transform is transposed, then the other is as well. */
-     d->plan = rfftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
+     d->plans[0] = rfftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
 				       FFTW_COMPLEX_TO_REAL,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
 
@@ -170,7 +184,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      /* ----------------------------------------------------- */
 
 #ifdef HAVE_FFTW
-     CHECK(d->plan && d->iplan, "FFTW plan creation failed");
+     CHECK(d->plans[0] && d->iplans[0], "FFTW plan creation failed");
 #endif
 
      CHK_MALLOC(d->eps_inv, symmetric_matrix, d->fft_output_size);
@@ -178,7 +192,12 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      /* A scratch output array is required because the "ordinary" arrays
 	are not in a cartesian basis (or even a constant basis). */
      fft_data_size *= d->max_fft_bands;
+#if defined(HAVE_FFTW3)
+     d->fft_data = (scalar *) FFTW(malloc)(sizeof(scalar) * 3 * fft_data_size);
+     CHECK(d->fft_data, "out of memory!");
+#else     
      CHK_MALLOC(d->fft_data, scalar, 3 * fft_data_size);
+#endif
 
      CHK_MALLOC(d->k_plus_G, k_data, *local_N);
      CHK_MALLOC(d->k_plus_G_normsqr, real, *local_N);
@@ -196,29 +215,39 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 void destroy_maxwell_data(maxwell_data *d)
 {
      if (d) {
+	  int i;
 
-#ifdef HAVE_FFTW
+	  for (i = 0; i < d->nplans; ++i) {
+#if defined(HAVE_FFTW3)
+	       FFTW(destroy_plan)((fftplan) (d->plans[i]));
+	       FFTW(destroy_plan)((fftplan) (d->iplans[i]));
+#elif defined(HAVE_FFTW)
 #  ifdef HAVE_MPI
 #    ifdef SCALAR_COMPLEX
-	  fftwnd_mpi_destroy_plan((fftplan) (d->plan));
-	  fftwnd_mpi_destroy_plan((fftplan) (d->iplan));
+	       fftwnd_mpi_destroy_plan((fftplan) (d->plans[i]));
+	       fftwnd_mpi_destroy_plan((fftplan) (d->iplans[i]));
 #    else /* not SCALAR_COMPLEX */
-	  rfftwnd_mpi_destroy_plan((fftplan) (d->plan));
-	  rfftwnd_mpi_destroy_plan((fftplan) (d->iplan));
+	       rfftwnd_mpi_destroy_plan((fftplan) (d->plans[i]));
+	       rfftwnd_mpi_destroy_plan((fftplan) (d->iplans[i]));
 #    endif /* not SCALAR_COMPLEX */
 #  else /* not HAVE_MPI */
 #    ifdef SCALAR_COMPLEX
-	  fftwnd_destroy_plan((fftplan) (d->plan));
-	  fftwnd_destroy_plan((fftplan) (d->iplan));
+	       fftwnd_destroy_plan((fftplan) (d->plans[i]));
+	       fftwnd_destroy_plan((fftplan) (d->iplans[i]));
 #    else /* not SCALAR_COMPLEX */
-	  rfftwnd_destroy_plan((fftplan) (d->plan));
-	  rfftwnd_destroy_plan((fftplan) (d->iplan));
+	       rfftwnd_destroy_plan((fftplan) (d->plans[i]));
+	       rfftwnd_destroy_plan((fftplan) (d->iplans[i]));
 #    endif /* not SCALAR_COMPLEX */
 #  endif /* not HAVE_MPI */
 #endif /* HAVE FFTW */
+	  }
 
 	  free(d->eps_inv);
+#if defined(HAVE_FFTW3)
+	  FFTW(free)(d->fft_data);
+#else
 	  free(d->fft_data);
+#endif
 	  free(d->k_plus_G);
 	  free(d->k_plus_G_normsqr);
 

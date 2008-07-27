@@ -24,7 +24,13 @@
 
 #include "maxwell.h"
 
-#if defined(HAVE_LIBFFTW)
+#if defined(HAVE_LIBFFTW3) || defined(HAVE_LIBFFTW3F) || defined(HAVE_LIBFFTW3L)
+#  include <fftw3.h>
+#  ifdef HAVE_MPI
+#    error FFTW3 MPI libraries are not supported yet; use FFTW2
+#  endif
+#  define HAVE_FFTW3 1
+#elif defined(HAVE_LIBFFTW)
 #  include <fftw.h>
 #  include <rfftw.h>
 #  ifdef HAVE_MPI
@@ -58,7 +64,18 @@
 #  define HAVE_FFTW 1
 #endif
 
-#ifdef HAVE_FFTW
+#include "scalar.h"
+
+#if defined(HAVE_FFTW3)
+#  if defined(SCALAR_SINGLE_PREC)
+#    define FFTW(x) fftwf_ ## x
+#  elif defined(SCALAR_LONG_DOUBLE_PREC)
+#    define FFTW(x) fftwl_ ## x
+#  else
+#    define FFTW(x) fftw_ ## x
+#  endif
+  typedef FFTW(plan) fftplan;
+#elif defined(HAVE_FFTW)
 #  ifdef HAVE_MPI
 #    ifdef SCALAR_COMPLEX
      typedef fftwnd_mpi_plan fftplan;
