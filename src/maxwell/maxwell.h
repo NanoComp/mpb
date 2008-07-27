@@ -94,7 +94,7 @@ typedef struct {
      void *plans[MAX_NPLANS], *iplans[MAX_NPLANS];
      int nplans, plans_howmany[MAX_NPLANS], plans_stride[MAX_NPLANS], plans_dist[MAX_NPLANS];
 
-     scalar *fft_data;
+     scalar *fft_data, *fft_data2;
      
      int zero_k;  /* non-zero if k is zero (handled specially) */
      k_data *k_plus_G;
@@ -145,7 +145,8 @@ extern void maxwell_sym_matrix_rotate(symmetric_matrix *RAR,
 				      const double R[3][3]);
 extern int maxwell_sym_matrix_positive_definite(symmetric_matrix *V);
 
-extern void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
+extern void maxwell_compute_fft(int dir, maxwell_data *d, 
+				scalar *array_in, scalar *array_out,
 				int howmany, int stride, int dist);
 extern void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Xin,
 				     scalar_complex *dfield,

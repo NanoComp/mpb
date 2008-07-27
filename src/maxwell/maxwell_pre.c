@@ -215,7 +215,7 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
 {
      maxwell_data *d = (maxwell_data *) data;
      int cur_band_start;
-     scalar *fft_data;
+     scalar *fft_data, *fft_data2;
      scalar_complex *cdata;
      real scale;
      int i, j, b;
@@ -230,6 +230,7 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
 	  evectmatrix_XeYS(Xout, Xin, YtY, 1);
 
      fft_data = d->fft_data;
+     fft_data2 = d->fft_data2;
      cdata = (scalar_complex *) fft_data;
 
      scale = -1.0 / Xout.N;  /* scale factor to normalize FFT;
@@ -249,7 +250,7 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
 		    k_data cur_k = d->k_plus_G[ij];
 		    
 		    for (b = 0; b < cur_num_bands; ++b)
-			 assign_crossinv_t2c(&fft_data[3 * (ij2*cur_num_bands
+			 assign_crossinv_t2c(&fft_data2[3 * (ij2*cur_num_bands
 							    + b)],
 					     cur_k,
 					     &Xout.data[ij * 2 * Xout.p +
@@ -261,7 +262,7 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
 	  /* Multiply by epsilon: */
 	  
 	  /* convert to position space via FFT: */
-	  maxwell_compute_fft(+1, d, fft_data,
+	  maxwell_compute_fft(+1, d, fft_data2, fft_data,
 			      cur_num_bands*3, cur_num_bands*3, 1);
 
 	  /* multiply by epsilon in position space.  Don't bother to
@@ -282,7 +283,7 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
 	  }
 
 	  /* convert back to Fourier space */
-          maxwell_compute_fft(-1, d, fft_data,
+          maxwell_compute_fft(-1, d, fft_data, fft_data2,
 			      cur_num_bands*3, cur_num_bands*3, 1);
 
 	  /********************************************/
@@ -299,7 +300,7 @@ void maxwell_preconditioner2(evectmatrix Xin, evectmatrix Xout, void *data,
 						       b + cur_band_start],
 					     Xout.p,
 					     cur_k,
-					     &fft_data[3 * (ij2*cur_num_bands
+					     &fft_data2[3 * (ij2*cur_num_bands
 							    + b)],
 					     scale);
                }

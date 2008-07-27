@@ -461,6 +461,7 @@ void compute_field_divergence(void)
 {
      int i, j, N;
      scalar *field = (scalar *) curfield;
+     scalar *field2 = mdata->fft_data == mdata->fft_data2 ? field : (field == mdata->fft_data ? mdata->fft_data2 : mdata->fft_data);
      real scale;
 
      if (!curfield || !strchr("dhec", curfield_type)) {
@@ -469,7 +470,7 @@ void compute_field_divergence(void)
      }
 
      /* convert back to Fourier space */
-     maxwell_compute_fft(-1, mdata, field, 3, 3, 1);
+     maxwell_compute_fft(-1, mdata, field, field2, 3, 3, 1);
 
      /* compute (k+G) dot field */
      for (i = 0; i < mdata->other_dims; ++i)
@@ -480,17 +481,17 @@ void compute_field_divergence(void)
 	       real kx = cur_k.kmag * (cur_k.my*cur_k.nz-cur_k.mz*cur_k.ny);
 	       real ky = cur_k.kmag * (cur_k.mz*cur_k.nx-cur_k.mx*cur_k.nz);
 	       real kz = cur_k.kmag * (cur_k.mx*cur_k.ny-cur_k.my*cur_k.nz);
-	       ASSIGN_SCALAR(field[ij],
-			     SCALAR_RE(field[3*ij+0]) * kx +
-			     SCALAR_RE(field[3*ij+1]) * ky +
-			     SCALAR_RE(field[3*ij+2]) * kz,
-			     SCALAR_IM(field[3*ij+0]) * kx +
-			     SCALAR_IM(field[3*ij+1]) * ky +
-			     SCALAR_IM(field[3*ij+2]) * kz);
+	       ASSIGN_SCALAR(field2[ij],
+			     SCALAR_RE(field2[3*ij+0]) * kx +
+			     SCALAR_RE(field2[3*ij+1]) * ky +
+			     SCALAR_RE(field2[3*ij+2]) * kz,
+			     SCALAR_IM(field2[3*ij+0]) * kx +
+			     SCALAR_IM(field2[3*ij+1]) * ky +
+			     SCALAR_IM(field2[3*ij+2]) * kz);
 	  }
 
      /* convert scalar field back to position space */
-     maxwell_compute_fft(+1, mdata, field, 1, 1, 1);
+     maxwell_compute_fft(+1, mdata, field2, field, 1, 1, 1);
 
      /* multiply by i (from divergence) and normalization (from FFT)
         and 2*pi (from k+G) */

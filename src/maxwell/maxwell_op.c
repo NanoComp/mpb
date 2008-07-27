@@ -153,7 +153,8 @@ static void assign_ucross_t2c(scalar *a, const real u[3], const k_data k,
 
 /**************************************************************************/
 
-void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array, 
+void maxwell_compute_fft(int dir, maxwell_data *d, 
+			 scalar *array_in, scalar *array_out, 
 			 int howmany, int stride, int dist)
 {
 #if defined(HAVE_FFTW3)
@@ -161,8 +162,10 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 #     error FFTW3 MPI plans not supported yet; use FFTW2 for MPI
 #   endif
      FFTW(plan) plan, iplan;
-     FFTW(complex) *carray = (FFTW(complex) *) array;
-     real *rarray = (real *) array;
+     FFTW(complex) *carray_in = (FFTW(complex) *) array_in;
+     real *rarray_in = (real *) array_in;
+     FFTW(complex) *carray_out = (FFTW(complex) *) array_out;
+     real *rarray_out = (real *) array_out;
      int ip;
      for (ip = 0; ip < d->nplans && (howmany != d->plans_howmany[ip] ||
 				     stride != d->plans_stride[ip] ||
@@ -174,21 +177,26 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
      else { /* create new plans */
 	  int n[3]; n[0] = d->nx; n[1] = d->ny; n[2] = d->nz;
 #  ifdef SCALAR_COMPLEX
-	  plan = FFTW(plan_many_dft)(3, n, howmany, carray, 0, stride, dist,
-				     carray, 0, stride, dist,
+	  plan = FFTW(plan_many_dft)(3, n, howmany, carray_in, 0, stride, dist,
+				     carray_out, 0, stride, dist,
 				     FFTW_BACKWARD, FFTW_ESTIMATE);
-	  iplan = FFTW(plan_many_dft)(3, n, howmany, carray, 0, stride, dist,
-				      carray, 0, stride, dist,
+	  iplan = FFTW(plan_many_dft)(3, n, howmany, carray_in,0,stride, dist,
+				      carray_out, 0, stride, dist,
 				      FFTW_FORWARD, FFTW_ESTIMATE);
 #  else
-	  plan = FFTW(plan_many_dft_c2r)(3, n, howmany,
-					 carray, 0, stride, dist,
-					 rarray, 0, stride*2, dist*2,
-					 FFTW_ESTIMATE);
-	  iplan = FFTW(plan_many_dft_r2c)(3, n, howmany,
-					  rarray, 0, stride*2, dist*2,
-					  carray, 0, stride, dist,
-					  FFTW_ESTIMATE);
+	  {
+	       int rnk = n[2] != 1 ? 3 : (n[1] != 1 ? 2 : 1);
+	       int nr[3]; nr[0] = n[0]; nr[1] = n[1]; nr[2] = n[2];
+	       nr[rnk-1] = 2*(nr[rnk-1]/2 + 1);
+	       plan = FFTW(plan_many_dft_c2r)(rnk, n, howmany,
+					      carray_in, 0, stride, dist,
+					      rarray_out, nr, stride, dist,
+					      FFTW_ESTIMATE);
+	       iplan = FFTW(plan_many_dft_r2c)(rnk, n, howmany,
+					       rarray_in, nr, stride, dist,
+					       carray_out, 0, stride, dist,
+					       FFTW_ESTIMATE);
+	  }
 #  endif
 	  CHECK(plan && iplan, "Failure creating FFTW3 plans");
      }
@@ -198,12 +206,12 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 	(so we don't ever have misaligned arrays), and we check above
 	that the strides etc. match */
 #  ifdef SCALAR_COMPLEX
-     FFTW(execute_dft)(dir < 0 ? plan : iplan, carray, carray);
+     FFTW(execute_dft)(dir < 0 ? plan : iplan, carray_in, carray_out);
 #  else
      if (dir > 0)
-	  FFTW(execute_dft_r2c)(iplan, rarray, carray);
+	  FFTW(execute_dft_r2c)(iplan, rarray_in, carray_out);
      else
-	  FFTW(execute_dft_c2r)(plan, carray, rarray);
+	  FFTW(execute_dft_c2r)(plan, carray_in, rarray_out);
 #  endif
 
      if (ip == MAX_NPLANS) { /* don't store too many plans */
@@ -220,13 +228,15 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
      }
 #elif defined(HAVE_FFTW)
 
+     CHECK(array_in == array_out, "only in-place supported with FFTW2");
+
 #  ifdef SCALAR_COMPLEX
 
 #    ifndef HAVE_MPI
 
      fftwnd((fftplan) (dir < 0 ? d->plans[0] : d->iplans[0]),
 	    howmany,
-	    (fftw_complex *) array, stride, dist,
+	    (fftw_complex *) array_in, stride, dist,
 	    0, 0, 0);
 
 #    else /* HAVE_MPI */
@@ -236,7 +246,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
      
      fftwnd_mpi((fftplan) (dir < 0 ? d->plans[0] : d->iplans[0]),
 		howmany,
-		(fftw_complex *) array, (fftw_complex *) NULL,
+		(fftw_complex *) array_in, (fftw_complex *) NULL,
 		FFTW_TRANSPOSED_ORDER);
 
 #    endif /* HAVE_MPI */
@@ -248,12 +258,12 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
      if (dir > 0)
 	  rfftwnd_real_to_complex((fftplan) (d->iplans[0]),
 				  howmany,
-				  (fftw_real *) array, stride, dist,
+				  (fftw_real *) array_in, stride, dist,
 				  0, 0, 0);
      else
 	  rfftwnd_complex_to_real((fftplan) (d->plans[0]),
 				  howmany,
-				  (fftw_complex *) array, stride, dist,
+				  (fftw_complex *) array_in, stride, dist,
 				  0, 0, 0);
 
 #    else /* HAVE_MPI */
@@ -262,7 +272,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d, scalar *array,
 	   "weird strides and dists don't work with rfftwnd_mpi");
      
      rfftwnd_mpi((fftplan) (dir < 0 ? d->plans[0] : d->iplans[0]),
-		 howmany, array, (scalar *) NULL,
+		 howmany, array_in, (scalar *) NULL,
 		 FFTW_TRANSPOSED_ORDER);
 
 #    endif /* HAVE_MPI */
@@ -335,6 +345,7 @@ void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin,
 			      int cur_band_start, int cur_num_bands)
 {
      scalar *fft_data = (scalar *) dfield;
+     scalar *fft_data_in = d->fft_data2 == d->fft_data ? fft_data : (fft_data == d->fft_data ? d->fft_data2 : d->fft_data);
      int i, j, b;
 
      CHECK(Hin.c == 2, "fields don't have 2 components!");
@@ -351,7 +362,7 @@ void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin,
 	       k_data cur_k = d->k_plus_G[ij];
 	       
 	       for (b = 0; b < cur_num_bands; ++b)
-		    assign_cross_t2c(&fft_data[3 * (ij2*cur_num_bands 
+		    assign_cross_t2c(&fft_data_in[3 * (ij2*cur_num_bands 
 						    + b)], 
 				     cur_k, 
 				     &Hin.data[ij * 2 * Hin.p + 
@@ -360,7 +371,7 @@ void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin,
 	  }
 
      /* now, convert to position space via FFT: */
-     maxwell_compute_fft(+1, d, fft_data,
+     maxwell_compute_fft(+1, d, fft_data_in, fft_data,
 			 cur_num_bands*3, cur_num_bands*3, 1);
 }
 
@@ -399,6 +410,7 @@ void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout,
 			      real scale)
 {
      scalar *fft_data = (scalar *) efield;
+     scalar *fft_data_out = d->fft_data2 == d->fft_data ? fft_data : (fft_data == d->fft_data ? d->fft_data2 : d->fft_data);
      int i, j, b;
 
      CHECK(Hout.c == 2, "fields don't have 2 components!");
@@ -408,7 +420,7 @@ void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout,
 	   "invalid range of bands for computing fields");
 
      /* convert back to Fourier space */
-     maxwell_compute_fft(-1, d, fft_data,
+     maxwell_compute_fft(-1, d, fft_data, fft_data_out,
 			 cur_num_bands*3, cur_num_bands*3, 1);
      
      /* then, compute Hout = curl(fft_data) (* scale factor): */
@@ -423,7 +435,7 @@ void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout,
 		    assign_cross_c2t(&Hout.data[ij * 2 * Hout.p + 
 					       b + cur_band_start],
 				     Hout.p, cur_k, 
-				     &fft_data[3 * (ij2*cur_num_bands + b)],
+				     &fft_data_out[3 * (ij2*cur_num_bands+b)],
 				     scale);
 	  }
 }
@@ -436,6 +448,7 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 			      int cur_band_start, int cur_num_bands)
 {
      scalar *fft_data = (scalar *) hfield;
+     scalar *fft_data_in = d->fft_data2 == d->fft_data ? fft_data : (fft_data == d->fft_data ? d->fft_data2 : d->fft_data);
      int i, j, b;
 
      CHECK(Hin.c == 2, "fields don't have 2 components!");
@@ -453,7 +466,7 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
                k_data cur_k = d->k_plus_G[ij];
 	       
 	       for (b = 0; b < cur_num_bands; ++b)
-		    assign_t2c(&fft_data[3 * (ij2*cur_num_bands 
+		    assign_t2c(&fft_data_in[3 * (ij2*cur_num_bands 
 					      + b)], 
 			       cur_k,
 			       &Hin.data[ij * 2 * Hin.p + 
@@ -462,7 +475,7 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 	  }
 
      /* now, convert to position space via FFT: */
-     maxwell_compute_fft(+1, d, fft_data,
+     maxwell_compute_fft(+1, d, fft_data_in, fft_data,
 			 cur_num_bands*3, cur_num_bands*3, 1);
 }
 
@@ -1135,7 +1148,7 @@ void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
 		       maxwell_data *d, const real u[3])
 {
-     scalar *fft_data;
+     scalar *fft_data, *fft_data_in;
      scalar_complex *cdata;
      real scale;
      int cur_band_start;
@@ -1145,6 +1158,8 @@ void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
      CHECK(Xin.c == 2, "fields don't have 2 components!");
 
      cdata = (scalar_complex *) (fft_data = d->fft_data);
+     fft_data_in = d->fft_data2;
+
      scale = -1.0 / Xout.N;  /* scale factor to normalize FFT;
                                 negative sign comes from 2 i's from curls */
 
@@ -1161,7 +1176,7 @@ void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
 		    k_data cur_k = d->k_plus_G[ij];
 		    
 		    for (b = 0; b < cur_num_bands; ++b)
-			 assign_ucross_t2c(&fft_data[3 * (ij2*cur_num_bands
+			 assign_ucross_t2c(&fft_data_in[3 * (ij2*cur_num_bands
 							  + b)], 
 					   u, cur_k, 
 					   &Xin.data[ij * 2 * Xin.p + 
@@ -1170,7 +1185,7 @@ void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
 	       }
 	  
 	  /* now, convert to position space via FFT: */
-	  maxwell_compute_fft(+1, d, fft_data,
+	  maxwell_compute_fft(+1, d, fft_data_in, fft_data,
 			      cur_num_bands*3, cur_num_bands*3, 1);
 	  
           maxwell_compute_e_from_d(d, cdata, cur_num_bands);

@@ -195,8 +195,10 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 #if defined(HAVE_FFTW3)
      d->fft_data = (scalar *) FFTW(malloc)(sizeof(scalar) * 3 * fft_data_size);
      CHECK(d->fft_data, "out of memory!");
+     d->fft_data2 = d->fft_data; /* works in-place */
 #else     
      CHK_MALLOC(d->fft_data, scalar, 3 * fft_data_size);
+     d->fft_data2 = d->fft_data; /* works in-place */
 #endif
 
      CHK_MALLOC(d->k_plus_G, k_data, *local_N);
@@ -245,6 +247,8 @@ void destroy_maxwell_data(maxwell_data *d)
 	  free(d->eps_inv);
 #if defined(HAVE_FFTW3)
 	  FFTW(free)(d->fft_data);
+	  if (d->fft_data2 != d->fft_data)
+	       FFTW(free)(d->fft_data2);
 #else
 	  free(d->fft_data);
 #endif
