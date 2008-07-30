@@ -88,6 +88,7 @@ extern void cvector32cscalar3(scalar_complex *cs, cvector3 v);
 
 extern int no_size_x, no_size_y, no_size_z;
 extern geom_box_tree geometry_tree;
+extern void reset_epsilon(void);
 extern void init_epsilon(void);
 
 /**************************************************************************/

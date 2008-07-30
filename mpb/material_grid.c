@@ -28,10 +28,35 @@
 
 /**************************************************************************/
 
+/* For Guile 1.6, to access this with reasonable efficiency requires
+   some ugly code from the guts of libguile/unif.c.  In Guile 1.8,
+   they provided a documented way (scm_array_get_handle) to do this,
+   but in this case you are also required to call scm_array_handle_release,
+   via material_grid_array_release.  In our code, you can only have
+   one material_grid array pointer at a time. */
+#ifdef HAVE_SCM_ARRAY_GET_HANDLE
+static scm_t_array_handle cur_material_grid_array_handle;
+#endif
 static double *material_grid_array(const material_grid *g)
 {
+#ifdef HAVE_SCM_ARRAY_GET_HANDLE
+     scm_array_get_handle(g->matgrid, &cur_material_grid_array_handle);
+     return (double *) scm_array_handle_uniform_writable_elements(
+	  &cur_material_grid_array_handle);
+#else
      CHECK(SCM_ARRAYP(g->matgrid), "bug: matgrid is not an array");
      return (double *) SCM_CELL_WORD_1(SCM_ARRAY_V(g->matgrid));
+#endif
+}
+
+static void material_grid_array_release(const material_grid *g)
+{
+#ifdef HAVE_SCM_ARRAY_GET_HANDLE
+     (void) g;
+     scm_array_handle_release(&cur_material_grid_array_handle);
+#else
+     (void) g;
+#endif
 }
 
 /* Get the interpolated value at p from the material grid g.
@@ -42,12 +67,15 @@ static double *material_grid_array(const material_grid *g)
    array of g->size double-precision values. */
 real material_grid_val(vector3 p, const material_grid *g)
 {
+     real val;
      if (p.x >= 1.0) p.x -= 1.0; else if (p.x < 0.0) p.x += 1.0;
      if (p.y >= 1.0) p.y -= 1.0; else if (p.y < 0.0) p.y += 1.0;
      if (p.z >= 1.0) p.z -= 1.0; else if (p.z < 0.0) p.z += 1.0;
      CHECK(SCM_ARRAYP(g->matgrid), "bug: matgrid is not an array");
-     return linear_interpolate(p.x, p.y, p.z, material_grid_array(g),
-			       g->size.x, g->size.y, g->size.z, 1);
+     val = linear_interpolate(p.x, p.y, p.z, material_grid_array(g),
+			      g->size.x, g->size.y, g->size.z, 1);
+     material_grid_array_release(g);
+     return val;
 }
 
 /* Returns true if m is a material grid and has the same epsilon min/max
@@ -107,6 +135,22 @@ material_grid *get_material_grids(geometric_object_list g, int *ngrids)
 	       grids[j] = *g.items[i].material.subclass.material_grid_data;
 	       ++*ngrids;
 	  }
+     if (default_material.which_subclass == MATERIAL_GRID) {
+	  int j;
+	  for (j = 0; j < *ngrids; ++j)
+	       if (material_grid_equal(&grids[j],
+				       default_material.subclass
+				       .material_grid_data))
+		    break;
+	  if (j == *ngrids) {
+	       if (j >= nalloc) {
+		    nalloc = nalloc * 2 + 1;
+		    grids = realloc(grids, sizeof(material_grid) * nalloc);
+	       }
+	       grids[j] = *default_material.subclass.material_grid_data;
+	       ++*ngrids;
+	  }
+     }
      return grids;
 }
 
@@ -127,6 +171,7 @@ void material_grids_set(const double *u, material_grid *grids, int ngrids)
 	  int k;
 	  for (k = 0; k < ntot; ++k)
 	       a[k] = u[j + k];
+	  material_grid_array_release(&grids[i]);
 	  j += ntot;
      }
 }
@@ -140,6 +185,7 @@ void material_grids_get(double *u, const material_grid *grids, int ngrids)
 	  int k;
 	  for (k = 0; k < ntot; ++k)
 	       u[j + k] = a[k];
+	  material_grid_array_release(&grids[i]);
 	  j += ntot;
      }
 }
@@ -161,7 +207,8 @@ void material_grids_get(double *u, const material_grid *grids, int ngrids)
    pixel.
 
    This whole process is complicated by the fact that a given material grid
-   pixel may appear via multiple objects in the structure.
+   pixel may appear via multiple objects in the structure (although actually
+   this is pretty easy to handle).
 */
 
 static void material_grid_addgradient(double *v, double scalegrad,
@@ -218,9 +265,9 @@ static void material_grid_addgradient(double *v, double scalegrad,
 	  int found_o = 0;
 	  double Esqr;
 
-	  p.x = ix / g->size.x;
-	  p.y = iy / g->size.y;
-	  p.z = iz / g->size.z;
+	  p.x = (ix+0.5) / g->size.x;
+	  p.y = (iy+0.5) / g->size.y;
+	  p.z = (iz+0.5) / g->size.z;
 	  p = from_geom_object_coords(p, *o);
 
 	  tp = geom_tree_search(p, geometry_tree, &oi);
@@ -298,6 +345,51 @@ void material_grids_addgradient(double *v, double scalegrad, int band,
 	  
 	  v += ntot;
      }
+}
+
+/**************************************************************************/
+/* some routines mainly for debugging */
+
+void print_material_grids_gradient(integer band)
+{
+     int ngrids;
+     material_grid *grids = get_material_grids(geometry, &ngrids);
+     int i, ntot = material_grids_ntot(grids, ngrids);
+     double *grad = (double *) malloc(sizeof(double) * ntot);
+     for (i = 0; i < ntot; ++i) grad[i] = 0;
+     material_grids_addgradient(grad, 1.0, band, grids, ngrids);
+     for (i = 0; i < ntot; ++i)
+	  mpi_one_printf(", %g", grad[i]);
+     free(grad);
+     free(grids);
+}
+
+number material_grids_approx_gradient(vector3 kpoint, integer band, 
+				      integer iu, number du)
+{
+     int ngrids;
+     material_grid *grids = get_material_grids(geometry, &ngrids);
+     int i, ntot = material_grids_ntot(grids, ngrids);
+     double *u = (double *) malloc(sizeof(double) * ntot);
+     double f0, f1, dfdu;
+     solve_kpoint(kpoint);
+     f0 = freqs.items[band-1];
+     for (i = 0; i < ntot; ++i) u[i] = 0;
+     material_grids_addgradient(u, 1.0, band, grids, ngrids);
+     dfdu = u[iu];
+     material_grids_get(u, grids, ngrids);
+     u[iu] += du;
+     material_grids_set(u, grids, ngrids);
+     reset_epsilon();
+     solve_kpoint(kpoint);
+     f1 = freqs.items[band-1];
+     u[iu] -= du;
+     material_grids_set(u, grids, ngrids);
+     reset_epsilon();
+     mpi_one_printf("approxgrad: ntot=%d, u[%d] = %g -> f_%d = %g, u += %g -> f_%d = %g; df/du = %g vs. analytic %g\n", ntot, iu, u[iu], band, f0, du, band, f1, (f1-f0)/du, dfdu);
+     free(u);
+     free(grids);
+     return (f1 - f0) / du;
 }
 
 /**************************************************************************/

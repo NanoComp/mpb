@@ -526,22 +526,35 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 
 /**************************************************************************/
 
+void reset_epsilon(void)
+{
+     epsilon_func_data d;
+     int mesh[3];
+
+     mesh[0] = mesh_size;
+     mesh[1] = (dimensions > 1) ? mesh_size : 1;
+     mesh[2] = (dimensions > 2) ? mesh_size : 1;
+
+     get_epsilon_file_func(epsilon_input_file,
+			   &d.eps_file_func, &d.eps_file_func_data);
+     set_maxwell_dielectric(mdata, mesh, R, G, 
+			    epsilon_func, mean_epsilon_func, &d);
+     destroy_epsilon_file_func_data(d.eps_file_func_data);
+}
+
 /* Initialize the dielectric function of the global mdata structure,
    along with other geometry data.  Should be called from init-params,
    or in general when global input vars have been loaded and mdata
    allocated. */
 void init_epsilon(void)
 {
-     int mesh[3], i;
+     int i;
      int tree_depth, tree_nobjects;
      number no_size; 
 
      no_size = 2.0 / ctl_get_number("infinity");
 
      mpi_one_printf("Mesh size is %d.\n", mesh_size);
-     mesh[0] = mesh_size;
-     mesh[1] = (dimensions > 1) ? mesh_size : 1;
-     mesh[2] = (dimensions > 2) ? mesh_size : 1;
 
      no_size_x = geometry_lattice.size.x <= no_size;
      no_size_y = geometry_lattice.size.y <= no_size || dimensions < 2;
@@ -617,12 +630,5 @@ void init_epsilon(void)
 	    tree_depth, tree_nobjects, geometry.num_items);
 
      mpi_one_printf("Initializing dielectric function...\n");
-     {
-	  epsilon_func_data d;
-	  get_epsilon_file_func(epsilon_input_file,
-				&d.eps_file_func, &d.eps_file_func_data);
-	  set_maxwell_dielectric(mdata, mesh, R, G, 
-				 epsilon_func, mean_epsilon_func, &d);
-	  destroy_epsilon_file_func_data(d.eps_file_func_data);
-     }
+     reset_epsilon();
 }

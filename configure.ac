@@ -261,7 +261,7 @@ else
         AC_CHECK_LIB(guile, gh_eval_str, [], [AC_MSG_ERROR([linking to guile failed])])
 fi
 
-AC_CHECK_FUNCS(scm_make_smob_type)
+AC_CHECK_FUNCS(scm_make_smob_type scm_array_get_handle)
 AC_MSG_CHECKING([for SCM_SMOB_PREDICATE])
 AC_TRY_LINK([#include <guile/gh.h>
 #include <libguile/smob.h>],

@@ -57,7 +57,7 @@
     (lambda (object)
       (let ((sz (object-property-value object 'size))
 	    (i (object-property-value object 'matgrid-init)))
-	(let ((g (apply make-uniform-array (cons 1/3 (vector->list sz)))))
+	(let ((g (apply make-uniform-array (cons 0.333 (vector->list sz)))))
 	  (array-index-map! g (lambda (x y z) 
 				(i (- (/ x (vector3-x sz)) 0.5)
 				   (- (/ y (vector3-y sz)) 0.5)
@@ -239,6 +239,11 @@
   'SCM 'vector3)
 (define-external-function cvector-field-get-point-bloch false false 'cvector3 
   'SCM 'vector3)
+
+(define-external-function print-material-grids-gradient false false
+  no-return-value 'integer)
+(define-external-function material-grids-approx-gradient false false
+  'number 'vector3 'integer 'integer 'number)
 
 ; ****************************************************************
 
