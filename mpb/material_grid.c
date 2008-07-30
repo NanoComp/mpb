@@ -315,8 +315,10 @@ void material_grids_addgradient(double *v, double scalegrad, int band,
 {
      int i;
      CHECK(band <= num_bands, "addgradient called for uncomputed band");
-     scalegrad *= -freqs.items[band - 1]/2;
-     get_efield(band);
+     if (band) {
+	  scalegrad *= -freqs.items[band - 1]/2;
+	  get_efield(band);
+     }
      compute_field_squared();
      for (i = 0; i < ngrids; ++i) {
 	  int ntot = grids[i].size.x * grids[i].size.y * grids[i].size.z;
@@ -390,6 +392,121 @@ number material_grids_approx_gradient(vector3 kpoint, integer band,
      free(u);
      free(grids);
      return (f1 - f0) / du;
+}
+
+/**************************************************************************/
+
+#ifdef HAVE_NLOPT_H
+#  include <nlopt.h>
+#endif
+
+typedef struct {
+     vector3_list ks;
+     int b1, b2;
+     int ngrids;
+     material_grid *grids;
+     int iter;
+     SCM field1, field2;
+} maxgap_func_data;
+
+/* SCM to pass to nlopt for optimization */
+static double maxgap_func(int n, const double *u, double *grad, void *data)
+{
+     maxgap_func_data *d = (maxgap_func_data *) data;
+     int i;
+     double f1 = 0, f2 = HUGE_VAL, gap, scale;
+     char prefix[256];
+     SCM curfield = gh_lookup("cur-field");
+
+     material_grids_set(u, d->grids, d->ngrids);
+     reset_epsilon();
+
+     for (i = 0; i < d->ks.num_items; ++i) {
+	  solve_kpoint(d->ks.items[i]);
+	  if (freqs.items[d->b1 - 1] > f1) {
+	       f1 = freqs.items[d->b1- 1];
+	       get_efield(d->b1);
+	       if (d->field1 == SCM_EOL) d->field1 = field_make(curfield);
+	       field_setB(d->field1, curfield);
+	  }
+	  if (freqs.items[d->b2 - 1] < f2) {
+	       f2 = freqs.items[d->b2- 1];
+	       get_efield(d->b2);
+	       if (d->field2 == SCM_EOL) d->field2 = field_make(curfield);
+	       field_setB(d->field2, curfield);
+	  }
+     }
+
+     gap = (f2 - f1) * 2.0 / (f1 + f2);
+     for (i = 0; i < n; ++i) grad[i] = 0;
+
+     /* d(-gap)/df1 * (-f1/2)*/
+     scale = -f1 * ((f1 + f2) - (f1 - f2)) / ((f1+f2)*(f1+f2));
+     field_load(d->field1);
+     material_grids_addgradient(grad, scale, 0, d->grids, d->ngrids);
+
+     /* d(-gap)/df2 * (-f2/2)*/
+     scale = -f2 * (-(f1 + f2) - (f1 - f2)) / ((f1+f2)*(f1+f2));
+     field_load(d->field2);
+     material_grids_addgradient(grad, scale, 0, d->grids, d->ngrids);
+
+     mpi_one_printf("material-grid-maxgap:, %d, %g, %g, %0.15g\n", ++d->iter, f1, f2, gap);
+     
+     if (verbose) {
+	  get_epsilon();
+	  snprintf(prefix, 256, "maxgap-%04d-", d->iter);
+	  output_field_to_file(-1, prefix);
+     }
+
+     return -gap;
+}
+
+number material_grids_maxgap(vector3_list kpoints, 
+			     integer band1, integer band2,
+			     number func_tol, number eps_tol,
+			     integer maxeval, number maxtime)
+{
+     maxgap_func_data d;
+     int i, ntot;
+     double *u, *lb, *ub, *u_tol, func_min;
+
+     CHECK(band1>0 && band1 <= num_bands && band2>0 && band2 <= num_bands,
+	   "invalid band numbers in material-grid-maxgap");
+     d.ks = kpoints;
+     d.b1 = band1; d.b2 = band2;
+     d.grids = get_material_grids(geometry, &d.ngrids);
+     d.iter = 0;
+     d.field1 = d.field2 = SCM_EOL;
+
+     ntot = material_grids_ntot(d.grids, d.ngrids);
+     u = (double *) malloc(sizeof(double) * 4 * ntot);
+     lb = u + ntot; ub = lb + ntot; u_tol = ub + ntot;
+     material_grids_get(u, d.grids, d.ngrids);
+     for (i = 0; i < ntot; ++i) {
+	  lb[i] = 0;
+	  ub[i] = 1;
+	  u_tol[i] = eps_tol;
+     }
+
+#if defined(HAVE_NLOPT_H) && defined(HAVE_NLOPT)
+ {
+     nlopt_result res;
+     res = nlopt_minimize(NLOPT_LD_MMA, ntot, maxgap_func, &d,
+			  lb, ub, u, &func_min,
+			  -HUGE_VAL, func_tol, 0, 0, u_tol, maxeval, maxtime);
+     CHECK(res > 0, "failure of nlopt_minimize");
+ }
+#else
+     CHECK(0, "nlopt library is required for material-grid-maxgap");
+#endif
+
+     d.field1 = d.field2 = SCM_EOL;
+
+     material_grids_set(u, d.grids, d.ngrids);
+     free(u);
+     free(d.grids);
+
+     return -func_min;
 }
 
 /**************************************************************************/

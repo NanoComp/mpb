@@ -387,6 +387,7 @@ AC_CHECK_LIB(gen, basename)
 with_nlopt=no
 if test -r $LIBCTL_DIR/utils/nlopt.c -a -r $LIBCTL_DIR/utils/nlopt-constants.scm; then
    AC_CHECK_LIB(nlopt, nlopt_minimize, [with_nlopt=yes
+					AC_DEFINE(HAVE_NLOPT,[1],[Have nlopt lib])
 				        NLOPT_CPPFLAG=-DHAVE_NLOPT])
 fi
 AC_SUBST(NLOPT_CPPFLAG)
@@ -395,7 +396,7 @@ AM_CONDITIONAL(NLOPT, test "x$with_nlopt" = "xyes")
 ##############################################################################
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS(unistd.h getopt.h)
+AC_CHECK_HEADERS(unistd.h getopt.h nlopt.h)
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
