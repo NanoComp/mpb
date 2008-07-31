@@ -609,11 +609,13 @@ static double maxgap_func(int n, const double *u, double *grad, void *data)
      mpi_allreduce(work, grad, d->ntot, double, MPI_DOUBLE, 
 		   MPI_SUM, MPI_COMM_WORLD);
 
-     mpi_one_printf("material-grid-maxgap:, %d, %g, %g, %0.15g\n", ++d->iter, f1, f2, gap);
+     mpi_one_printf("material-grid-%sgap:, %d, %g, %g, %0.15g\n", 
+		    d->do_min ? "min" : "max", ++d->iter, f1, f2, gap);
      
      if (verbose) {
 	  get_epsilon();
-	  snprintf(prefix, 256, "maxgap-%04d-", d->iter);
+	  snprintf(prefix, 256, "%sgap-%04d-", 
+		   d->do_min ? "min" : "max", d->iter);
 	  output_field_to_file(-1, prefix);
      }
 
