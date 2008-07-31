@@ -247,6 +247,9 @@
 (define-external-function material-grids-maxgap false false
   'number (make-list-type 'vector3) 'integer 'integer
   'number 'number 'integer 'number)
+(define-external-function material-grids-mingap false false
+  'number (make-list-type 'vector3) 'integer 'integer
+  'number 'number 'integer 'number)
 
 ; ****************************************************************
 

@@ -552,6 +552,7 @@ number material_grids_approx_gradient(vector3 kpoint, integer band,
 #endif
 
 typedef struct {
+     boolean do_min;
      vector3_list ks;
      int b1, b2;
      int ngrids;
@@ -595,11 +596,13 @@ static double maxgap_func(int n, const double *u, double *grad, void *data)
 
      /* d(-gap)/df1 * (-f1/2)*/
      scale = -f1 * ((f1 + f2) - (f1 - f2)) / ((f1+f2)*(f1+f2));
+     if (d->do_min) scale = -scale;
      field_load(d->field1);
      material_grids_addgradient(work, scale, 0, d->grids, d->ngrids);
 
      /* d(-gap)/df2 * (-f2/2)*/
      scale = -f2 * (-(f1 + f2) - (f1 - f2)) / ((f1+f2)*(f1+f2));
+     if (d->do_min) scale = -scale;
      field_load(d->field2);
      material_grids_addgradient(work, scale, 0, d->grids, d->ngrids);
 
@@ -614,13 +617,14 @@ static double maxgap_func(int n, const double *u, double *grad, void *data)
 	  output_field_to_file(-1, prefix);
      }
 
-     return -gap;
+     return d->do_min ? gap : -gap;
 }
 
-number material_grids_maxgap(vector3_list kpoints, 
-			     integer band1, integer band2,
-			     number func_tol, number eps_tol,
-			     integer maxeval, number maxtime)
+static number material_grids_maxmin_gap(boolean do_min,
+					vector3_list kpoints, 
+					integer band1, integer band2,
+					number func_tol, number eps_tol,
+					integer maxeval, number maxtime)
 {
      maxgap_func_data d;
      int i, ntot;
@@ -633,6 +637,7 @@ number material_grids_maxgap(vector3_list kpoints,
      d.grids = get_material_grids(geometry, &d.ngrids);
      d.iter = 0;
      d.field1 = d.field2 = SCM_EOL;
+     d.do_min = do_min;
 
      ntot = material_grids_ntot(d.grids, d.ngrids);
      u = (double *) malloc(sizeof(double) * 5 * ntot);
@@ -667,6 +672,24 @@ number material_grids_maxgap(vector3_list kpoints,
      free(d.grids);
 
      return -func_min;
+}
+
+number material_grids_maxgap(vector3_list kpoints, 
+			     integer band1, integer band2,
+			     number func_tol, number eps_tol,
+			     integer maxeval, number maxtime)
+{
+     return material_grids_maxmin_gap(0, kpoints, band1, band2,
+				      func_tol, eps_tol, maxeval, maxtime);
+}
+
+number material_grids_mingap(vector3_list kpoints, 
+			     integer band1, integer band2,
+			     number func_tol, number eps_tol,
+			     integer maxeval, number maxtime)
+{
+     return material_grids_maxmin_gap(1, kpoints, band1, band2,
+				      func_tol, eps_tol, maxeval, maxtime);
 }
 
 /**************************************************************************/
