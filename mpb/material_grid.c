@@ -641,7 +641,7 @@ number material_grids_maxgap(vector3_list kpoints,
      for (i = 0; i < ntot; ++i) {
 	  ub[i] = 1;
 	  u_tol[i] = eps_tol;
-	  lb[i] = 1e-4; /* u == 0 will cause problems in the optimization */
+	  lb[i] = 0;
 	  if (u[i] < lb[i]) u[i] = lb[i];
      }
 
