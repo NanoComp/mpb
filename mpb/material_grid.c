@@ -68,9 +68,6 @@ static void material_grid_array_release(const material_grid *g)
 real material_grid_val(vector3 p, const material_grid *g)
 {
      real val;
-     if (p.x >= 1.0) p.x -= 1.0; else if (p.x < 0.0) p.x += 1.0;
-     if (p.y >= 1.0) p.y -= 1.0; else if (p.y < 0.0) p.y += 1.0;
-     if (p.z >= 1.0) p.z -= 1.0; else if (p.z < 0.0) p.z += 1.0;
      CHECK(SCM_ARRAYP(g->matgrid), "bug: matgrid is not an array");
      val = linear_interpolate(p.x, p.y, p.z, material_grid_array(g),
 			      g->size.x, g->size.y, g->size.z, 1);
@@ -231,24 +228,29 @@ static void add_interpolate_weights(real rx, real ry, real rz, real *data,
      int x, y, z, x2, y2, z2;
      real dx, dy, dz, u;
 
-     if (rx >= 1.0) rx -= 1.0; else if (rx < 0.0) rx += 1.0;
-     if (ry >= 1.0) ry -= 1.0; else if (ry < 0.0) ry += 1.0;
-     if (rz >= 1.0) rz -= 1.0; else if (rz < 0.0) rz += 1.0;
+     /* mirror boundary conditions for r just beyond the boundary */
+     if (rx < 0.0) rx = -rx; else if (rx > 1.0) rx = 1.0 - rx;
+     if (ry < 0.0) ry = -ry; else if (ry > 1.0) ry = 1.0 - ry;
+     if (rz < 0.0) rz = -rz; else if (rz > 1.0) rz = 1.0 - rz;
 
      /* get the point corresponding to r in the epsilon array grid: */
-     x = rx * nx;
-     y = ry * ny;
-     z = rz * nz;
+     x = rx * nx; if (x == nx) --x;
+     y = ry * ny; if (y == ny) --y;
+     z = rz * nz; if (z == nz) --z;
 
-     /* get the difference between (x,y,z) and the actual point */
-     dx = rx * nx - x;
-     dy = ry * ny - y;
-     dz = rz * nz - z;
+     /* get the difference between (x,y,z) and the actual point
+        ... we shift by 0.5 to center the data points in the pixels */
+     dx = rx * nx - x - 0.5;
+     dy = ry * ny - y - 0.5;
+     dz = rz * nz - z - 0.5;
 
-     /* get the other closest point in the grid, with periodic boundaries: */
-     x2 = (nx + (dx >= 0.0 ? x + 1 : x - 1)) % nx;
-     y2 = (ny + (dy >= 0.0 ? y + 1 : y - 1)) % ny;
-     z2 = (nz + (dz >= 0.0 ? z + 1 : z - 1)) % nz;
+     /* get the other closest point in the grid, with mirror boundaries: */
+     x2 = (dx >= 0.0 ? x + 1 : x - 1);
+     if (x2 < 0) x2++; else if (x2 == nx) x2--;
+     y2 = (dy >= 0.0 ? y + 1 : y - 1);
+     if (y2 < 0) y2++; else if (y2 == ny) y2--;
+     z2 = (dz >= 0.0 ? z + 1 : z - 1);
+     if (z2 < 0) z2++; else if (z2 == nz) z2--;
 
      /* take abs(d{xyz}) to get weights for {xyz} and {xyz}2: */
      dx = fabs(dx);
