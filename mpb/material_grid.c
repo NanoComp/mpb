@@ -88,26 +88,29 @@ static int compatible_matgrids(const material_grid *mg,
 	     m->subclass.material_grid_data->epsilon_max == mg->epsilon_max);
 }
 
-double matgrid_valprod(vector3 p, geom_box_tree tp, int oi,
-		       const material_grid *mg)
+double matgrid_val(vector3 p, geom_box_tree tp, int oi,
+		   const material_grid *mg)
 {
-     double u = 1.0;
+     double u = 1.0, u1;
+     CHECK(sizeof(real) == sizeof(double), "material grids require double precision");
      if (tp) {
 	  do {
-	       u *= material_grid_val(
+	       u1 = material_grid_val(
 		    to_geom_box_coords(p, &tp->objects[oi]),
 		    tp->objects[oi].o->material
 		    .subclass.material_grid_data);
+	       if (u1 < u) u = u1;
 	       tp = geom_tree_search_next(p, tp, &oi);
 	  } while (tp &&
 		   compatible_matgrids(mg, &tp->objects[oi].o->material));
      }
      if (!tp && compatible_matgrids(mg, &default_material)) {
-	  p.x = no_size_x ? 0 : p.x / geometry_lattice.size.x + 0.5;
-	  p.y = no_size_y ? 0 : p.y / geometry_lattice.size.y + 0.5;
-	  p.z = no_size_z ? 0 : p.z / geometry_lattice.size.z + 0.5;
-	  u *= material_grid_val(p, 
+	  p.x = no_size_x ? 0 : p.x / geometry_lattice.size.x;
+	  p.y = no_size_y ? 0 : p.y / geometry_lattice.size.y;
+	  p.z = no_size_z ? 0 : p.z / geometry_lattice.size.z;
+	  u1 = material_grid_val(p, 
 				 default_material.subclass.material_grid_data);
+	  if (u1 < u) u = u1;
      }
      return u;
 }
@@ -154,7 +157,7 @@ material_grid *get_material_grids(geometric_object_list g, int *ngrids)
      return grids;
 }
 
-int material_grids_ntot(material_grid *grids, int ngrids)
+int material_grids_ntot(const material_grid *grids, int ngrids)
 {
      int i, ntot = 0;
      for (i = 0; i < ngrids; ++i)
@@ -165,6 +168,7 @@ int material_grids_ntot(material_grid *grids, int ngrids)
 void material_grids_set(const double *u, material_grid *grids, int ngrids)
 {
      int i, j = 0;
+     CHECK(sizeof(real) == sizeof(double), "material grids require double precision");
      for (i = 0; i < ngrids; ++i) {
           int ntot = grids[i].size.x * grids[i].size.y * grids[i].size.z;
 	  double *a = material_grid_array(&grids[i]);
@@ -179,6 +183,7 @@ void material_grids_set(const double *u, material_grid *grids, int ngrids)
 void material_grids_get(double *u, const material_grid *grids, int ngrids)
 {
      int i, j = 0;
+     CHECK(sizeof(real) == sizeof(double), "material grids require double precision");
      for (i = 0; i < ngrids; ++i) {
           int ntot = grids[i].size.x * grids[i].size.y * grids[i].size.z;
 	  double *a = material_grid_array(&grids[i]);
@@ -202,150 +207,294 @@ void material_grids_get(double *u, const material_grid *grids, int ngrids)
    where E is normalized so that integral eps |E|^2 = 1 (the default
    normalization in MPB).  Thus for a particular "pixel" in the
    material grid with value u, that component of the gradient is:
-        |E|^2 * dV * (product of u's at that point) * (eps_max-eps_min) / u
-   where |E|^2 is the field at that point and dV is the volume of the
-   pixel.
+        |E|^2 * dV * (eps_max-eps_min) * interpolation_weight
+   where |E|^2 is the field at that point, dV is the volume of the
+   |E|^2 voxel, and interpolation_weight is the weight of that grid
+   pixel that contributes to the |E|^2 voxel in the linear interpolation..
 
-   This whole process is complicated by the fact that a given material grid
-   pixel may appear via multiple objects in the structure (although actually
-   this is pretty easy to handle).
+   Where multiple grids overlap, only those grids that contribute
+   the minimum u contribute, and for other grids the gradient is zero.
+   This makes the gradient only piecewise continuous, but all the
+   other alternatives that I've thought of so far seem worse.
+   (e.g. using the product of the u's makes the gradient zero
+    when two or more of the u's are zero, preventing optimizer progress)
 */
 
-static void material_grid_addgradient(double *v, double scalegrad,
-				      const material_grid *g,
-				      const geometric_object *o,
-				      int o_is_default)
+/* add the weights from linear_interpolate (see the linear_interpolate
+   function in epsilon_file.c) to data ... this has to be changed if
+   linear_interpolate is changed!! ...also multiply by scaleby */
+static void add_interpolate_weights(real rx, real ry, real rz, real *data, 
+				    int nx, int ny, int nz, int stride,
+				    double scaleby,
+				    const real *udata, double umin)
 {
-     int ix,iy,iz, nx, ny, nz;
+     int x, y, z, x2, y2, z2;
+     real dx, dy, dz, u;
 
-     /* First, compute the volume element dV for grid pixels in this object. */
-     {
-	  vector3 p0 = {0,0,0}, e1 = {1,0,0}, e2 = {0,1,0}, e3 = {0,0,1}; 
-	  p0 = from_geom_object_coords(p0, *o);
-	  e1 = vector3_minus(from_geom_object_coords(e1, *o), p0);
-	  e2 = vector3_minus(from_geom_object_coords(e2, *o), p0);
-	  e3 = vector3_minus(from_geom_object_coords(e3, *o), p0);
+     if (rx >= 1.0) rx -= 1.0; else if (rx < 0.0) rx += 1.0;
+     if (ry >= 1.0) ry -= 1.0; else if (ry < 0.0) ry += 1.0;
+     if (rz >= 1.0) rz -= 1.0; else if (rz < 0.0) rz += 1.0;
 
-	  /* if we are not a 3d cell, require that at least one
-	     of the e vectors be along the "flat" dimension(s), and
-	     set these vectors to unit vectors */
-	  if (no_size_x) {
-	       if (e1.y == 0 && e1.z == 0) e1.x = 1;
-	       else if (e2.y == 0 && e2.z == 0) e2.x = 1;
-	       else if (e3.y == 0 && e3.z == 0) e3.x = 1;
-	       else CHECK(0, "invalid object for material_grid");
-	  }
-	  if (no_size_y) {
-	       if (e1.x == 0 && e1.z == 0) e1.y = 1;
-	       else if (e2.x == 0 && e2.z == 0) e2.y = 1;
-	       else if (e3.x == 0 && e3.z == 0) e3.y = 1;
-	       else CHECK(0, "invalid object for material_grid");
-	  }
-	  if (no_size_z) {
-	       if (e1.y == 0 && e1.x == 0) e1.z = 1;
-	       else if (e2.y == 0 && e2.x == 0) e2.z = 1;
-	       else if (e3.y == 0 && e3.x == 0) e3.z = 1;
-	       else CHECK(0, "invalid object for material_grid");
-	  }
+     /* get the point corresponding to r in the epsilon array grid: */
+     x = rx * nx;
+     y = ry * ny;
+     z = rz * nz;
 
-	  scalegrad *= fabs(vector3_dot(e1, vector3_cross(e2, e3)))
-	       / (g->size.x * g->size.y * g->size.z);
+     /* get the difference between (x,y,z) and the actual point */
+     dx = rx * nx - x;
+     dy = ry * ny - y;
+     dz = rz * nz - z;
+
+     /* get the other closest point in the grid, with periodic boundaries: */
+     x2 = (nx + (dx >= 0.0 ? x + 1 : x - 1)) % nx;
+     y2 = (ny + (dy >= 0.0 ? y + 1 : y - 1)) % ny;
+     z2 = (nz + (dz >= 0.0 ? z + 1 : z - 1)) % nz;
+
+     /* take abs(d{xyz}) to get weights for {xyz} and {xyz}2: */
+     dx = fabs(dx);
+     dy = fabs(dy);
+     dz = fabs(dz);
+
+     /* define a macro to give us data(x,y,z) on the grid,
+	in row-major order (the order used by HDF5): */
+#define D(x,y,z) (data[(((x)*ny + (y))*nz + (z)) * stride])
+#define U(x,y,z) (udata[(((x)*ny + (y))*nz + (z)) * stride])
+     
+     u = (((U(x,y,z)*(1.0-dx) + U(x2,y,z)*dx) * (1.0-dy) +
+	   (U(x,y2,z)*(1.0-dx) + U(x2,y2,z)*dx) * dy) * (1.0-dz) +
+	  ((U(x,y,z2)*(1.0-dx) + U(x2,y,z2)*dx) * (1.0-dy) +
+	   (U(x,y2,z2)*(1.0-dx) + U(x2,y2,z2)*dx) * dy) * dz);
+     if (u == umin) {
+	  D(x,y,z) += (1.0-dx) * (1.0-dy) * (1.0-dz) * scaleby;
+	  D(x2,y,z) += dx * (1.0-dy) * (1.0-dz) * scaleby;
+	  D(x,y2,z) += (1.0-dx) * dy * (1.0-dz) * scaleby;
+	  D(x2,y2,z) += dx * dy * (1.0-dz) * scaleby;
+	  D(x,y,z2) += (1.0-dx) * (1.0-dy) * dz * scaleby;
+	  D(x2,y,z2) += dx * (1.0-dy) * dz * scaleby;
+	  D(x,y2,z2) += (1.0-dx) * dy * dz * scaleby;
+	  D(x2,y2,z2) += dx * dy * dz * scaleby;
      }
+#undef D
+}
 
-     scalegrad *= (g->epsilon_max - g->epsilon_min);
+static void material_grids_addgradient_point(double *v, 
+					     vector3 p, double scalegrad,
+					     const material_grid *grids, 
+					     int ngrids)
+{
+     geom_box_tree tp;
+     int oi, i;
+     material_grid *mg;
+     double umin;
+     
+     tp = geom_tree_search(p, geometry_tree, &oi);
+     if (tp && tp->objects[oi].o->material.which_subclass == MATERIAL_GRID)
+          mg = tp->objects[oi].o->material.subclass.material_grid_data;
+     else if (!tp && default_material.which_subclass == MATERIAL_GRID)
+	  mg = default_material.subclass.material_grid_data;
+     else
+          return; /* no material grids at this point */
 
-     nx = g->size.x; ny = g->size.y; nz = g->size.z;
-     for (ix = 0; ix < nx; ++ix)
-     for (iy = 0; iy < ny; ++iy)
-     for (iz = 0; iz < nz; ++iz) {
-	  double u = 1.0;
-	  geom_box_tree tp;
-	  int oi;
-	  vector3 p;
-	  int found_o = 0;
-	  double Esqr;
+     umin = matgrid_val(p, tp, oi, mg);
+     scalegrad *= (mg->epsilon_max - mg->epsilon_min);
 
-	  p.x = (ix+0.5) / g->size.x;
-	  p.y = (iy+0.5) / g->size.y;
-	  p.z = (iz+0.5) / g->size.z;
-	  p = from_geom_object_coords(p, *o);
-
-	  tp = geom_tree_search(p, geometry_tree, &oi);
-	  if ((!o_is_default && !tp) ||
-	      (tp && !compatible_matgrids(g, &tp->objects[oi].o->material)))
-	       continue;
-
-	  Esqr = get_energy_point(p);
-
-	  /* multiply values of all grids *except* from the current
-	     object, and make sure that we find the current object somewhere */
-	  if (tp) {
-	       do {
-		    if (tp->objects[oi].o == o)
-			 found_o = 1;
-		    else {
-			 u *= material_grid_val(
-			      to_geom_box_coords(p, &tp->objects[oi]),
-			      tp->objects[oi].o->material
-			      .subclass.material_grid_data);
-		    }
-		    tp = geom_tree_search_next(p, tp, &oi);
-	       } while (tp &&
-			compatible_matgrids(g, &tp->objects[oi].o->material));
-	  }
-	  if (!tp && compatible_matgrids(g, &default_material)) {
-	       if (o_is_default)
-		    found_o = 1;
-	       else {
-		    p.x = no_size_x ? 0 : p.x / geometry_lattice.size.x + 0.5;
-		    p.y = no_size_y ? 0 : p.y / geometry_lattice.size.y + 0.5;
-		    p.z = no_size_z ? 0 : p.z / geometry_lattice.size.z + 0.5;
-		    u *= material_grid_val(
-			 p, default_material.subclass.material_grid_data);
+     if (tp) {
+	  do {
+	       vector3 pb = to_geom_box_coords(p, &tp->objects[oi]);
+	       vector3 sz = tp->objects[oi].o->material
+		    .subclass.material_grid_data->size;
+	       double *vcur = v, *ucur;
+	       for (i = 0; i < ngrids; ++i) {
+		    if (material_grid_equal(grids+i,
+					    tp->objects[oi].o->material
+					    .subclass.material_grid_data))
+			 break;
+		    else
+			 vcur += (int) (grids[i].size.x * grids[i].size.y 
+					* grids[i].size.z);
 	       }
+	       CHECK(i < ngrids, "bug in material_grid_gradient_point");
+	       ucur = material_grid_array(grids+i);
+	       add_interpolate_weights(pb.x, pb.y, pb.z, 
+				       vcur, sz.x, sz.y, sz.z, 1, scalegrad,
+				       ucur, umin);
+	       material_grid_array_release(grids+i);
+	       tp = geom_tree_search_next(p, tp, &oi);
+	  } while (tp &&
+		   compatible_matgrids(mg, &tp->objects[oi].o->material));
+     }
+     if (!tp && compatible_matgrids(mg, &default_material)) {
+	  vector3 pb;
+	  vector3 sz = default_material.subclass.material_grid_data->size;
+	  double *vcur = v, *ucur;
+	  for (i = 0; i < ngrids; ++i) {
+	       if (material_grid_equal(grids+i, default_material
+				       .subclass.material_grid_data))
+		    break;
+	       else
+		    vcur += (int) (grids[i].size.x * grids[i].size.y 
+				   * grids[i].size.z);
 	  }
-	  if (!found_o) continue;
-
-	  v[(ix * ny + iy) * nz + iz] += scalegrad * u * Esqr;
+	  CHECK(i < ngrids, "bug in material_grid_gradient_point");
+	  pb.x = no_size_x ? 0 : p.x / geometry_lattice.size.x;
+	  pb.y = no_size_y ? 0 : p.y / geometry_lattice.size.y;
+	  pb.z = no_size_z ? 0 : p.z / geometry_lattice.size.z;
+	  ucur = material_grid_array(grids+i);
+	  add_interpolate_weights(pb.x, pb.y, pb.z, 
+				  vcur, sz.x, sz.y, sz.z, 1, scalegrad,
+				  ucur, umin);
+	  material_grid_array_release(grids+i);
      }
 }
 
-void material_grids_addgradient(double *v, double scalegrad, int band,
+void material_grids_addgradient(double *v,
+				double scalegrad, int band,
 				const material_grid *grids, int ngrids)
 {
-     int i;
+     int i, j, k, n1, n2, n3, n_other, n_last, rank, last_dim;
+#ifdef HAVE_MPI
+     int local_n2, local_y_start, local_n3;
+#endif
+     real s1, s2, s3, c1, c2, c3;
+     real *Esqr;
+
      CHECK(band <= num_bands, "addgradient called for uncomputed band");
      if (band) {
 	  scalegrad *= -freqs.items[band - 1]/2;
 	  get_efield(band);
      }
      compute_field_squared();
-     for (i = 0; i < ngrids; ++i) {
-	  int ntot = grids[i].size.x * grids[i].size.y * grids[i].size.z;
-	  int j;
+     Esqr = (real *) curfield;
+     scalegrad *= Vol / H.N;
 
-	  for (j = 0; j < geometry.num_items; ++j)
-	       if (geometry.items[j].material.which_subclass==MATERIAL_GRID &&
-		   material_grid_equal(&grids[i], geometry.items[j].material
-				       .subclass.material_grid_data))
-		    material_grid_addgradient(v, scalegrad, &grids[i],
-					      &geometry.items[j], 0);
+     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
+     n_other = mdata->other_dims;
+     n_last = mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     last_dim = mdata->last_dim;
+     rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
 
-	  if (default_material.which_subclass == MATERIAL_GRID &&
-	      material_grid_equal(&grids[i], default_material
-				  .subclass.material_grid_data)) {
-	       vector3 cen = {0,0,0};
-	       geometric_object o;
-	       o = make_block(default_material, cen,
-			      geometry_lattice.basis1,
-			      geometry_lattice.basis2,
-			      geometry_lattice.basis3,
-			      geometry_lattice.size);
-	       material_grid_addgradient(v, scalegrad, &grids[i], &o, 1);
-	       geometric_object_destroy(o);
+     s1 = geometry_lattice.size.x / n1;
+     s2 = geometry_lattice.size.y / n2;
+     s3 = geometry_lattice.size.z / n3;
+     c1 = n1 <= 1 ? 0 : geometry_lattice.size.x * 0.5;
+     c2 = n2 <= 1 ? 0 : geometry_lattice.size.y * 0.5;
+     c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
+
+     /* Here we have different loops over the coordinates, depending
+	upon whether we are using complex or real and serial or
+        parallel transforms.  Each loop must define, in its body,
+        variables (i2,j2,k2) describing the coordinate of the current
+        point, and "index" describing the corresponding index in 
+	the curfield array.
+
+        This was all stolen from fields.c...it would be better
+        if we didn't have to cut and paste, sigh. */
+
+#ifdef SCALAR_COMPLEX
+
+#  ifndef HAVE_MPI
+     
+     for (i = 0; i < n1; ++i)
+	  for (j = 0; j < n2; ++j)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int i2 = i, j2 = j, k2 = k;
+	  int index = ((i * n2 + j) * n3 + k);
+
+#  else /* HAVE_MPI */
+
+     local_n2 = mdata->local_ny;
+     local_y_start = mdata->local_y_start;
+
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int i2 = i, j2 = j + local_y_start, k2 = k;
+	  int index = ((j * n1 + i) * n3 + k);
+
+#  endif /* HAVE_MPI */
+
+#else /* not SCALAR_COMPLEX */
+
+#  ifndef HAVE_MPI
+
+     for (i = 0; i < n_other; ++i)
+	  for (j = 0; j < n_last; ++j)
+     {
+	  int index = i * n_last + j;
+	  int i2, j2, k2;
+	  switch (rank) {
+	      case 2: i2 = i; j2 = j; k2 = 0; break;
+	      case 3: i2 = i / n2; j2 = i % n2; k2 = j; break;
+	      default: i2 = j; j2 = k2 = 0;  break;
 	  }
-	  
-	  v += ntot;
+
+#  else /* HAVE_MPI */
+
+     local_n2 = mdata->local_ny;
+     local_y_start = mdata->local_y_start;
+
+     /* For a real->complex transform, the last dimension is cut in
+	half.  For a 2d transform, this is taken into account in local_ny
+	already, but for a 3d transform we must compute the new n3: */
+     if (n3 > 1)
+	  local_n3 = mdata->last_dim_size / 2;
+     else
+	  local_n3 = 1;
+     
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < local_n3; ++k)
+     {
+#         define i2 i
+	  int j2 = j + local_y_start;
+#         define k2 k
+	  int index = ((j * n1 + i) * local_n3 + k);
+
+#  endif /* HAVE_MPI */
+
+#endif /* not SCALAR_COMPLEX */
+
+	  {
+	       vector3 p;
+
+	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
+
+	       material_grids_addgradient_point(
+		    v, p, Esqr[index]*scalegrad, grids,ngrids);
+
+#ifndef SCALAR_COMPLEX
+	       {
+		    int last_index;
+#  ifdef HAVE_MPI
+		    if (n3 == 1)
+			 last_index = j + local_y_start;
+		    else
+			 last_index = k;
+#  else
+		    last_index = j;
+#  endif
+		    
+		    if (last_index != 0 && 2*last_index != last_dim) {
+			 int i2c, j2c, k2c;
+			 i2c = i2 ? (n1 - i2) : 0;
+			 j2c = j2 ? (n2 - j2) : 0;
+			 k2c = k2 ? (n3 - k2) : 0;
+			 p.x = i2c * s1 - c1; 
+			 p.y = j2c * s2 - c2; 
+			 p.z = k2c * s3 - c3;
+			 
+			 material_grids_addgradient_point(
+			      v, p, Esqr[index]*scalegrad, grids,ngrids);
+		    }
+	       }
+#endif /* !SCALAR_COMPLEX */
+
+	  }
+
      }
 }
 
@@ -407,6 +556,8 @@ typedef struct {
      material_grid *grids;
      int iter;
      SCM field1, field2;
+     double *work;
+     int ntot;
 } maxgap_func_data;
 
 /* SCM to pass to nlopt for optimization */
@@ -414,7 +565,7 @@ static double maxgap_func(int n, const double *u, double *grad, void *data)
 {
      maxgap_func_data *d = (maxgap_func_data *) data;
      int i;
-     double f1 = 0, f2 = HUGE_VAL, gap, scale;
+     double f1 = 0, f2 = HUGE_VAL, gap, scale, *work = d->work;
      char prefix[256];
      SCM curfield = gh_lookup("cur-field");
 
@@ -438,17 +589,20 @@ static double maxgap_func(int n, const double *u, double *grad, void *data)
      }
 
      gap = (f2 - f1) * 2.0 / (f1 + f2);
-     for (i = 0; i < n; ++i) grad[i] = 0;
+     for (i = 0; i < n; ++i) work[i] = 0;
 
      /* d(-gap)/df1 * (-f1/2)*/
      scale = -f1 * ((f1 + f2) - (f1 - f2)) / ((f1+f2)*(f1+f2));
      field_load(d->field1);
-     material_grids_addgradient(grad, scale, 0, d->grids, d->ngrids);
+     material_grids_addgradient(work, scale, 0, d->grids, d->ngrids);
 
      /* d(-gap)/df2 * (-f2/2)*/
      scale = -f2 * (-(f1 + f2) - (f1 - f2)) / ((f1+f2)*(f1+f2));
      field_load(d->field2);
-     material_grids_addgradient(grad, scale, 0, d->grids, d->ngrids);
+     material_grids_addgradient(work, scale, 0, d->grids, d->ngrids);
+
+     mpi_allreduce(work, grad, d->ntot, double, MPI_DOUBLE, 
+		   MPI_SUM, MPI_COMM_WORLD);
 
      mpi_one_printf("material-grid-maxgap:, %d, %g, %g, %0.15g\n", ++d->iter, f1, f2, gap);
      
@@ -468,7 +622,7 @@ number material_grids_maxgap(vector3_list kpoints,
 {
      maxgap_func_data d;
      int i, ntot;
-     double *u, *lb, *ub, *u_tol, func_min;
+     double *u, *lb, *ub, *u_tol, *work, func_min;
 
      CHECK(band1>0 && band1 <= num_bands && band2>0 && band2 <= num_bands,
 	   "invalid band numbers in material-grid-maxgap");
@@ -479,14 +633,18 @@ number material_grids_maxgap(vector3_list kpoints,
      d.field1 = d.field2 = SCM_EOL;
 
      ntot = material_grids_ntot(d.grids, d.ngrids);
-     u = (double *) malloc(sizeof(double) * 4 * ntot);
-     lb = u + ntot; ub = lb + ntot; u_tol = ub + ntot;
+     u = (double *) malloc(sizeof(double) * 5 * ntot);
+     lb = u + ntot; ub = lb + ntot; u_tol = ub + ntot; work = u_tol + ntot;
      material_grids_get(u, d.grids, d.ngrids);
      for (i = 0; i < ntot; ++i) {
-	  lb[i] = 0;
 	  ub[i] = 1;
 	  u_tol[i] = eps_tol;
+	  lb[i] = 1e-4; /* u == 0 will cause problems in the optimization */
+	  if (u[i] < lb[i]) u[i] = lb[i];
      }
+
+     d.work = work;
+     d.ntot = ntot;
 
 #if defined(HAVE_NLOPT_H) && defined(HAVE_NLOPT)
  {

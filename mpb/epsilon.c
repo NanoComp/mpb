@@ -194,8 +194,8 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 	  if (material.which_subclass == MATERIAL_GRID) {
 	       material_type mat_eps;
 	       mat_eps = make_dielectric(
-		    matgrid_valprod(p, tp, oi, 
-				    material.subclass.material_grid_data)
+		    matgrid_val(p, tp, oi, 
+				material.subclass.material_grid_data)
 		    * (material.subclass.material_grid_data->epsilon_max -
 		       material.subclass.material_grid_data->epsilon_min) +
 		    material.subclass.material_grid_data->epsilon_min);
