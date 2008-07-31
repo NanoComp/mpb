@@ -138,7 +138,7 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      /* call search routine from libctl/utils/libgeom/geom.c: 
         (we have to use the lower-level geom_tree_search to
          support material-grid types, which have funny semantics) */
-     tp = geom_tree_search(shift_to_unit_cell(p), geometry_tree, &oi);
+     tp = geom_tree_search(p = shift_to_unit_cell(p), geometry_tree, &oi);
      if (tp) {
 	  inobject = 1;
 	  material = tp->objects[oi].o->material;
