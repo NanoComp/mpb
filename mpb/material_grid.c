@@ -85,18 +85,22 @@ static int compatible_matgrids(const material_grid *mg,
 	     m->subclass.material_grid_data->epsilon_max == mg->epsilon_max);
 }
 
+static int matgrid_val_count = 0; /* cache for gradient calculation */
 double matgrid_val(vector3 p, geom_box_tree tp, int oi,
 		   const material_grid *mg)
 {
-     double u = 1.0, u1;
+     double uprod = 1.0, umin = 1.0, usum = 0.0, u;
+     matgrid_val_count = 0;
      CHECK(sizeof(real) == sizeof(double), "material grids require double precision");
      if (tp) {
 	  do {
-	       u1 = material_grid_val(
+	       u = material_grid_val(
 		    to_geom_box_coords(p, &tp->objects[oi]),
 		    tp->objects[oi].o->material
 		    .subclass.material_grid_data);
-	       if (u1 < u) u = u1;
+	       if (u < umin) umin = u;
+	       uprod *= u;
+	       usum += u; ++matgrid_val_count;
 	       tp = geom_tree_search_next(p, tp, &oi);
 	  } while (tp &&
 		   compatible_matgrids(mg, &tp->objects[oi].o->material));
@@ -105,11 +109,15 @@ double matgrid_val(vector3 p, geom_box_tree tp, int oi,
 	  p.x = no_size_x ? 0 : p.x / geometry_lattice.size.x;
 	  p.y = no_size_y ? 0 : p.y / geometry_lattice.size.y;
 	  p.z = no_size_z ? 0 : p.z / geometry_lattice.size.z;
-	  u1 = material_grid_val(p, 
-				 default_material.subclass.material_grid_data);
-	  if (u1 < u) u = u1;
+	  u = material_grid_val(p, 
+				default_material.subclass.material_grid_data);
+	  if (u < umin) umin = u;
+	  uprod *= u;
+	  usum += u; ++matgrid_val_count;
      }
-     return u;
+     return (mg->material_grid_kind == U_MIN ? umin
+	     : (mg->material_grid_kind == U_PROD ? uprod 
+		: usum / matgrid_val_count));
 }
 
 /**************************************************************************/
@@ -207,23 +215,32 @@ void material_grids_get(double *u, const material_grid *grids, int ngrids)
         |E|^2 * dV * (eps_max-eps_min) * interpolation_weight
    where |E|^2 is the field at that point, dV is the volume of the
    |E|^2 voxel, and interpolation_weight is the weight of that grid
-   pixel that contributes to the |E|^2 voxel in the linear interpolation..
+   pixel that contributes to the |E|^2 voxel in the linear interpolation.
 
-   Where multiple grids overlap, only those grids that contribute
+   For U_MIN: Where multiple grids overlap, only those grids that contribute
    the minimum u contribute, and for other grids the gradient is zero.
-   This makes the gradient only piecewise continuous, but all the
-   other alternatives that I've thought of so far seem worse.
-   (e.g. using the product of the u's makes the gradient zero
-    when two or more of the u's are zero, preventing optimizer progress)
+   This unfortunately makes the gradient only piecewise continuous.
+
+   For U_PROD: The gradient is multiplied by the product of u's from 
+   overlapping grids, divided by the u from the current grid.  This
+   unfortunately makes the gradient zero when two or more u's are zero,
+   stalling convergence, although we try to avoid this by making the
+   minimum u = 1e-4 instead of 0.
+
+   For U_SUM: The gradient is divided by the number of overlapping grids.
+   This doesn't have the property that u=0 in one grid makes the total
+   u=0, unfortunately, which is desirable if u=0 indicates "drilled holes".
 */
 
 /* add the weights from linear_interpolate (see the linear_interpolate
    function in epsilon_file.c) to data ... this has to be changed if
-   linear_interpolate is changed!! ...also multiply by scaleby */
+   linear_interpolate is changed!! ...also multiply by scaleby
+   etc. for different gradient types */
 static void add_interpolate_weights(real rx, real ry, real rz, real *data, 
 				    int nx, int ny, int nz, int stride,
 				    double scaleby,
-				    const real *udata, double umin)
+				    const real *udata, 
+				    int ukind, double uval)
 {
      int x, y, z, x2, y2, z2;
      real dx, dy, dz, u;
@@ -266,16 +283,19 @@ static void add_interpolate_weights(real rx, real ry, real rz, real *data,
 	   (U(x,y2,z)*(1.0-dx) + U(x2,y2,z)*dx) * dy) * (1.0-dz) +
 	  ((U(x,y,z2)*(1.0-dx) + U(x2,y,z2)*dx) * (1.0-dy) +
 	   (U(x,y2,z2)*(1.0-dx) + U(x2,y2,z2)*dx) * dy) * dz);
-     if (u == umin) {
-	  D(x,y,z) += (1.0-dx) * (1.0-dy) * (1.0-dz) * scaleby;
-	  D(x2,y,z) += dx * (1.0-dy) * (1.0-dz) * scaleby;
-	  D(x,y2,z) += (1.0-dx) * dy * (1.0-dz) * scaleby;
-	  D(x2,y2,z) += dx * dy * (1.0-dz) * scaleby;
-	  D(x,y,z2) += (1.0-dx) * (1.0-dy) * dz * scaleby;
-	  D(x2,y,z2) += dx * (1.0-dy) * dz * scaleby;
-	  D(x,y2,z2) += (1.0-dx) * dy * dz * scaleby;
-	  D(x2,y2,z2) += dx * dy * dz * scaleby;
-     }
+
+     if (ukind == U_MIN && u != uval) return;
+     if (ukind == U_PROD) scaleby *= uval / u;
+     
+     D(x,y,z) += (1.0-dx) * (1.0-dy) * (1.0-dz) * scaleby;
+     D(x2,y,z) += dx * (1.0-dy) * (1.0-dz) * scaleby;
+     D(x,y2,z) += (1.0-dx) * dy * (1.0-dz) * scaleby;
+     D(x2,y2,z) += dx * dy * (1.0-dz) * scaleby;
+     D(x,y,z2) += (1.0-dx) * (1.0-dy) * dz * scaleby;
+     D(x2,y,z2) += dx * (1.0-dy) * dz * scaleby;
+     D(x,y2,z2) += (1.0-dx) * dy * dz * scaleby;
+     D(x2,y2,z2) += dx * dy * dz * scaleby;
+
 #undef D
 }
 
@@ -287,7 +307,8 @@ static void material_grids_addgradient_point(double *v,
      geom_box_tree tp;
      int oi, i;
      material_grid *mg;
-     double umin;
+     double uval;
+     int kind;
      
      tp = geom_tree_search(p, geometry_tree, &oi);
      if (tp && tp->objects[oi].o->material.which_subclass == MATERIAL_GRID)
@@ -297,8 +318,10 @@ static void material_grids_addgradient_point(double *v,
      else
           return; /* no material grids at this point */
 
-     umin = matgrid_val(p, tp, oi, mg);
+     uval = matgrid_val(p, tp, oi, mg);
      scalegrad *= (mg->epsilon_max - mg->epsilon_min);
+     if ((kind = mg->material_grid_kind) == U_SUM)
+	  scalegrad /= matgrid_val_count;
 
      if (tp) {
 	  do {
@@ -319,7 +342,7 @@ static void material_grids_addgradient_point(double *v,
 	       ucur = material_grid_array(grids+i);
 	       add_interpolate_weights(pb.x, pb.y, pb.z, 
 				       vcur, sz.x, sz.y, sz.z, 1, scalegrad,
-				       ucur, umin);
+				       ucur, kind, uval);
 	       material_grid_array_release(grids+i);
 	       tp = geom_tree_search_next(p, tp, &oi);
 	  } while (tp &&
@@ -344,7 +367,7 @@ static void material_grids_addgradient_point(double *v,
 	  ucur = material_grid_array(grids+i);
 	  add_interpolate_weights(pb.x, pb.y, pb.z, 
 				  vcur, sz.x, sz.y, sz.z, 1, scalegrad,
-				  ucur, umin);
+				  ucur, kind, uval);
 	  material_grid_array_release(grids+i);
      }
 }
@@ -631,6 +654,7 @@ static number material_grids_maxmin_gap(boolean do_min,
      maxgap_func_data d;
      int i, ntot;
      double *u, *lb, *ub, *u_tol, *work, func_min;
+     int have_uprod;
 
      CHECK(band1>0 && band1 <= num_bands && band2>0 && band2 <= num_bands,
 	   "invalid band numbers in material-grid-maxgap");
@@ -645,10 +669,14 @@ static number material_grids_maxmin_gap(boolean do_min,
      u = (double *) malloc(sizeof(double) * 5 * ntot);
      lb = u + ntot; ub = lb + ntot; u_tol = ub + ntot; work = u_tol + ntot;
      material_grids_get(u, d.grids, d.ngrids);
+     for (i = 0; i < d.ngrids && d.grids[i].material_grid_kind != U_PROD; ++i);
+     have_uprod = i < d.ngrids;
      for (i = 0; i < ntot; ++i) {
 	  ub[i] = 1;
 	  u_tol[i] = eps_tol;
-	  lb[i] = 0;
+	  /* bound u slightly about 0 for uprod grids, as when u=0
+	     the gradient is problematic (especially for multiple u's = 0 */
+	  lb[i] = have_uprod ? 1e-4 : 0;
 	  if (u[i] < lb[i]) u[i] = lb[i];
      }
 

@@ -45,7 +45,14 @@
   (define-property material-func no-default 'function
     (lambda (p) (= 1 (procedure-num-args p)))))
 
+; must match material_grid_kinds in mpb.h
+(define U-MIN 0)
+(define U-PROD 1)
+(define U-SUM 2)
+
 (define-class material-grid material-type
+  (define-property material-grid-kind U-MIN 'integer
+    (lambda (k) (and (>= k U-MIN) (<= k U-SUM))))
   (define-property epsilon-min no-default 'number)
   (define-property epsilon-max no-default 'number)
   (define-property size no-default 'vector3
