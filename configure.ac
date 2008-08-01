@@ -495,6 +495,7 @@ program_transform_name="s,_,-,g;$program_transform_name"
 
 AC_CONFIG_FILES([
 	Makefile
+	examples/Makefile
 	tests/Makefile
 	src/Makefile
 	src/util/Makefile
