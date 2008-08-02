@@ -76,11 +76,13 @@ real material_grid_val(vector3 p, const material_grid *g)
 }
 
 /* Returns true if m is a material grid and has the same epsilon min/max
-   as mg */
+   as mg, and the same kind, so that they are merged when they overlap */
 static int compatible_matgrids(const material_grid *mg,
 			       const material_type *m)
 {
      return (m->which_subclass == MATERIAL_GRID &&
+	     m->subclass.material_grid_data->material_grid_kind
+	     == mg->material_grid_kind &&
 	     m->subclass.material_grid_data->epsilon_min == mg->epsilon_min &&
 	     m->subclass.material_grid_data->epsilon_max == mg->epsilon_max);
 }
