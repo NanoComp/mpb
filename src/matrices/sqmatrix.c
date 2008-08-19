@@ -211,7 +211,7 @@ void sqmatrix_invert(sqmatrix U, short positive_definite,
 	  /* QUESTION: would it be more efficient to stop here,
 	     returning the Cholesky factorization of U?  This
 	     could then be used to multiply by 1/U without
-	     ever calculating the inverse explicitely.  It
+	     ever calculating the inverse explicitly.  It
 	     would probably be more numerically stable, but
 	     how do the computational costs compare? */
 	  
