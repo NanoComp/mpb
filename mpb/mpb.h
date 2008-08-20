@@ -98,6 +98,13 @@ typedef enum { U_MIN = 0, U_PROD = 1, U_SUM = 2 } material_grid_kinds;
 extern real material_grid_val(vector3 p, const material_grid *g);
 extern double matgrid_val(vector3 p, geom_box_tree tp, int oi,
 			  const material_grid *mg);
+material_grid *get_material_grids(geometric_object_list g, int *ngrids);
+int material_grids_ntot(const material_grid *grids, int ngrids);
+void material_grids_set(const double *u, material_grid *grids, int ngrids);
+void material_grids_get(double *u, const material_grid *grids, int ngrids);
+void material_grids_addgradient(double *v,
+				double scalegrad, int band,
+				const material_grid *grids, int ngrids);
 
 /**************************************************************************/
 
