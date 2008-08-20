@@ -1016,7 +1016,7 @@ static void output_scalarfield(real *vals,
 			       int first_dim_start, int first_dim_size,
 			       int write_start0_special)
 {
-     matrixio_id data_id = -1;
+     matrixio_id data_id = {-1, 1};
 
      fieldio_write_real_vals(vals, 3, dims, 
 			     local_dims, start, file_id, 0, 
@@ -1060,7 +1060,7 @@ static void output_scalarfield(real *vals,
      }
 #endif
 
-     if (data_id >= 0)
+     if (data_id.id >= 0)
 	  matrixio_close_dataset(data_id);
 }
 
@@ -1072,7 +1072,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 {
      char fname[100], *fname2, description[100];
      int dims[3], local_dims[3], start[3] = {0,0,0};
-     matrixio_id file_id = -1;
+     matrixio_id file_id = {-1,1};
      int attr_dims[2] = {3, 3};
      real output_k[3]; /* kvector in reciprocal lattice basis */
      real output_R[3][3];
@@ -1169,7 +1169,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  output_k[0] = output_k[1] = output_k[2] = 0.0; /* don't know k */
      
      if (strchr("dhecv", curfield_type)) { /* outputting vector field */
-	  matrixio_id data_id[6] = {-1,-1,-1,-1,-1,-1};
+	  matrixio_id data_id[6] = {{-1,1},{-1,1},{-1,1},{-1,1},{-1,1},{-1,1}};
 	  int i;
 
 	  sprintf(fname, "%c.k%02d.b%02d",
@@ -1221,13 +1221,13 @@ void output_field_to_file(integer which_component, string filename_prefix)
 #endif
 
 	  for (i = 0; i < 6; ++i)
-	       if (data_id[i] >= 0)
+	       if (data_id[i].id >= 0)
 		    matrixio_close_dataset(data_id[i]);
 	  matrixio_write_data_attr(file_id, "Bloch wavevector",
 				   output_k, 1, attr_dims);
      }
      else if (strchr("C", curfield_type)) { /* outputting cmplx scalar field */
-	  matrixio_id data_id[2] = {-1,-1};
+	  matrixio_id data_id[2] = {{-1,1},{-1,1}};
 	  int i;
 
 	  sprintf(fname, "%c.k%02d.b%02d",
@@ -1274,7 +1274,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 #endif
 
 	  for (i = 0; i < 2; ++i)
-	       if (data_id[i] >= 0)
+	       if (data_id[i].id >= 0)
 		    matrixio_close_dataset(data_id[i]);
 	  matrixio_write_data_attr(file_id, "Bloch wavevector",
 				   output_k, 1, attr_dims);
@@ -1349,7 +1349,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
      else
 	  mpi_one_fprintf(stderr, "unknown field type!\n");
 
-     if (file_id >= 0) {
+     if (file_id.id >= 0) {
 	  matrixio_write_data_attr(file_id, "lattice vectors",
 				   &output_R[0][0], 2, attr_dims);
 	  matrixio_write_string_attr(file_id, "description", description);

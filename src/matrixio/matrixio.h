@@ -24,13 +24,20 @@
 /* don't use new HDF5 1.8 API (which isn't even fully documented yet, grrr) */
 #  define H5_USE_16_API 1
 #  include <hdf5.h>
-typedef hid_t matrixio_id;
+typedef hid_t matrixio_id_;
 #else /* no HDF */
-typedef int matrixio_id; /* dummy */
+typedef int matrixio_id_; /* dummy */
 #endif
 
+typedef struct {
+     matrixio_id_ id;
+     int parallel;
+} matrixio_id;
+
 extern matrixio_id matrixio_create(const char *fname);
+matrixio_id matrixio_create_serial(const char *fname);
 extern matrixio_id matrixio_open(const char *fname, int read_only);
+matrixio_id matrixio_open_serial(const char *fname, int read_only);
 extern void matrixio_close(matrixio_id id);
 
 extern matrixio_id matrixio_create_sub(matrixio_id id,

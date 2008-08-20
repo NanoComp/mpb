@@ -141,9 +141,9 @@ void fieldio_write_real_vals(real *vals,
 {
      rank = dims[2] == 1 ? (dims[1] == 1 ? 1 : 2) : 3;
 
-     if (!append || *data_id < 0)
+     if (!append || data_id->id < 0)
 	  *data_id = matrixio_create_dataset(file_id, dataname, 
 					     NULL, rank,dims);
-
+     
      matrixio_write_real_data(*data_id,local_dims,start,1,vals);
 }

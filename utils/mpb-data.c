@@ -339,7 +339,7 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      }
 
      strcpy(out_name, name_re);
-     if (out_file == in_file)
+     if (out_file.id == in_file.id)
 	  strcat(out_name, "-new");
      if (verbose)
 	  printf("Writing dataset to %s...\n", out_name);
@@ -349,7 +349,7 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
 
      if (d_out_im) {
 	  strcpy(out_name, name_im);
-	  if (out_file == in_file)
+	  if (out_file.id == in_file.id)
 	       strcat(out_name, "-new");
 	  if (verbose)
 	       printf("Writing dataset to %s...\n", out_name);
@@ -485,7 +485,7 @@ void handle_cvector_dataset(matrixio_id in_file, matrixio_id out_file,
 	  }
 
 	  nam[0] = 'x' + dim;
-	  if (out_file != in_file)
+	  if (out_file.id != in_file.id)
 	       nam[3] = 0;
 	  if (verbose)
 	       printf("Writing dataset to %s...\n", nam);
@@ -718,7 +718,7 @@ void handle_file(const char *fname, const char *out_fname,
      free(kvector);
 
      matrixio_close(in_file);
-     if (out_file != in_file)
+     if (out_file.id != in_file.id)
 	  matrixio_close(out_file);
 }
 

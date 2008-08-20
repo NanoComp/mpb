@@ -78,66 +78,66 @@
    can *not* be attached to files, in which case we'll write/read it
    as an ordinary dataset.  Ugh. */
 
-static void write_attr(matrixio_id id, matrixio_id type_id,
-		       matrixio_id space_id, const char *name, const void *val)
+static void write_attr(matrixio_id id, matrixio_id_ type_id,
+		       matrixio_id_ space_id,
+		       const char *name, const void *val)
 {
 #if defined(HAVE_HDF5)
      hid_t attr_id;
 
-     if (!mpi_is_master())
+     if (!mpi_is_master() && id.parallel)
 	  return; /* only one process should add attributes */
      
-     if (H5I_FILE == H5Iget_type(id)) {
-          attr_id = H5Dcreate(id, name, type_id, space_id, H5P_DEFAULT);
-          CHECK(id >= 0, "error creating HDF attr");
+     if (H5I_FILE == H5Iget_type(id.id)) {
+          attr_id = H5Dcreate(id.id, name, type_id, space_id, H5P_DEFAULT);
+          CHECK(attr_id >= 0, "error creating HDF attr");
           H5Dwrite(attr_id, type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, val);
           H5Dclose(attr_id);
      }
      else {
-	  attr_id = H5Acreate(id, name, type_id, space_id, H5P_DEFAULT);
-	  CHECK(id >= 0, "error creating HDF attr");
+	  attr_id = H5Acreate(id.id, name, type_id, space_id, H5P_DEFAULT);
+	  CHECK(attr_id >= 0, "error creating HDF attr");
 	  H5Awrite(attr_id, type_id, val);
 	  H5Aclose(attr_id);
      }
 #endif
 }
 
-static matrixio_id open_attr(matrixio_id id, matrixio_id *type_id,
-			     matrixio_id *space_id, const char *name)
+static matrixio_id open_attr(matrixio_id id, matrixio_id_ *type_id,
+			     matrixio_id_ *space_id, const char *name)
 {
+     matrixio_id attr_id;
+     attr_id.parallel = id.parallel;
+     attr_id.id = -1;
 #if defined(HAVE_HDF5)
-     hid_t attr_id;
-
-     if (H5I_FILE == H5Iget_type(id)) {
-          SUPPRESS_HDF5_ERRORS(attr_id = H5Dopen(id, name));
-	  if (attr_id >= 0) {
-	       *type_id = H5Dget_type(attr_id);
-	       *space_id = H5Dget_space(attr_id);
+     if (H5I_FILE == H5Iget_type(id.id)) {
+          SUPPRESS_HDF5_ERRORS(attr_id.id = H5Dopen(id.id, name));
+	  if (attr_id.id >= 0) {
+	       *type_id = H5Dget_type(attr_id.id);
+	       *space_id = H5Dget_space(attr_id.id);
 	  }
      }
      else {
-          SUPPRESS_HDF5_ERRORS(attr_id = H5Aopen_name(id, name));
-	  if (attr_id >= 0) {
-	       *type_id = H5Aget_type(attr_id);
-	       *space_id = H5Aget_space(attr_id);
+          SUPPRESS_HDF5_ERRORS(attr_id.id = H5Aopen_name(id.id, name));
+	  if (attr_id.id >= 0) {
+	       *type_id = H5Aget_type(attr_id.id);
+	       *space_id = H5Aget_space(attr_id.id);
 	  }
      }
 
-     return attr_id;
-#else
-     return -1;
 #endif
+     return attr_id;
 }
 
 static void read_attr(matrixio_id id, matrixio_id attr_id,
-		      matrixio_id mem_type_id, void *val)
+		      matrixio_id_ mem_type_id, void *val)
 {
 #if defined(HAVE_HDF5)
-     if (H5I_FILE == H5Iget_type(id)) {
-	  H5Dread(attr_id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, val);
+     if (H5I_FILE == H5Iget_type(id.id)) {
+	  H5Dread(attr_id.id, mem_type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, val);
      }
      else {
-	  H5Aread(attr_id, mem_type_id, val);
+	  H5Aread(attr_id.id, mem_type_id, val);
      }
 #endif
 }
@@ -145,11 +145,11 @@ static void read_attr(matrixio_id id, matrixio_id attr_id,
 static void close_attr(matrixio_id id, matrixio_id attr_id)
 {
 #if defined(HAVE_HDF5)
-     if (H5I_FILE == H5Iget_type(id)) {
-          H5Dclose(attr_id);
+     if (H5I_FILE == H5Iget_type(id.id)) {
+          H5Dclose(attr_id.id);
      }
      else {
-          H5Aclose(attr_id);
+          H5Aclose(attr_id.id);
      }
 #endif
 }
@@ -214,7 +214,7 @@ void matrixio_write_data_attr(matrixio_id id, const char *name,
 char *matrixio_read_string_attr(matrixio_id id, const char *name)
 {
 #if defined(HAVE_HDF5)
-     hid_t attr_id;
+     matrixio_id attr_id;
      hid_t type_id;
      hid_t space_id;
      int len;
@@ -224,7 +224,7 @@ char *matrixio_read_string_attr(matrixio_id id, const char *name)
 	  return NULL; /* don't try to read empty-named attributes */
      
      attr_id = open_attr(id, &type_id, &space_id, name);
-     if (attr_id < 0)
+     if (attr_id.id < 0)
 	  return NULL;
 
      if (H5Sget_simple_extent_npoints(space_id) == 1) {
@@ -252,7 +252,8 @@ real *matrixio_read_data_attr(matrixio_id id, const char *name,
 			      int *rank, int max_rank, int *dims)
 {
 #if defined(HAVE_HDF5)
-     hid_t attr_id, type_id, mem_type_id, space_id;
+     matrixio_id attr_id;
+     hid_t type_id, mem_type_id, space_id;
      real *d = NULL;
 
      if (!name || !name[0] || max_rank < 0 || !dims)
@@ -267,7 +268,7 @@ real *matrixio_read_data_attr(matrixio_id id, const char *name,
 #endif
 
      attr_id = open_attr(id, &type_id, &space_id, name);
-     if (attr_id < 0)
+     if (attr_id.id < 0)
           return NULL;
 
      *rank = H5Sget_simple_extent_ndims(space_id);
@@ -324,7 +325,7 @@ static char *add_fname_suffix(const char *fname)
 
 static int matrixio_critical_section_tag = 0;
 
-matrixio_id matrixio_create(const char *fname)
+static matrixio_id matrixio_create_(const char *fname, int parallel)
 {
 #if defined(HAVE_HDF5)
      char *new_fname;
@@ -334,22 +335,24 @@ matrixio_id matrixio_create(const char *fname)
      access_props = H5Pcreate (H5P_FILE_ACCESS);
      
 #  if defined(HAVE_MPI) && defined(HAVE_H5PSET_FAPL_MPIO)
-     H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
+     if (parallel)
+	  H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
 #  endif
 
      new_fname = add_fname_suffix(fname);
 
 #  ifdef HAVE_H5PSET_FAPL_MPIO
-     id = H5Fcreate(new_fname, H5F_ACC_TRUNC, H5P_DEFAULT, access_props);
+     id.id = H5Fcreate(new_fname, H5F_ACC_TRUNC, H5P_DEFAULT, access_props);
 #  else
-     mpi_begin_critical_section(matrixio_critical_section_tag);
-     if (mpi_is_master())
-	  id = H5Fcreate(new_fname, H5F_ACC_TRUNC, H5P_DEFAULT, access_props);
+     if (parallel) mpi_begin_critical_section(matrixio_critical_section_tag);
+     if (mpi_is_master() || !parallel)
+	  id.id = H5Fcreate(new_fname, H5F_ACC_TRUNC,H5P_DEFAULT,access_props);
      else
-	  id = H5Fopen(new_fname, H5F_ACC_RDWR, access_props);
+	  id.id = H5Fopen(new_fname, H5F_ACC_RDWR, access_props);
 #  endif
+     id.parallel = parallel;
 
-     CHECK(id >= 0, "error creating HDF output file");
+     CHECK(id.id >= 0, "error creating HDF output file");
 
      free(new_fname);
 
@@ -364,7 +367,15 @@ matrixio_id matrixio_create(const char *fname)
 #endif
 }
 
-matrixio_id matrixio_open(const char *fname, int read_only)
+matrixio_id matrixio_create(const char *fname) {
+     return matrixio_create_(fname, 1);
+}
+
+matrixio_id matrixio_create_serial(const char *fname) {
+     return matrixio_create_(fname, 0);
+}
+
+static matrixio_id matrixio_open_(const char *fname, int read_only, int parallel)
 {
 #if defined(HAVE_HDF5)
      char *new_fname;
@@ -374,18 +385,20 @@ matrixio_id matrixio_open(const char *fname, int read_only)
      access_props = H5Pcreate (H5P_FILE_ACCESS);
      
 #  if defined(HAVE_MPI) && defined(HAVE_H5PSET_FAPL_MPIO)
-     H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
+     if (parallel)
+	  H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
 #  endif
 
      new_fname = add_fname_suffix(fname);
 
-     IF_EXCLUSIVE(mpi_begin_critical_section(matrixio_critical_section_tag),0);
+     IF_EXCLUSIVE(if (parallel) mpi_begin_critical_section(matrixio_critical_section_tag),0);
 
      if (read_only)
-	  id = H5Fopen(new_fname, H5F_ACC_RDONLY, access_props);
+	  id.id = H5Fopen(new_fname, H5F_ACC_RDONLY, access_props);
      else
-	  id = H5Fopen(new_fname, H5F_ACC_RDWR, access_props);
-     CHECK(id >= 0, "error opening HDF input file");
+	  id.id = H5Fopen(new_fname, H5F_ACC_RDWR, access_props);
+     id.parallel = parallel;
+     CHECK(id.id >= 0, "error opening HDF input file");
 
      free(new_fname);
 
@@ -401,9 +414,17 @@ matrixio_id matrixio_open(const char *fname, int read_only)
 void matrixio_close(matrixio_id id)
 {
 #if defined(HAVE_HDF5)
-     CHECK(H5Fclose(id) >= 0, "error closing HDF file");
-     IF_EXCLUSIVE(mpi_end_critical_section(matrixio_critical_section_tag++),0);
+     CHECK(H5Fclose(id.id) >= 0, "error closing HDF file");
+     IF_EXCLUSIVE(if (id.parallel) mpi_end_critical_section(matrixio_critical_section_tag++),0);
 #endif
+}
+
+matrixio_id matrixio_open(const char *fname, int read_only) {
+     return matrixio_open_(fname, read_only, 1);
+}
+
+matrixio_id matrixio_open_serial(const char *fname, int read_only) {
+     return matrixio_open_(fname, read_only, 0);
 }
 
 /*****************************************************************************/
@@ -411,38 +432,37 @@ void matrixio_close(matrixio_id id)
 matrixio_id matrixio_create_sub(matrixio_id id, 
 				const char *name, const char *description)
 {
-#if defined(HAVE_HDF5)
      matrixio_id sub_id;
+     sub_id.id = 0;
+     sub_id.parallel = id.parallel;
+#if defined(HAVE_HDF5)
 
      /* when running a parallel job, only the master process creates the
 	group.  It flushes the group to disk and then the other processes
 	open the group.  Is this the right thing to do, or is the
         H5Gcreate function parallel-aware? */
 
-     if (mpi_is_master()) {
-	  sub_id = H5Gcreate(id, name, 0 /* ==> default size */ );
+     if (mpi_is_master() || !id.parallel) {
+	  sub_id.id = H5Gcreate(id.id, name, 0 /* ==> default size */ );
 	  matrixio_write_string_attr(sub_id, "description", description);
 	  
-	  H5Fflush(sub_id, H5F_SCOPE_GLOBAL);
+	  H5Fflush(sub_id.id, H5F_SCOPE_GLOBAL);
 
-	  IF_EXCLUSIVE(0,MPI_Barrier(MPI_COMM_WORLD));
+	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(MPI_COMM_WORLD));
      }
      else {
-	  IF_EXCLUSIVE(0,MPI_Barrier(MPI_COMM_WORLD));
+	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(MPI_COMM_WORLD));
 
-	  sub_id = H5Gopen(id, name);
+	  sub_id.id = H5Gopen(id.id, name);
      }
-
-     return sub_id;
-#else
-     return 0;
 #endif
+     return sub_id;
 }
 
 void matrixio_close_sub(matrixio_id id)
 {
 #if defined(HAVE_HDF5)
-     CHECK(H5Gclose(id) >= 0, "error closing HDF group");
+     CHECK(H5Gclose(id.id) >= 0, "error closing HDF group");
 #endif
 }
 
@@ -452,16 +472,18 @@ matrixio_id matrixio_open_dataset(matrixio_id id,
 				  const char *name,
 				  int rank, const int *dims)
 {
+     matrixio_id data_id;
+     data_id.id = 0;
+     data_id.parallel = id.parallel;
 #if defined(HAVE_HDF5)
+ {
      int i, rank_copy;
-     hid_t space_id, data_id;
+     hid_t space_id;
      hsize_t *dims_copy, *maxdims;
 
-     data_id = H5Dopen(id, name);
+     CHECK((data_id.id = H5Dopen(id.id, name)) >= 0, "error in H5Dopen");
 
-     CHECK((data_id = H5Dopen(id, name)) >= 0, "error in H5Dopen");
-
-     CHECK((space_id = H5Dget_space(data_id)) >= 0,
+     CHECK((space_id = H5Dget_space(data_id.id)) >= 0,
 	   "error in H5Dget_space");
 
      rank_copy = H5Sget_simple_extent_ndims(space_id);
@@ -478,11 +500,9 @@ matrixio_id matrixio_open_dataset(matrixio_id id,
      free(dims_copy);
 
      H5Sclose(space_id);
-
-     return data_id;
-#else
-     return 0;
+ }
 #endif
+     return data_id;
 }
 
 /*****************************************************************************/
@@ -491,19 +511,23 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
 				    const char *name, const char *description,
 				    int rank, const int *dims)
 {
+     matrixio_id data_id;
+     data_id.id = 0;
+     data_id.parallel = id.parallel;
 #if defined(HAVE_HDF5)
+ {
      int i;
-     hid_t space_id, type_id, data_id;
+     hid_t space_id, type_id;
      hsize_t *dims_copy;
 
      /* delete pre-existing datasets, or we'll have an error; I think
         we can only do this on the master process. (?) */
      if (matrixio_dataset_exists(id, name)) {
-	  if (mpi_is_master()) {
+	  if (mpi_is_master() || !id.parallel) {
 	       matrixio_dataset_delete(id, name);
-	       H5Fflush(id, H5F_SCOPE_GLOBAL);
+	       H5Fflush(id.id, H5F_SCOPE_GLOBAL);
 	  }
-	  IF_EXCLUSIVE(0,MPI_Barrier(MPI_COMM_WORLD));
+	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(MPI_COMM_WORLD));
      }
 
      CHECK(rank > 0, "non-positive rank");
@@ -527,26 +551,24 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
      /* Create the dataset.  Note that, on parallel machines, H5Dcreate
 	should do the right thing; it is supposedly a collective operation. */
      IF_EXCLUSIVE(
-	  if (mpi_is_master())
-	       data_id = H5Dcreate(id, name, type_id, space_id, H5P_DEFAULT);
+	  if (mpi_is_master() || !id.parallel)
+	       data_id.id = H5Dcreate(id.id,name,type_id,space_id,H5P_DEFAULT);
 	  else
-	       data_id = H5Dopen(id, name),
-	  data_id = H5Dcreate(id, name, type_id, space_id, H5P_DEFAULT));
+	       data_id.id = H5Dopen(id.id, name),
+	  data_id.id = H5Dcreate(id.id, name, type_id, space_id, H5P_DEFAULT));
 
      H5Sclose(space_id);  /* the dataset should have its own copy now */
      
      matrixio_write_string_attr(data_id, "description", description);
-
-     return data_id;
-#else
-     return 0;
+ }
 #endif
+     return data_id;
 }
 
 void matrixio_close_dataset(matrixio_id data_id)
 {
 #if defined(HAVE_HDF5)
-     CHECK(H5Dclose(data_id) >= 0, "error closing HDF dataset");
+     CHECK(H5Dclose(data_id.id) >= 0, "error closing HDF dataset");
 #endif
 }
 
@@ -554,7 +576,7 @@ int matrixio_dataset_exists(matrixio_id id, const char *name)
 {
 #if defined(HAVE_HDF5)
      hid_t data_id;
-     SUPPRESS_HDF5_ERRORS(data_id = H5Dopen(id, name));
+     SUPPRESS_HDF5_ERRORS(data_id = H5Dopen(id.id, name));
      if (data_id >= 0)
 	  H5Dclose(data_id);
      return (data_id >= 0);
@@ -566,7 +588,7 @@ int matrixio_dataset_exists(matrixio_id id, const char *name)
 void matrixio_dataset_delete(matrixio_id id, const char *name)
 {
 #if defined(HAVE_HDF5)
-     H5Gunlink(id, name);
+     H5Gunlink(id.id, name);
 #endif
 }
 
@@ -590,7 +612,7 @@ void matrixio_write_real_data(matrixio_id data_id,
      /*******************************************************************/
      /* Get dimensions of dataset */
      
-     space_id = H5Dget_space(data_id);
+     space_id = H5Dget_space(data_id.id);
 
      rank = H5Sget_simple_extent_ndims(space_id);
      
@@ -683,7 +705,7 @@ void matrixio_write_real_data(matrixio_id data_id,
      /* Write the data, then free all the stuff we've allocated. */
 
      if (do_write)
-	  H5Dwrite(data_id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
+	  H5Dwrite(data_id.id, type_id, mem_space_id, space_id, H5P_DEFAULT, 
 		   data_copy);
 
      if (free_data_copy)
@@ -756,10 +778,10 @@ real *matrixio_read_real_data(matrixio_id id,
 	  strcpy(dname, name);
      }
      else {
-	  if (H5Giterate(id, "/", NULL, find_dataset, &dname) < 0)
+	  if (H5Giterate(id.id, "/", NULL, find_dataset, &dname) < 0)
 	       return NULL;
      }
-     SUPPRESS_HDF5_ERRORS(data_id = H5Dopen(id, dname));
+     SUPPRESS_HDF5_ERRORS(data_id = H5Dopen(id.id, dname));
      free(dname);
      if (data_id < 0)
 	  return NULL;
