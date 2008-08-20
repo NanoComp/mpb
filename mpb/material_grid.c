@@ -23,6 +23,7 @@
 #include <mpiglue.h>
 #include <mpi_utils.h>
 #include <check.h>
+#include <matrixio.h>
 
 #include "mpb.h"
 
@@ -570,6 +571,102 @@ number material_grids_approx_gradient(vector3 kpoint, integer band,
      free(u);
      free(grids);
      return (f1 - f0) / du;
+}
+
+/**************************************************************************/
+
+static void synchronize_material_grid(material_grid *g)
+{
+     double *grid;
+     int n = ((int) g->size.x) * ((int) g->size.y) * ((int) g->size.z);
+     grid = material_grid_array(g);
+     MPI_Bcast(grid, n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+     material_grid_array_release(g);
+}
+
+void randomize_material_gridB(material_grid g, number noise)
+{
+     if (mpi_is_master()) {
+	  double *grid;
+	  int i, n = ((int) g.size.x) * ((int) g.size.y) * ((int) g.size.z);
+	  grid = material_grid_array(&g);
+	  for (i = 0; i < n; ++i) {
+	       double u = grid[i] + noise * (-1 + rand() * 2.0/RAND_MAX);
+	       while (u >= 0 && u <= 1) { /* mirror boundary conditions */
+		    if (u > 1) u = 1 - u;
+		    if (u < 0) u = -u;
+	       }
+	  }
+	  material_grid_array_release(&g);
+     }
+     synchronize_material_grid(&g);
+}
+
+/**************************************************************************/
+
+void save_material_grid(material_grid g, string filename)
+{
+     if (mpi_is_master()) {
+	  matrixio_id file_id, data_id;
+	  int dims[3], rank, start[3] = {0,0,0};
+	  double *grid;
+	  
+	  dims[0] = g.size.x;
+	  dims[1] = g.size.y;
+	  dims[2] = g.size.z;
+	  rank = dims[2] == 1 ? (dims[1] == 1 ? 1 : 2) : 3;
+
+	  file_id = matrixio_create_serial(filename);
+	  data_id = matrixio_create_dataset(file_id, "data", NULL, rank, dims);
+
+	  grid = material_grid_array(&g);
+	  matrixio_write_real_data(data_id, dims, start, 1, grid);
+	  material_grid_array_release(&g);
+
+	  matrixio_close_dataset(data_id);
+	  matrixio_close(file_id);
+     }
+}
+
+void load_material_gridB(material_grid g, string filename, vector3 supercell)
+{
+     if (mpi_is_master()) {
+	  matrixio_id file_id;
+	  int dims[3] = {1,1,1}, rank = 3;
+	  int nx, ny, nz, ix,iy,iz;
+	  double *data, *grid;
+	  double sx, sy, sz;
+
+	  file_id = matrixio_open_serial(filename, 1);
+	  data = matrixio_read_real_data(file_id, "data", &rank,dims, 0,0,0,0);
+	  CHECK(data, "couldn't find dataset in material grid file");
+	  matrixio_close(file_id);
+
+	  nx = g.size.x;
+	  ny = g.size.y;
+	  nz = g.size.z;
+	  sx = supercell.x > 0 ? supercell.x : 1;
+	  sy = supercell.y > 0 ? supercell.y : 1;
+	  sz = supercell.z > 0 ? supercell.z : 1;
+
+	  grid = material_grid_array(&g);
+	  for (ix = 0; ix < nx; ++ix)
+	       for (iy = 0; iy < ny; ++iy)
+		    for (iz = 0; iz < nz; ++iz) {
+			 double dummy;
+			 double x,y,z;
+			 x = modf((ix + 0.5) * (sx / nx), &dummy);
+			 y = modf((iy + 0.5) * (sy / ny), &dummy);
+			 z = modf((iz + 0.5) * (sz / nz), &dummy);
+			 grid[(ix * ny + iy) * nz + iz]
+			      = linear_interpolate(x,y,z, data,
+						   dims[0],dims[1],dims[2], 1);
+		    }
+	  material_grid_array_release(&g);
+	  
+	  free(data);
+     }
+     synchronize_material_grid(&g);
 }
 
 /**************************************************************************/

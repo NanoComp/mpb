@@ -247,6 +247,12 @@
 (define-external-function cvector-field-get-point-bloch false false 'cvector3 
   'SCM 'vector3)
 
+(define-external-function randomize-material-grid! false false
+  no-return-value 'material-grid 'number)
+(define-external-function save-material-grid false false
+  no-return-value 'material-grid 'string)
+(define-external-function load-material-grid! false false
+  no-return-value 'material-grid 'string 'vector3)
 (define-external-function print-material-grids-gradient false false
   no-return-value 'integer)
 (define-external-function material-grids-approx-gradient false false
