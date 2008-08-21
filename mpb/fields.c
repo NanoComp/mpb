@@ -157,7 +157,7 @@ void get_efield(integer which_band)
 /* Extract the mean epsilon from the effective inverse dielectric tensor,
    which contains two eigenvalues that correspond to the mean epsilon,
    and one which corresponds to the harmonic mean. */
-static real mean_epsilon(const symmetric_matrix *eps_inv)
+real mean_epsilon_from_matrix(const symmetric_matrix *eps_inv)
 {
      real eps_eigs[3];
      maxwell_sym_matrix_eigs(eps_eigs, eps_inv);
@@ -197,7 +197,7 @@ void get_epsilon(void)
      nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
 
      for (i = 0; i < N; ++i) {
-          epsilon[i] = mean_epsilon(mdata->eps_inv + i);
+          epsilon[i] = mean_epsilon_from_matrix(mdata->eps_inv + i);
 	  if (epsilon[i] < eps_low)
 	       eps_low = epsilon[i];
 	  if (epsilon[i] > eps_high)
@@ -746,7 +746,7 @@ number get_epsilon_point(vector3 p)
 {
      symmetric_matrix eps_inv;
      eps_inv = interp_eps_inv(p);
-     return mean_epsilon(&eps_inv);
+     return mean_epsilon_from_matrix(&eps_inv);
 }
 
 cmatrix3x3 get_epsilon_inverse_tensor_point(vector3 p)
@@ -954,7 +954,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
      nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
 
      for (i = 0; i < N; ++i) {
-	  epsilon = mean_epsilon(mdata->eps_inv +i);
+	  epsilon = mean_epsilon_from_matrix(mdata->eps_inv +i);
 	  if (epsilon >= eps_low && epsilon <= eps_high) {
 	       energy_sum += energy[i];
 #ifndef SCALAR_COMPLEX
@@ -1632,7 +1632,7 @@ cnumber compute_field_integral(function f)
 	       real epsilon;
 	       vector3 p;
 
-	       epsilon = mean_epsilon(mdata->eps_inv + index);
+	       epsilon = mean_epsilon_from_matrix(mdata->eps_inv + index);
 	       
 	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
 	       if (integrate_energy) {

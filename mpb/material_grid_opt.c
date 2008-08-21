@@ -33,6 +33,7 @@
 #endif
 
 /**************************************************************************/
+/* optimization of band gaps as a function of the material grid */
 
 typedef struct {
      boolean do_min;

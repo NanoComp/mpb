@@ -73,6 +73,7 @@ extern int kpoint_index;
 /* in fields.c */
 extern void compute_field_squared(void);
 void get_efield(integer which_band);
+real mean_epsilon_from_matrix(const symmetric_matrix *eps_inv);
 
 /**************************************************************************/
 

@@ -253,6 +253,8 @@
   no-return-value 'material-grid 'string)
 (define-external-function load-material-grid! false false
   no-return-value 'material-grid 'string 'vector3)
+(define-external-function material-grids-match-epsilon-file! false false
+  no-return-value 'string 'number)
 (define-external-function print-material-grids-gradient false false
   no-return-value 'integer)
 (define-external-function material-grids-approx-gradient false false
