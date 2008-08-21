@@ -592,10 +592,11 @@ void randomize_material_gridB(material_grid g, number noise)
 	  grid = material_grid_array(&g);
 	  for (i = 0; i < n; ++i) {
 	       double u = grid[i] + noise * (-1 + rand() * 2.0/RAND_MAX);
-	       while (u >= 0 && u <= 1) { /* mirror boundary conditions */
+	       while (u < 0 || u > 1) { /* mirror boundary conditions */
 		    if (u > 1) u = 1 - u;
 		    if (u < 0) u = -u;
 	       }
+	       grid[i] = u;
 	  }
 	  material_grid_array_release(&g);
      }
