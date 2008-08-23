@@ -888,4 +888,27 @@ number compute_1_group_velocity_component(vector3 d, integer b)
      return group_v;
 }
 
+/* returns group velocity for band b, in Cartesian coordinates */
+vector3 compute_1_group_velocity(integer b)
+{
+     vector3 v, d;
+     matrix3x3 RmT = matrix3x3_transpose(Rm);
+     d.x = 1; d.y = d.z = 0;
+     v.x = compute_1_group_velocity_component(matrix3x3_vector3_mult(RmT,d),b);
+     d.y = 1; d.x = d.z = 0;
+     v.y = compute_1_group_velocity_component(matrix3x3_vector3_mult(RmT,d),b);
+     d.z = 1; d.y = d.x = 0;
+     v.z = compute_1_group_velocity_component(matrix3x3_vector3_mult(RmT,d),b);
+     return v;
+}
+
+/* as above, but returns "group velocity" given by gradient of
+   frequency with respect to k in reciprocal coords ... this is useful
+   for band optimization. */
+vector3 compute_1_group_velocity_reciprocal(integer b)
+{
+     return matrix3x3_vector3_mult(matrix3x3_transpose(Gm), 
+				   compute_1_group_velocity(b));
+}
+
 /**************************************************************************/
