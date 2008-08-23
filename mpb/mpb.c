@@ -839,4 +839,53 @@ number_list compute_group_velocity_component(vector3 d)
      return group_v;
 }
 
+/* as above, but only computes for given band */
+number compute_1_group_velocity_component(vector3 d, integer b)
+{
+     real u[3];
+     int ib = b - 1;
+     real group_v, scratch;
+
+     curfield_reset();
+
+     if (!mdata) {
+	  mpi_one_fprintf(stderr, "init-params must be called first!\n");
+	  return group_v;
+     }
+     if (!kpoint_index) {
+	  mpi_one_fprintf(stderr, "solve-kpoint must be called first!\n");
+	  return group_v;
+     }
+
+     /* convert d to unit vector in Cartesian coords: */
+     d = unit_vector3(matrix3x3_vector3_mult(Gm, d));
+     u[0] = d.x; u[1] = d.y; u[2] = d.z;
+
+     evectmatrix_resize(&W[0], 1, 0);
+     CHECK(nwork_alloc > 1, "eigensolver-nwork is too small");
+     evectmatrix_resize(&W[1], 1, 0);
+
+     {  /* initialize fields of block from H */
+	  int in;
+	  scalar *data = W[1].data;
+	  for (in = 0; in < W[1].n; ++in)
+	       data[in] = H.data[in * H.p + ib];
+     }
+
+     maxwell_ucross_op(W[1], W[0], mdata, u);
+     evectmatrix_XtY_diag_real(W[1], W[0], &group_v, &scratch);
+
+     /* Reset scratch matrix sizes: */
+     evectmatrix_resize(&W[1], W[1].alloc_p, 0);
+     evectmatrix_resize(&W[0], W[0].alloc_p, 0);
+
+     if (freqs.items[ib] == 0)  /* v is undefined in this case */
+	  group_v = 0.0;  /* just set to zero */
+     else
+	  group_v /= negative_epsilon_okp ? sqrt(fabs(freqs.items[ib]))
+	       : freqs.items[ib];
+
+     return group_v;
+}
+
 /**************************************************************************/

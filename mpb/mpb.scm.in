@@ -307,6 +307,8 @@
 
 (define-external-function compute-group-velocity-component false false
   (make-list-type 'number) 'vector3)
+(define-external-function compute-1-group-velocity-component false false
+  'number 'vector3 'integer)
 
 ; Return a list of the group velocity vector3's, in the cartesian
 ; basis (and units of c):
