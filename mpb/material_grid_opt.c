@@ -214,11 +214,12 @@ static number material_grids_maxmin_gap(boolean do_min,
      nlopt_result res;
      extern int mma_verbose;
      mma_verbose = kpoints.num_items*2;
-     res = nlopt_minimize_c(NLOPT_LD_MMA, n, maxgap_func, &d,
-			    kpoints.num_items*2, band_constraint, 
-			    cdata, sizeof(band_constraint_data),
-			    lb, ub, u, &func_min,
-			    -HUGE_VAL, func_tol,0, 0,u_tol, maxeval,maxtime);
+     res = nlopt_minimize_constrained(
+	  NLOPT_LD_MMA, n, maxgap_func, &d,
+	  kpoints.num_items*2, band_constraint, 
+	  cdata, sizeof(band_constraint_data),
+	  lb, ub, u, &func_min,
+	  -HUGE_VAL, func_tol,0, 0,u_tol, maxeval,maxtime);
      CHECK(res > 0, "failure of nlopt_minimize");
  }
 #else
