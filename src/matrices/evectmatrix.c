@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "config.h"
 #include <mpiglue.h>
@@ -147,6 +148,7 @@ void evectmatrix_XtX(sqmatrix U, evectmatrix X, sqmatrix S)
 
      /* take advantage of the fact that U is Hermitian and only write
 	out the upper triangle of the matrix */
+     memset(S.data, 0, sizeof(scalar) * (U.p * U.p));
      blasglue_herk('U', 'C', X.p, X.n, 1.0, X.data, X.p, 0.0, S.data, U.p);
      evectmatrix_flops += X.N * X.c * X.p * (X.p - 1);
 
@@ -172,6 +174,7 @@ void evectmatrix_XtY_slice(sqmatrix U, evectmatrix X, evectmatrix Y,
      CHECK(ix + p <= X.p && iy + p <= Y.p && ix >= 0 && iy >= 0 && X.n == Y.n
            && p == U.p && p <= S.alloc_p, "invalid arguments to XtY_slice");
 
+     memset(S.data, 0, sizeof(scalar) * (U.p * U.p));
      blasglue_gemm('C', 'N', p, p, X.n,
                    1.0, X.data + ix, X.p, Y.data + iy, Y.p, 0.0, S.data, U.p);
      evectmatrix_flops += X.N * X.c * p * (2*p);
@@ -201,6 +204,7 @@ void evectmatrixXtY_sub(sqmatrix U, int Uoffset, evectmatrix X, evectmatrix Y,
 	   "submatrix exceeds matrix bounds");
      CHECK(Y.p <= S.alloc_p, "scratch matrix too small");
      
+     memset(S.data, 0, sizeof(scalar) * (Y.p * Y.p));
      blasglue_gemm('C', 'N', X.p, X.p, X.n,
 		   1.0, X.data, X.p, Y.data, Y.p, 0.0, S.data, Y.p);
      evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
