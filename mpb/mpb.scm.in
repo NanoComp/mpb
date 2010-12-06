@@ -64,7 +64,8 @@
     (lambda (object)
       (let ((sz (object-property-value object 'size))
 	    (i (object-property-value object 'matgrid-init)))
-	(let ((g (apply make-uniform-array (cons 0.333 (vector->list sz)))))
+	(let ((g (apply make-uniform-array 
+			(cons 0.333 (map inexact->exact (vector->list sz))))))
 	  (array-index-map! g (lambda (x y z) 
 				(i (- (/ x (vector3-x sz)) 0.5)
 				   (- (/ y (vector3-y sz)) 0.5)
