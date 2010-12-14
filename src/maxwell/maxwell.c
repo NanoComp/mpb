@@ -139,7 +139,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 					   FFTW_ESTIMATE | FFTW_IN_PLACE);
      }
 
-     fftwnd_mpi_local_sizes(d->iplan, &d->local_nx, &d->local_x_start,
+     fftwnd_mpi_local_sizes(d->iplans[0], &d->local_nx, &d->local_x_start,
 			    &d->local_ny, &d->local_y_start,
 			    &fft_data_size);
      
@@ -161,7 +161,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				       FFTW_COMPLEX_TO_REAL,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
 
-     rfftwnd_mpi_local_sizes(d->iplan, &d->local_nx, &d->local_x_start,
+     rfftwnd_mpi_local_sizes(d->iplans[0], &d->local_nx, &d->local_x_start,
 			     &d->local_ny, &d->local_y_start,
 			     &fft_data_size);
 
