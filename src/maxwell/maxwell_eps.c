@@ -410,14 +410,6 @@ void set_maxwell_dielectric(maxwell_data *md,
 	      &size_moment_mesh);
      mesh_prod_inv = 1.0 / mesh_prod;
 
-#ifdef DEBUG
-     mpi_one_printf("Using moment mesh (%d):\n", size_moment_mesh);
-     for (i = 0; i < size_moment_mesh; ++i)
-	  mpi_one_printf("   (%g, %g, %g) (%g)\n",
-		 moment_mesh[i][0], moment_mesh[i][1], moment_mesh[i][2],
-		 moment_mesh_weights[i]);
-#endif
-
      s1 = 1.0 / n1;
      s2 = 1.0 / n2;
      s3 = 1.0 / n3;
