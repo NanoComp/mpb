@@ -255,19 +255,9 @@ static int mean_epsilon_func(symmetric_matrix *meps,
      d3 *= no_size_z ? 0 : geometry_lattice.size.z * 0.5;
 
 #if 0 /* no averaging */
-     {
-	  const geometric_object *o;
-          material_type mat;
-          vector3 z, shiftby;
-	  int id;
-          z = shift_to_unit_cell(p);
-          o = object_of_point_in_tree(z, geometry_tree, &shiftby, &id);
-	  mat = (o && o->material.which_subclass != MATERIAL_TYPE_SELF)
-               ? o->material : default_material;
-	  material_eps(mat, meps, meps_inv);
-	  n[0] = n[1] = n[2] = 0;
-	  return 1;
-     }
+     epsilon_func(meps, meps_inv, r, edata);
+     n[0] = n[1] = n[2] = 0;
+     return 1;
 #endif
 
      for (i = 0; i < num_neighbors[dimensions - 1]; ++i) {
