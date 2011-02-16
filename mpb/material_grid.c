@@ -573,6 +573,190 @@ number material_grids_approx_gradient(vector3 kpoint, integer band,
      return (f1 - f0) / du;
 }
 
+void print_material_grids_deps_du(void)
+{
+     int i, j, k, n1, n2, n3;
+     real s1, s2, s3, c1, c2, c3;
+     int ngrids;
+     material_grid *grids = get_material_grids(geometry, &ngrids);
+     int ntot = material_grids_ntot(grids, ngrids);
+     double *v = (double *) malloc(sizeof(double) * ntot);
+
+     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
+
+     s1 = geometry_lattice.size.x / n1;
+     s2 = geometry_lattice.size.y / n2;
+     s3 = geometry_lattice.size.z / n3;
+     c1 = n1 <= 1 ? 0 : geometry_lattice.size.x * 0.5;
+     c2 = n2 <= 1 ? 0 : geometry_lattice.size.y * 0.5;
+     c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
+
+     /* Here we have different loops over the coordinates, depending
+	upon whether we are using complex or real and serial or
+        parallel transforms.  Each loop must define, in its body,
+        variables (i2,j2,k2) describing the coordinate of the current
+        point, and "index" describing the corresponding index in 
+	the curfield array.
+
+        This was all stolen from fields.c...it would be better
+        if we didn't have to cut and paste, sigh. */
+
+     for (i = 0; i < n1; ++i)
+	  for (j = 0; j < n2; ++j)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int index = ((i * n2 + j) * n3 + k);
+
+	  {
+	       vector3 p;
+	       geom_box_tree tp;
+	       int oi, ig;
+	       material_grid *mg;
+	       double uval;
+	       int kind;
+	       double scalegrad;
+     
+	       memset(v, 0, sizeof(double) * ntot);
+
+	       p.x = i * s1 - c1; p.y = j * s2 - c2; p.z = k * s3 - c3;
+	       
+     tp = geom_tree_search(p, geometry_tree, &oi);
+     if (tp && tp->objects[oi].o->material.which_subclass == MATERIAL_GRID)
+          mg = tp->objects[oi].o->material.subclass.material_grid_data;
+     else if (!tp && default_material.which_subclass == MATERIAL_GRID)
+	  mg = default_material.subclass.material_grid_data;
+     else
+          goto gotmyv; /* no material grids at this point */
+
+     uval = matgrid_val(p, tp, oi, mg);
+     scalegrad = (mg->epsilon_max - mg->epsilon_min);
+     if ((kind = mg->material_grid_kind) == U_SUM)
+	  scalegrad /= matgrid_val_count;
+
+     if (tp) {
+	  do {
+	       vector3 pb = to_geom_box_coords(p, &tp->objects[oi]);
+	       vector3 sz = tp->objects[oi].o->material
+		    .subclass.material_grid_data->size;
+	       double *vcur = v, *ucur;
+	       for (ig = 0; ig < ngrids; ++ig) {
+		    if (material_grid_equal(grids+ig,
+					    tp->objects[oi].o->material
+					    .subclass.material_grid_data))
+			 break;
+		    else
+			 vcur += (int) (grids[ig].size.x * grids[ig].size.y 
+					* grids[ig].size.z);
+	       }
+	       CHECK(ig < ngrids, "bug in material_grid_gradient_point");
+	       ucur = material_grid_array(grids+ig);
+	       add_interpolate_weights(pb.x, pb.y, pb.z, 
+				       vcur, sz.x, sz.y, sz.z, 1, scalegrad,
+				       ucur, kind, uval);
+	       material_grid_array_release(grids+ig);
+	       tp = geom_tree_search_next(p, tp, &oi);
+	  } while (tp &&
+		   compatible_matgrids(mg, &tp->objects[oi].o->material));
+     }
+     if (!tp && compatible_matgrids(mg, &default_material)) {
+	  vector3 pb;
+	  vector3 sz = default_material.subclass.material_grid_data->size;
+	  double *vcur = v, *ucur;
+	  for (ig = 0; ig < ngrids; ++ig) {
+	       if (material_grid_equal(grids+ig, default_material
+				       .subclass.material_grid_data))
+		    break;
+	       else
+		    vcur += (int) (grids[ig].size.x * grids[ig].size.y 
+				   * grids[ig].size.z);
+	  }
+	  CHECK(ig < ngrids, "bug in material_grid_gradient_point");
+	  pb.x = no_size_x ? 0 : p.x / geometry_lattice.size.x;
+	  pb.y = no_size_y ? 0 : p.y / geometry_lattice.size.y;
+	  pb.z = no_size_z ? 0 : p.z / geometry_lattice.size.z;
+	  ucur = material_grid_array(grids+ig);
+	  add_interpolate_weights(pb.x, pb.y, pb.z, 
+				  vcur, sz.x, sz.y, sz.z, 1, scalegrad,
+				  ucur, kind, uval);
+	  material_grid_array_release(grids+ig);
+     }
+
+	  gotmyv:
+     mpi_one_printf("depsdu:, %g, %d", 
+		    mean_epsilon_from_matrix(mdata->eps_inv + index), index);
+     for (ig = 0; ig < ntot; ++ig)
+	  mpi_one_printf(", %g", v[ig]);
+     mpi_one_printf("\n");
+
+
+	  }
+     }
+
+     free(v);
+}
+
+void print_material_grids_deps_du_numeric(double du)
+{
+     int i, j, k;
+     int n1 = mdata->nx, n2 = mdata->ny, n3 = mdata->nz;
+     int ngrids;
+     material_grid *grids = get_material_grids(geometry, &ngrids);
+     int ntot = material_grids_ntot(grids, ngrids);
+     double *u = (double *) malloc(sizeof(double) * ntot);
+     double *v = (double *) malloc(sizeof(double) * (n1*n2*n3) * ntot);
+     double *ep = (double *) malloc(sizeof(double) * (n1*n2*n3));
+     double *foo;
+     int iu;
+
+     material_grids_get(u, grids, ngrids);
+     reset_epsilon();
+
+     ep[0] = 1.234;
+
+     for (i = 0; i < n1; ++i)
+	  for (j = 0; j < n2; ++j)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int index = ((i * n2 + j) * n3 + k);
+	  ep[index] = mean_epsilon_from_matrix(mdata->eps_inv + index);
+     }
+
+     for (iu = 0; iu < ntot; ++iu) {
+	  u[iu] += du;
+	  material_grids_set(u, grids, ngrids);
+	  reset_epsilon();
+
+	  for (i = 0; i < n1; ++i)
+	       for (j = 0; j < n2; ++j)
+		    for (k = 0; k < n3; ++k)
+		    {
+			 int index = ((i * n2 + j) * n3 + k);
+			 double epn = 
+			      mean_epsilon_from_matrix(mdata->eps_inv + index);
+			 v[index*ntot + iu] = (epn - ep[index]) / du;
+		    }
+	  u[iu] -= du;
+     }
+
+     for (i = 0; i < n1; ++i)
+	  for (j = 0; j < n2; ++j)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int index = ((i * n2 + j) * n3 + k);
+	  mpi_one_printf("depsduN:, %g, %d", ep[index], index);
+	  for (iu = 0; iu < ntot; ++iu)
+	       mpi_one_printf(", %g", v[index*ntot + iu]);
+	  mpi_one_printf("\n");
+     }
+     
+     material_grids_set(u, grids, ngrids);
+     reset_epsilon();
+
+     free(ep);
+     free(v);
+     free(u);
+}
+
 /**************************************************************************/
 
 static void synchronize_material_grid(material_grid *g)

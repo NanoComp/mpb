@@ -258,6 +258,10 @@
   no-return-value 'string 'number)
 (define-external-function print-material-grids-gradient false false
   no-return-value 'integer)
+(define-external-function print-material-grids-deps-du false false
+  no-return-value)
+(define-external-function print-material-grids-deps-du-numeric false false
+  no-return-value 'number)
 (define-external-function material-grids-approx-gradient false false
   'number 'vector3 'integer 'integer 'number)
 (define-external-function material-grids-maxgap false false
