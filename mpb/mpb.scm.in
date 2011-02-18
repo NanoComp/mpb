@@ -44,6 +44,8 @@
 (define-class material-function material-type
   (define-property material-func no-default 'function
     (lambda (p) (= 1 (procedure-num-args p)))))
+(define (epsilon-func f) ; convenience wrapper
+  (material-func (lambda (p) (make dielectric (epsilon (f p))))))
 
 ; must match material_grid_kinds in mpb.h
 (define U-MIN 0)
