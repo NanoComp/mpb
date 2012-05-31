@@ -505,12 +505,9 @@ void set_maxwell_dielectric(maxwell_data *md,
      {
 	  int mi, mj, mk;
 #ifdef WITH_HERMITIAN_EPSILON
-	  symmetric_matrix eps_mean = {0,0,0,{0,0},{0,0},{0,0}}, 
-			   eps_inv_mean = {0,0,0,{0,0},{0,0},{0,0}},
-			   eps_mean_inv;
+	  symmetric_matrix eps_mean, eps_inv_mean, eps_mean_inv;
 #else
-	  symmetric_matrix eps_mean = {0,0,0,0,0,0}, 
-			   eps_inv_mean = {0,0,0,0,0,0}, eps_mean_inv;
+	  symmetric_matrix eps_mean, eps_inv_mean, eps_mean_inv;
 #endif
 	  real norm_len;
 	  real norm0, norm1, norm2;
@@ -521,8 +518,6 @@ void set_maxwell_dielectric(maxwell_data *md,
 	       r[0] = i2 * s1;
 	       r[1] = j2 * s2;
 	       r[2] = k2 * s3;
-	       /* NOTE: mepsilon must not modify eps_mean or
-		  eps_inv_mean unless it returns true */
 	       if (mepsilon && mepsilon(&eps_mean, &eps_inv_mean, normal,
 					s1, s2, s3, mesh_prod_inv,
 					r, epsilon_data)) {
@@ -568,6 +563,15 @@ void set_maxwell_dielectric(maxwell_data *md,
 		    goto got_mean;
 	       }
 	  }
+
+	  eps_mean.m00 = eps_mean.m11 = eps_mean.m22 =
+	       eps_inv_mean.m00 = eps_inv_mean.m11 = eps_inv_mean.m22 = 0.0;
+	  ASSIGN_ESCALAR(eps_mean.m01, 0,0);
+	  ASSIGN_ESCALAR(eps_mean.m02, 0,0);
+	  ASSIGN_ESCALAR(eps_mean.m12, 0,0);
+	  ASSIGN_ESCALAR(eps_inv_mean.m01, 0,0);
+	  ASSIGN_ESCALAR(eps_inv_mean.m02, 0,0);
+	  ASSIGN_ESCALAR(eps_inv_mean.m12, 0,0);
 
 	  for (mi = 0; mi < mesh_size[0]; ++mi)
 	       for (mj = 0; mj < mesh_size[1]; ++mj)
