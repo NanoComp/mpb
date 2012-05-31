@@ -363,7 +363,10 @@ static matrixio_id matrixio_create_(const char *fname, int parallel)
      mpi_one_fprintf(stderr,
 		     "matrixio: cannot output \"%s\" (compiled without HDF)\n",
 		     fname);
-     return 0;
+     {
+	  matrixio_id id = {0,0};
+	  return id;
+     }
 #endif
 }
 
@@ -407,7 +410,10 @@ static matrixio_id matrixio_open_(const char *fname, int read_only, int parallel
      return id;
 #else
      CHECK(0, "no matrixio implementation is linked");
-     return 0;
+     {
+	  matrixio_id id = {0,0};
+	  return id;
+     }
 #endif
 }
 
