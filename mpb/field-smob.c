@@ -172,7 +172,7 @@ static void update_curfield(field_smob *pf)
 boolean cur_fieldp(SCM obj)
 {
      if (SCM_NIMP(obj) && SCM_SYMBOLP(obj)) {
-	  char *s = gh_symbol2newstr(obj, NULL);
+	  char *s = ctl_symbol2newstr(obj);
 	  int ret = !strcmp(s, "cur-field");
 	  free(s);
 	  return ret;

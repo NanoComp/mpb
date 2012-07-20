@@ -10,7 +10,8 @@ AM_MAINTAINER_MODE
 # except for public releases.)
 SHARED_VERSION_INFO="0:0:0"
 
-AM_INIT_AUTOMAKE(1.6)
+AM_INIT_AUTOMAKE([check-news color-tests parallel-tests silent-rules 1.11])
+AM_SILENT_RULES(yes)
 AC_SUBST(SHARED_VERSION_INFO)
 AM_ENABLE_SHARED(no) dnl shared libs cause too many headaches to be default
 AC_PROG_LIBTOOL
@@ -374,7 +375,7 @@ fi
 AC_SUBST(CTL_H_CPPFLAG)
 
 # Check libctl version >= LIBCTL_MAJOR.LIBCTL_MINOR.LIBCTL_BUGFIX
-LIBCTL_MAJOR=3; LIBCTL_MINOR=0; LIBCTL_BUGFIX=0
+LIBCTL_MAJOR=3; LIBCTL_MINOR=2; LIBCTL_BUGFIX=1
 AC_MSG_CHECKING([whether libctl version is at least ${LIBCTL_MAJOR}.${LIBCTL_MINOR}.${LIBCTL_BUGFIX}])
 AC_EGREP_CPP(yes, [[
 #include <ctl.h>
