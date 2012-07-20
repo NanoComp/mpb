@@ -70,7 +70,8 @@ CHECK(0, "MPI_Send stub is non-functional");
 #define MPI_Recv(sb,n,t, r,tag, comm,statp) \
 CHECK(0, "MPI_Recv stub is non-functional");
 
-typedef int MPI_Status;
+typedef int mpiglue_status_t;
+#define MPI_Status mpiglue_status_t
 
 typedef clock_t mpiglue_clock_t;
 #define MPIGLUE_CLOCK clock()

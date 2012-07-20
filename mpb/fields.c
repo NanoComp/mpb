@@ -22,10 +22,10 @@
 #include <stddef.h>
 
 #include "config.h"
-#include <mpiglue.h>
-#include <mpi_utils.h>
 #include <check.h>
 #include <matrixio.h>
+#include <mpiglue.h>
+#include <mpi_utils.h>
 #include <maxwell.h>
 
 #include <ctl-io.h>

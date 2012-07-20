@@ -28,10 +28,11 @@
 
 #include <check.h>
 #include <scalar.h>
-#include <mpiglue.h>
 #include <mpi_utils.h>
 
 #include "matrixio.h"
+
+#include <mpiglue.h>
 
 /*****************************************************************************/
 

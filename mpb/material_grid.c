@@ -20,10 +20,10 @@
 #include <math.h>
 
 #include "config.h"
-#include <mpiglue.h>
-#include <mpi_utils.h>
 #include <check.h>
 #include <matrixio.h>
+#include <mpiglue.h>
+#include <mpi_utils.h>
 
 #include "mpb.h"
 
