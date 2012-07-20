@@ -2,6 +2,8 @@
 AC_INIT(mpb, 1.5, stevenj@alum.mit.edu)
 AC_CONFIG_SRCDIR([src/matrices/matrices.c])
 AC_CONFIG_HEADER([config.h src/mpbconf.h])
+AC_CONFIG_MACRO_DIR([m4])
+AM_MAINTAINER_MODE
 
 # Shared-library version number; indicates api compatibility, and is
 # not the same as the "public" version number.  (Don't worry about this
@@ -27,6 +29,7 @@ AC_MSG_CHECKING([for vendor cc to be used instead of gcc])
 AC_MSG_RESULT()
 AC_CHECK_PROGS(CC, cc xlc) # prefer vendor cc, to stay in sync with Fortran
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 AC_ARG_ENABLE(single, [AC_HELP_STRING([--enable-single],[compile for single precision])], enable_single=$enableval, enable_single=no)
 if test "$enable_single" = "yes"; then
@@ -158,7 +161,7 @@ fi
 
 if test x"$inv_sym" = xyes; then
 	if test x = x"`echo $LIBS | egrep 'l[[dsx]]*rfftw|lfftw3'`"; then
-		AC_MSG_ERROR([The RFFTW libraries, which are required to compile MPB with inversion symmetry, could not be found.  These should have been installed as a part of FFTW.])
+		AC_MSG_ERROR([The FFTW3 or RFFTW libraries, which are required to compile MPB with inversion symmetry, could not be found.  These should have been installed as a part of FFTW.])
 	fi
 fi
 
@@ -245,21 +248,26 @@ if test x"$guile_ok" = xno; then
 	AC_MSG_ERROR([could not find guile program; check your PATH])
 fi
 
-AC_CHECK_PROG(HAVE_GUILE_CONFIG, guile-config, yes, no)
-if test "$HAVE_GUILE_CONFIG" = "yes"; then
-        CPPFLAGS="$CPPFLAGS `guile-config compile`"
-        LIBS="`guile-config link` $LIBS"
-	AC_MSG_CHECKING([if linking to guile works])
-	AC_TRY_LINK_FUNC(gh_enter, AC_MSG_RESULT(yes), [
-	AC_MSG_RESULT(no)
-	AC_MSG_ERROR([guile-config is broken or Guile is not working.])
-	])
-else
+AC_CHECK_PROG(GUILE_CONFIG, guile-config, guile-config, unknown)
+if test "x$GUILE_CONFIG" = "xunknown"; then
         AC_CHECK_LIB(readline, readline)
         AC_CHECK_LIB(dl, dlopen)
         AC_CHECK_LIB(guile-ltdl, scm_lt_dlinit, [], [AC_CHECK_LIB(ltdl, dlopen)])
-        AC_CHECK_LIB(guile, gh_eval_str, [], [AC_MSG_ERROR([linking to guile failed])])
+        AC_CHECK_LIB(guile, gh_eval_str, [],
+                     [AC_CHECK_LIB(guile, scm_eval_string, [],
+		         [AC_MSG_ERROR([linking to guile failed])])])
+else
+        CPPFLAGS="$CPPFLAGS `$GUILE_CONFIG compile`"
+        LIBS="`$GUILE_CONFIG link` $LIBS"
+	AC_MSG_CHECKING([if linking to guile works])
+	AC_TRY_LINK_FUNC(gh_enter, AC_MSG_RESULT(yes),
+ 	  [AC_TRY_LINK_FUNC(scm_boot_guile, AC_MSG_RESULT(yes),
+            [AC_MSG_RESULT(no)
+             AC_MSG_ERROR([guile-config is broken])])])
 fi
+AC_CHECK_HEADERS([libguile.h guile/gh.h])
+
+# Check how smob types work in this Guile version:
 
 AC_CHECK_FUNCS(scm_make_smob_type scm_array_get_handle)
 AC_MSG_CHECKING([for SCM_SMOB_PREDICATE])
@@ -341,13 +349,10 @@ fi
 AC_MSG_RESULT($LIBCTL_DIR)
 AC_SUBST(LIBCTL_DIR)
 
-AC_CHECK_PROG(gen_ctl_io_ok, gen-ctl-io, yes, no)
-if test x"$gen_ctl_io_ok" = xno; then
+AC_CHECK_PROGS(GEN_CTL_IO, gen-ctl-io, echo)
+if test x"$GEN_CTL_IO" = xecho; then
 	AC_MSG_ERROR([could not find gen-ctl-io program; check your PATH])
 fi
-
-GEN_CTL_IO=gen-ctl-io
-AC_SUBST(GEN_CTL_IO)
 
 # check for -lctl:
 AC_CHECK_LIB(ctl, ctl_get_vector3, [], [AC_MSG_ERROR([Couldn't find the required libctl library.])])
@@ -359,7 +364,7 @@ AC_CHECK_HEADER(ctl.h, [CTL_H_CPPFLAG=" "], [
   AC_MSG_CHECKING([for alternate ctl.h location])
   for ctl_h_path in /usr/include/ctl /usr/local/include/ctl; do
      CPPFLAGS="$save_CPPFLAGS -I$ctl_h_path"
-     AC_COMPILE_IFELSE(AC_LANG_PROGRAM([[#include <ctl.h>]],[]), [CTL_H_CPPFLAG=-I$ctl_h_path; break])
+     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ctl.h>]],[])], [CTL_H_CPPFLAG=-I$ctl_h_path; break])
   done
   AC_MSG_RESULT([$CTL_H_CPPFLAG])
   CPPFLAGS=$save_CPPFLAGS])
@@ -378,20 +383,26 @@ AC_EGREP_CPP(yes, [[
 #endif
 ]], [AC_MSG_RESULT(ok)], [AC_MSG_ERROR([libctl version ${LIBCTL_MAJOR}.${LIBCTL_MINOR}.${LIBCTL_BUGFIX} or later is required])])
 
+# Check for libctl_quiet feature (in libctl 3.1.1 or later):
+AC_MSG_CHECKING([for libctl_quiet feature])
+if grep libctl_quiet "$LIBCTL_DIR/base/main.c" 2>&1 > /dev/null; then
+   AC_MSG_RESULT(yes)
+   AC_DEFINE([HAVE_LIBCTL_QUIET], [1], [If we have the libctl_quiet variable])
+else
+   AC_MSG_RESULT(no)
+fi
+
 # On IRIX, basename/dirname functions in libctl/main.c require -lgen
 AC_CHECK_LIB(gen, basename)
 
 ##############################################################################
-# check for nlopt library and libctl support
+# check for nlopt library
 
-with_nlopt=no
-if test -r $LIBCTL_DIR/utils/nlopt.c -a -r $LIBCTL_DIR/utils/nlopt-constants.scm; then
-   AC_CHECK_LIB(nlopt, nlopt_minimize, [with_nlopt=yes
-					AC_DEFINE(HAVE_NLOPT,[1],[Have nlopt lib])
-				        NLOPT_CPPFLAG=-DHAVE_NLOPT])
-fi
-AC_SUBST(NLOPT_CPPFLAG)
-AM_CONDITIONAL(NLOPT, test "x$with_nlopt" = "xyes")
+AC_CHECK_HEADERS(nlopt.h)
+NLOPT_LIB=""
+AC_CHECK_LIB(nlopt, nlopt_minimize, [AC_DEFINE(HAVE_NLOPT,[1],[Have nlopt lib])
+                                     NLOPT_LIB="-lnlopt"])
+AC_SUBST(NLOPT_LIB)
 
 ##############################################################################
 # Checks for header files.
@@ -449,25 +460,6 @@ AC_PATH_PROG(SH_JOB, bash ksh ash, sh)
 if test x"$SH_JOB" = xsh; then
 	AC_MSG_WARN([Couldn't find bash or ksh shell on your system.  The mpb-split command may not work if your sh doesn't support job control.])
 fi
-
-##############################################################################
-# The following function is used only for debugging.  Note that
-# we must test for it *after* setting the compiler flags (which
-# affect whether it is declared, as it is a GNU extension).
-# We need to #include <stdio.h> because that somehow affects whether
-# the function is declared with older gcc versions.  We need
-# to use AC_TRY_COMPILE because the test in AC_HAVE_DECL seems
-# to be optimized out.
-
-AC_CHECK_FUNCS(feenableexcept) dnl GNU libc fp exception control function
-AC_MSG_CHECKING([whether feenableexcept declaration is usable])
-feenableexcept_decl_ok=yes
-AC_TRY_COMPILE([#include <stdio.h>
-#define _GNU_SOURCE 1
-#include <fenv.h>], [feenableexcept(0);],
-[AC_DEFINE([HAVE_DECL_FEENABLEEXCEPT],[1],[Define if fenv.h declares this.])],
-[feenableexcept_decl_ok=no])
-AC_MSG_RESULT($feenableexcept_decl_ok)
 
 ##############################################################################
 # The following function is used only for debugging.  Note that
