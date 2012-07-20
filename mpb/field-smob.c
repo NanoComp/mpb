@@ -39,22 +39,22 @@ long scm_tc16_smob_field_smob = 0;
 
 static SCM field_p(SCM obj)
 {
-     return gh_bool2scm(FIELD_P(obj));
+     return ctl_convert_boolean_to_scm(FIELD_P(obj));
 }
 
 static SCM rscalar_field_p(SCM obj)
 {
-     return gh_bool2scm(RSCALAR_FIELD_P(obj));
+     return ctl_convert_boolean_to_scm(RSCALAR_FIELD_P(obj));
 }
 
 static SCM cscalar_field_p(SCM obj)
 {
-     return gh_bool2scm(CSCALAR_FIELD_P(obj));
+     return ctl_convert_boolean_to_scm(CSCALAR_FIELD_P(obj));
 }
 
 static SCM cvector_field_p(SCM obj)
 {
-     return gh_bool2scm(CVECTOR_FIELD_P(obj));
+     return ctl_convert_boolean_to_scm(CVECTOR_FIELD_P(obj));
 }
 
 static int print_field_smob(SCM obj, SCM port, scm_print_state *pstate)
@@ -337,7 +337,7 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 	       SCM item = SCM_EOL;
 	       switch (ps[j]->type) {
 		   case RSCALAR_FIELD_SMOB:
-			item = gh_double2scm(ps[j]->f.rs[i]);
+			item = ctl_convert_number_to_scm(ps[j]->f.rs[i]);
 			break;
 		   case CSCALAR_FIELD_SMOB:
 			item = cnumber2scm(cscalar2cnumber(ps[j]->f.cs[i]));
@@ -352,7 +352,7 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 	  result = gh_apply(f, arg_list);
 	  switch (pd->type) {
 	      case RSCALAR_FIELD_SMOB:
-		   pd->f.rs[i] = gh_scm2double(result);
+		   pd->f.rs[i] = ctl_convert_number_to_c(result);
 		   break;
 	      case CSCALAR_FIELD_SMOB:
 		   pd->f.cs[i] = cnumber2cscalar(scm2cnumber(result));
@@ -538,7 +538,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 		    SCM item = SCM_EOL;
 		    switch (pf[ifield]->type) {
 			case RSCALAR_FIELD_SMOB:
-			     item = gh_double2scm(pf[ifield]->f.rs[index]);
+			     item = ctl_convert_number_to_scm(pf[ifield]->f.rs[index]);
 			     break;
 			case CSCALAR_FIELD_SMOB:
 			     item = cnumber2scm(cscalar2cnumber(
@@ -582,7 +582,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 			      SCM item = SCM_UNDEFINED;
 			      switch (pf[ifield]->type) {
 				  case RSCALAR_FIELD_SMOB:
-				       item = gh_double2scm(
+				       item = ctl_convert_number_to_scm(
 					    pf[ifield]->f.rs[index]);
 				       break;
 				  case CSCALAR_FIELD_SMOB:

@@ -41,7 +41,7 @@ long scm_tc16_smob_evectmatrix = 0;
 
 static SCM evectmatrix_p(SCM obj)
 {
-     return gh_bool2scm(EVECTMATRIX_P(obj));
+     return ctl_convert_boolean_to_scm(EVECTMATRIX_P(obj));
 }
 
 static int print_evectmatrix(SCM obj, SCM port, scm_print_state *pstate)
@@ -82,7 +82,7 @@ long scm_tc16_smob_sqmatrix = 0;
 
 static SCM sqmatrix_p(SCM obj)
 {
-     return gh_bool2scm(SQMATRIX_P(obj));
+     return ctl_convert_boolean_to_scm(SQMATRIX_P(obj));
 }
 
 static int print_sqmatrix(SCM obj, SCM port, scm_print_state *pstate)
