@@ -337,7 +337,8 @@ static matrixio_id matrixio_create_(const char *fname, int parallel)
      
 #  if defined(HAVE_MPI) && defined(HAVE_H5PSET_FAPL_MPIO)
      if (parallel)
-	  H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
+	  CHECK(H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL)
+		>= 0, "error initializing MPI file access");
 #  endif
 
      new_fname = add_fname_suffix(fname);
@@ -610,7 +611,7 @@ void matrixio_write_real_data(matrixio_id data_id,
      int rank;
      hsize_t *dims, *maxdims;
      hid_t space_id, type_id, mem_space_id;
-     hssize_t *start;
+     start_t *start;
      hsize_t *strides, *count, count_prod;
      int i;
      real *data_copy;
@@ -675,7 +676,7 @@ void matrixio_write_real_data(matrixio_id data_id,
      /* Before we can write the data to the data set, we must define
 	the dimensions and "selections" of the arrays to be read & written: */
 
-     CHK_MALLOC(start, hssize_t, rank);
+     CHK_MALLOC(start, start_t, rank);
      CHK_MALLOC(strides, hsize_t, rank);
      CHK_MALLOC(count, hsize_t, rank);
 
@@ -838,10 +839,10 @@ real *matrixio_read_real_data(matrixio_id id,
 	the dimensions and "selections" of the arrays to be read & written: */
 
      if (data) {
-	  hssize_t *start;
+	  start_t *start;
 	  hsize_t *strides, *count;
 
-	  CHK_MALLOC(start, hssize_t, *rank);
+	  CHK_MALLOC(start, start_t, *rank);
 	  CHK_MALLOC(strides, hsize_t, *rank);
 	  CHK_MALLOC(count, hsize_t, *rank);
 	  
