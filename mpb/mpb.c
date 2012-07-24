@@ -30,9 +30,6 @@
 #include <ctype.h>
 #include <stddef.h>
 
-/* GNU Guile library header file: */
-#include <guile/gh.h>
-
 /* Header files for my eigensolver routines: */
 #include "config.h"
 #include <mpiglue.h>
