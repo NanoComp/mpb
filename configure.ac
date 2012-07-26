@@ -167,6 +167,28 @@ if test x"$inv_sym" = xyes; then
 fi
 
 ##############################################################################
+# Check for OpenMP libraries
+
+AC_ARG_WITH(openmp, [AC_HELP_STRING([--with-openmp],[enable OpenMP parallelization])], with_omp=$withval, with_omp=no)
+if test "x$with_omp" = xyes; then
+   AC_DEFINE([USE_OPENMP], [1], [Define to use OpenMP threading.])
+   AX_OPENMP([], [AC_MSG_ERROR([Could not find OpenMP flag; configure with --without-openmp])])
+   CFLAGS="$CFLAGS $OPENMP_CFLAGS"
+   fftw_omp=yes
+   if test "$enable_single" = "yes"; then
+        AC_CHECK_LIB(fftw3f_omp, fftwf_init_threads, [], [fftw_omp=no])
+   elif test "$enable_long_double" = "yes"; then
+        AC_CHECK_LIB(fftw3l_omp, fftwl_init_threads, [], [fftw_omp=no])
+   else
+        AC_CHECK_LIB(fftw3_omp, fftw_init_threads, [], [fftw_omp=no])
+   fi
+   if test $fftw_omp = no; then
+      AC_MSG_ERROR([Could not find OpenMP FFTW3 library; configure with --without-openmp])
+   fi
+   echo "*********************** OpenMP ***********************"
+fi
+
+##############################################################################
 # Checks for BLAS and LAPACK libraries:
 
 ACX_BLAS([], [AC_MSG_ERROR([BLAS was not found!])])

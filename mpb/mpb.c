@@ -75,12 +75,44 @@ static void *malloc_hook(size_t n)
 
 /* The following are hook functions called from main() when
    starting the program and just before exiting.   We use
-   them to initialize MPI. */
+   them to initialize MPI and OpenMP */
+
+#ifdef USE_OPENMP
+#  include <omp.h>
+#  include <fftw3.h>
+#  if defined(SCALAR_SINGLE_PREC)
+#    define FFTW(x) fftwf_ ## x
+#  elif defined(SCALAR_LONG_DOUBLE_PREC)
+#    define FFTW(x) fftwl_ ## x
+#  else
+#    define FFTW(x) fftw_ ## x
+#  endif
+#endif
 
 void ctl_start_hook(int *argc, char ***argv)
 {
      my_malloc_hook = malloc_hook;
      MPI_Init(argc, argv);
+
+#ifdef USE_OPENMP
+     {
+	  char *senthread = getenv("OMP_NUM_THREADS");
+	  int i, nthread = senthread ? (atoi(senthread) > 0
+					? atoi(senthread) : 1) : 1;
+	  for (i = 0; i < *argc; ++i)
+	       if (!strncasecmp("--nthread=", (*argv)[i], 10)) {
+		    int j;
+		    CHECK((nthread=atoi((*argv)[i]+10)) > 0,
+			  "invalid argument for --nthread=...");
+		    *argc -= 1;
+		    for (j = i; j < *argc; ++j)
+			 (*argv)[j] = (*argv)[j+1];
+	       }
+	  omp_set_num_threads(nthread);
+	  CHECK(FFTW(init_threads)(), "error initializing threaded FFTW");
+	  FFTW(plan_with_nthreads)(nthread);
+     }
+#endif
 
 #ifdef HAVE_LIBCTL_QUIET
      {
