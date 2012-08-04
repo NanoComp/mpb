@@ -86,8 +86,12 @@ static void write_attr(matrixio_id id, matrixio_id_ type_id,
 #if defined(HAVE_HDF5)
      hid_t attr_id;
 
+#ifndef HAVE_H5PSET_FAPL_MPIO
      if (!mpi_is_master() && id.parallel)
 	  return; /* only one process should add attributes */
+#else
+     /* otherwise, the operations must be performed collectively */
+#endif
      
      if (H5I_FILE == H5Iget_type(id.id)) {
           attr_id = H5Dcreate(id.id, name, type_id, space_id, H5P_DEFAULT);
@@ -324,7 +328,9 @@ static char *add_fname_suffix(const char *fname)
 
 /*****************************************************************************/
 
+#ifndef HAVE_H5PSET_FAPL_MPIO
 static int matrixio_critical_section_tag = 0;
+#endif
 
 static matrixio_id matrixio_create_(const char *fname, int parallel)
 {
@@ -445,6 +451,10 @@ matrixio_id matrixio_create_sub(matrixio_id id,
      sub_id.parallel = id.parallel;
 #if defined(HAVE_HDF5)
 
+#  ifdef HAVE_H5PSET_FAPL_MPIO /* H5Gcreate is collective */
+     sub_id.id = H5Gcreate(id.id, name, 0 /* ==> default size */ );
+     matrixio_write_string_attr(sub_id, "description", description);
+#  else
      /* when running a parallel job, only the master process creates the
 	group.  It flushes the group to disk and then the other processes
 	open the group.  Is this the right thing to do, or is the
@@ -463,6 +473,7 @@ matrixio_id matrixio_create_sub(matrixio_id id,
 
 	  sub_id.id = H5Gopen(id.id, name);
      }
+#  endif
 #endif
      return sub_id;
 }
@@ -531,11 +542,15 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
      /* delete pre-existing datasets, or we'll have an error; I think
         we can only do this on the master process. (?) */
      if (matrixio_dataset_exists(id, name)) {
+#  ifdef HAVE_H5PSET_FAPL_MPIO /* H5Gunlink is collective */
+	  matrixio_dataset_delete(id, name);
+#  else
 	  if (mpi_is_master() || !id.parallel) {
 	       matrixio_dataset_delete(id, name);
 	       H5Fflush(id.id, H5F_SCOPE_GLOBAL);
 	  }
 	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(MPI_COMM_WORLD));
+#  endif
      }
 
      CHECK(rank > 0, "non-positive rank");
