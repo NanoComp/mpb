@@ -66,13 +66,6 @@ int feenableexcept (int EXCEPTS);
 
 /**************************************************************************/
 
-/* use Guile malloc function instead of plain malloc, to force use
-   of the garbage collector when we run low */
-static void *malloc_hook(size_t n)
-{
-     return (void*) scm_must_malloc(n, "stuff for MPB");
-}
-
 /* The following are hook functions called from main() when
    starting the program and just before exiting.   We use
    them to initialize MPI and OpenMP */
@@ -91,7 +84,6 @@ static void *malloc_hook(size_t n)
 
 void ctl_start_hook(int *argc, char ***argv)
 {
-     my_malloc_hook = malloc_hook;
      MPI_Init(argc, argv);
 
 #ifdef USE_OPENMP

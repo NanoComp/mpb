@@ -43,8 +43,6 @@ extern void check_breakpoint(void);
 
 #endif /* not CHECK_DISABLE */
 
-extern void* (*my_malloc_hook) (size_t);
-
 #ifdef DEBUG_MALLOC
 extern void *debug_malloc(size_t n);
 extern void debug_free(void *p);
@@ -61,10 +59,7 @@ extern void debug_check_memory_leaks(void);
 
 #define CHK_MALLOC(p, t, n) {                                         \
      size_t CHK_MALLOC_n_tmp = (n);                                   \
-     if (my_malloc_hook)                                              \
-          (p) = (t *) my_malloc_hook(sizeof(t) * CHK_MALLOC_n_tmp);   \
-     else                                                             \
-          (p) = (t *) malloc(sizeof(t) * CHK_MALLOC_n_tmp);           \
+     (p) = (t *) malloc(sizeof(t) * CHK_MALLOC_n_tmp);                \
      CHECK((p) || CHK_MALLOC_n_tmp == 0, "out of memory!");           \
 }
 
