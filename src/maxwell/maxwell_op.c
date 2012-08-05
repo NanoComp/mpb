@@ -158,9 +158,6 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 			 int howmany, int stride, int dist)
 {
 #if defined(HAVE_FFTW3)
-#   ifdef HAVE_MPI
-#     error FFTW3 MPI plans not supported yet; use FFTW2 for MPI
-#   endif
      FFTW(plan) plan, iplan;
      FFTW(complex) *carray_in = (FFTW(complex) *) array_in;
      real *rarray_in = (real *) array_in;
@@ -175,19 +172,53 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 	  iplan = (FFTW(plan)) d->iplans[ip];
      }
      else { /* create new plans */
-	  int n[3]; n[0] = d->nx; n[1] = d->ny; n[2] = d->nz;
+	  ptrdiff_t np[3];
+	  int n[3]; np[0]=n[0]=d->nx; np[1]=n[1]=d->ny; np[2]=n[2]=d->nz;
 #  ifdef SCALAR_COMPLEX
+#    ifdef HAVE_MPI
+	  CHECK(stride==howmany && dist==1, "bug: unsupported stride/dist");
+	  plan = FFTW(mpi_plan_many_dft)(3, np, howmany, 
+					 FFTW_MPI_DEFAULT_BLOCK,
+					 FFTW_MPI_DEFAULT_BLOCK,
+					 carray_in, carray_out,
+					 MPI_COMM_WORLD, FFTW_BACKWARD,
+					 FFTW_ESTIMATE
+					 | FFTW_MPI_TRANSPOSED_IN);
+	  iplan = FFTW(mpi_plan_many_dft)(3, np, howmany, 
+					  FFTW_MPI_DEFAULT_BLOCK,
+					  FFTW_MPI_DEFAULT_BLOCK,
+					  carray_in, carray_out,
+					  MPI_COMM_WORLD, FFTW_FORWARD,
+					  FFTW_ESTIMATE
+					  | FFTW_MPI_TRANSPOSED_OUT);
+#    else /* !HAVE_MPI */
 	  plan = FFTW(plan_many_dft)(3, n, howmany, carray_in, 0, stride, dist,
 				     carray_out, 0, stride, dist,
 				     FFTW_BACKWARD, FFTW_ESTIMATE);
 	  iplan = FFTW(plan_many_dft)(3, n, howmany, carray_in,0,stride, dist,
 				      carray_out, 0, stride, dist,
 				      FFTW_FORWARD, FFTW_ESTIMATE);
-#  else
+#    endif /* !HAVE_MPI */
+#  else /* !SCALAR_COMPLEX */
 	  {
 	       int rnk = n[2] != 1 ? 3 : (n[1] != 1 ? 2 : 1);
 	       int nr[3]; nr[0] = n[0]; nr[1] = n[1]; nr[2] = n[2];
 	       nr[rnk-1] = 2*(nr[rnk-1]/2 + 1);
+#    ifdef HAVE_MPI
+	  CHECK(stride==howmany && dist==1, "bug: unsupported stride/dist");
+	  plan = FFTW(mpi_plan_many_dft_c2r)(rnk, np, howmany, 
+					     FFTW_MPI_DEFAULT_BLOCK,
+					     FFTW_MPI_DEFAULT_BLOCK,
+					     carray_in, rarray_out,
+					     MPI_COMM_WORLD, FFTW_ESTIMATE
+					     | FFTW_MPI_TRANSPOSED_IN);
+	  iplan = FFTW(mpi_plan_many_dft_r2c)(rnk, np, howmany, 
+					      FFTW_MPI_DEFAULT_BLOCK,
+					      FFTW_MPI_DEFAULT_BLOCK,
+					      rarray_in, carray_out,
+					      MPI_COMM_WORLD, FFTW_ESTIMATE
+					      | FFTW_MPI_TRANSPOSED_OUT);
+#    else /* !HAVE_MPI */
 	       plan = FFTW(plan_many_dft_c2r)(rnk, n, howmany,
 					      carray_in, 0, stride, dist,
 					      rarray_out, nr, stride, dist,
@@ -196,8 +227,9 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 					       rarray_in, nr, stride, dist,
 					       carray_out, 0, stride, dist,
 					       FFTW_ESTIMATE);
+#    endif /* !HAVE_MPI */
 	  }
-#  endif
+#  endif /* !SCALAR_COMPLEX */
 	  CHECK(plan && iplan, "Failure creating FFTW3 plans");
      }
 
@@ -206,12 +238,23 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 	(so we don't ever have misaligned arrays), and we check above
 	that the strides etc. match */
 #  ifdef SCALAR_COMPLEX
+#    ifdef HAVE_MPI
+     FFTW(mpi_execute_dft)(dir < 0 ? plan : iplan, carray_in, carray_out);
+#    else /* !HAVE_MPI */
      FFTW(execute_dft)(dir < 0 ? plan : iplan, carray_in, carray_out);
+#    endif /* !HAVE_MPI */
 #  else
+#    ifdef HAVE_MPI
+     if (dir > 0)
+	  FFTW(mpi_execute_dft_r2c)(iplan, rarray_in, carray_out);
+     else
+	  FFTW(mpi_execute_dft_c2r)(plan, carray_in, rarray_out);
+#    else /* !HAVE_MPI */
      if (dir > 0)
 	  FFTW(execute_dft_r2c)(iplan, rarray_in, carray_out);
      else
 	  FFTW(execute_dft_c2r)(plan, carray_in, rarray_out);
+#    endif /* !HAVE_MPI */
 #  endif
 
      if (ip == MAX_NPLANS) { /* don't store too many plans */

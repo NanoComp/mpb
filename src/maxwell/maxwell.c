@@ -121,8 +121,38 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      /* ----------------------------------------------------- */
 
 #  if defined(HAVE_FFTW3)
-#    error FFTW3 MPI plans not supported yet; use FFTW2 for MPI
+{
+     int i;
+     ptrdiff_t np[3], local_nx, local_ny, local_x_start, local_y_start;
 
+     CHECK(rank > 1, "rank < 2 MPI computations are not supported");
+
+     d->nplans = 0; /* plans will be created as needed */
+
+     for (i = 0; i < rank; ++i) np[i] = n[i];
+     
+#    ifndef SCALAR_COMPLEX
+     d->last_dim_size = 2 * (np[rank-1] = d->last_dim / 2 + 1);
+#    endif
+
+     fft_data_size = *alloc_N 
+	  = FFTW(mpi_local_size_transposed)(rank, np, MPI_COMM_WORLD,
+					    &local_nx, &local_x_start,
+					    &local_ny, &local_y_start);
+#    ifndef SCALAR_COMPLEX
+     fft_data_size = (*alloc_N *= 2); // convert to # of real scalars
+#    endif
+
+     d->local_nx = local_nx;
+     d->local_x_start = local_x_start;
+     d->local_ny = local_ny;
+     d->local_y_start = local_y_start;
+
+     d->fft_output_size = nx * d->local_ny * (rank==3 ? np[2] : nz);
+     *local_N = d->local_nx * ny * nz;
+     *N_start = d->local_x_start * ny * nz;
+     d->other_dims = *local_N / d->last_dim;
+}
 #  elif defined(HAVE_FFTW)
 
      CHECK(rank > 1, "rank < 2 MPI computations are not supported");

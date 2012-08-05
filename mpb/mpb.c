@@ -70,16 +70,22 @@ int feenableexcept (int EXCEPTS);
    starting the program and just before exiting.   We use
    them to initialize MPI and OpenMP */
 
+#if defined(SCALAR_SINGLE_PREC)
+#  define FFTW(x) fftwf_ ## x
+#elif defined(SCALAR_LONG_DOUBLE_PREC)
+#  define FFTW(x) fftwl_ ## x
+#else
+#  define FFTW(x) fftw_ ## x
+#endif
+
 #ifdef USE_OPENMP
 #  include <omp.h>
 #  include <fftw3.h>
-#  if defined(SCALAR_SINGLE_PREC)
-#    define FFTW(x) fftwf_ ## x
-#  elif defined(SCALAR_LONG_DOUBLE_PREC)
-#    define FFTW(x) fftwl_ ## x
-#  else
-#    define FFTW(x) fftw_ ## x
-#  endif
+#endif
+
+#if defined(HAVE_MPI) && (defined(HAVE_LIBFFTW3F_MPI) || defined(HAVE_LIBFFTW3L_MPI) || defined(HAVE_LIBFFTW3_MPI))
+#  define HAVE_FFTW3_MPI
+#  include <fftw3-mpi.h>
 #endif
 
 void ctl_start_hook(int *argc, char ***argv)
@@ -106,6 +112,10 @@ void ctl_start_hook(int *argc, char ***argv)
      }
 #endif
 
+#ifdef HAVE_FFTW3_MPI
+     FFTW(mpi_init)();
+#endif
+
 #ifdef HAVE_LIBCTL_QUIET
      {
 	  extern int libctl_quiet;
@@ -121,6 +131,9 @@ void ctl_start_hook(int *argc, char ***argv)
 
 void ctl_stop_hook(void)
 {
+#ifdef HAVE_FFTW3_MPI
+     FFTW(mpi_cleanup)();
+#endif
      MPI_Finalize();
 }
 

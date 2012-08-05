@@ -127,7 +127,6 @@ AC_ARG_WITH(fftw2, [AC_HELP_STRING([--with-fftw2],[prefer FFTW2 to FFTW3])], wit
 
 # Check for FFTW libraries
 fftw3_func=execute
-test "x$with_mpi" = xno || fftw3_func=notarealfunction # skip FFTW3 with MPI
 test "x$with_fftw2" = xyes && fftw3_func=notarealfunction # prefer FFTW2
 if test "$enable_single" = "yes"; then
         AC_CHECK_LIB(fftw3f, fftwf_$fftw3_func, [], [
@@ -209,32 +208,35 @@ if test "x$with_mpi" = "xyes"; then
 
 	# Check for fftw_mpi library.
 	if test "$enable_single" = "yes"; then
+	   	AC_CHECK_LIB(fftw3f_mpi, fftwf_mpi_${fftw3_func}_dft, [], [
         	AC_CHECK_LIB(sfftw_mpi, fftwnd_mpi)
 	        if test x"$inv_sym" = xyes; then
 	                AC_CHECK_LIB(srfftw_mpi, rfftwnd_mpi)
-	        fi
+	        fi])
 	elif test "$enable_long_double" = "yes"; then
+	   	AC_CHECK_LIB(fftw3l_mpi, fftwl_mpi_${fftw3_func}_dft, [], [
         	AC_CHECK_LIB(xfftw_mpi, fftwnd_mpi)
 	        if test x"$inv_sym" = xyes; then
 	                AC_CHECK_LIB(xrfftw_mpi, rfftwnd_mpi)
-	        fi
+	        fi])
 	else
+	   	AC_CHECK_LIB(fftw3_mpi, fftw_mpi_${fftw3_func}_dft, [], [
 	        AC_CHECK_LIB(dfftw_mpi, fftwnd_mpi)
 	        if test x"$inv_sym" = xyes; then
 	                AC_CHECK_LIB(drfftw_mpi, rfftwnd_mpi)
-	        fi
+	        fi])
 	fi
-	if test x = x"`echo $LIBS | egrep 'l[[ds]]fftw_mpi'`"; then
+	if test x = x"`echo $LIBS | egrep 'l[[ds]]fftw_mpi|lfftw3f_mpi|lfftw3l_mpi|lfftw3_mpi'`"; then
        		AC_CHECK_LIB(fftw_mpi, fftwnd_mpi)
 	        if test x"$inv_sym" = xyes; then
 	                AC_CHECK_LIB(rfftw_mpi, rfftwnd_mpi)
 	        fi
 	fi
-	if test x = x"`echo $LIBS | egrep 'l[[ds]]*fftw_mpi'`"; then
-		AC_MSG_ERROR([couldn't find fftw_mpi library for --with-mpi])
+	if test x = x"`echo $LIBS | egrep 'l[[ds]]*fftw_mpi|lfftw3f_mpi|lfftw3l_mpi|lfftw3_mpi'`"; then
+		AC_MSG_ERROR([couldn't find fftw MPI library for --with-mpi])
 	fi
         if test x"$inv_sym" = xyes; then
-		if test x = x"`echo $LIBS | egrep 'l[[ds]]*rfftw_mpi'`"; then
+		if test x = x"`echo $LIBS | egrep 'l[[ds]]*rfftw_mpi|lfftw3l_mpi|lfftw3f_mpi|lfftw3_mpi'`"; then
 			AC_MSG_ERROR([couldn't find rfftw_mpi library for --with-mpi --with-inv-symmetry])
 		fi
 	fi
