@@ -1,5 +1,5 @@
 # libctl: flexible Guile-based control files for scientific software
-# Copyright (C) 1998, 1999, 2000, 2001, 2002, Steven G. Johnson
+# Copyright (C) 1998, 1999-2012, Steven G. Johnson
 #
 # This file may be used without restriction.  It is in the public
 # domain, and is NOT restricted by the terms of any GNU license.
@@ -28,7 +28,7 @@ MY_CPPFLAGS = -I$(top_srcdir)/src/util -I$(top_srcdir)/src/matrices -I$(top_srcd
 MY_DEFS = -DHAVE_CTL_HOOKS=1 -DHAVE_CTL_EXPORT_HOOK=1
 
 # what is printed out when invoking your program with --version:
-VERSION_STRING = "mpb@MPB_SUFFIX@ @VERSION@, Copyright (C) 1999-2005 by MIT"
+VERSION_STRING = "mpb@MPB_SUFFIX@ @VERSION@, Copyright (C) 1999-2012, MIT"
 
 check-local: mpb@MPB_SUFFIX@
 	./mpb@MPB_SUFFIX@ $(top_srcdir)/examples/check.ctl
