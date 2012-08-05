@@ -27,6 +27,11 @@
 
 #include "mpb.h"
 
+#ifdef HAVE_SCM_IS_ARRAY
+#  undef SCM_ARRAYP
+#  define SCM_ARRAYP scm_is_array
+#endif
+
 /**************************************************************************/
 
 /* For Guile 1.6, to access this with reasonable efficiency requires

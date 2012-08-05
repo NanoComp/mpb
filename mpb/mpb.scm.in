@@ -793,7 +793,7 @@
 		 (make-vector (- band-max band-min -1) kmag-guess)))
 	; bktab is a table (assoc. list) to memoize all (band . k) results:
 	(bktab '()))
-    (define ((rootfun b) k)
+    (define (rootfun b) (lambda (k)
       (let ((tab-val (assoc (cons b k) bktab))) ; first, look in cached table
 	(if tab-val 
 	    (begin ; use cached result if available
@@ -820,7 +820,7 @@
 		; finally return (frequency - omega . derivative):
 		(let ((fun (- (car (reverse freqs)) omega)))
 		  (print "find-k " b " at " k ": " fun "\n")
-		  (cons fun (car (reverse v)))))))))
+		  (cons fun (car (reverse v))))))))))
     (randomize-fields) ; don't let previous computations interfere
     (let ((ks (reverse (map
 			(lambda (b)
@@ -889,6 +889,6 @@
 
 @ACTIVATE_READLINE@  ; command to activate readline is determined by configure
 
-(set! scm-repl-prompt "mpb> ")
+(ctl-set-prompt! "mpb> ")
 
 ; ****************************************************************

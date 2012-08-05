@@ -2,6 +2,8 @@ MPB 1.5
 
   * MPB now also installs a library, for use from within Meep 1.2 or later.
 
+  * Support Guile 2.x.
+
   * Support FFTW version 3.x (in addition to FFTW 2.x).  Version 3.3 or later
     is required for MPI parallelism.
 
