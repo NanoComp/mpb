@@ -1,3 +1,57 @@
+MPB 1.5
+
+  * MPB now also installs a library, for use from within Meep 1.2 or later.
+
+  * Support FFTW version 3.x (in addition to FFTW 2.x).  Version 3.3 or later
+    is required for MPI parallelism.
+
+  * Support for OpenMP parallelism.
+
+  * Use more accurate subpixel averaging algorithm for interfaces between
+    anisotropic material (see Kottke et al, PRE 77, 036611, 2008).
+
+  * Use more accurate geometry routines in recent libctl versions (improves
+    and speeds subpixel averaging).
+
+  * Support using a different k origin in find-k.
+
+  * Added epsilon-func wrapper for material-func (similar to Meep).
+
+  * Added compute-1-group-velocity to compute group velocity of a single band.
+
+  * Added kinterpolate-uniform function, to interpolate with roughly
+    uniform spacing in reciprocal space.
+
+  * Added optimize-grid-size! function to round the grid size to a size
+    that can be handled more efficiently.  (Only affects resolution, not
+    lattice vectors.)
+
+  * Allow user to set filename-prefix to false to disable its use.
+
+  * Added mpb-data -P <angle> option to change the phase angle of the output.
+
+  * Added compute-field-divergence and routines to get and output the
+    bound charge density: get-charge-density and output-charge-density.
+
+  * resolution is now an arbitrary real number, not just an integer,
+    although of course MPB eventually computes an integer grid size.
+
+  * Support HDF5 1.8.
+
+  * Fix output-at-kpoint to avoid sensitivity to roundoff errors.
+
+  * Bug fix in parallel HDF5 support: HDF5 compiled for parallel I/O (MPI)
+    now works.
+
+  * Bug fix in field-map!, thanks to Karen Lee for the bug report.
+
+  * Bug fix for first-brillouin-zone-k, thanks to Mischa Megens.
+
+  * Bug fix: get-field and compute-field-integral now use fields with the same
+    phase as the outputted fields. Thanks to Jim West for the bug report.
+
+  * Miscellaneous bug fixes.
+
 MPB 1.4.2 (3/3/2003)
 
   * Interactive prompt is now "mpb>" not "guile>".
