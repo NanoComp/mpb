@@ -19,10 +19,6 @@ AC_PROG_LIBTOOL
 ###########################################################################
 MPB_VERSION=$PACKAGE_VERSION
 AC_SUBST(MPB_VERSION)
-
-AC_MSG_CHECKING([for vendor f77 to be used instead of g77])
-AC_MSG_RESULT()
-AC_CHECK_PROGS(F77, f77 xlf77 cf77 fort77 f90 xlf90)
 AC_PROG_F77
 
 # Get C compiler.
@@ -190,8 +186,8 @@ fi
 ##############################################################################
 # Checks for BLAS and LAPACK libraries:
 
-ACX_BLAS([], [AC_MSG_ERROR([BLAS was not found!])])
-ACX_LAPACK([], [AC_MSG_ERROR([LAPACK was not found!])])
+AX_BLAS([], [AC_MSG_ERROR([BLAS was not found!])])
+AX_LAPACK([], [AC_MSG_ERROR([LAPACK was not found!])])
 
 LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
 
@@ -199,7 +195,7 @@ LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
 # Check for MPI library
 
 if test "x$with_mpi" = "xyes"; then
-	ACX_MPI([], [AC_MSG_ERROR(could not find mpi library for --with-mpi)])
+	AX_MPI([], [AC_MSG_ERROR(could not find mpi library for --with-mpi)])
         CC="$MPICC"
 	LIBS="$MPILIBS $LIBS"
 
