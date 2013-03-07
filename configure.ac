@@ -292,8 +292,12 @@ AC_CHECK_HEADERS([libguile.h guile/gh.h])
 
 AC_CHECK_FUNCS(scm_make_smob_type scm_array_get_handle scm_is_array)
 AC_MSG_CHECKING([for SCM_SMOB_PREDICATE])
-AC_TRY_LINK([#include <guile/gh.h>
-#include <libguile/smob.h>],
+AC_TRY_LINK([#if defined(HAVE_LIBGUILE_H)
+#  include <libguile.h>
+#else
+#  include <guile/gh.h>
+#  include <libguile/smob.h>
+#endif],
                     [int x; SCM_SMOB_PREDICATE(1,x);],
                     ok=yes, ok=no)
 AC_MSG_RESULT($ok)
@@ -301,8 +305,12 @@ if test $ok = yes; then
 	AC_DEFINE(HAVE_SCM_SMOB_PREDICATE, 1, [define if we have SCM_SMOB_PREDICATE])
 fi
 AC_MSG_CHECKING([for SCM_SMOB_DATA])
-AC_TRY_LINK([#include <guile/gh.h>
-#include <libguile/smob.h>],
+AC_TRY_LINK([#if defined(HAVE_LIBGUILE_H)
+#  include <libguile.h>
+#else
+#  include <guile/gh.h>
+#  include <libguile/smob.h>
+#endif],
                     [int x; SCM_SMOB_DATA(x);],
                     ok=yes, ok=no)
 AC_MSG_RESULT($ok)
@@ -310,8 +318,12 @@ if test $ok = yes; then
 	AC_DEFINE(HAVE_SCM_SMOB_DATA, 1, [define if we have SCM_SMOB_DATA])
 fi
 AC_MSG_CHECKING([for SCM_NEWSMOB])
-AC_TRY_LINK([#include <guile/gh.h>
-#include <libguile/smob.h>],
+AC_TRY_LINK([#if defined(HAVE_LIBGUILE_H)
+#  include <libguile.h>
+#else
+#  include <guile/gh.h>
+#  include <libguile/smob.h>
+#endif],
                     [int x; SCM_NEWSMOB(x,1,0);],
                     ok=yes, ok=no)
 AC_MSG_RESULT($ok)
