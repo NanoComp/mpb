@@ -382,7 +382,7 @@
   (define (try-all&repeat k)
     (let ((knew (try-all k)))
       (if (< (n knew) (n k)) (try-all&repeat knew) k)))
-  (let ((k0 (vector3- k (vector-map inexact->exact k))))
+  (let ((k0 (vector3- k (vector-map round k))))
     (if (< (n k0) (n k)) (try-all&repeat k0) (try-all&repeat k))))
 
 ; ****************************************************************
