@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2012, Massachusetts Institute of Technology.
+/* Copyright (C) 1999-2014 Massachusetts Institute of Technology.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -794,7 +794,7 @@ int main(int argc, char **argv)
                    return EXIT_SUCCESS;
               case 'V':
                    printf("mpb-data " PACKAGE_VERSION " by Steven G. Johnson.\n"
-"Copyright (C) 1999-2012, Massachusetts Institute of Technology.\n"
+"Copyright (C) 1999-2014 Massachusetts Institute of Technology.\n"
 "This is free software, and you are welcome to redistribute it under the\n"
 "terms of the GNU General Public License (GPL).  mpb-data comes with\n"
 "ABSOLUTELY NO WARRANTY; see the GPL for more details.\n");
