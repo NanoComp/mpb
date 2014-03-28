@@ -118,7 +118,27 @@ static linmin_real trace_func(linmin_real theta, linmin_real *trace_deriv, void 
 	  sqmatrix_copy(d->S1, d->YtY);
 	  sqmatrix_aApbB(c*c, d->S1, s*s, d->DtD);
 	  sqmatrix_ApaB(d->S1, 2*s*c, d->symYtD);
-	  sqmatrix_invert(d->S1, 1, d->S2);
+	  if (!sqmatrix_invert(d->S1, 1, d->S2)) {
+	       /* if c or s is small, we sometimes run into numerical
+		  difficulties, and it is better to use the Taylor expansion */
+	       if (c < 1e-4 * s && c != 0) {
+		    sqmatrix_copy(d->S1, d->DtD);
+		    CHECK(sqmatrix_invert(d->S1, 1, d->S2), "singular DtD!");
+		    sqmatrix_AeBC(d->S2, d->S1, 0, d->symYtD, 1);
+		    sqmatrix_AeBC(d->S3, d->S2, 0, d->S1, 1);
+		    sqmatrix_aApbB(1/(s*s), d->S1, -2*c/(s*s*s), d->S3);
+	       }
+	       else if (s < 1e-4 * c && s != 0) {
+		    sqmatrix_copy(d->S1, d->YtY);
+		    CHECK(sqmatrix_invert(d->S1, 1, d->S2), "singular DtD!");
+		    sqmatrix_AeBC(d->S2, d->S1, 0, d->symYtD, 1);
+		    sqmatrix_AeBC(d->S3, d->S2, 0, d->S1, 1);
+		    sqmatrix_aApbB(1/(c*c), d->S1, -2*s/(c*c*c), d->S3);
+	       }
+	       else {
+		    CHECK(0, "inexplicable singularity in linmin trace_func");
+	       }
+	  }
 	  
 	  sqmatrix_copy(d->S2, d->YtAY);
 	  sqmatrix_aApbB(c*c, d->S2, s*s, d->DtAD);
@@ -192,7 +212,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
      real d_scale = 1.0;
      real traceGtX, prev_traceGtX = 0.0;
      real theta, prev_theta = 0.5;
-     int i, iteration = 0;
+     int i, iteration = 0, num_emergency_restarts = 0;
      mpiglue_clock_t prev_feedback_time;
      real time_AZ, time_KZ=0, time_ZtZ, time_ZtW, time_ZS, time_linmin=0;
      real linmin_improvement = 0;
@@ -250,10 +270,12 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
      tfd.YtY = YtY; tfd.DtD = DtD; tfd.symYtD = symYtD;
      tfd.S1 = YtAYU; tfd.S2 = S2; tfd.S3 = S3;
 
+ restartY:
+
      if (flags & EIGS_ORTHONORMALIZE_FIRST_STEP) {
 	  evectmatrix_XtX(U, Y, S2);
 	  sqmatrix_assert_hermitian(U);
-	  sqmatrix_invert(U, 1, S2);
+	  CHECK(sqmatrix_invert(U, 1, S2), "non-independent initial Y");
 	  sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
 	  evectmatrix_XeYS(G, Y, S1, 1); /* G = orthonormalize Y */
 	  evectmatrix_copy(Y, G);
@@ -282,7 +304,19 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	  blasglue_rscal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
 
 	  sqmatrix_copy(U, YtY);
-	  sqmatrix_invert(U, 1, S2);
+	  if (!sqmatrix_invert(U, 1, S2)) { /* non-independent Y columns */
+	       /* emergency restart with random Y */
+	       CHECK(iteration + 10 * ++num_emergency_restarts
+		     < EIGENSOLVER_MAX_ITERATIONS, 
+		     "too many emergency restarts");
+	       mpi_one_printf("    emergency randomization of Y on iter. %d\n",
+			      iteration);
+	       for (i = 0; i < Y.p * Y.n; ++i)
+		    ASSIGN_SCALAR(Y.data[i],
+				  rand() * 1.0 / RAND_MAX - 0.5,
+				  rand() * 1.0 / RAND_MAX - 0.5);
+	       goto restartY;
+	  }
 
 	  /* If trace(1/YtY) gets big, it means that the columns
 	     of Y are becoming nearly parallel.  This sometimes happens,
@@ -306,7 +340,8 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		    blasglue_rscal(Y.p * Y.n, 1/y_norm, Y.data, 1);
 		    blasglue_rscal(Y.p * Y.p, 1/(y_norm*y_norm), YtY.data, 1);
 		    sqmatrix_copy(U, YtY);
-		    sqmatrix_invert(U, 1, S2);
+		    CHECK(sqmatrix_invert(U, 1, S2),
+			  "non-independent Y after re-orthogonalization");
 	       }
 	  }
 
@@ -433,7 +468,8 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		  S3 = (YtKG)t / (YtKY).  Recall that, at this point,
 		  X holds KG and G holds KY.  K is assumed Hermitian. */
 	       evectmatrix_XtY(S1, Y, G, S2);
-	       sqmatrix_invert(S1, 0, S2);  /* S1 = 1 / (YtKY) */
+	       CHECK(sqmatrix_invert(S1, 0, S2),
+		     "singular YtKY");  /* S1 = 1 / (YtKY) */
 	       evectmatrix_XtY(S2, X, Y, S3);  /* S2 = GtKY = (YtKG)t */
 	       sqmatrix_AeBC(S3, S2, 0 , S1, 1);
 	       evectmatrix_XpaYS(X, -1.0, G, S3, 1);
@@ -514,7 +550,8 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       evectmatrix_aXpbY(1.0, Y, t / d_norm, D);
 
 	       evectmatrix_XtX(U, Y, S2);
-	       sqmatrix_invert(U, 1, S2);  /* U = 1 / (Yt Y) */
+	       CHECK(sqmatrix_invert(U, 1, S2),
+		     "singular YtY");  /* U = 1 / (Yt Y) */
 	       A(Y, G, Adata, 1, X); /* G = AY; X is scratch */
 	       evectmatrix_XtY(S1, Y, G, S2);  /* S1 = Yt A Y */
 
@@ -714,7 +751,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
            " iterations");
 
      evectmatrix_XtX(U, Y, S2);
-     sqmatrix_invert(U, 1, S2);
+     CHECK(sqmatrix_invert(U, 1, S2), "singular YtY at end");
      eigensolver_get_eigenvals_aux(Y, eigenvals, A, Adata,
 				   X, G, U, S1, S2);
 

@@ -538,6 +538,11 @@ void solve_kpoint(vector3 kvector)
      deflation_data deflation;
      int prev_parity;
 
+     /* if we get too close to singular k==0 point, just set k=0
+	to exploit our special handling of this k */
+     if (vector3_norm(kvector) < 1e-10)
+	  kvector.x = kvector.y = kvector.z = 0;
+
      mpi_one_printf("solve_kpoint (%g,%g,%g):\n",
 		    kvector.x, kvector.y, kvector.z);
      

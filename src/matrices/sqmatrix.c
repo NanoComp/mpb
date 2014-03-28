@@ -197,8 +197,9 @@ void sqmatrix_aApbB(real a, sqmatrix A, real b, sqmatrix B)
 }
 
 /* U <- 1/U.  U must be Hermitian and, if positive_definite != 0,
-   positive-definite (e.g. U = Yt*Y).  Work is a scratch matrix. */
-void sqmatrix_invert(sqmatrix U, short positive_definite,
+   positive-definite (e.g. U = Yt*Y).  Work is a scratch matrix. 
+   Returns 1 on success, 0 if failure (e.g. matrix singular) */
+int sqmatrix_invert(sqmatrix U, short positive_definite,
 		     sqmatrix Work)
 {
      int i, j;
@@ -206,7 +207,7 @@ void sqmatrix_invert(sqmatrix U, short positive_definite,
      sqmatrix_assert_hermitian(U);
      if (positive_definite) {
 	  /* factorize U: */
-	  lapackglue_potrf('U', U.p, U.data, U.p);
+	  if (!lapackglue_potrf('U', U.p, U.data, U.p)) return 0;
 	  
 	  /* QUESTION: would it be more efficient to stop here,
 	     returning the Cholesky factorization of U?  This
@@ -216,7 +217,7 @@ void sqmatrix_invert(sqmatrix U, short positive_definite,
 	     how do the computational costs compare? */
 	  
 	  /* Compute 1/U (upper half only) */
-	  lapackglue_potri('U', U.p, U.data, U.p);
+	  if (!lapackglue_potri('U', U.p, U.data, U.p)) return 0;
      }
      else {
 	  int *ipiv;
@@ -225,11 +226,11 @@ void sqmatrix_invert(sqmatrix U, short positive_definite,
 	  CHECK(Work.p * Work.p >= U.p, "scratch matrix is too small");
 
 	  /* factorize U: */
-	  lapackglue_hetrf('U', U.p, U.data, U.p,
-			   ipiv, Work.data, Work.p * Work.p);
-
+	  if (!lapackglue_hetrf('U', U.p, U.data, U.p,
+				ipiv, Work.data, Work.p * Work.p)) return 0;
 	  /* Compute 1/U (upper half only) */
-	  lapackglue_hetri('U', U.p, U.data, U.p, ipiv, Work.data);
+	  if (!lapackglue_hetri('U', U.p, U.data, U.p, ipiv, Work.data))
+	       return 0;
 	  
 	  free(ipiv);
      }
@@ -240,6 +241,8 @@ void sqmatrix_invert(sqmatrix U, short positive_definite,
 	  for (j = i + 1; j < U.p; ++j) {
 	       ASSIGN_CONJ(U.data[j * U.p + i], U.data[i * U.p + j]);
 	  }
+
+     return 1;
 }
 
 /* U <- eigenvectors of U.  U must be Hermitian. eigenvals <- eigenvalues.

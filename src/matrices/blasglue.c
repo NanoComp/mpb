@@ -231,7 +231,7 @@ void blasglue_herk(char uplo, char trans, int n, int k,
 
 #ifndef NO_LAPACK
 
-void lapackglue_potrf(char uplo, int n, scalar *A, int fdA)
+int lapackglue_potrf(char uplo, int n, scalar *A, int fdA)
 {
      int info;
 
@@ -240,10 +240,10 @@ void lapackglue_potrf(char uplo, int n, scalar *A, int fdA)
      F(potrf,POTRF) (&uplo, &n, A, &fdA, &info);
 
      CHECK(info >= 0, "invalid argument in potrf");
-     CHECK(info <= 0, "non positive-definite matrix in potrf");
+     return (info == 0);
 }
 
-void lapackglue_potri(char uplo, int n, scalar *A, int fdA)
+int lapackglue_potri(char uplo, int n, scalar *A, int fdA)
 {
      int info;
 
@@ -252,10 +252,10 @@ void lapackglue_potri(char uplo, int n, scalar *A, int fdA)
      F(potri,POTRI) (&uplo, &n, A, &fdA, &info);
 
      CHECK(info >= 0, "invalid argument in potri");
-     CHECK(info <= 0, "zero diagonal element (singular matrix) in potri");
+     return (info == 0);
 }
 
-void lapackglue_hetrf(char uplo, int n, scalar *A, int fdA,
+int lapackglue_hetrf(char uplo, int n, scalar *A, int fdA,
 		      int *ipiv, scalar *work, int lwork)
 {
      int info;
@@ -269,10 +269,10 @@ void lapackglue_hetrf(char uplo, int n, scalar *A, int fdA,
 #endif
 
      CHECK(info >= 0, "invalid argument in hetrf");
-     CHECK(info <= 0, "singular matrix in hetrf");
+     return (info == 0);
 }
 
-void lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
+int lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
 		      int *ipiv, scalar *work)
 {
      int info;
@@ -286,7 +286,7 @@ void lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
 #endif
 
      CHECK(info >= 0, "invalid argument in hetri");
-     CHECK(info <= 0, "zero diagonal element (singular matrix) in hetri");
+     return (info == 0);
 }
 
 void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA, 

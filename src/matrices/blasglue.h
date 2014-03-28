@@ -32,11 +32,11 @@ void blasglue_gemm(char transa, char transb, int m, int n, int k,
 extern void blasglue_herk(char uplo, char trans, int n, int k,
 			  real a, scalar *A, int fdA,
 			  real b, scalar *C, int fdC);
-extern void lapackglue_potrf(char uplo, int n, scalar *A, int fdA);
-extern void lapackglue_potri(char uplo, int n, scalar *A, int fdA);
-extern void lapackglue_hetrf(char uplo, int n, scalar *A, int fdA,
+extern int lapackglue_potrf(char uplo, int n, scalar *A, int fdA);
+extern int lapackglue_potri(char uplo, int n, scalar *A, int fdA);
+extern int lapackglue_hetrf(char uplo, int n, scalar *A, int fdA,
 			     int *ipiv, scalar *work, int lwork);
-extern void lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
+extern int lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
 			     int *ipiv, scalar *work);
 extern void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
 			    real *w, scalar *work, int lwork, real *rwork);
