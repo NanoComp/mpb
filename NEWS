@@ -40,6 +40,9 @@ MPB 1.5
 
   * Support HDF5 1.8.
 
+  * Fix recurring "non positive-definite matrix in potrf" errors that
+    were arising due to roundoff errors preventing matrix inversion.
+
   * Fix output-at-kpoint to avoid sensitivity to roundoff errors.
 
   * Bug fix in parallel HDF5 support: HDF5 compiled for parallel I/O (MPI)
