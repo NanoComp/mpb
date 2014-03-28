@@ -57,3 +57,11 @@ tests/malloctest
 tests/maxwell_test
 tests/normal_vectors
 utils/mpb-data
+
+# test output:
+check-epsilon.h5
+tests/blastest.out
+tests/maxwell_test.out
+
+examples/*.h5
+examples/*.png
