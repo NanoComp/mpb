@@ -57,6 +57,14 @@ tests/malloctest
 tests/maxwell_test
 tests/normal_vectors
 utils/mpb-data
+mpb/mpbi
+mpb/mpbi-split
+src/mpbi.h
+utils/mpbi-data
+mpb/mpb_mpi
+src/mpb_mpi.h
+mpb/mpbi_mpi
+src/mpbi_mpi.h
 
 # test output:
 check-epsilon.h5
