@@ -10,7 +10,7 @@ AM_MAINTAINER_MODE
 # except for public releases.)
 SHARED_VERSION_INFO="0:0:0"
 
-AM_INIT_AUTOMAKE([check-news color-tests parallel-tests silent-rules 1.11])
+AM_INIT_AUTOMAKE([foreign check-news color-tests parallel-tests silent-rules 1.11])
 AM_SILENT_RULES(yes)
 AC_SUBST(SHARED_VERSION_INFO)
 AM_ENABLE_SHARED(no) dnl shared libs cause too many headaches to be default
