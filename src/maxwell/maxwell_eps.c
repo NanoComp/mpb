@@ -195,7 +195,7 @@ static int sym_matrix_eq(symmetric_matrix V1, symmetric_matrix V2, double tol)
 */
 void maxwell_sym_matrix_rotate(symmetric_matrix *RAR,
 			       const symmetric_matrix *A_,
-			       const double R[3][3])
+			       double R[3][3])
 {
      int i,j;
      double A[3][3], AR[3][3];
