@@ -22,4 +22,4 @@
 (set-param! resolution 32)
 (set-param! num-bands 8)
 
-(run-tm) ; note that TM and TE bands are degenerate, so we only need TM
+(run-tm output-hfield-y) ; note that TM and TE bands are degenerate, so we only need TM

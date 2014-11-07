@@ -208,6 +208,8 @@
 (define-external-function sqmatrix-size false false 'integer 'SCM)
 (define-external-function sqmatrix-ref false false 'cnumber 
   'SCM 'integer 'integer)
+(define-external-function sqmatrix-mult false false 'SCM
+  'SCM 'SCM)
 (define-external-function get-eigenvectors false false 'SCM
   'integer 'integer)
 (define-external-function set-eigenvectors false false no-return-value
