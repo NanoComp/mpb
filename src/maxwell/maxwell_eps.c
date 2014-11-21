@@ -814,3 +814,22 @@ void set_maxwell_dielectric(maxwell_data *md,
      mpi_allreduce_1(&n1, int, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
      md->eps_inv_mean = eps_inv_total / (3 * n1);
 }
+
+void set_maxwell_mu(maxwell_data *md,
+                    const int mesh_size[3],
+                    real R[3][3], real G[3][3],
+                    maxwell_dielectric_function mu,
+                    maxwell_dielectric_mean_function mmu,
+                    void *mu_data) {
+    symmetric_matrix *eps_inv = md->eps_inv;
+    real eps_inv_mean = md->eps_inv_mean;
+    if (md->mu_inv == NULL) {
+        CHK_MALLOC(md->mu_inv, symmetric_matrix, md->fft_output_size);        
+    }
+    /* just re-use code to set epsilon, but initialize mu_inv instead */
+    md->eps_inv = md->mu_inv;
+    set_maxwell_dielectric(md, mesh_size, R, G, mu, mmu, mu_data);
+    md->eps_inv = eps_inv;
+    md->mu_inv_mean = md->eps_inv_mean;
+    md->eps_inv_mean = eps_inv_mean;
+}

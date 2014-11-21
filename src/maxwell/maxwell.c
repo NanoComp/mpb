@@ -218,6 +218,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 #endif
 
      CHK_MALLOC(d->eps_inv, symmetric_matrix, d->fft_output_size);
+     d->mu_inv = NULL;
 
      /* A scratch output array is required because the "ordinary" arrays
 	are not in a cartesian basis (or even a constant basis). */
@@ -235,6 +236,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      CHK_MALLOC(d->k_plus_G_normsqr, real, *local_N);
 
      d->eps_inv_mean = 1.0;
+     d->mu_inv_mean = 1.0;
 
      d->local_N = *local_N;
      d->N_start = *N_start;
@@ -275,6 +277,7 @@ void destroy_maxwell_data(maxwell_data *d)
 	  }
 
 	  free(d->eps_inv);
+          if (d->mu_inv) free(d->mu_inv);
 #if defined(HAVE_FFTW3)
 	  FFTW(free)(d->fft_data);
 	  if (d->fft_data2 != d->fft_data)

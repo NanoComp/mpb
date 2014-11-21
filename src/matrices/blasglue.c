@@ -111,6 +111,8 @@ extern void F(heev,HEEV) (char *, char *, int *, scalar *, int *, real *,
 			  scalar *, int *, real *, int *);
 extern void FR(syev,SYEV) (char *, char *, int *, real *, int *, real *,
 			   real *, int *, int *);
+extern void F(hegv,HEGV) (int *, char *, char *, int *, scalar *, int *, scalar *, int *, real *, scalar *, int *, real *, int *);
+extern void FR(sygv,SYGV) (int *, char *, char *, int *, real *, int *, real *, int *, real *, real *, int *, int *);
 
 #ifdef __cplusplus
 }                               /* extern "C" */
@@ -305,6 +307,25 @@ void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
 
      CHECK(info >= 0, "invalid argument in heev");
      CHECK(info <= 0, "failure to converge in heev");
+}
+
+void lapackglue_hegv(int itype, char jobz, char uplo, int n,
+                     scalar *A, int fdA, scalar *B, int fdB, 
+		     real *w, scalar *work, int lwork, real *rwork)
+{
+     int info;
+
+     uplo = uplo == 'U' ? 'L' : 'U';
+
+#ifdef SCALAR_COMPLEX
+     F(hegv,HEGV) (&itype, &jobz, &uplo, &n, A, &fdA, B, &fdB, w, work, &lwork, rwork, &info);
+#else
+     (void) rwork; /* unused */
+     F(sygv,SYGV) (&itype, &jobz, &uplo, &n, A, &fdA, B, &fdB, w, work, &lwork, &info);
+#endif
+
+     CHECK(info >= 0, "invalid argument in hegv");
+     CHECK(info <= 0, "failure to converge in hegv");
 }
 
 void lapackglue_syev(char jobz, char uplo, int n, real *A, int fdA, 

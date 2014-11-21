@@ -412,7 +412,7 @@ void init_params(integer p, boolean reset_fields)
      if (mdata) {  /* need to clean up from previous init_params call */
 	  if (nx == mdata->nx && ny == mdata->ny && nz == mdata->nz &&
 	      block_size == Hblock.alloc_p && num_bands == H.p &&
-	      eigensolver_nwork == nwork_alloc)
+	      eigensolver_nwork + (mdata->mu_inv!=NULL) == nwork_alloc)
 	       have_old_fields = 1; /* don't need to reallocate */
 	  else {
 	       destroy_evectmatrix(H);
@@ -450,7 +450,7 @@ void init_params(integer p, boolean reset_fields)
 	  mpi_one_printf("Allocating fields...\n");
 	  H = create_evectmatrix(nx * ny * nz, 2, num_bands,
 				 local_N, N_start, alloc_N);
-	  nwork_alloc = eigensolver_nwork;
+	  nwork_alloc = eigensolver_nwork + (mdata->mu_inv!=NULL);
 	  for (i = 0; i < nwork_alloc; ++i)
 	       W[i] = create_evectmatrix(nx * ny * nz, 2, block_size,
 					 local_N, N_start, alloc_N);
@@ -646,7 +646,8 @@ void solve_kpoint(vector3 kvector)
 	  }
 
 	  if (mtdata) {  /* solving for bands near a target frequency */
-	       if (eigensolver_davidsonp)
+               CHECK(mdata->mu_inv==NULL, "targeted solver doesn't handle mu");
+               if (eigensolver_davidsonp)
 		    eigensolver_davidson(
 			 Hblock, eigvals + ib,
 			 maxwell_target_operator, (void *) mtdata,
@@ -660,6 +661,7 @@ void solve_kpoint(vector3 kvector)
 	       else
 		    eigensolver(Hblock, eigvals + ib,
 				maxwell_target_operator, (void *) mtdata,
+                                NULL, NULL,
 				simple_preconditionerp ? 
 				maxwell_target_preconditioner :
 				maxwell_target_preconditioner2,
@@ -676,7 +678,8 @@ void solve_kpoint(vector3 kvector)
 					 maxwell_operator,mdata, W[0],W[1]);
 	  }
 	  else {
-	       if (eigensolver_davidsonp)
+               if (eigensolver_davidsonp) {
+                    CHECK(mdata->mu_inv==NULL, "Davidson doesn't handle mu");
 		    eigensolver_davidson(
 			 Hblock, eigvals + ib,
 			 maxwell_operator, (void *) mdata,
@@ -687,9 +690,12 @@ void solve_kpoint(vector3 kvector)
 			 evectconstraint_chain_func,
 			 (void *) constraints,
 			 W, nwork_alloc, tolerance, &num_iters, flags, 0.0);
+               }
 	       else
 		    eigensolver(Hblock, eigvals + ib,
 				maxwell_operator, (void *) mdata,
+                                mdata->mu_inv ? maxwell_muinv_operator : NULL,
+                                (void *) mdata,
 				simple_preconditionerp ?
 				maxwell_preconditioner :
 				maxwell_preconditioner2,

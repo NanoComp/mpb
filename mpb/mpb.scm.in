@@ -30,16 +30,24 @@
 
 (define-class material-type no-parent)
 
-(define-class dielectric material-type
-  (define-property epsilon no-default 'number))
+(define-class medium material-type
+  (define-property epsilon 1.0 'number)
+  (define-property mu 1.0 'number))
+(define dielectric medium) ; backwards compatibility
 
 (define (index n) (epsilon (* n n))) ; convenient substitute for epsilon
 
-(define-class dielectric-anisotropic material-type
-  (define-property epsilon-diag no-default 'vector3)
+(define-class medium-anisotropic material-type
+  (define-property epsilon-diag (vector3 1 1 1) 'vector3)
   (define-property epsilon-offdiag (vector3 0 0 0) 'cvector3)
   (define-property
-    epsilon-offdiag-imag (vector3 0 0 0) 'vector3))
+    epsilon-offdiag-imag (vector3 0 0 0) 'vector3) ; backwards compatibility
+  (define-property mu-diag (vector3 1 1 1) 'vector3)
+  (define-property mu-offdiag (vector3 0 0 0) 'cvector3)
+  (define-property
+    mu-offdiag-imag (vector3 0 0 0) 'vector3) ; backwards compatibility
+)
+(define dielectric-anisotropic medium-anisotropic) ; backwards compatibility
 
 (define-class material-function material-type
   (define-property material-func no-default 'function
@@ -57,6 +65,8 @@
     (lambda (k) (and (>= k U-MIN) (<= k U-SUM))))
   (define-property epsilon-min no-default 'number)
   (define-property epsilon-max no-default 'number)
+  (define-property mu-min 1.0 'number)
+  (define-property mu-max 1.0 'number)
   (define-property size no-default 'vector3
     (lambda (sz) (for-all? (vector->list sz)
 			   (lambda (x) (and (integer? x) (positive? x))))))
@@ -104,6 +114,8 @@
 (define-input-var mesh-size 3 'integer positive?)
 
 (define-input-var epsilon-input-file "" 'string)
+(define-input-var mu-input-file "" 'string)
+(define-input-var force-mu? false 'boolean)
 
 (define-input-var deterministic? false 'boolean)
 

@@ -245,30 +245,50 @@ int sqmatrix_invert(sqmatrix U, short positive_definite,
      return 1;
 }
 
-/* U <- eigenvectors of U.  U must be Hermitian. eigenvals <- eigenvalues.
-   W is a work array.  The columns of adjoint(U') are the eigenvectors, so that
-   U == adjoint(U') D U', with D = diag(eigenvals). 
+/* U <- eigenvectors of Ux=lambda B x, while B is overwritten (by its
+   Cholesky factors).  U and B must be Hermitian, and B must be
+   positive-definite; if B==NULL then it is taken to be the
+   identity. eigenvals <- eigenvalues.  W is a work array.  The
+   columns of adjoint(U') are the eigenvectors, so that U ==
+   adjoint(U') D U', with D = diag(eigenvals).
 
    The eigenvalues are returned in ascending order. */
-void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W)
+void sqmatrix_gen_eigensolve(sqmatrix U, sqmatrix B, real *eigenvals, sqmatrix W)
 {
      real *work;
+     scalar *morework;
+     int nwork;
 
      sqmatrix_assert_hermitian(U);
      CHK_MALLOC(work, real, 3*U.p - 2);
-
-     if (W.p * W.p >= 3 * U.p - 1)
-	  lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
-			  W.data, W.p * W.p, work);
+     if (W.p * W.p >= 3 * U.p - 1) {
+         morework = W.data;
+         nwork = W.p * W.p;
+     }
      else {
-	  scalar *morework;
-	  CHK_MALLOC(morework, scalar, 3 * U.p - 1);
-	  lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
-			  morework, 3 * U.p - 1, work);
-	  free(morework);
+         CHK_MALLOC(morework, scalar, 3 * U.p - 1);
+         nwork = 3 * U.p - 1;
+     }
+     if (B.data) {
+         CHECK(B.p == U.p, "mismatched matrix sizes in sqmatrix_eigensolve");
+         sqmatrix_assert_hermitian(B);
+         lapackglue_hegv(1, 'V', 'U', U.p, U.data, B.p, B.data, U.p, eigenvals,
+                         morework, nwork, work);
+     }
+     else {
+         lapackglue_heev('V', 'U', U.p, U.data, U.p, eigenvals,
+                         morework, nwork, work);
      }
 
+     if (morework != W.data) free(morework);
      free(work);
+}
+
+void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W)
+{
+    sqmatrix B;
+    B.data = NULL;
+    sqmatrix_gen_eigensolve(U, B, eigenvals, W);
 }
 
 /* Compute Usqrt <- sqrt(U), where U must be Hermitian positive-definite. 

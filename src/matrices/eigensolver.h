@@ -41,6 +41,7 @@ typedef void (*evectconstraint) (evectmatrix X, void *data);
 
 extern void eigensolver(evectmatrix Y, real *eigenvals,
 			evectoperator A, void *Adata,
+			evectoperator B, void *Bdata,
 			evectpreconditioner K, void *Kdata,
 			evectconstraint constraint, void *constraint_data,
 			evectmatrix Work[], int nWork,
@@ -49,6 +50,7 @@ extern void eigensolver(evectmatrix Y, real *eigenvals,
 
 extern void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 			evectoperator A, void *Adata,
+			evectoperator B, void *Bdata,
 			evectpreconditioner K, void *Kdata,
 			evectconstraint constraint, void *constraint_data,
 			evectoperator L, void *Ldata, real *lag,

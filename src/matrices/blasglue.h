@@ -40,6 +40,9 @@ extern int lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
 			     int *ipiv, scalar *work);
 extern void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
 			    real *w, scalar *work, int lwork, real *rwork);
+extern void lapackglue_hegv(int itype, char jobz, char uplo, int n,
+                            scalar *A, int fdA, scalar *B, int fdB, 
+                            real *w, scalar *work, int lwork, real *rwork);
 extern void lapackglue_syev(char jobz, char uplo, int n, real *A, int fdA,
 			    real *w, real *work, int lwork);
 

@@ -110,6 +110,8 @@ typedef struct {
 
      symmetric_matrix *eps_inv;
      real eps_inv_mean;
+     symmetric_matrix *mu_inv;
+     real mu_inv_mean;
 } maxwell_data;
 
 extern maxwell_data *create_maxwell_data(int nx, int ny, int nz,
@@ -145,6 +147,13 @@ extern void set_maxwell_dielectric(maxwell_data *md,
 				   maxwell_dielectric_mean_function mepsilon,
 				   void *epsilon_data);
 
+extern void set_maxwell_mu(maxwell_data *md,
+                           const int mesh_size[3],
+                           real R[3][3], real G[3][3],
+                           maxwell_dielectric_function mu,
+                           maxwell_dielectric_mean_function mmu,
+                           void *mu_data);
+    
 extern void maxwell_sym_matrix_eigs(real eigs[3], const symmetric_matrix *V);
 extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
                                       const symmetric_matrix *V);
@@ -181,6 +190,8 @@ void assign_symmatrix_vector(scalar_complex *newv,
 
 extern void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 			     int is_current_eigenvector, evectmatrix Work);
+extern void maxwell_muinv_operator(evectmatrix Xin, evectmatrix Xout, void *data,
+                                   int is_current_eigenvector, evectmatrix Work);
 extern void maxwell_simple_precondition(evectmatrix X,
 					void *data, real *eigenvals);
 extern void maxwell_preconditioner(evectmatrix Xin, evectmatrix Xout,

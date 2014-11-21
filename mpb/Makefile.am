@@ -16,11 +16,11 @@
 bin_PROGRAMS = mpb@MPB_SUFFIX@
 
 SPECIFICATION_FILE = mpb.scm
-EXTRA_DIST = mpb.scm.in
+EXTRA_DIST = mpb.scm.in epsilon.c
 
 nodist_pkgdata_DATA = $(SPECIFICATION_FILE)
 
-MY_SOURCES = epsilon.c epsilon_file.c field-smob.c fields.c	\
+MY_SOURCES = medium.c epsilon_file.c field-smob.c fields.c	\
 material_grid.c material_grid_opt.c matrix-smob.c mpb.c field-smob.h matrix-smob.h mpb.h my-smob.h
 
 MY_LIBS = $(top_builddir)/src/matrixio/libmatrixio.a $(top_builddir)/src/libmpb@MPB_SUFFIX@.la $(NLOPT_LIB)
@@ -63,10 +63,13 @@ CTL_DEFS = -DCTL_SCM='"'$(LIBCTL_DIR)/base/ctl.scm'"' \
 
 mpb@MPB_SUFFIX@_SOURCES = $(MY_SOURCES)
 nodist_mpb@MPB_SUFFIX@_SOURCES = main.c geom.c ctl-io.h ctl-io.c
-BUILT_SOURCES = $(nodist_mpb@MPB_SUFFIX@_SOURCES)
+BUILT_SOURCES = $(nodist_mpb@MPB_SUFFIX@_SOURCES) mu.c
 mpb@MPB_SUFFIX@_LDADD = $(MY_LIBS)
 mpb@MPB_SUFFIX@_LDFLAGS = $(MY_LDFLAGS)
 mpb@MPB_SUFFIX@_CPPFLAGS = $(MY_CPPFLAGS) $(MY_DEFS) $(CTL_DEFS)  $(CTL_H_CPPFLAG)
+
+mu.c: epsilon.c
+	perl -pe 's/epsilon/mu/g' $< > $@
 
 main.c: $(LIBCTL_DIR)/base/main.c
 	cp -f $(LIBCTL_DIR)/base/main.c $@

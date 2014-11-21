@@ -15,45 +15,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
-#include "config.h"
-#include <mpiglue.h>
-#include <mpi_utils.h>
-#include <check.h>
-
-#include "mpb.h"
-
-int no_size_x = 0, no_size_y = 0, no_size_z = 0;
-
-geom_box_tree geometry_tree = NULL; /* recursive tree of geometry 
-				       objects for fast searching */
+/* THIS FILE IS TO BE #included IN medium.c.  ALSO USED TO GENERATE mu.c */
 
 /**************************************************************************/
 
-typedef struct {
-     maxwell_dielectric_function eps_file_func;
-     void *eps_file_func_data;
-} epsilon_func_data;
-
-static material_type make_dielectric(double epsilon)
-{
-     material_type m;
-     m.which_subclass = DIELECTRIC;
-     CHK_MALLOC(m.subclass.dielectric_data, dielectric, 1);
-     m.subclass.dielectric_data->epsilon = epsilon;
-     return m;
-}
-
-static void material_eps(material_type material,
+static void material_epsilon(material_type material,
 			 symmetric_matrix *eps, symmetric_matrix *eps_inv)
 {
      switch (material.which_subclass) {
-	 case DIELECTRIC:
+	 case MEDIUM:
 	 {
-	      real eps_val = material.subclass.dielectric_data->epsilon;
+	      real eps_val = material.subclass.medium_data->epsilon;
 	      eps->m00 = eps->m11 = eps->m22 = eps_val;
 	      eps_inv->m00 = eps_inv->m11 = eps_inv->m22 = 1.0 / eps_val;
 #ifdef WITH_HERMITIAN_EPSILON
@@ -69,10 +41,10 @@ static void material_eps(material_type material,
 #endif
 	      break;
 	 }
-	 case DIELECTRIC_ANISOTROPIC:
+	 case MEDIUM_ANISOTROPIC:
 	 {
-	      dielectric_anisotropic *d =
-		   material.subclass.dielectric_anisotropic_data;
+              medium_anisotropic *d =
+		   material.subclass.medium_anisotropic_data;
 	      eps->m00 = d->epsilon_diag.x;
 	      eps->m11 = d->epsilon_diag.y;
 	      eps->m22 = d->epsilon_diag.z;
@@ -121,7 +93,7 @@ static void material_eps(material_type material,
 static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 			 const real r[3], void *edata)
 {
-     epsilon_func_data *d = (epsilon_func_data *) edata;
+     medium_func_data *d = (medium_func_data *) edata;
      geom_box_tree tp;
      int oi;
      material_type material;
@@ -152,8 +124,8 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
      {
 	  material_type m2 = material_of_point_inobject(p, &inobject);
 	  CHECK(m2.which_subclass == material.which_subclass &&
-		m2.subclass.dielectric_data ==
-		material.subclass.dielectric_data,
+		m2.subclass.medium_data ==
+		material.subclass.medium_data,
 		"material_of_point & material_of_point_in_tree don't agree!");
      }
 #endif
@@ -165,8 +137,8 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 
      /* if we aren't in any geometric object and we have an epsilon
 	file, use that. */
-     if (!inobject && d->eps_file_func) {
-	  d->eps_file_func(eps, eps_inv, r, d->eps_file_func_data);
+     if (!inobject && d->epsilon_file_func) {
+	  d->epsilon_file_func(eps, eps_inv, r, d->epsilon_file_func_data);
      }
      else {
 	  boolean destroy_material = 0;
@@ -193,7 +165,7 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 	     the interpolated grid values. */
 	  if (material.which_subclass == MATERIAL_GRID) {
 	       material_type mat_eps;
-	       mat_eps = make_dielectric(
+	       mat_eps = make_epsilon(
 		    matgrid_val(p, tp, oi, 
 				material.subclass.material_grid_data)
 		    * (material.subclass.material_grid_data->epsilon_max -
@@ -205,16 +177,10 @@ static void epsilon_func(symmetric_matrix *eps, symmetric_matrix *eps_inv,
 	       destroy_material = 1;
 	  }
 	       
-	  material_eps(material, eps, eps_inv);
+	  material_epsilon(material, eps, eps_inv);
 	  if (destroy_material)
 	       material_type_destroy(material);
      }
-}
-
-static int variable_material(int which_subclass)
-{
-     return (which_subclass == MATERIAL_GRID ||
-	     which_subclass == MATERIAL_FUNCTION);
 }
 
 static int mean_epsilon_func(symmetric_matrix *meps, 
@@ -223,7 +189,7 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 			     real d1, real d2, real d3, real tol,
 			     const real r[3], void *edata)
 {
-     epsilon_func_data *d = (epsilon_func_data *) edata;
+     medium_func_data *d = (medium_func_data *) edata;
      vector3 p;
      const geometric_object *o1 = 0, *o2 = 0;
      vector3 shiftby1, shiftby2, normal;
@@ -308,13 +274,13 @@ static int mean_epsilon_func(symmetric_matrix *meps,
      if ((o1 && variable_material(o1->material.which_subclass)) ||
 	 (o2 && variable_material(o2->material.which_subclass)) ||
 	 ((variable_material(default_material.which_subclass)
-	   || d->eps_file_func)
+	   || d->epsilon_file_func)
 	  && (!o1 || !o2 ||
 	      o1->material.which_subclass == MATERIAL_TYPE_SELF ||
 	      o2->material.which_subclass == MATERIAL_TYPE_SELF)))
 	  return 0; /* arbitrary material functions are non-analyzable */
 	      
-     material_eps(mat1, meps, meps_inv);
+     material_epsilon(mat1, meps, meps_inv);
 
      /* check for trivial case of only one object/material */
      if (id1 == id2 || material_type_equal(&mat1, &mat2)) { 
@@ -355,7 +321,7 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 #ifdef KOTTKE /* new anisotropic smoothing, based on Kottke algorithm */
 	  symmetric_matrix eps1, delta;
 	  double Rot[3][3], norm, n0, n1, n2;
-	  material_eps(mat2, &eps2, &epsinv2);
+	  material_epsilon(mat2, &eps2, &epsinv2);
 	  eps1 = *meps;
 
 	  /* make Cartesian orthonormal frame relative to interface */
@@ -457,7 +423,7 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 #  endif
 
 #else /* !KOTTKE, just compute mean epsilon and mean inverse epsilon */
-	  material_eps(mat2, &eps2, &epsinv2);
+	  material_epsilon(mat2, &eps2, &epsinv2);
 
 	  meps->m00 = fill * (meps->m00 - eps2.m00) + eps2.m00;
 	  meps->m11 = fill * (meps->m11 - eps2.m11) + eps2.m11;
@@ -514,111 +480,3 @@ static int mean_epsilon_func(symmetric_matrix *meps,
      return 1;
 }
 
-/**************************************************************************/
-
-void reset_epsilon(void)
-{
-     epsilon_func_data d;
-     int mesh[3];
-
-     mesh[0] = mesh_size;
-     mesh[1] = (dimensions > 1) ? mesh_size : 1;
-     mesh[2] = (dimensions > 2) ? mesh_size : 1;
-
-     get_epsilon_file_func(epsilon_input_file,
-			   &d.eps_file_func, &d.eps_file_func_data);
-     set_maxwell_dielectric(mdata, mesh, R, G, 
-			    epsilon_func, mean_epsilon_func, &d);
-     destroy_epsilon_file_func_data(d.eps_file_func_data);
-}
-
-/* Initialize the dielectric function of the global mdata structure,
-   along with other geometry data.  Should be called from init-params,
-   or in general when global input vars have been loaded and mdata
-   allocated. */
-void init_epsilon(void)
-{
-     int i;
-     int tree_depth, tree_nobjects;
-     number no_size; 
-
-     no_size = 2.0 / ctl_get_number("infinity");
-
-     mpi_one_printf("Mesh size is %d.\n", mesh_size);
-
-     no_size_x = geometry_lattice.size.x <= no_size;
-     no_size_y = geometry_lattice.size.y <= no_size || dimensions < 2;
-     no_size_z = geometry_lattice.size.z <= no_size || dimensions < 3;
-
-     Rm.c0 = vector3_scale(no_size_x ? 1 : geometry_lattice.size.x, 
-			   geometry_lattice.basis.c0);
-     Rm.c1 = vector3_scale(no_size_y ? 1 : geometry_lattice.size.y, 
-			   geometry_lattice.basis.c1);
-     Rm.c2 = vector3_scale(no_size_z ? 1 : geometry_lattice.size.z, 
-			   geometry_lattice.basis.c2);
-     mpi_one_printf("Lattice vectors:\n");
-     mpi_one_printf("     (%g, %g, %g)\n", Rm.c0.x, Rm.c0.y, Rm.c0.z);  
-     mpi_one_printf("     (%g, %g, %g)\n", Rm.c1.x, Rm.c1.y, Rm.c1.z);
-     mpi_one_printf("     (%g, %g, %g)\n", Rm.c2.x, Rm.c2.y, Rm.c2.z);
-     Vol = fabs(matrix3x3_determinant(Rm));
-     mpi_one_printf("Cell volume = %g\n", Vol);
-  
-     Gm = matrix3x3_inverse(matrix3x3_transpose(Rm));
-     mpi_one_printf("Reciprocal lattice vectors (/ 2 pi):\n");
-     mpi_one_printf("     (%g, %g, %g)\n", Gm.c0.x, Gm.c0.y, Gm.c0.z);  
-     mpi_one_printf("     (%g, %g, %g)\n", Gm.c1.x, Gm.c1.y, Gm.c1.z);
-     mpi_one_printf("     (%g, %g, %g)\n", Gm.c2.x, Gm.c2.y, Gm.c2.z);
-     
-     if (eigensolver_nwork > MAX_NWORK) {
-	  mpi_one_printf("(Reducing nwork = %d to maximum: %d.)\n",
-		 eigensolver_nwork, MAX_NWORK);
-	  eigensolver_nwork = MAX_NWORK;
-     }
-
-     matrix3x3_to_arr(R, Rm);
-     matrix3x3_to_arr(G, Gm);
-
-     /* we must do this to correct for a non-orthogonal lattice basis: */
-     geom_fix_objects();
-
-     mpi_one_printf("Geometric objects:\n");
-     if (mpi_is_master())
-	  for (i = 0; i < geometry.num_items; ++i) {
-	       display_geometric_object_info(5, geometry.items[i]);
-	       
-	       if (geometry.items[i].material.which_subclass == DIELECTRIC)
-		    printf("%*sdielectric constant epsilon = %g\n",
-			   5 + 5, "",
-			   geometry.items[i].material.
-			   subclass.dielectric_data->epsilon);
-	  }
-
-     destroy_geom_box_tree(geometry_tree);  /* destroy any tree from
-					       previous runs */
-     {
-	  geom_box b0;
-	  b0.low = vector3_plus(geometry_center,
-				vector3_scale(-0.5, geometry_lattice.size));
-	  b0.high = vector3_plus(geometry_center,
-				 vector3_scale(0.5, geometry_lattice.size));
-	  /* pad tree boundaries to allow for sub-pixel averaging */
-	  b0.low.x -= geometry_lattice.size.x / mdata->nx;
-	  b0.low.y -= geometry_lattice.size.y / mdata->ny;
-	  b0.low.z -= geometry_lattice.size.z / mdata->nz;
-	  b0.high.x += geometry_lattice.size.x / mdata->nx;
-	  b0.high.y += geometry_lattice.size.y / mdata->ny;
-	  b0.high.z += geometry_lattice.size.z / mdata->nz;
-	  geometry_tree = create_geom_box_tree0(geometry, b0);
-     }
-     if (verbose && mpi_is_master()) {
-	  printf("Geometry object bounding box tree:\n");
-	  display_geom_box_tree(5, geometry_tree);
-     }
-     geom_box_tree_stats(geometry_tree, &tree_depth, &tree_nobjects);
-     mpi_one_printf("Geometric object tree has depth %d and %d object nodes"
-	    " (vs. %d actual objects)\n",
-	    tree_depth, tree_nobjects, geometry.num_items);
-
-     mpi_one_printf("Initializing dielectric function...\n");
-     reset_epsilon();
-}
