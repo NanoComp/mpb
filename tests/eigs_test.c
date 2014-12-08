@@ -88,7 +88,7 @@ int main(int argc, char **argv)
      sqmatrix X, U, YtY, Bcopy;
      evectmatrix Y, Y2, Ystart, W[NWORK];
      real *eigvals, *eigvals_dense, sum = 0.0;
-     int num_iters;
+     int num_iters, nWork = NWORK;
      evectoperator bop = Bop;
 
      if (argc >= 2)
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
      rand_posdef(A, X);
      rand_posdef(B, X);
 
-#if 0
+#if 1
      for (i = 0; i < n; ++i) {
          for (j = 0; j < n; ++j) {
              ASSIGN_SCALAR(B.data[i * n + j], 0, 0);
@@ -129,15 +129,26 @@ int main(int argc, char **argv)
 
      CHK_MALLOC(eigvals_dense, real, n);
 
+     p = MIN(MIN(5, MAX(n/4, 2)), n);
+     printf("\nSolving for %d eigenvals out of %d.\n", p, n);
+     YtY = create_sqmatrix(p);         
+     Y = create_evectmatrix(n, 1, p, n, 0, n);
+     Y2 = create_evectmatrix(n, 1, p, n, 0, n);
+     Ystart = create_evectmatrix(n, 1, p, n, 0, n);
+     for (i = 0; i < nWork; ++i)
+         W[i] = create_evectmatrix(n, 1, p, n, 0, n);
+     CHK_MALLOC(eigvals, real, p);
+         
      for (trial = 0; trial < 2; ++trial) {
          sqmatrix_copy(U, A);
          if (trial > 0) {
-             printf("=== Generalized Eigenproblem ===\n");
+             printf("=== Ordinary Eigenproblem ===\n");
              sqmatrix_eigensolve(U, eigvals_dense, X);
              bop = NULL;
+             nWork = NWORK - 1;
          }
          else {
-             printf("=== Ordinary Eigenproblem ===\n");
+             printf("=== Generalized Eigenproblem ===\n");
              sqmatrix_copy(Bcopy, B);
              sqmatrix_gen_eigensolve(U, Bcopy, eigvals_dense, X);
          }
@@ -153,9 +164,6 @@ int main(int argc, char **argv)
          for (i = 0; i < n * n; ++i)
              ASSIGN_CONJ(U.data[i], U.data[i]);
          
-         p = MIN(MIN(5, MAX(n/4, 2)), n);
-         printf("\nSolving for %d eigenvals out of %d.\n", p, n);
-         
          printf("\nSolved A by dense eigensolver.\nEigenvalues = ");
          for (sum = 0.0, i = 0; i < p; ++i) {
              sum += eigvals_dense[i];
@@ -164,15 +172,6 @@ int main(int argc, char **argv)
          printf("\nEigenvalue sum = %f\n", sum);
          printf("\nEigenvectors are (by column): \n");
          printmat(U.data, n, p, n);
-         
-         YtY = create_sqmatrix(p);
-         
-         Y = create_evectmatrix(n, 1, p, n, 0, n);
-         Y2 = create_evectmatrix(n, 1, p, n, 0, n);
-         Ystart = create_evectmatrix(n, 1, p, n, 0, n);
-         for (i = 0; i < NWORK; ++i)
-             W[i] = create_evectmatrix(n, 1, p, n, 0, n);
-         CHK_MALLOC(eigvals, real, p);
          
          for (i = 0; i < n*p; ++i)
              ASSIGN_REAL(Ystart.data[i], rand() * 1.0 / RAND_MAX);
@@ -185,7 +184,7 @@ int main(int argc, char **argv)
          
          evectmatrix_copy(Y, Ystart);
          eigensolver(Y, eigvals, Aop,NULL, bop,NULL, Cop,NULL, NULL,NULL,
-                     W, NWORK, 1e-10,&num_iters, EIGS_DEFAULT_FLAGS);
+                     W, nWork, 1e-10,&num_iters, EIGS_DEFAULT_FLAGS);
          printf("\nSolved for eigenvectors after %d iterations.\n", num_iters);
          printf("\nEigenvalues = ");
          for (sum = 0.0, i = 0; i < p; ++i) {
@@ -216,7 +215,7 @@ int main(int argc, char **argv)
          printf("\nSolving with exact inverse preconditioner...\n");
          evectmatrix_copy(Y, Ystart);
          eigensolver(Y, eigvals, Aop,NULL, bop,NULL, Ainvop,NULL, NULL,NULL,
-                     W, NWORK, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
+                     W, nWork, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
          printf("Solved for eigenvectors after %d iterations.\n", num_iters);
          printf("\nEigenvalues = ");
          for (sum = 0.0, i = 0; i < p; ++i) {
@@ -230,7 +229,7 @@ int main(int argc, char **argv)
          printf("\nSolving without conjugate-gradient...\n");
          evectmatrix_copy(Y, Ystart);
          eigensolver(Y, eigvals, Aop,NULL, bop,NULL, Cop,NULL, NULL,NULL,
-                     W, NWORK - 1, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
+                     W, nWork - 1, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
          printf("Solved for eigenvectors after %d iterations.\n", num_iters);
          printf("\nEigenvalues = ");
          for (sum = 0.0, i = 0; i < p; ++i) {
@@ -244,7 +243,7 @@ int main(int argc, char **argv)
          printf("\nSolving without preconditioning...\n");
          evectmatrix_copy(Y, Ystart);
          eigensolver(Y, eigvals, Aop,NULL, bop,NULL, NULL,NULL, NULL,NULL,
-                     W, NWORK, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
+                     W, nWork, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
          printf("Solved for eigenvectors after %d iterations.\n", num_iters);
          printf("\nEigenvalues = ");
          for (sum = 0.0, i = 0; i < p; ++i) {
@@ -258,7 +257,7 @@ int main(int argc, char **argv)
          printf("\nSolving without conjugate-gradient or preconditioning...\n");
          evectmatrix_copy(Y, Ystart);
          eigensolver(Y, eigvals, Aop,NULL, bop,NULL, NULL,NULL, NULL,NULL,
-                     W, NWORK - 1, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
+                     W, nWork - 1, 1e-10, &num_iters, EIGS_DEFAULT_FLAGS);
          printf("Solved for eigenvectors after %d iterations.\n", num_iters);
          printf("\nEigenvalues = ");
          for (sum = 0.0, i = 0; i < p; ++i) {
@@ -280,7 +279,7 @@ int main(int argc, char **argv)
      destroy_evectmatrix(Y);
      destroy_evectmatrix(Y2);
      destroy_evectmatrix(Ystart);
-     for (i = 0; i < NWORK; ++i)
+     for (i = 0; i < nWork; ++i)
 	  destroy_evectmatrix(W[i]);
 
      free(eigvals);
