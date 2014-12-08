@@ -323,6 +323,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 
 	  y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtBY)) / Y.p);
 	  blasglue_rscal(Y.p * Y.n, 1/y_norm, Y.data, 1);
+	  if (B) blasglue_rscal(Y.p * Y.n, 1/y_norm, BY.data, 1);
 	  blasglue_rscal(Y.p * Y.p, 1/(y_norm*y_norm), YtBY.data, 1);
 
 	  sqmatrix_copy(U, YtBY);
@@ -356,7 +357,6 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		    evectmatrix_XeYS(G, Y, S1, 1); /* G = orthonormalize Y */
 		    evectmatrix_copy(Y, G);
 		    prev_traceGtX = 0.0;
-
                     if (B) {
                         B(Y, BY, Bdata, 1, G); /* B*Y; G is scratch */
                         evectmatrix_XtY(YtBY, Y, BY, S2);
@@ -365,6 +365,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
                         evectmatrix_XtX(YtBY, Y, S2);
 		    y_norm = sqrt(SCALAR_RE(sqmatrix_trace(YtBY)) / Y.p);
 		    blasglue_rscal(Y.p * Y.n, 1/y_norm, Y.data, 1);
+		    if (B) blasglue_rscal(Y.p * Y.n, 1/y_norm, BY.data, 1);
 		    blasglue_rscal(Y.p * Y.p, 1/(y_norm*y_norm), YtBY.data, 1);
 		    sqmatrix_copy(U, YtBY);
 		    CHECK(sqmatrix_invert(U, 1, S2),
