@@ -446,6 +446,8 @@ void init_params(integer p, boolean reset_fields)
      else
 	  mtdata = NULL;
 
+     init_epsilon();
+
      if (!have_old_fields) {
 	  mpi_one_printf("Allocating fields...\n");
 	  H = create_evectmatrix(nx * ny * nz, 2, num_bands,
@@ -460,8 +462,6 @@ void init_params(integer p, boolean reset_fields)
 	  else
 	       Hblock = H;
      }
-
-     init_epsilon();
 
      mpi_one_printf("%d k-points:\n", k_points.num_items);
      for (i = 0; i < k_points.num_items; ++i)
