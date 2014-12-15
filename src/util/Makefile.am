@@ -7,7 +7,11 @@ BUILT_SOURCES = sphere-quad.h
 noinst_PROGRAMS = sphere_quad
 sphere_quad_SOURCES = sphere-quad.c
 
+if MAINTAINER_MODE
+
 PRELUDE = "/* This file was automatically generated --- DO NOT EDIT */"
 SPHERE_QUAD = $(top_builddir)/src/util/sphere_quad
-sphere-quad.h: sphere_quad
+sphere-quad.h: $(SPHERE_QUAD)$(EXEEXT)
 	(echo $(PRELUDE); echo; $(SPHERE_QUAD)) > $@
+
+endif
