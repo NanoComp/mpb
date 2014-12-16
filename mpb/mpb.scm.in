@@ -150,6 +150,8 @@
 (define-external-function init-params true false
   no-return-value 'integer 'boolean)
 
+(define-external-function using-mu? false false 'boolean)
+
 ; (set-parity p) changes the parity that is solved for by
 ; solve-kpoint, below.  p should be one of the following constants
 ; init-params should already have been called.  Be sure to call
@@ -180,6 +182,7 @@
 (define-external-function get-hfield false false no-return-value 'integer)
 (define-external-function get-efield-from-dfield false false no-return-value)
 (define-external-function get-epsilon false false no-return-value)
+(define-external-function get-mu false false no-return-value)
 (define-external-function fix-field-phase false false no-return-value)
 (define-external-function compute-field-energy false false 
 	(make-list-type 'number))
@@ -439,6 +442,10 @@
   (get-epsilon)
   (output-field-to-file -1 (get-filename-prefix)))
 
+(define (output-mu)
+  (get-mu)
+  (output-field-to-file -1 (get-filename-prefix)))
+
 (define (compute-energy-in-objects . objects)
   (compute-energy-in-object-list objects))
 
@@ -589,7 +596,9 @@
    (let ((k-split (list-split k-points k-split-num k-split-index)))
      (set-kpoint-index (car k-split))
      (if (zero? (car k-split))
-	 (output-epsilon)) ; output epsilon immediately for 1st k block
+	 (begin 
+           (output-epsilon) ; output epsilon immediately for 1st k block
+           (if (using-mu?) (output-mu)))) ; and mu too, if we have it
      (if (> num-bands 0)
 	 (begin
 	   (map (lambda (k)
@@ -660,6 +669,19 @@
   (get-hfield which-band)
   (output-field-z))
 
+(define (output-bfield which-band)
+  (get-bfield which-band)
+  (output-field))
+(define (output-bfield-x which-band)
+  (get-bfield which-band)
+  (output-field-x))
+(define (output-bfield-y which-band)
+  (get-bfield which-band)
+  (output-field-y))
+(define (output-bfield-z which-band)
+  (get-bfield which-band)
+  (output-field-z))
+
 (define (output-dfield which-band)
   (get-dfield which-band)
   (output-field))
@@ -686,10 +708,11 @@
   (get-efield which-band)
   (output-field-z))
 
-(define (output-hpwr which-band)
-  (get-hfield which-band)
+(define (output-bpwr which-band)
+  (get-bfield which-band)
   (compute-field-energy)
   (output-field))
+(define output-hpwr output-bpwr) ; backwards compatibility
 
 (define (output-dpwr which-band)
   (get-dfield which-band)
@@ -726,7 +749,7 @@
   (compute-field-energy)
   (let ((epwr (field-copy cur-field))
         (tot-pwr (rscalar-field-make cur-field)))
-    (get-hfield which-band)
+    (get-bfield which-band)
     (compute-field-energy)
     (field-map! tot-pwr
                 (lambda (epwr hpwr) (+ epwr hpwr))
@@ -778,6 +801,9 @@
 ; given band based upon the spatial representation of the given field:
 (define (fix-hfield-phase which-band)
   (get-hfield which-band)
+  (fix-field-phase))
+(define (fix-bfield-phase which-band)
+  (get-bfield which-band)
   (fix-field-phase))
 (define (fix-dfield-phase which-band)
   (get-dfield which-band)

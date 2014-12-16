@@ -688,7 +688,7 @@ void print_material_grids_deps_du(void)
 
 	  gotmyv:
      mpi_one_printf("depsdu:, %g, %d", 
-		    mean_epsilon_from_matrix(mdata->eps_inv + index), index);
+		    mean_medium_from_matrix(mdata->eps_inv + index), index);
      for (ig = 0; ig < ntot; ++ig)
 	  mpi_one_printf(", %g", v[ig]);
      mpi_one_printf("\n");
@@ -723,7 +723,7 @@ void print_material_grids_deps_du_numeric(double du)
 	       for (k = 0; k < n3; ++k)
      {
 	  int index = ((i * n2 + j) * n3 + k);
-	  ep[index] = mean_epsilon_from_matrix(mdata->eps_inv + index);
+	  ep[index] = mean_medium_from_matrix(mdata->eps_inv + index);
      }
 
      for (iu = 0; iu < ntot; ++iu) {
@@ -737,7 +737,7 @@ void print_material_grids_deps_du_numeric(double du)
 		    {
 			 int index = ((i * n2 + j) * n3 + k);
 			 double epn = 
-			      mean_epsilon_from_matrix(mdata->eps_inv + index);
+			      mean_medium_from_matrix(mdata->eps_inv + index);
 			 v[index*ntot + iu] = (epn - ep[index]) / du;
 		    }
 	  u[iu] -= du;
@@ -999,7 +999,7 @@ static double match_eps_func(int n, const double *u, double *grad, void *data)
 	       double scalegrad;
 	       vector3 p;
 
-	       epsilon = mean_epsilon_from_matrix(mdata->eps_inv + index);
+	       epsilon = mean_medium_from_matrix(mdata->eps_inv + index);
 	       eps0 = linear_interpolate((i2 + 0.5) / n1,
 					 (j2 + 0.5) / n2,
 					 (k2 + 0.5) / n3,

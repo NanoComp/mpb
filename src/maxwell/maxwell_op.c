@@ -543,7 +543,8 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 
 void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin, 
                               evectmatrix Hout, scalar_complex *hfield,
-			      int cur_band_start, int cur_num_bands)
+			      int Bin_band_start, int Hout_band_start,
+                              int cur_num_bands)
 {
      scalar *fft_data = (scalar *) hfield;
      scalar *fft_data_out = d->fft_data2 == d->fft_data ? fft_data : (fft_data == d->fft_data ? d->fft_data2 : d->fft_data);
@@ -553,12 +554,12 @@ void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
      if (d->mu_inv == NULL) {
          if (Bin.data != Hout.data)
              evectmatrix_copy_slice(Hout, Bin,
-                                    cur_band_start,cur_band_start,
+                                    Hout_band_start, Bin_band_start,
                                     cur_num_bands);
          return;
      }
      
-     maxwell_compute_h_from_H(d, Bin, hfield, cur_band_start, cur_num_bands);
+     maxwell_compute_h_from_H(d, Bin, hfield, Bin_band_start, cur_num_bands);
      maxwell_compute_e_from_d_(d, hfield, cur_num_bands, d->mu_inv);
      
      /* convert back to Fourier space */
@@ -573,7 +574,7 @@ void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
              k_data cur_k = d->k_plus_G[ij];
              for (b = 0; b < cur_num_bands; ++b)
                  project_c2t(&Hout.data[ij * 2 * Hout.p + 
-                                        b + cur_band_start],
+                                        b + Hout_band_start],
                              Hout.p, cur_k, 
                                &fft_data_out[3 * (ij2*cur_num_bands+b)],
                              scale);
@@ -1206,7 +1207,8 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
                                        cur_band_start, cur_num_bands);
           else {
               maxwell_compute_H_from_B(d, Xin, Xout, cdata,
-                                       cur_band_start, cur_num_bands);
+                                       cur_band_start, cur_band_start,
+                                       cur_num_bands);
               maxwell_compute_d_from_H(d, Xout, cdata,
                                        cur_band_start, cur_num_bands);
           }
@@ -1214,7 +1216,8 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 	  maxwell_compute_H_from_e(d, Xout, cdata,
 				   cur_band_start, cur_num_bands, scale);
           maxwell_compute_H_from_B(d, Xout, Xout, cdata,
-                                   cur_band_start, cur_num_bands);
+                                   cur_band_start, cur_band_start,
+                                   cur_num_bands);
      }
 }
 
@@ -1238,7 +1241,8 @@ void maxwell_muinv_operator(evectmatrix Xin, evectmatrix Xout, void *data,
 	  cur_band_start += d->num_fft_bands) {
 	  int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
           maxwell_compute_H_from_B(d, Xin, Xout, cdata,
-                                   cur_band_start, cur_num_bands);
+                                   cur_band_start, cur_band_start,
+                                   cur_num_bands);
      }
 }
 

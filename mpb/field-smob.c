@@ -139,11 +139,11 @@ field_smob *update_curfield_smob(void)
      curfield_smob.last_dim_size = mdata->last_dim_size;
      curfield_smob.other_dims = mdata->other_dims;
      curfield_smob.type_char = curfield_type;
-     if (strchr("dhecv", curfield_type)) { /* complex vector field */
+     if (strchr("dhbecv", curfield_type)) { /* complex vector field */
 	  curfield_smob.type = CVECTOR_FIELD_SMOB;
 	  curfield_smob.f.cv = curfield;
      }
-     else if (strchr("DHnR", curfield_type)) { /* real scalar field */
+     else if (strchr("DHBnR", curfield_type)) { /* real scalar field */
 	  curfield_smob.type = RSCALAR_FIELD_SMOB;
 	  curfield_smob.f.rs = (real *) curfield;
      }

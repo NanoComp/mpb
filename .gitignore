@@ -65,9 +65,11 @@ mpb/mpb_mpi
 src/mpb_mpi.h
 mpb/mpbi_mpi
 src/mpbi_mpi.h
+mpb/mu.c
 
 # test output:
 check-epsilon.h5
+check-mu.h5
 tests/blastest.out
 tests/maxwell_test.out
 

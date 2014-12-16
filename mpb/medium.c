@@ -69,6 +69,9 @@ static int variable_material(int which_subclass)
 
 /**************************************************************************/
 
+#define epsilon_CURFIELD_TYPE 'n'
+#define mu_CURFIELD_TYPE 'm'
+
 #include "epsilon.c"
 #include "mu.c"
 

@@ -171,6 +171,10 @@ extern void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Xin,
 extern void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 				     scalar_complex *hfield,
 				     int cur_band_start, int cur_num_bands);
+extern void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin, 
+                                     evectmatrix Hout, scalar_complex *hfield,
+                                     int Bin_band_start, int Hout_band_start,
+                                     int cur_num_bands);
 extern void maxwell_compute_e_from_d(maxwell_data *d,
 				     scalar_complex *dfield,
 				     int cur_num_bands);

@@ -20,6 +20,7 @@ AC_PROG_LIBTOOL
 MPB_VERSION=$PACKAGE_VERSION
 AC_SUBST(MPB_VERSION)
 AC_PROG_F77
+AC_PATH_PROG(PERL, perl perl5, $srcdir/missing)
 
 # Get C compiler.
 AC_MSG_CHECKING([for vendor cc to be used instead of gcc])

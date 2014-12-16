@@ -67,13 +67,20 @@ void get_dfield(int which_band)
      curfield = (scalar_complex *) mdata->fft_data;
      curfield_band = which_band;
      curfield_type = 'd';
-     maxwell_compute_d_from_H(mdata, H, curfield, which_band - 1, 1);
+     if (mdata->mu_inv == NULL)
+         maxwell_compute_d_from_H(mdata, H, curfield, which_band - 1, 1);
+     else {
+         evectmatrix_resize(&W[0], 1, 0);
+         maxwell_compute_H_from_B(mdata, H, W[0], curfield, which_band-1,0, 1);
+         maxwell_compute_d_from_H(mdata, W[0], curfield, 0, 1);
+         evectmatrix_resize(&W[0], W[0].alloc_p, 0);
+     }
 
      /* Here, we correct for the fact that compute_d_from_H actually
 	computes just (k+G) x H, whereas the actual D field is
 	i/omega i(k+G) x H...so, there is an added factor of -1/omega. 
 
-        We also divide by the cell volume so that the integral of |H|^2
+        We also divide by the cell volume so that the integral of H*B
         or of D*E is unity.  (From the eigensolver + FFT, they are
         initially normalized to sum to nx*ny*nz.) */
      {
@@ -117,12 +124,57 @@ void get_hfield(integer which_band)
      curfield = (scalar_complex *) mdata->fft_data;
      curfield_band = which_band;
      curfield_type = 'h';
-     maxwell_compute_h_from_H(mdata, H, curfield, which_band - 1, 1);
+     if (mdata->mu_inv == NULL)
+         maxwell_compute_h_from_H(mdata, H, curfield, which_band - 1, 1);
+     else {
+         evectmatrix_resize(&W[0], 1, 0);
+         maxwell_compute_H_from_B(mdata, H, W[0], curfield, which_band-1,0, 1);
+         maxwell_compute_h_from_H(mdata, W[0], curfield, 0, 1);
+         evectmatrix_resize(&W[0], W[0].alloc_p, 0);
+     }
 
-     /* Divide by the cell volume so that the integral of |H|^2
+     /* Divide by the cell volume so that the integral of H*B
         or of D*E is unity.  (From the eigensolver + FFT, they are
         initially normalized to sum to nx*ny*nz.) */
+     {
+	  int i, N;
+	  double scale;
+	  N = mdata->fft_output_size;
 
+	  scale = 1.0 / sqrt(Vol);
+	  for (i = 0; i < 3*N; ++i) {
+	       curfield[i].re *= scale;
+	       curfield[i].im *= scale;
+	  }
+     }
+}
+
+void get_bfield(integer which_band)
+{
+     if (!mdata) {
+	  mpi_one_fprintf(stderr,
+			  "init-params must be called before get-bfield!\n");
+	  return;
+     }
+     if (!kpoint_index) {
+	  mpi_one_fprintf(stderr,
+			  "solve-kpoint must be called before get-bfield!\n");
+	  return;
+     }
+     if (which_band < 1 || which_band > H.p) {
+	  mpi_one_fprintf(stderr,
+			  "must have 1 <= band index <= num_bands (%d)\n",H.p);
+	  return;
+     }
+
+     curfield = (scalar_complex *) mdata->fft_data;
+     curfield_band = which_band;
+     curfield_type = 'b';
+     maxwell_compute_h_from_H(mdata, H, curfield, which_band - 1, 1);
+
+     /* Divide by the cell volume so that the integral of H*B
+        or of D*E is unity.  (From the eigensolver + FFT, they are
+        initially normalized to sum to nx*ny*nz.) */
      {
 	  int i, N;
 	  double scale;
@@ -157,162 +209,13 @@ void get_efield(integer which_band)
 /* Extract the mean epsilon from the effective inverse dielectric tensor,
    which contains two eigenvalues that correspond to the mean epsilon,
    and one which corresponds to the harmonic mean. */
-real mean_epsilon_from_matrix(const symmetric_matrix *eps_inv)
+real mean_medium_from_matrix(const symmetric_matrix *eps_inv)
 {
      real eps_eigs[3];
      maxwell_sym_matrix_eigs(eps_eigs, eps_inv);
      /* the harmonic mean should be the largest eigenvalue (smallest
 	epsilon), so we'll ignore it and average the other two: */
      return 2.0 / (eps_eigs[0] + eps_eigs[1]);
-}
-
-/* get the dielectric function, and compute some statistics */
-void get_epsilon(void)
-{
-     int i, N, last_dim, last_dim_stored, nx, nz, local_y_start;
-     real *epsilon;
-     real eps_mean = 0, eps_inv_mean = 0, eps_high = -1e20, eps_low = 1e20;
-     int fill_count = 0;
-
-     if (!mdata) {
-	  mpi_one_fprintf(stderr,
-			  "init-params must be called before get-epsilon!\n");
-	  return;
-     }
-
-     curfield = (scalar_complex *) mdata->fft_data;
-     epsilon = (real *) curfield;
-     curfield_band = 0;
-     curfield_type = 'n';
-
-     /* get epsilon.  Recall that we actually have an inverse
-	dielectric tensor at each point; define an average index by
-	the inverse of the average eigenvalue of the 1/eps tensor.
-	i.e. 3/(trace 1/eps). */
-
-     N = mdata->fft_output_size;
-     last_dim = mdata->last_dim;
-     last_dim_stored =
-	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
-     nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
-
-     for (i = 0; i < N; ++i) {
-          epsilon[i] = mean_epsilon_from_matrix(mdata->eps_inv + i);
-	  if (epsilon[i] < eps_low)
-	       eps_low = epsilon[i];
-	  if (epsilon[i] > eps_high)
-	       eps_high = epsilon[i];
-	  eps_mean += epsilon[i];
-	  eps_inv_mean += 1/epsilon[i];
-	  if (epsilon[i] > 1.0001)
-	       ++fill_count;
-#ifndef SCALAR_COMPLEX
-	  /* most points need to be counted twice, by rfftw output symmetry: */
-	  {
-	       int last_index;
-#  ifdef HAVE_MPI
-	       if (nz == 1) /* 2d calculation: 1st dim. is truncated one */
-		    last_index = i / nx + local_y_start;
-	       else
-		    last_index = i % last_dim_stored;
-#  else
-	       last_index = i % last_dim_stored;
-#  endif
-	       if (last_index != 0 && 2*last_index != last_dim) {
-		    eps_mean += epsilon[i];
-		    eps_inv_mean += 1/epsilon[i];
-		    if (epsilon[i] > 1.0001)
-			 ++fill_count;
-	       }
-	  }
-#endif
-     }
-
-     mpi_allreduce_1(&eps_mean, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
-     mpi_allreduce_1(&eps_inv_mean, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
-     mpi_allreduce_1(&eps_low, real, SCALAR_MPI_TYPE,
-		     MPI_MIN, MPI_COMM_WORLD);
-     mpi_allreduce_1(&eps_high, real, SCALAR_MPI_TYPE,
-		     MPI_MAX, MPI_COMM_WORLD);
-     mpi_allreduce_1(&fill_count, int, MPI_INT,
-                   MPI_SUM, MPI_COMM_WORLD);
-     N = mdata->nx * mdata->ny * mdata->nz;
-     eps_mean /= N;
-     eps_inv_mean = N/eps_inv_mean;
-
-     mpi_one_printf("epsilon: %g-%g, mean %g, harm. mean %g, "
-		    "%g%% > 1, %g%% \"fill\"\n",
-		    eps_low, eps_high, eps_mean, eps_inv_mean,
-		    (100.0 * fill_count) / N, 
-		    eps_high == eps_low ? 100.0 :
-		    100.0 * (eps_mean-eps_low) / (eps_high-eps_low));
-}
-
-/* get the specified component of the dielectric tensor,
-   or the inverse tensor if inv != 0 */
-void get_epsilon_tensor(int c1, int c2, int imag, int inv)
-{
-     int i, N;
-     real *epsilon;
-     int conj = 0, offset = 0;
-
-     curfield_type = '-'; /* only used internally, for now */
-     epsilon = (real *) mdata->fft_data;
-     N = mdata->fft_output_size;
-
-     switch (c1 * 3 + c2) {
-	 case 0:
-	      offset = offsetof(symmetric_matrix, m00);
-	      break;
-	 case 1:
-	      offset = offsetof(symmetric_matrix, m01);
-	      break;
-	 case 2:
-	      offset = offsetof(symmetric_matrix, m02);
-	      break;
-	 case 3:
-	      offset = offsetof(symmetric_matrix, m01); /* = conj(m10) */
-	      conj = imag;
-	      break;
-	 case 4:
-	      offset = offsetof(symmetric_matrix, m11);
-	      break;
-	 case 5:
-	      offset = offsetof(symmetric_matrix, m12);
-	      break;
-	 case 6:
-	      offset = offsetof(symmetric_matrix, m02); /* = conj(m20) */
-	      conj = imag;
-	      break;
-	 case 7:
-	      offset = offsetof(symmetric_matrix, m12); /* = conj(m21) */
-	      conj = imag;
-	      break;
-	 case 8:
-	      offset = offsetof(symmetric_matrix, m22);
-	      break;
-     }
-
-#ifdef WITH_HERMITIAN_EPSILON
-     if (c1 != c2 && imag)
-	  offset += offsetof(scalar_complex, im);
-#endif
-
-     for (i = 0; i < N; ++i) {
-	  if (inv) {
-	       epsilon[i] = 
-		    *((real *) (((char *) &mdata->eps_inv[i]) + offset));
-	  }
-	  else {
-	       symmetric_matrix eps;
-	       maxwell_sym_matrix_invert(&eps, &mdata->eps_inv[i]);
-	       epsilon[i] = *((real *) (((char *) &eps) + offset));
-	  }
-	  if (conj)
-	       epsilon[i] = -epsilon[i];
-     }     
 }
 
 /**************************************************************************/
@@ -336,10 +239,12 @@ double compute_field_energy_internal(real comp_sum[6])
 	  real
 	       comp_sqr0,comp_sqr1,comp_sqr2,comp_sqr3,comp_sqr4,comp_sqr5;
 
-	  /* energy is either |curfield|^2 or |curfield|^2 / epsilon,
-	     depending upon whether it is H or D. */
+	  /* energy is either |curfield|^2 / mu or |curfield|^2 / epsilon,
+	     depending upon whether it is B or D. */
 	  if (curfield_type == 'd') 
 	       assign_symmatrix_vector(field, mdata->eps_inv[i], curfield+3*i);
+	  else if (curfield_type == 'b' && mdata->mu_inv != NULL) 
+	       assign_symmatrix_vector(field, mdata->mu_inv[i], curfield+3*i);
 	  else {
 	       field[0] =   curfield[3*i];
 	       field[1] = curfield[3*i+1];
@@ -406,8 +311,12 @@ number_list compute_field_energy(void)
      real energy_sum, comp_sum[6];
      number_list retval = { 0, 0 };
 
-     if (!curfield || !strchr("dh", curfield_type)) {
+     if (!curfield || !strchr("dhb", curfield_type)) {
 	  mpi_one_fprintf(stderr, "The D or H field must be loaded first.\n");
+	  return retval;
+     }
+     else if (curfield_type == 'h' && mdata->mu_inv != NULL) {
+	  mpi_one_fprintf(stderr, "B, not H, must be loaded if we have mu.\n");
 	  return retval;
      }
 
@@ -443,7 +352,7 @@ void compute_field_squared(void)
 {
      real comp_sum[6]; /* unused */
 
-     if (!curfield || !strchr("dhecv", curfield_type)) {
+     if (!curfield || !strchr("dhbecv", curfield_type)) {
           mpi_one_fprintf(stderr, "A vector field must be loaded first.\n");
      }
 
@@ -464,7 +373,7 @@ void compute_field_divergence(void)
      scalar *field2 = mdata->fft_data == mdata->fft_data2 ? field : (field == mdata->fft_data ? mdata->fft_data2 : mdata->fft_data);
      real scale;
 
-     if (!curfield || !strchr("dhec", curfield_type)) {
+     if (!curfield || !strchr("dhbec", curfield_type)) {
           mpi_one_fprintf(stderr, "A Bloch-periodic field must be loaded.\n");
           return;
      }
@@ -508,7 +417,7 @@ void compute_field_divergence(void)
 
 /**************************************************************************/
 
-/* Fix the phase of the current field (e/h/d) to a canonical value.
+/* Fix the phase of the current field (e/h/b/d) to a canonical value.
    Also changes the phase of the corresponding eigenvector by the
    same amount, so that future calculations will have a consistent
    phase.
@@ -534,7 +443,7 @@ void fix_field_phase(void)
      double theta;
      scalar phase;
 
-     if (!curfield || !strchr("dhecv", curfield_type)) {
+     if (!curfield || !strchr("dhbecv", curfield_type)) {
           mpi_one_fprintf(stderr, "The D/H/E field must be loaded first.\n");
           return;
      }
@@ -746,7 +655,7 @@ number get_epsilon_point(vector3 p)
 {
      symmetric_matrix eps_inv;
      eps_inv = interp_eps_inv(p);
-     return mean_epsilon_from_matrix(&eps_inv);
+     return mean_medium_from_matrix(&eps_inv);
 }
 
 cmatrix3x3 get_epsilon_inverse_tensor_point(vector3 p)
@@ -769,7 +678,7 @@ cmatrix3x3 get_epsilon_inverse_tensor_point(vector3 p)
 
 number get_energy_point(vector3 p)
 {
-     CHECK(curfield && strchr("DHR", curfield_type),
+     CHECK(curfield && strchr("DHBR", curfield_type),
 	   "compute-field-energy must be called before get-energy-point");
      return f_interp_val(p, mdata, (real *) curfield, 1, 0);
 }
@@ -779,7 +688,7 @@ cvector3 get_bloch_field_point(vector3 p)
      scalar_complex field[3];
      cvector3 F;
 
-     CHECK(curfield && strchr("dhecv", curfield_type),
+     CHECK(curfield && strchr("dhbecv", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
      field[0] = f_interp_cval(p, mdata, &curfield[0].re, 6);
      field[1] = f_interp_cval(p, mdata, &curfield[1].re, 6);
@@ -795,7 +704,7 @@ cvector3 get_field_point(vector3 p)
      scalar_complex field[3], phase;
      cvector3 F;
 
-     CHECK(curfield && strchr("dhecv", curfield_type),
+     CHECK(curfield && strchr("dhbecv", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
      field[0] = f_interp_cval(p, mdata, &curfield[0].re, 6);
      field[1] = f_interp_cval(p, mdata, &curfield[1].re, 6);
@@ -942,7 +851,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
      real *energy = (real *) curfield;
      real epsilon, energy_sum = 0.0;
 
-     if (!curfield || !strchr("DHR", curfield_type)) {
+     if (!curfield || !strchr("DHBR", curfield_type)) {
           mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
           return 0.0;
      }
@@ -954,7 +863,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
      nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
 
      for (i = 0; i < N; ++i) {
-	  epsilon = mean_epsilon_from_matrix(mdata->eps_inv +i);
+	  epsilon = mean_medium_from_matrix(mdata->eps_inv +i);
 	  if (epsilon >= eps_low && epsilon <= eps_high) {
 	       energy_sum += energy[i];
 #ifndef SCALAR_COMPLEX
@@ -1168,7 +1077,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
      if (strchr("Rv", curfield_type)) /* generic scalar/vector field */
 	  output_k[0] = output_k[1] = output_k[2] = 0.0; /* don't know k */
      
-     if (strchr("dhecv", curfield_type)) { /* outputting vector field */
+     if (strchr("dhbecv", curfield_type)) { /* outputting vector field */
 	  matrixio_id data_id[6] = {{-1,1},{-1,1},{-1,1},{-1,1},{-1,1},{-1,1}};
 	  int i;
 
@@ -1279,10 +1188,14 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  matrixio_write_data_attr(file_id, "Bloch wavevector",
 				   output_k, 1, attr_dims);
      }
-     else if (strchr("DHnR", curfield_type)) { /* scalar field */
+     else if (strchr("DHBnmR", curfield_type)) { /* scalar field */
 	  if (curfield_type == 'n') {
 	       sprintf(fname, "epsilon");
 	       sprintf(description, "dielectric function, epsilon");
+	  }
+	  else if (curfield_type == 'm') {
+	       sprintf(fname, "mu");
+	       sprintf(description, "permeability mu");
 	  }
 	  else {
 	       sprintf(fname, "%cpwr.k%02d.b%02d",
@@ -1294,7 +1207,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  }
 	  fname2 = fix_fname(fname, filename_prefix, mdata, 
 			     /* no parity suffix for epsilon: */
-			     curfield_type != 'n');
+			     curfield_type != 'n' && curfield_type != 'm');
 	  mpi_one_printf("Outputting %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
 	  free(fname2);
@@ -1378,7 +1291,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
      real *energy = (real *) curfield;
      real energy_sum = 0;
 
-     if (!curfield || !strchr("DHR", curfield_type)) {
+     if (!curfield || !strchr("DHBR", curfield_type)) {
           mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
           return 0.0;
      }
@@ -1528,14 +1441,14 @@ cnumber compute_field_integral(function f)
      cnumber integral = {0,0};
      vector3 kvector = {0,0,0};
 
-     if (!curfield || !strchr("dheDHRcv", curfield_type)) {
+     if (!curfield || !strchr("dhbeDHBRcv", curfield_type)) {
           mpi_one_fprintf(stderr, "The D or H energy/field must be loaded first.\n");
           return integral;
      }
      if (curfield_type != 'v')
 	  kvector = cur_kvector;
 
-     integrate_energy = strchr("DHR", curfield_type) != NULL;
+     integrate_energy = strchr("DHBR", curfield_type) != NULL;
 
      n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
      n_other = mdata->other_dims;
@@ -1632,7 +1545,7 @@ cnumber compute_field_integral(function f)
 	       real epsilon;
 	       vector3 p;
 
-	       epsilon = mean_epsilon_from_matrix(mdata->eps_inv + index);
+	       epsilon = mean_medium_from_matrix(mdata->eps_inv + index);
 	       
 	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
 	       if (integrate_energy) {
@@ -1751,7 +1664,7 @@ cnumber compute_field_integral(function f)
 
 number compute_energy_integral(function f)
 {
-     if (!curfield || !strchr("DHR", curfield_type)) {
+     if (!curfield || !strchr("DHBR", curfield_type)) {
           mpi_one_fprintf(stderr, "The D or H energy density must be loaded first.\n");
           return 0.0;
      }

@@ -17,7 +17,7 @@
 (define num-err 0)
 
 ; function to check if two results are sufficently close:
-(define-param check-tolerance 1e-4)
+(define-param check-tolerance 1e-3)
 (define (almost-equal? x y)
   (if (> (abs x) 1e-3)
       (let ((err (/ (abs (- x y)) (* 0.5 (+ (abs x) (abs y)))))
@@ -53,6 +53,12 @@
 	(map check-freqs-aux correct-freqs all-freqs (indices all-freqs))
 	(print "check-freqs: PASSED\n"))
       (error "check-freqs: wrong number of k-points")))
+
+; checks whether list X and list Y are almost equal
+(define (check-almost-equal X Y)
+  (if (fold-left and true (map almost-equal? X Y))
+      (print "check-almost-equal: PASSED\n")
+      (error "check-almost-equal: FAILED\n" X Y)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -154,29 +160,31 @@
  "**************************************************************************\n"
 )
 
-(set! geometry-lattice (make lattice (size 3 3 1)
-                         (basis1 (/ (sqrt 3) 2) 0.5)
-                         (basis2 (/ (sqrt 3) 2) -0.5)))
-(set! k-points (list (vector3 0 0.5 0))) ; K
-(set! geometry (list
-		(make cylinder (material (make dielectric (epsilon 12))) 
-		      (center 0 0) (radius 0.2) (height infinity))))
-(set! geometry (geometric-objects-lattice-duplicates geometry))
-(set! geometry (append geometry 
-                       (list (make cylinder (center 0 0 0) 
-                                   (radius 0.33) (height infinity)
-                                  (material (make dielectric (epsilon 12)))))))
-(set! grid-size (vector3 (* 16 5) (* 16 5) 1))
-(set! num-bands 2)
-(set! target-freq 0.35)
-(run-tm)
-
-(define ct-save check-tolerance)
-(set! check-tolerance (* ct-save 10))
-(check-freqs '((0.33627039929402 0.338821383601027)))
-(set! check-tolerance ct-save)
-
-(set! target-freq 0)
+(if (not force-mu?) ; targeted solver doesn't handle mu yet
+    (begin
+      (set! geometry-lattice (make lattice (size 3 3 1)
+                                   (basis1 (/ (sqrt 3) 2) 0.5)
+                                   (basis2 (/ (sqrt 3) 2) -0.5)))
+      (set! k-points (list (vector3 0 0.5 0))) ; K
+      (set! geometry (list
+                      (make cylinder (material (make dielectric (epsilon 12))) 
+                            (center 0 0) (radius 0.2) (height infinity))))
+      (set! geometry (geometric-objects-lattice-duplicates geometry))
+      (set! geometry (append geometry 
+                             (list (make cylinder (center 0 0 0) 
+                                         (radius 0.33) (height infinity)
+                                         (material (make dielectric (epsilon 12)))))))
+      (set! grid-size (vector3 (* 16 5) (* 16 5) 1))
+      (set! num-bands 2)
+      (set! target-freq 0.35)
+      (run-tm)
+      
+      (let ((ct-save check-tolerance))
+        (set! check-tolerance (* ct-save 10))
+        (check-freqs '((0.33627039929402 0.338821383601027)))
+        (set! check-tolerance ct-save))
+      
+      (set! target-freq 0)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -233,6 +241,18 @@
 (set! num-bands 3)
 (run)
 (check-freqs '((0.0 0.0 0.546634963647193) (0.259951207183097 0.259951258670471 0.444658075510584) (0.300692330235002 0.345673935773948 0.497692646240215) (0.362782432577119 0.362782474830613 0.502236936705387)))
+
+(print
+ "*******************************************************************************\n"
+ " Test case: group velocity in simple cubic lattice with anisotropic dielectric.\n"
+ "*******************************************************************************\n"
+)
+(set! k-points (list (vector3 0.12 0.34 0.41)))
+(run)
+(let ((v (compute-group-velocity-component (vector3 1 2 3))))
+  (check-almost-equal v (map (lambda (b) (compute-1-group-velocity-component (vector3 1 2 3) b))
+                             (arith-sequence 1 1 num-bands)))
+  (check-almost-equal v '(0.202671224992983 0.310447990695762 -0.0480795046912859)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

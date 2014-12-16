@@ -16,7 +16,7 @@
 bin_PROGRAMS = mpb@MPB_SUFFIX@
 
 SPECIFICATION_FILE = mpb.scm
-EXTRA_DIST = mpb.scm.in epsilon.c
+EXTRA_DIST = mpb.scm.in epsilon.c mu.c
 
 nodist_pkgdata_DATA = $(SPECIFICATION_FILE)
 
@@ -32,6 +32,7 @@ VERSION_STRING = "mpb@MPB_SUFFIX@ @VERSION@, Copyright (C) 1999-2012, MIT"
 
 check-local: mpb@MPB_SUFFIX@
 	./mpb@MPB_SUFFIX@ $(top_srcdir)/examples/check.ctl
+	./mpb@MPB_SUFFIX@ force-mu?=true $(top_srcdir)/examples/check.ctl
 
 dist_man_MANS = mpb-split.1 mpb.1
 
@@ -68,8 +69,12 @@ mpb@MPB_SUFFIX@_LDADD = $(MY_LIBS)
 mpb@MPB_SUFFIX@_LDFLAGS = $(MY_LDFLAGS)
 mpb@MPB_SUFFIX@_CPPFLAGS = $(MY_CPPFLAGS) $(MY_DEFS) $(CTL_DEFS)  $(CTL_H_CPPFLAG)
 
+if MAINTAINER_MODE
+
 mu.c: epsilon.c
-	perl -pe 's/epsilon/mu/g' $< > $@
+	$(PERL) -pe 's/epsilon/mu/g;s/eps_inv/mu_inv/g' $< > $@
+
+endif
 
 main.c: $(LIBCTL_DIR)/base/main.c
 	cp -f $(LIBCTL_DIR)/base/main.c $@

@@ -480,3 +480,155 @@ static int mean_epsilon_func(symmetric_matrix *meps,
      return 1;
 }
 
+/****************************************************************************/
+/* epsilon output functions (see also fields.c) */
+
+/* get the epsilon function, and compute some statistics */
+void get_epsilon(void)
+{
+     int i, N, last_dim, last_dim_stored, nx, nz, local_y_start;
+     real *epsilon;
+     real eps_mean = 0, eps_inv_mean = 0, eps_high = -1e20, eps_low = 1e20;
+     int fill_count = 0;
+
+     if (!mdata) {
+	  mpi_one_fprintf(stderr,
+			  "init-params must be called before get-epsilon!\n");
+	  return;
+     }
+
+     curfield = (scalar_complex *) mdata->fft_data;
+     epsilon = (real *) curfield;
+     curfield_band = 0;
+     curfield_type = epsilon_CURFIELD_TYPE;
+
+     /* get epsilon.  Recall that we actually have an inverse
+	dielectric tensor at each point; define an average index by
+	the inverse of the average eigenvalue of the 1/eps tensor.
+	i.e. 3/(trace 1/eps). */
+
+     N = mdata->fft_output_size;
+     last_dim = mdata->last_dim;
+     last_dim_stored =
+	  mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
+
+     for (i = 0; i < N; ++i) {
+          epsilon[i] = mean_medium_from_matrix(mdata->eps_inv + i);
+	  if (epsilon[i] < eps_low)
+	       eps_low = epsilon[i];
+	  if (epsilon[i] > eps_high)
+	       eps_high = epsilon[i];
+	  eps_mean += epsilon[i];
+	  eps_inv_mean += 1/epsilon[i];
+	  if (epsilon[i] > 1.0001)
+	       ++fill_count;
+#ifndef SCALAR_COMPLEX
+	  /* most points need to be counted twice, by rfftw output symmetry: */
+	  {
+	       int last_index;
+#  ifdef HAVE_MPI
+	       if (nz == 1) /* 2d calculation: 1st dim. is truncated one */
+		    last_index = i / nx + local_y_start;
+	       else
+		    last_index = i % last_dim_stored;
+#  else
+	       last_index = i % last_dim_stored;
+#  endif
+	       if (last_index != 0 && 2*last_index != last_dim) {
+		    eps_mean += epsilon[i];
+		    eps_inv_mean += 1/epsilon[i];
+		    if (epsilon[i] > 1.0001)
+			 ++fill_count;
+	       }
+	  }
+#endif
+     }
+
+     mpi_allreduce_1(&eps_mean, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce_1(&eps_inv_mean, real, SCALAR_MPI_TYPE,
+		     MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce_1(&eps_low, real, SCALAR_MPI_TYPE,
+		     MPI_MIN, MPI_COMM_WORLD);
+     mpi_allreduce_1(&eps_high, real, SCALAR_MPI_TYPE,
+		     MPI_MAX, MPI_COMM_WORLD);
+     mpi_allreduce_1(&fill_count, int, MPI_INT,
+                   MPI_SUM, MPI_COMM_WORLD);
+     N = mdata->nx * mdata->ny * mdata->nz;
+     eps_mean /= N;
+     eps_inv_mean = N/eps_inv_mean;
+
+     mpi_one_printf("epsilon: %g-%g, mean %g, harm. mean %g, "
+		    "%g%% > 1, %g%% \"fill\"\n",
+		    eps_low, eps_high, eps_mean, eps_inv_mean,
+		    (100.0 * fill_count) / N, 
+		    eps_high == eps_low ? 100.0 :
+		    100.0 * (eps_mean-eps_low) / (eps_high-eps_low));
+}
+
+/* get the specified component of the dielectric tensor,
+   or the inverse tensor if inv != 0 */
+void get_epsilon_tensor(int c1, int c2, int imag, int inv)
+{
+     int i, N;
+     real *epsilon;
+     int conj = 0, offset = 0;
+
+     curfield_type = '-'; /* only used internally, for now */
+     epsilon = (real *) mdata->fft_data;
+     N = mdata->fft_output_size;
+
+     switch (c1 * 3 + c2) {
+	 case 0:
+	      offset = offsetof(symmetric_matrix, m00);
+	      break;
+	 case 1:
+	      offset = offsetof(symmetric_matrix, m01);
+	      break;
+	 case 2:
+	      offset = offsetof(symmetric_matrix, m02);
+	      break;
+	 case 3:
+	      offset = offsetof(symmetric_matrix, m01); /* = conj(m10) */
+	      conj = imag;
+	      break;
+	 case 4:
+	      offset = offsetof(symmetric_matrix, m11);
+	      break;
+	 case 5:
+	      offset = offsetof(symmetric_matrix, m12);
+	      break;
+	 case 6:
+	      offset = offsetof(symmetric_matrix, m02); /* = conj(m20) */
+	      conj = imag;
+	      break;
+	 case 7:
+	      offset = offsetof(symmetric_matrix, m12); /* = conj(m21) */
+	      conj = imag;
+	      break;
+	 case 8:
+	      offset = offsetof(symmetric_matrix, m22);
+	      break;
+     }
+
+#ifdef WITH_HERMITIAN_EPSILON
+     if (c1 != c2 && imag)
+	  offset += offsetof(scalar_complex, im);
+#endif
+
+     for (i = 0; i < N; ++i) {
+	  if (inv) {
+	       epsilon[i] = 
+		    *((real *) (((char *) &mdata->eps_inv[i]) + offset));
+	  }
+	  else {
+	       symmetric_matrix eps;
+	       maxwell_sym_matrix_invert(&eps, &mdata->eps_inv[i]);
+	       epsilon[i] = *((real *) (((char *) &eps) + offset));
+	  }
+	  if (conj)
+	       epsilon[i] = -epsilon[i];
+     }     
+}
+

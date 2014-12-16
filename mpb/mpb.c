@@ -487,6 +487,11 @@ void init_params(integer p, boolean reset_fields)
      evectmatrix_flops = eigensolver_flops; /* reset, if changed */
 }
 
+boolean using_mup(void)
+{
+    return mdata && mdata->mu_inv != NULL;
+}
+
 /**************************************************************************/
 
 /* When we are solving for a few bands at a time, we solve for the
@@ -846,14 +851,9 @@ number_list compute_group_velocity_component(vector3 d)
 	       evectmatrix_resize(&W[0], num_bands - ib, 0);
 	       evectmatrix_resize(&Hblock, num_bands - ib, 0);
 	  }
-	  if (Hblock.data != H.data) {  /* initialize fields of block from H */
-	       int in, ip;
-	       for (in = 0; in < Hblock.n; ++in)
-		    for (ip = 0; ip < Hblock.p; ++ip)
-			 Hblock.data[in * Hblock.p + ip] =
-			      H.data[in * H.p + ip + ib];
-	  }
-
+          maxwell_compute_H_from_B(mdata, H, Hblock,
+                                   (scalar_complex *) mdata->fft_data,
+                                   ib, 0, Hblock.p);
 	  maxwell_ucross_op(Hblock, W[0], mdata, u);
 	  evectmatrix_XtY_diag_real(Hblock, W[0], gv_scratch,
 				    gv_scratch + group_v.num_items);
@@ -917,13 +917,9 @@ number compute_1_group_velocity_component(vector3 d, integer b)
      CHECK(nwork_alloc > 1, "eigensolver-nwork is too small");
      evectmatrix_resize(&W[1], 1, 0);
 
-     {  /* initialize fields of block from H */
-	  int in;
-	  scalar *data = W[1].data;
-	  for (in = 0; in < W[1].n; ++in)
-	       data[in] = H.data[in * H.p + ib];
-     }
-
+     maxwell_compute_H_from_B(mdata, H, W[1],
+                              (scalar_complex *) mdata->fft_data,
+                              ib, 0, 1);
      maxwell_ucross_op(W[1], W[0], mdata, u);
      evectmatrix_XtY_diag_real(W[1], W[0], &group_v, &scratch);
 
