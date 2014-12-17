@@ -11,7 +11,7 @@ if MAINTAINER_MODE
 
 PRELUDE = "/* This file was automatically generated --- DO NOT EDIT */"
 SPHERE_QUAD = $(top_builddir)/src/util/sphere_quad
-sphere-quad.h: $(SPHERE_QUAD)$(EXEEXT)
+sphere-quad.h: sphere_quad$(EXEEXT)
 	(echo $(PRELUDE); echo; $(SPHERE_QUAD)) > $@
 
 endif
