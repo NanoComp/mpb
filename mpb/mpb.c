@@ -186,6 +186,27 @@ number mpi_max(number num)
 }
 
 /**************************************************************************/
+/* expose some build info to guile */
+
+boolean has_hermitian_epsp()
+{
+#if WITH_HERMITIAN_EPSILON
+    return 1;
+#else
+    return 0;
+#endif
+}
+
+boolean has_inversion_symp()
+{
+#if SCALAR_COMPLEX
+    return 0;
+#else
+    return 1;
+#endif
+}
+
+/**************************************************************************/
 
 /* a couple of utilities to convert libctl data types to the data
    types of the eigensolver & maxwell routines: */
