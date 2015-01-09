@@ -1237,9 +1237,9 @@ void maxwell_muinv_operator(evectmatrix Xin, evectmatrix Xout, void *data,
     cdata = (scalar_complex *) d->fft_data;
 
      /* compute the operator, num_fft_bands at a time: */
-     for (cur_band_start = 0; cur_band_start < Xin.p; 
+     for (cur_band_start = 0; cur_band_start < Xout.p; 
 	  cur_band_start += d->num_fft_bands) {
-	  int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
+	  int cur_num_bands = MIN2(d->num_fft_bands, Xout.p - cur_band_start);
           maxwell_compute_H_from_B(d, Xin, Xout, cdata,
                                    cur_band_start, cur_band_start,
                                    cur_num_bands);

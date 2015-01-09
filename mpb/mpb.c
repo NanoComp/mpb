@@ -234,7 +234,7 @@ int nwork_alloc = 0;
 
 maxwell_data *mdata = NULL;
 maxwell_target_data *mtdata = NULL;
-evectmatrix H, W[MAX_NWORK], Hblock;
+evectmatrix H, W[MAX_NWORK], Hblock, muinvH;
 
 vector3 cur_kvector;
 scalar_complex *curfield = NULL;
@@ -441,6 +441,8 @@ void init_params(integer p, boolean reset_fields)
 		    destroy_evectmatrix(W[i]);
 	       if (Hblock.data != H.data)
 		    destroy_evectmatrix(Hblock);
+               if (muinvH.data != H.data)
+                   destroy_evectmatrix(muinvH);                   
 	  }
 	  destroy_maxwell_target_data(mtdata); mtdata = NULL;
 	  destroy_maxwell_data(mdata); mdata = NULL;
@@ -482,6 +484,13 @@ void init_params(integer p, boolean reset_fields)
 					   local_N, N_start, alloc_N);
 	  else
 	       Hblock = H;
+          if (using_mup() && block_size < num_bands) {
+              muinvH = create_evectmatrix(nx * ny * nz, 2, num_bands,
+                                          local_N, N_start, alloc_N);
+          }
+          else {
+              muinvH = H;
+          }
      }
 
      mpi_one_printf("%d k-points:\n", k_points.num_items);
@@ -522,7 +531,8 @@ boolean using_mup(void)
 
 typedef struct {
      evectmatrix Y;  /* the vectors to orthogonalize against; Y must
-			itself be normalized (Yt Y = 1) */
+			itself be normalized (Yt B Y = 1) */
+     evectmatrix BY;  /* B * Y */
      int p;  /* the number of columns of Y to orthogonalize against */
      scalar *S;  /* a matrix for storing the dot products; should have
 		    at least p * X.p elements (see below for X) */
@@ -533,19 +543,23 @@ static void deflation_constraint(evectmatrix X, void *data)
 {
      deflation_data *d = (deflation_data *) data;
 
-     CHECK(X.n == d->Y.n && d->Y.p >= d->p, "invalid dimensions");
+     CHECK(X.n == d->BY.n && d->BY.p >= d->p && d->Y.p >= d->p,
+           "invalid dimensions");
+
+     /* compute (1 - Y (BY)t) X = (1 - Y Yt B) X
+          = projection of X so that Yt B X = 0 */
 
      /* (Sigh...call the BLAS functions directly since we are not
-	using all the columns of Y...evectmatrix is not set up for
+	using all the columns of BY...evectmatrix is not set up for
 	this case.) */
 
-     /* compute S = Xt Y (i.e. all the dot products): */
+     /* compute S = Xt BY (i.e. all the dot products): */
      blasglue_gemm('C', 'N', X.p, d->p, X.n,
-		   1.0, X.data, X.p, d->Y.data, d->Y.p, 0.0, d->S2, d->p);
+		   1.0, X.data, X.p, d->BY.data, d->BY.p, 0.0, d->S2, d->p);
      mpi_allreduce(d->S2, d->S, d->p * X.p * SCALAR_NUMVALS,
 		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
 
-     /* compute X = X - Y*St = (1 - Y Yt) X */
+     /* compute X = X - Y*St = (1 - BY Yt B) X */
      blasglue_gemm('N', 'C', X.n, X.p, d->p,
 		   -1.0, d->Y.data, d->Y.p, d->S, d->p,
 		   1.0, X.data, X.p);
@@ -625,8 +639,9 @@ void solve_kpoint(vector3 kvector)
 	  ib0 = 0; /* solve for all bands */
 
      /* Set up deflation data: */
-     if (H.data != Hblock.data) {
-	  deflation.Y = H;
+     if (muinvH.data != Hblock.data) {
+          deflation.Y = H;
+          deflation.BY = muinvH.data != H.data ? muinvH : H;
 	  deflation.p = 0;
 	  CHK_MALLOC(deflation.S, scalar, H.p * Hblock.p);
 	  CHK_MALLOC(deflation.S2, scalar, H.p * Hblock.p);
@@ -665,10 +680,16 @@ void solve_kpoint(vector3 kvector)
 			 Hblock.data[in * Hblock.p + ip] =
 			      H.data[in * H.p + ip + (ib-ib0)];
 	       deflation.p = ib-ib0;
-	       if (deflation.p > 0)
+	       if (deflation.p > 0) {
+                    if (deflation.BY.data != H.data) {
+                        evectmatrix_resize(&deflation.BY, deflation.p, 0);
+                        maxwell_muinv_operator(H, deflation.BY, (void *) mdata,
+                                               1, deflation.BY);
+                    }
 		    constraints = evect_add_constraint(constraints,
 						       deflation_constraint,
 						       &deflation);
+               }
 	  }
 
 	  if (mtdata) {  /* solving for bands near a target frequency */

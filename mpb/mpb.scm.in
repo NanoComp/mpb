@@ -172,6 +172,7 @@
 ; (randomize-fields) initializes the fields to random values; should
 ; only be called after init-params.
 (define-external-function randomize-fields false false no-return-value)
+(define-param randomize-fields? false) ; whether to always randomize
 
 ; (solve-kpoint kpoint) solves for the specified bands at the given k point.
 ; Requires that (init-params) has been called, and does not re-read the
@@ -588,6 +589,9 @@
 ; every k point.  These are typically used to output the bands.
 
 (define (run-parity p reset-fields . band-functions)
+ (if (and randomize-fields?
+          (not (member randomize-fields band-functions)))
+     (set! band-functions (cons randomize-fields band-functions)))
  (set! total-run-time (+ total-run-time
   (begin-time "total elapsed time for run: "
    (set! all-freqs '())
