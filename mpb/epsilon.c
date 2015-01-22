@@ -514,7 +514,10 @@ void get_epsilon(void)
      nx = mdata->nx; nz = mdata->nz; local_y_start = mdata->local_y_start;
 
      for (i = 0; i < N; ++i) {
-          epsilon[i] = mean_medium_from_matrix(mdata->eps_inv + i);
+          if (mdata->eps_inv == NULL)
+              epsilon[i] = 1.0;
+          else
+              epsilon[i] = mean_medium_from_matrix(mdata->eps_inv + i);
 	  if (epsilon[i] < eps_low)
 	       eps_low = epsilon[i];
 	  if (epsilon[i] > eps_high)
