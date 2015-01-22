@@ -132,7 +132,7 @@ void maxwell_zparity_constraint(evectmatrix X, void *data)
 double *maxwell_zparity(evectmatrix X, maxwell_data *d)
 {
      int i, j, b, nxy, nz;
-     double *zparity, *zp_scratch;
+     double *zparity, *zp_scratch, *norm_scratch;
 
      CHECK(d, "null maxwell data pointer!");
      CHECK(X.c == 2, "fields don't have 2 components!");
@@ -141,6 +141,9 @@ double *maxwell_zparity(evectmatrix X, maxwell_data *d)
      CHK_MALLOC(zp_scratch, double, X.p);
      for (b = 0; b < X.p; ++b)
 	  zp_scratch[b] = 0.0;
+     CHK_MALLOC(norm_scratch, double, X.p);
+     for (b = 0; b < X.p; ++b)
+	  norm_scratch[b] = 0.0;
 
      if (d->nz > 1) {
 	  nxy = d->other_dims;
@@ -166,12 +169,22 @@ double *maxwell_zparity(evectmatrix X, maxwell_data *d)
 			  SCALAR_IM(u) * SCALAR_IM(u2) -
 			  SCALAR_RE(v) * SCALAR_RE(v2) -
 			  SCALAR_IM(v) * SCALAR_IM(v2));
+		    norm_scratch[b] += (ij == ij2 ? 1.0 : 2.0) *
+                         (SCALAR_RE(u) * SCALAR_RE(u) +
+                          SCALAR_IM(u) * SCALAR_IM(u) +
+                          SCALAR_RE(v) * SCALAR_RE(v) +
+                          SCALAR_IM(v) * SCALAR_IM(v));
 	       }
 	  }
 
      mpi_allreduce(zp_scratch, zparity, X.p,
 		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(norm_scratch, zp_scratch, X.p,
+		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     
+     for (b = 0; b < X.p; ++b)
+         zparity[b] /= zp_scratch[b];
      free(zp_scratch);
+     free(norm_scratch);
      
      return zparity;
 }
@@ -241,7 +254,7 @@ void maxwell_yparity_constraint(evectmatrix X, void *data)
 double *maxwell_yparity(evectmatrix X, maxwell_data *d)
 {
      int i, j, k, b, nx, ny, nz;
-     double *yparity, *yp_scratch;
+     double *yparity, *yp_scratch, *norm_scratch;
 
      CHECK(d, "null maxwell data pointer!");
      CHECK(X.c == 2, "fields don't have 2 components!");
@@ -250,6 +263,9 @@ double *maxwell_yparity(evectmatrix X, maxwell_data *d)
      CHK_MALLOC(yp_scratch, double, X.p);
      for (b = 0; b < X.p; ++b)
 	  yp_scratch[b] = 0.0;
+     CHK_MALLOC(norm_scratch, double, X.p);
+     for (b = 0; b < X.p; ++b)
+	  norm_scratch[b] = 0.0;
 
      nx = d->local_nx;
      ny = d->ny;
@@ -273,6 +289,11 @@ double *maxwell_yparity(evectmatrix X, maxwell_data *d)
 			       SCALAR_IM(v) * SCALAR_IM(v2) -
 			       SCALAR_RE(u) * SCALAR_RE(u2) -
 			       SCALAR_IM(u) * SCALAR_IM(u2));
+			 norm_scratch[b] += (ijk == ijk2 ? 1.0 : 2.0) *
+			      (SCALAR_RE(v) * SCALAR_RE(v) +
+			       SCALAR_IM(v) * SCALAR_IM(v) +
+			       SCALAR_RE(u) * SCALAR_RE(u) +
+			       SCALAR_IM(u) * SCALAR_IM(u));
 		    }
 	       }
 	  }
@@ -280,7 +301,12 @@ double *maxwell_yparity(evectmatrix X, maxwell_data *d)
 
      mpi_allreduce(yp_scratch, yparity, X.p,
 		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce(norm_scratch, yp_scratch, X.p,
+		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     
+     for (b = 0; b < X.p; ++b)
+         yparity[b] /= yp_scratch[b];
      free(yp_scratch);
+     free(norm_scratch);
      
      return yparity;
 }
