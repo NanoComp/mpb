@@ -5,6 +5,9 @@
 #undef SCALAR_LONG_DOUBLE_PREC
 #undef SCALAR_SINGLE_PREC
 #undef WITH_HERMITIAN_EPSILON
+#undef MPB_VERSION_MAJOR
+#undef MPB_VERSION_MINOR
+#undef MPB_VERSION_PATCH
 
 #define MPB_REAL 1 /* avoid C++ conflict with MPB's "real" type */
 #include "mpb/eigensolver.h"
