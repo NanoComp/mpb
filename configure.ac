@@ -409,7 +409,7 @@ AC_CHECK_HEADER(ctl.h, [CTL_H_CPPFLAG=" "], [
      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ctl.h>]],[])], [CTL_H_CPPFLAG=-I$ctl_h_path; break])
   done
   AC_MSG_RESULT([$CTL_H_CPPFLAG])
-  CPPFLAGS=$save_CPPFLAGS])
+  CPPFLAGS="$save_CPPFLAGS $CTL_H_CPPFLAG"])
 if test "x$CTL_H_CPPFLAG" = "x"; then
   AC_MSG_ERROR([Couldn't find the ctl.h header file for libctl.])
 fi
