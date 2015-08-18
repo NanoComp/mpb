@@ -795,10 +795,9 @@ void solve_kpoint(vector3 kvector)
 	  free(deflation.S);
      }
 
-     if (num_write_output_vars > 1) {
+     if (num_write_output_vars > 0) {
 	  /* clean up from prev. call */
-	  free(freqs.items);
-	  free(parity);
+         destroy_output_vars();
      }
 
      CHK_MALLOC(parity, char, strlen(parity_string(mdata)) + 1);
