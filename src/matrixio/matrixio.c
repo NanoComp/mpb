@@ -343,7 +343,7 @@ static matrixio_id matrixio_create_(const char *fname, int parallel)
      
 #  if defined(HAVE_MPI) && defined(HAVE_H5PSET_FAPL_MPIO)
      if (parallel)
-	  CHECK(H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL)
+	  CHECK(H5Pset_fapl_mpio(access_props, mpb_comm, MPI_INFO_NULL)
 		>= 0, "error initializing MPI file access");
 #  endif
 
@@ -397,7 +397,7 @@ static matrixio_id matrixio_open_(const char *fname, int read_only, int parallel
      
 #  if defined(HAVE_MPI) && defined(HAVE_H5PSET_FAPL_MPIO)
      if (parallel)
-	  H5Pset_fapl_mpio(access_props, MPI_COMM_WORLD, MPI_INFO_NULL);
+	  H5Pset_fapl_mpio(access_props, mpb_comm, MPI_INFO_NULL);
 #  endif
 
      new_fname = add_fname_suffix(fname);
@@ -466,10 +466,10 @@ matrixio_id matrixio_create_sub(matrixio_id id,
 	  
 	  H5Fflush(sub_id.id, H5F_SCOPE_GLOBAL);
 
-	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(MPI_COMM_WORLD));
+	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(mpb_comm));
      }
      else {
-	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(MPI_COMM_WORLD));
+	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(mpb_comm));
 
 	  sub_id.id = H5Gopen(id.id, name);
      }
@@ -549,7 +549,7 @@ matrixio_id matrixio_create_dataset(matrixio_id id,
 	       matrixio_dataset_delete(id, name);
 	       H5Fflush(id.id, H5F_SCOPE_GLOBAL);
 	  }
-	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(MPI_COMM_WORLD));
+	  IF_EXCLUSIVE(0,if (id.parallel) MPI_Barrier(mpb_comm));
 #  endif
      }
 

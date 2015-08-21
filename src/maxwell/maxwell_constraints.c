@@ -178,9 +178,9 @@ double *maxwell_zparity(evectmatrix X, maxwell_data *d)
 	  }
 
      mpi_allreduce(zp_scratch, zparity, X.p,
-		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		   double, MPI_DOUBLE, MPI_SUM, mpb_comm);
      mpi_allreduce(norm_scratch, zp_scratch, X.p,
-		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     
+		   double, MPI_DOUBLE, MPI_SUM, mpb_comm);     
      for (b = 0; b < X.p; ++b)
          zparity[b] /= zp_scratch[b];
      free(zp_scratch);
@@ -300,9 +300,9 @@ double *maxwell_yparity(evectmatrix X, maxwell_data *d)
      }
 
      mpi_allreduce(yp_scratch, yparity, X.p,
-		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+		   double, MPI_DOUBLE, MPI_SUM, mpb_comm);
      mpi_allreduce(norm_scratch, yp_scratch, X.p,
-		   double, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);     
+		   double, MPI_DOUBLE, MPI_SUM, mpb_comm);     
      for (b = 0; b < X.p; ++b)
          yparity[b] /= yp_scratch[b];
      free(yp_scratch);

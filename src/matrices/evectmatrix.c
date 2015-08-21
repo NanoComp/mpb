@@ -163,7 +163,7 @@ void evectmatrix_XtX(sqmatrix U, evectmatrix X, sqmatrix S)
      }
 
      mpi_allreduce(S.data, U.data, U.p * U.p * SCALAR_NUMVALS,
-		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+		   real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 }
 
 /* Dot p selected columns of X with those in Y, starting at ix and iy.
@@ -180,7 +180,7 @@ void evectmatrix_XtY_slice(sqmatrix U, evectmatrix X, evectmatrix Y,
      evectmatrix_flops += X.N * X.c * p * (2*p);
 
      mpi_allreduce(S.data, U.data, U.p * U.p * SCALAR_NUMVALS,
-                   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+                   real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 }
 
 /* compute U = adjoint(X) * Y, with S a scratch matrix. */
@@ -212,7 +212,7 @@ void evectmatrixXtY_sub(sqmatrix U, int Uoffset, evectmatrix X, evectmatrix Y,
      for (i = 0; i < Y.p; ++i) {
 	  mpi_allreduce(S.data + i*Y.p, U.data + Uoffset + i*U.p, 
 			Y.p * SCALAR_NUMVALS,
-			real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+			real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
      }
 }
 
@@ -224,7 +224,7 @@ void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag,
      matrix_XtY_diag(X.data, Y.data, X.n, X.p, scratch_diag);
      evectmatrix_flops += X.N * X.c * X.p * 2;
      mpi_allreduce(scratch_diag, diag, X.p * SCALAR_NUMVALS, 
-		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+		   real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 }
 
 /* As above, but only compute real parts of diagonal. */
@@ -234,7 +234,7 @@ void evectmatrix_XtY_diag_real(evectmatrix X, evectmatrix Y, real *diag,
      matrix_XtY_diag_real(X.data, Y.data, X.n, X.p, scratch_diag);
      evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
      mpi_allreduce(scratch_diag, diag, X.p,
-		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+		   real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 }
 
 /* As above, but compute only the diagonal elements of XtX. */
@@ -243,7 +243,7 @@ void evectmatrix_XtX_diag_real(evectmatrix X, real *diag, real *scratch_diag)
      matrix_XtX_diag_real(X.data, X.n, X.p, scratch_diag);
      evectmatrix_flops += X.N * X.c * X.p * (2*X.p);
      mpi_allreduce(scratch_diag, diag, X.p,
-		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+		   real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 }
 
 /* compute trace(adjoint(X) * Y) */
@@ -257,7 +257,7 @@ scalar evectmatrix_traceXtY(evectmatrix X, evectmatrix Y)
      evectmatrix_flops += X.N * X.c * X.p * (2*X.p) + X.p;
 
      mpi_allreduce(&trace_scratch, &trace, SCALAR_NUMVALS,
-		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+		   real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 
      return trace;
 }

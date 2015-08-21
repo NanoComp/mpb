@@ -118,13 +118,13 @@ elastic_data *create_elastic_data(int nx, int ny, int nz,
      CHECK(rank > 1, "rank < 2 MPI computations are not supported");
 
 #    ifdef SCALAR_COMPLEX
-     d->iplan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
+     d->iplan = fftwnd_mpi_create_plan(mpb_comm, rank, n,
 				       FFTW_FORWARD,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
      {
 	  int nt[3]; /* transposed dimensions for reverse FFT */
 	  nt[0] = n[1]; nt[1] = n[0]; nt[2] = n[2]; 
-	  d->plan = fftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, nt,
+	  d->plan = fftwnd_mpi_create_plan(mpb_comm, rank, nt,
 					   FFTW_BACKWARD,
 					   FFTW_ESTIMATE | FFTW_IN_PLACE);
      }
@@ -139,7 +139,7 @@ elastic_data *create_elastic_data(int nx, int ny, int nz,
 
      CHECK(rank > 1, "rank < 2 MPI computations are not supported");
 
-     d->iplan = rfftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
+     d->iplan = rfftwnd_mpi_create_plan(mpb_comm, rank, n,
 					FFTW_REAL_TO_COMPLEX,
 					FFTW_ESTIMATE | FFTW_IN_PLACE);
 
@@ -147,7 +147,7 @@ elastic_data *create_elastic_data(int nx, int ny, int nz,
 	the reverse transform here--we always pass the dimensions of the
 	original real array, and rfftwnd_mpi assumes that if one
 	transform is transposed, then the other is as well. */
-     d->plan = rfftwnd_mpi_create_plan(MPI_COMM_WORLD, rank, n,
+     d->plan = rfftwnd_mpi_create_plan(mpb_comm, rank, n,
 				       FFTW_COMPLEX_TO_REAL,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
 

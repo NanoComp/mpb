@@ -291,9 +291,9 @@ double compute_field_energy_internal(real comp_sum[6])
      }
 
      mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
+		     MPI_SUM, mpb_comm);
      mpi_allreduce(comp_sum2, comp_sum, 6, real, SCALAR_MPI_TYPE,
-                   MPI_SUM, MPI_COMM_WORLD);
+                   MPI_SUM, mpb_comm);
 
      /* remember that we now have energy density; denoted by capital D/H */
      curfield_type = toupper(curfield_type);
@@ -460,7 +460,7 @@ void fix_field_phase(void)
 	  sq_sum2[1] += 2*a*b;
      }
      mpi_allreduce(sq_sum2, sq_sum, 2, real, SCALAR_MPI_TYPE,
-                   MPI_SUM, MPI_COMM_WORLD);
+                   MPI_SUM, mpb_comm);
      /* compute the phase = exp(i*theta) maximizing the real part of
 	the sum of the squares.  i.e., maximize:
 	    cos(2*theta)*sq_sum[0] - sin(2*theta)*sq_sum[1] */
@@ -495,7 +495,7 @@ void fix_field_phase(void)
 	       maxabs = r;
      }
      mpi_allreduce_1(&maxabs, real, SCALAR_MPI_TYPE,
-		     MPI_MAX, MPI_COMM_WORLD);
+		     MPI_MAX, mpb_comm);
      for (i = N - 1; i >= 0; --i) {
 #ifdef SCALAR_COMPLEX
 	  real r = curfield[i].re * phase.re - curfield[i].im * phase.im;
@@ -516,7 +516,7 @@ void fix_field_phase(void)
 	  struct twoint_struct {int i; int s;} x;
 	  x.i = maxabs_index; x.s = maxabs_sign;
 	  mpi_allreduce_1(&x, struct twoint_struct, MPI_2INT,
-			  MPI_MAXLOC, MPI_COMM_WORLD);
+			  MPI_MAXLOC, mpb_comm);
 	  maxabs_index = x.i; maxabs_sign = x.s;
      }
      ASSIGN_SCALAR(phase,
@@ -885,7 +885,7 @@ number compute_energy_in_dielectric(number eps_low, number eps_high)
 	  }
      }
      mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
+		     MPI_SUM, mpb_comm);
      energy_sum *= Vol / H.N;
      return energy_sum;
 }
@@ -1421,7 +1421,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
      }
 
      mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
+		     MPI_SUM, mpb_comm);
      energy_sum *= Vol / H.N;
      return energy_sum;
 }
@@ -1657,7 +1657,7 @@ cnumber compute_field_integral(function f)
      {
 	  cnumber integral_sum;
 	  mpi_allreduce(&integral, &integral_sum, 2, number, 
-			MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+			MPI_DOUBLE, MPI_SUM, mpb_comm);
 	  return integral_sum;
      }
 }

@@ -809,9 +809,9 @@ void set_maxwell_dielectric(maxwell_data *md,
      }}  /* end of loop body */
 
      mpi_allreduce_1(&eps_inv_total, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
+		     MPI_SUM, mpb_comm);
      n1 = md->fft_output_size;
-     mpi_allreduce_1(&n1, int, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+     mpi_allreduce_1(&n1, int, MPI_INT, MPI_SUM, mpb_comm);
      md->eps_inv_mean = eps_inv_total / (3 * n1);
 }
 

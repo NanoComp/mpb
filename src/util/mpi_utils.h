@@ -20,6 +20,19 @@
 
 #include <stdio.h>
 
+#ifdef HAVE_MPI
+#  include <mpi.h>
+extern MPI_Comm mpb_comm;
+#else
+extern int mpb_comm;
+#endif
+
+extern void end_divide_parallel(void);
+extern int divide_parallel_processes(int numgroups);
+extern void begin_global_communications(void);
+extern void end_global_communications(void);
+extern int my_global_rank();
+
 extern void mpi_die(const char *template, ...)
 #ifdef __GNUC__
      __attribute__ ((format (printf, 1, 2)))

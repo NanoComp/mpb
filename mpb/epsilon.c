@@ -549,15 +549,15 @@ void get_epsilon(void)
      }
 
      mpi_allreduce_1(&eps_mean, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
+		     MPI_SUM, mpb_comm);
      mpi_allreduce_1(&eps_inv_mean, real, SCALAR_MPI_TYPE,
-		     MPI_SUM, MPI_COMM_WORLD);
+		     MPI_SUM, mpb_comm);
      mpi_allreduce_1(&eps_low, real, SCALAR_MPI_TYPE,
-		     MPI_MIN, MPI_COMM_WORLD);
+		     MPI_MIN, mpb_comm);
      mpi_allreduce_1(&eps_high, real, SCALAR_MPI_TYPE,
-		     MPI_MAX, MPI_COMM_WORLD);
+		     MPI_MAX, mpb_comm);
      mpi_allreduce_1(&fill_count, int, MPI_INT,
-                   MPI_SUM, MPI_COMM_WORLD);
+                   MPI_SUM, mpb_comm);
      N = mdata->nx * mdata->ny * mdata->nz;
      eps_mean /= N;
      eps_inv_mean = N/eps_inv_mean;

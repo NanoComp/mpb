@@ -769,7 +769,7 @@ static void synchronize_material_grid(material_grid *g)
      double *grid;
      int n = ((int) g->size.x) * ((int) g->size.y) * ((int) g->size.z);
      grid = material_grid_array(g);
-     MPI_Bcast(grid, n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+     MPI_Bcast(grid, n, MPI_DOUBLE, 0, mpb_comm);
      material_grid_array_release(g);
 }
 
@@ -1053,11 +1053,11 @@ static double match_eps_func(int n, const double *u, double *grad, void *data)
      }
      if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
 	  mpi_allreduce(work, grad, n, double, MPI_DOUBLE, 
-			MPI_SUM, MPI_COMM_WORLD);
+			MPI_SUM, mpb_comm);
      {
 	  double valtmp = val * scaleby;
 	  mpi_allreduce(&valtmp, &val, 1, double, MPI_DOUBLE,
-			MPI_SUM, MPI_COMM_WORLD);
+			MPI_SUM, mpb_comm);
      }
      mpi_one_printf("match-epsilon-file:, %d, %g\n", d->iter, sqrt(val));
      return val;

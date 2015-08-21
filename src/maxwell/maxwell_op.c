@@ -193,14 +193,14 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 					 FFTW_MPI_DEFAULT_BLOCK,
 					 FFTW_MPI_DEFAULT_BLOCK,
 					 carray_in, carray_out,
-					 MPI_COMM_WORLD, FFTW_BACKWARD,
+					 mpb_comm, FFTW_BACKWARD,
 					 FFTW_ESTIMATE
 					 | FFTW_MPI_TRANSPOSED_IN);
 	  iplan = FFTW(mpi_plan_many_dft)(3, np, howmany, 
 					  FFTW_MPI_DEFAULT_BLOCK,
 					  FFTW_MPI_DEFAULT_BLOCK,
 					  carray_in, carray_out,
-					  MPI_COMM_WORLD, FFTW_FORWARD,
+					  mpb_comm, FFTW_FORWARD,
 					  FFTW_ESTIMATE
 					  | FFTW_MPI_TRANSPOSED_OUT);
 #    else /* !HAVE_MPI */
@@ -222,13 +222,13 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 					     FFTW_MPI_DEFAULT_BLOCK,
 					     FFTW_MPI_DEFAULT_BLOCK,
 					     carray_in, rarray_out,
-					     MPI_COMM_WORLD, FFTW_ESTIMATE
+					     mpb_comm, FFTW_ESTIMATE
 					     | FFTW_MPI_TRANSPOSED_IN);
 	  iplan = FFTW(mpi_plan_many_dft_r2c)(rnk, np, howmany, 
 					      FFTW_MPI_DEFAULT_BLOCK,
 					      FFTW_MPI_DEFAULT_BLOCK,
 					      rarray_in, carray_out,
-					      MPI_COMM_WORLD, FFTW_ESTIMATE
+					      mpb_comm, FFTW_ESTIMATE
 					      | FFTW_MPI_TRANSPOSED_OUT);
 #    else /* !HAVE_MPI */
 	       plan = FFTW(plan_many_dft_c2r)(rnk, n, howmany,

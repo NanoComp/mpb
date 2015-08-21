@@ -762,9 +762,9 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       /* Sum the times over the processors so that all the
 		  processors compare the same, average times. */
 	       mpi_allreduce_1(&t_exact,
-			       real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+			       real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 	       mpi_allreduce_1(&t_approx, 
-			       real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+			       real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 
 	       if (!(flags & EIGS_FORCE_EXACT_LINMIN) &&
 		   linmin_improvement > 0 &&

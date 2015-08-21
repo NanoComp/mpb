@@ -218,9 +218,10 @@ SCM sqmatrix_mult(SCM Ao, SCM Bo)
 {
     sqmatrix *A = assert_sqmatrix_smob(Ao);
     sqmatrix *B = assert_sqmatrix_smob(Bo);
+    sqmatrix C;
     SCM obj;
     CHECK(A->p == B->p, "only equal-size matrices can be multiplied");
-    sqmatrix C = create_sqmatrix(A->p);
+    C = create_sqmatrix(A->p);
     sqmatrix_AeBC(C, *A, 0, *B, 0);
     obj = sqmatrix2scm(C);
     destroy_sqmatrix(C);

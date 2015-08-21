@@ -615,7 +615,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
      {
 	  cnumber integral_sum;
 	  mpi_allreduce(&integral, &integral_sum, 2, number, 
-			MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+			MPI_DOUBLE, MPI_SUM, mpb_comm);
 	  return integral_sum;
      }
 }

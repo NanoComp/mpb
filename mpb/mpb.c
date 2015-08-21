@@ -167,21 +167,21 @@ boolean using_mpip(void)
 integer mpi_num_procs(void)
 {
      int num_procs;
-     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
+     MPI_Comm_size(mpb_comm, &num_procs);
      return num_procs;
 }
 
 integer mpi_proc_index(void)
 {
      int proc_num;
-     MPI_Comm_rank(MPI_COMM_WORLD, &proc_num);
+     MPI_Comm_rank(mpb_comm, &proc_num);
      return proc_num;
 }
 
 number mpi_max(number num)
 {
      double x = num, xmax;
-     mpi_allreduce(&x, &xmax, 1, double, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+     mpi_allreduce(&x, &xmax, 1, double, MPI_DOUBLE, MPI_MAX, mpb_comm);
      return xmax;
 }
 
@@ -455,7 +455,7 @@ void init_params(integer p, boolean reset_fields)
 	  /* seed should be the same for each run, although
 	     it should be different for each process: */
 	  int rank;
-	  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	  MPI_Comm_rank(mpb_comm, &rank);
 	  srand(314159 * (rank + 1));
      }
 
@@ -557,7 +557,7 @@ static void deflation_constraint(evectmatrix X, void *data)
      blasglue_gemm('C', 'N', X.p, d->p, X.n,
 		   1.0, X.data, X.p, d->BY.data, d->BY.p, 0.0, d->S2, d->p);
      mpi_allreduce(d->S2, d->S, d->p * X.p * SCALAR_NUMVALS,
-		   real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
+		   real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 
      /* compute X = X - Y*St = (1 - BY Yt B) X */
      blasglue_gemm('N', 'C', X.n, X.p, d->p,
