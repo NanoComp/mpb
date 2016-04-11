@@ -123,7 +123,7 @@ int main(int argc, char **argv)
      if (n <= 10) {
 	  printf("Solving for eigenvalues of %d x %d matrix: \nA = ", n, n);
 	  printmat_matlab(A.data, n, n);
-	  printf("B = ", n, n);
+	  printf("B = ");
 	  printmat_matlab(B.data, n, n);
      }
 
