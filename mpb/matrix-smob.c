@@ -211,6 +211,7 @@ cnumber sqmatrix_ref(SCM mo, integer i, integer j)
 	   "invalid arguments to sqmatrix-ref");
      c.re = SCALAR_RE(m->data[i * m->p + j]);
      c.im = SCALAR_IM(m->data[i * m->p + j]);
+     scm_remember_upto_here_1(mo);
      return c;
 }
 
@@ -225,7 +226,33 @@ SCM sqmatrix_mult(SCM Ao, SCM Bo)
     sqmatrix_AeBC(C, *A, 0, *B, 0);
     obj = sqmatrix2scm(C);
     destroy_sqmatrix(C);
+    scm_remember_upto_here_2(Ao, Bo);
     return obj;
+}
+
+SCM sqmatrix_diagm(cnumber_list d)
+{
+    int i, p = d.num_items;
+    SCM obj;
+    sqmatrix D = create_sqmatrix(p);
+    for (i = 0; i < p*p; ++i)
+        CASSIGN_ZERO(D.data[i]);
+    for (i = 0; i < p; ++i)
+        CASSIGN_SCALAR(D.data[i*p+i], d.items[i].re, d.items[i].im);
+    obj = sqmatrix2scm(D);
+    destroy_sqmatrix(D);
+    return obj;
+}
+
+cnumber_list sqmatrix_eigvals(SCM Ao)
+{
+    sqmatrix *A = assert_sqmatrix_smob(Ao);
+    cnumber_list eigvals;
+    eigvals.num_items = A->p;
+    CHK_MALLOC(eigvals.items, cnumber, A->p);
+    sqmatrix_eigenvalues(*A, (scalar_complex *) eigvals.items);
+    scm_remember_upto_here_1(Ao);
+    return eigvals;
 }
 
 /*************************************************************************/
@@ -244,6 +271,7 @@ void set_eigenvectors(SCM mo, integer b_start)
 
      evectmatrix_copy_slice(H, *m, b_start - 1, 0, m->p);
      curfield_reset();
+     scm_remember_upto_here_1(mo);
 }
 
 SCM dot_eigenvectors(SCM mo, integer b_start)
@@ -260,6 +288,7 @@ SCM dot_eigenvectors(SCM mo, integer b_start)
      destroy_sqmatrix(S);
      obj = sqmatrix2scm(U);
      destroy_sqmatrix(U);
+     scm_remember_upto_here_1(mo);
      return obj;
 }
 
@@ -284,6 +313,7 @@ void output_eigenvectors(SCM mo, char *filename)
      evectmatrix *m = assert_evectmatrix_smob(mo);
      evectmatrixio_writeall_raw(filename, *m);
      curfield_reset();
+     scm_remember_upto_here_1(mo);
 }
 
 SCM input_eigenvectors(char *filename, integer num_bands)
@@ -293,6 +323,7 @@ SCM input_eigenvectors(char *filename, integer num_bands)
 	  evectmatrix *m = assert_evectmatrix_smob(mo);
 	  evectmatrixio_readall_raw(filename, *m);
      }
+     scm_remember_upto_here_1(mo);     
      return mo;
 }
 

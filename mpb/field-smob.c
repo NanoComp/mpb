@@ -203,6 +203,7 @@ SCM rscalar_field_make(SCM f0)
      CHK_MALLOC(pf->f.rs, real, pf->N);
      for (i = 0; i < pf->N; ++i)
 	  pf->f.rs[i] = 0.0;
+     scm_remember_upto_here_1(f0);
      return field2scm(pf);
 }
 
@@ -218,6 +219,7 @@ SCM cscalar_field_make(SCM f0)
      CHK_MALLOC(pf->f.cs, scalar_complex, pf->N);
      for (i = 0; i < pf->N; ++i)
 	  CASSIGN_ZERO(pf->f.cs[i]);
+     scm_remember_upto_here_1(f0);
      return field2scm(pf);
 }
 
@@ -234,6 +236,7 @@ SCM cvector_field_make(SCM f0)
      CHK_MALLOC(pf->f.cv, scalar_complex, 3 * pf->N);
      for (i = 0; i < pf->N * 3; ++i)
 	  CASSIGN_ZERO(pf->f.cv[i]);
+     scm_remember_upto_here_1(f0);
      return field2scm(pf);
 }
 
@@ -242,6 +245,7 @@ void cvector_field_nonblochB(SCM f)
      field_smob *pf = assert_field_smob(f);
      pf->type_char = 'v';
      update_curfield(pf);
+     scm_remember_upto_here_1(f);     
 }
 
 SCM field_make(SCM f0)
@@ -255,6 +259,7 @@ SCM field_make(SCM f0)
 	 case CVECTOR_FIELD_SMOB:
 	      return cvector_field_make(f0);
      }
+     scm_remember_upto_here_1(f0);
      return SCM_UNDEFINED;
 }
 
@@ -271,7 +276,9 @@ boolean fields_conformp(SCM f1o, SCM f2o)
 {
      field_smob *f1 = assert_field_smob(f1o);
      field_smob *f2 = assert_field_smob(f2o);
-     return fields_conform(f1, f2);
+     boolean ret = fields_conform(f1, f2);
+     scm_remember_upto_here_2(f1o, f2o);
+     return ret;
 }
 
 static void field_set(field_smob *fd, field_smob *fs)
@@ -306,6 +313,7 @@ void field_setB(SCM dest, SCM src)
      field_smob *fd = assert_field_smob(dest);
      field_smob *fs = assert_field_smob(src);
      field_set(fd, fs);
+     scm_remember_upto_here_2(dest, src);     
 }
 
 void field_load(SCM src)
@@ -317,6 +325,7 @@ void field_load(SCM src)
 	   "argument for field-load must conform to current size");
      curfield_smob.type = fs->type;
      field_set(&curfield_smob, fs);
+     scm_remember_upto_here_1(src);
 }
 
 void field_mapLB(SCM dest, function f, SCM_list src)
@@ -378,6 +387,7 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 	  }
      free(ps);
      update_curfield(pd);
+     scm_remember_upto_here_2(dest, src);
 }
 
 /*************************************************************************/

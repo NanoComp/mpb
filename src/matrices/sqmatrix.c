@@ -61,7 +61,6 @@ void sqmatrix_assert_hermitian(sqmatrix A)
 void sqmatrix_copy(sqmatrix A, sqmatrix B)
 {
      CHECK(A.p == B.p, "arrays not conformant");
-
      blasglue_copy(A.p * A.p, B.data, 1, A.data, 1);
 }
 
@@ -289,6 +288,28 @@ void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W)
     sqmatrix B;
     B.data = NULL;
     sqmatrix_gen_eigensolve(U, B, eigenvals, W);
+}
+
+/* Compute eigenvalues of a general (non-Hermitian) matrix A.
+   Does not compute the eigenvectors. */
+void sqmatrix_eigenvalues(sqmatrix A, scalar_complex *eigvals)
+{
+    sqmatrix B; /* make a copy of A, since geev overwrites array */
+    scalar *work, work1;
+    real *rwork;
+    int lwork;
+    B = create_sqmatrix(A.p);
+    sqmatrix_copy(B, A);
+    CHK_MALLOC(rwork, real, 2*A.p);
+    lapackglue_geev('N','N', A.p, B.data, A.p, eigvals, NULL,1,NULL,1,
+                    &work1, -1, rwork);
+    lwork = (int) (SCALAR_RE(work1) + 0.5);
+    CHK_MALLOC(work, scalar, lwork);
+    lapackglue_geev('N','N', A.p, B.data, A.p, eigvals, NULL,1,NULL,1,
+                    work, lwork, rwork);
+    free(work);
+    free(rwork);
+    destroy_sqmatrix(B);
 }
 
 /* Compute Usqrt <- sqrt(U), where U must be Hermitian positive-definite. 

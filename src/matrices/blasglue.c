@@ -114,7 +114,16 @@ extern void FR(syev,SYEV) (char *, char *, int *, real *, int *, real *,
 extern void F(hegv,HEGV) (int *, char *, char *, int *, scalar *, int *, scalar *, int *, real *, scalar *, int *, real *, int *);
 extern void FR(sygv,SYGV) (int *, char *, char *, int *, real *, int *, real *, int *, real *, real *, int *, int *);
 
-#ifdef __cplusplus
+extern void F(geev,GEEV) (char *jobvl, char *jobvr, int *n,
+                          scalar *A, int *lda, scalar *w,
+                          scalar *VL, int *ldvl, scalar *VR, int *ldvr,
+                          scalar *work, int *lwork, real *rwork, int *info);
+extern void FR(geev,GEEV) (char *jobvl, char *jobvr, int *n,
+                           scalar *A, int *lda, real *wr, real *wi,
+                           scalar *VL, int *ldvl, scalar *VR, int *ldvr,
+                           scalar *work, int *lwork, int *info);
+    
+#ifdef __cplusplus0
 }                               /* extern "C" */
 #endif                          /* __cplusplus */
 
@@ -145,7 +154,7 @@ void blasglue_rscal(int n, real a, scalar *x, int incx)
 
 void blasglue_copy(int n, scalar *x, int incx, scalar *y, int incy)
 {
-     F(copy,COPY) (&n, x, &incx, y, &incy);
+    F(copy,COPY) (&n, x, &incx, y, &incy);
 }
 
 scalar blasglue_dotc(int n, scalar *x, int incx, scalar *y, int incy)
@@ -307,6 +316,32 @@ void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
 
      CHECK(info >= 0, "invalid argument in heev");
      CHECK(info <= 0, "failure to converge in heev");
+}
+
+void lapackglue_geev(char jobvl, char jobvr, int n,
+                     scalar *A, int fdA, scalar_complex *w,
+                     scalar *VL, int fdVL, scalar *VR, int fdVR,
+		     scalar *work, int lwork, real *rwork)
+{
+     int info;
+
+#ifdef SCALAR_COMPLEX
+     F(geev,GEEV) (&jobvl, &jobvr, &n, A, &fdA, w, VL, &fdVL, VR, &fdVR,
+                   work, &lwork, rwork, &info);
+#else
+     int i;
+     real *wr, *wi;
+     CHK_MALLOC(wr, real, 2*n);
+     wi = wr + n;
+     (void) rwork; /* unused */
+     FR(geev,GEEV) (&jobvl, &jobvr, &n, A, &fdA, wr, wi, VL, &fdVL, VR, &fdVR,
+                   work, &lwork, rwork, &info);
+     for (i = 0; i < n; ++i)
+         CASSIGN_SCALAR(w[i], wr[i], wi[i]);
+     free(wr);
+#endif
+     CHECK(info >= 0, "invalid argument in geev");
+     CHECK(info <= 0, "failure to converge in geev");
 }
 
 void lapackglue_hegv(int itype, char jobz, char uplo, int n,

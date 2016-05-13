@@ -112,6 +112,7 @@ extern int sqmatrix_invert(sqmatrix U, short positive_definite,
 			    sqmatrix Work);
 extern void sqmatrix_eigensolve(sqmatrix U, real *eigenvals, sqmatrix W);
 extern void sqmatrix_gen_eigensolve(sqmatrix U, sqmatrix B, real *eigenvals, sqmatrix W);
+extern void sqmatrix_eigenvalues(sqmatrix A, scalar_complex *eigenvals);
 extern void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W);
 
 #ifdef __cplusplus

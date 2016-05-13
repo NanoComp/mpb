@@ -229,6 +229,10 @@
   'SCM 'integer 'integer)
 (define-external-function sqmatrix-mult false false 'SCM
   'SCM 'SCM)
+(define-external-function sqmatrix-diagm false false 'SCM
+  (make-list-type 'cnumber))
+(define-external-function sqmatrix-eigvals false false (make-list-type 'cnumber)
+  'SCM)
 (define-external-function get-eigenvectors false false 'SCM
   'integer 'integer)
 (define-external-function set-eigenvectors false false no-return-value
