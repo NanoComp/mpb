@@ -297,6 +297,9 @@
 (define-external-function material-grids-mingap false false
   'number (make-list-type 'vector3) 'integer 'integer
   'number 'number 'integer 'number)
+(define-external-function material-grids-min-tetm-gap false false
+  'number 'vector3 'integer
+  'number 'number 'integer 'number)
 
 ; ****************************************************************
 

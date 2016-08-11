@@ -33,6 +33,113 @@
 #endif
 
 /**************************************************************************/
+/* minimizing the TE/TM difference in frequency */
+
+typedef struct {
+    vector3 k; /* which k point */
+    int b; /* which band */
+    int ngrids;
+    material_grid *grids;
+    int iter;
+    struct maxwell_data *mdata1, *mdata2;
+    double *work; /* work array of length ntot */
+} mindiff_func_data;
+
+static double mindiff_func(int n, const double *u, double *grad, void *data)
+{
+    mindiff_func_data *d = (mindiff_func_data *) data;
+    double *work = d->work;
+    double gap, f1, f2;
+
+    /* set the material grids, for use in the solver
+       and also for outputting in verbose mode */
+    d->iter++;
+    material_grids_set(u, d->grids, d->ngrids);
+    reset_epsilon();
+    if (grad) memset(work, 0, sizeof(double) * (n-2));
+
+    set_maxwell_data_parity(mdata, EVEN_Z_PARITY);
+    randomize_fields();
+    solve_kpoint(d->k);
+    gap = (f2 = freqs.items[d->b-1]);
+    if (grad) {
+        material_grids_addgradient(work, 1.0, d->b, 
+                                   d->grids, d->ngrids);
+    }
+
+    set_maxwell_data_parity(mdata, ODD_Z_PARITY);
+    randomize_fields();
+    solve_kpoint(d->k);
+    gap -= (f1 = freqs.items[d->b-1]);
+    if (grad) {
+        material_grids_addgradient(work, -1.0, d->b, 
+                                   d->grids, d->ngrids);
+    }
+
+    if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
+        mpi_allreduce(work, grad, n, double, MPI_DOUBLE, 
+                      MPI_SUM, mpb_comm);
+
+     mpi_one_printf("material-grid-mindiff:, %d, %g, %g, %0.15g\n", 
+                    d->iter, f1, f2, gap);
+
+     return gap;
+}
+
+number material_grids_min_tetm_gap(vector3 kpoint, integer band,
+                                   number func_tol, number eps_tol,
+                                   integer maxeval, number maxtime)
+{
+     mindiff_func_data d;
+     int i, n;
+     double *u, *lb, *ub, *u_tol, func_min;
+     int have_uprod;
+
+     CHECK(band <= num_bands, "invalid band number in material-grid-min-tetm-gap");
+     d.k = kpoint;
+     d.b = band;
+     d.grids = get_material_grids(geometry, &d.ngrids);
+     d.iter = 0;
+     n = material_grids_ntot(d.grids, d.ngrids);
+     u = (double *) malloc(sizeof(double) * n * 5);
+     lb = u + n; ub = lb + n; u_tol = ub + n; d.work = u_tol + n;
+
+     material_grids_get(u, d.grids, d.ngrids);
+
+     for (i = 0; i < d.ngrids && d.grids[i].material_grid_kind != U_PROD; ++i);
+     have_uprod = i < d.ngrids;
+     for (i = 0; i < n; ++i) {
+	  ub[i] = 1;
+	  u_tol[i] = eps_tol;
+	  /* bound u slightly about 0 for uprod grids, as when u=0
+	     the gradient is problematic (especially for multiple u's = 0 */
+	  lb[i] = have_uprod ? 1e-4 : 0;
+	  if (u[i] < lb[i]) u[i] = lb[i];
+     }
+
+#if defined(HAVE_NLOPT_H) && defined(HAVE_NLOPT)
+     {
+         nlopt_result res;
+         res = nlopt_minimize_constrained(
+	     NLOPT_LD_MMA, n, mindiff_func, &d,
+             0, NULL, NULL, 0,
+             lb, ub, u, &func_min,
+             -HUGE_VAL, func_tol,0, 0,u_tol, maxeval,maxtime);
+         CHECK(res > 0, "failure of nlopt_minimize");
+     }
+#else
+     CHECK(0, "nlopt library is required for material-grid-maxgap");
+#endif
+
+     func_min = mindiff_func(n, u, NULL, &d);
+
+     free(u);
+     free(d.grids);
+
+     return func_min;
+}
+
+/**************************************************************************/
 /* optimization of band gaps as a function of the material grid */
 
 typedef struct {
