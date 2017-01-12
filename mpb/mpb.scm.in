@@ -946,3 +946,37 @@
 (ctl-set-prompt! "mpb> ")
 
 ; ****************************************************************
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;added by Ling Lu 01/12/2017
+;; Define abelian/non-abelian BerryPhase() function
+;; Inputs: klist, a list of k points that has to form a close loop; n1, the first/lowest band#; n, the number of bands to compute
+;; Outputs: a list of n eigenvalues, whose magnitudes approach 1 with denser klist, whose phases are the Berry phases.
+(define (BerryPhase klist n1 n)
+(let* (
+(ev 1) (uk (list)) (ukG (list)) (phase (list)) (W 1) (G 1)
+;; ev is the previous eigenvector saved; uk ukG are the list of initial and end real-space wavefunctions; phase stores the phase differences; W is the product of sqmatrices; G is the difference in k after a closed loop.
+)
+;; Store the list of eigenfields of the last k point
+(solve-kpoint (list-ref klist 0))
+(do ((i 0 (+ i 1))) ((= i n))
+(get-hfield (+ n1 i))
+(set! uk (cons (field-copy cur-field) uk)) )
+;; INNER-PRODUCT OF STATES ON THE K-LIST
+(set! ev (get-eigenvectors n1 n)) ;eigenvectors
+(set! W (dot-eigenvectors ev n1)) ;normalize W to be unity sqmatrix
+(do ((i 1 (+ i 1))) ((= i (length klist)))
+	(solve-kpoint (list-ref klist i))
+        (set! W (sqmatrix-mult W (dot-eigenvectors ev n1)))
+	(set! ev (get-eigenvectors n1 n)) )
+;; Store the list of eigenfields of the last k point
+(do ((i 0 (+ i 1))) ((= i n))
+(get-hfield (+ n1 i))
+(set! ukG (cons (field-copy cur-field) ukG)) )
+;; Ensure the boundary conditions between the initial and final k points 
+(set! G (vector3- (first klist) (first (reverse klist)) ))
+(do ((i 0 (+ i 1))) ((= i n))
+(set! phase (cons (integrate-fields (lambda (r u1 u2) (* (exp (* (vector3-dot G r) (* 2 pi 0+1i))) (vector3-dot (vector3-conj u1) u2))) (list-ref ukG i) (list-ref uk i)) phase)) )
+;; BUILD A DIAGONAL SQMATRIX HERE, THEN MULTIPLY W, THEN RETURN THE EIGENVALUES
+(set! W (sqmatrix-mult W (sqmatrix-diagm phase)))
+(sqmatrix-eigvals W) ))	;;ENG OF BERRYPHASE FUNCTION
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
