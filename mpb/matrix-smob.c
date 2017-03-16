@@ -277,15 +277,46 @@ void set_eigenvectors(SCM mo, integer b_start)
 SCM dot_eigenvectors(SCM mo, integer b_start)
 {
      evectmatrix *m = assert_evectmatrix_smob(mo);
-     sqmatrix U, S;
+     sqmatrix U;
      SCM obj;
+     int final_band = b_start-1 + m->p;
 
      CHECK(mdata, "init-params must be called before dot-eigenvectors");
+     CHECK(final_band <= num_bands, "not enough bands in dot-eigenvectors");
 
      U = create_sqmatrix(m->p);
-     S = create_sqmatrix(m->p);
-     evectmatrix_XtY_slice(U, *m, H, 0, b_start - 1, m->p, S);
-     destroy_sqmatrix(S);
+     if (mdata->mu_inv == NULL) {
+         sqmatrix S = create_sqmatrix(m->p);
+         evectmatrix_XtY_slice(U, *m, H, 0, b_start - 1, m->p, S);
+         destroy_sqmatrix(S);
+     }
+     else {
+         /* ...we have to do this in blocks of eigensolver_block_size since
+            the work matrix W[0] may not have enough space to do it at once. */
+         int ib;
+         sqmatrix S1 = create_sqmatrix(m->p);
+         sqmatrix S2 = create_sqmatrix(m->p);
+
+         for (ib = b_start-1; ib < final_band; ib += Hblock.alloc_p) {
+             if (ib + Hblock.alloc_p > final_band) {
+                 maxwell_set_num_bands(mdata, final_band - ib);
+                 evectmatrix_resize(&Hblock, final_band - ib, 0);
+             }
+             maxwell_compute_H_from_B(mdata, H, Hblock,
+                                      (scalar_complex *) mdata->fft_data,
+                                      ib, 0, Hblock.p);
+             
+             evectmatrix_XtY_slice2(U, *m, Hblock, 0, 0, m->p, Hblock.p,
+                                    ib-(b_start-1), S1, S2);
+         }
+
+         /* Reset scratch matrix sizes: */
+         evectmatrix_resize(&Hblock, Hblock.alloc_p, 0);
+         maxwell_set_num_bands(mdata, Hblock.alloc_p);
+
+         destroy_sqmatrix(S2);
+         destroy_sqmatrix(S1);
+     }
      obj = sqmatrix2scm(U);
      destroy_sqmatrix(U);
      scm_remember_upto_here_1(mo);

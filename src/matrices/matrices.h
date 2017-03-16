@@ -83,6 +83,9 @@ extern void evectmatrix_XtY(sqmatrix U, evectmatrix X, evectmatrix Y,
 			    sqmatrix S);
 extern void evectmatrix_XtY_slice(sqmatrix U, evectmatrix X, evectmatrix Y,
 				  int ix, int iy, int p, sqmatrix S);
+extern void evectmatrix_XtY_slice2(sqmatrix U, evectmatrix X, evectmatrix Y,
+                                   int ix, int iy, int p, int q, int iu,
+                                   sqmatrix S1, sqmatrix S2);
 extern void evectmatrixXtY_sub(sqmatrix U, int Uoffset,
 			       evectmatrix X, evectmatrix Y, sqmatrix S);
 extern void evectmatrix_XtY_diag(evectmatrix X, evectmatrix Y, scalar *diag,

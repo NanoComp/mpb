@@ -166,21 +166,36 @@ void evectmatrix_XtX(sqmatrix U, evectmatrix X, sqmatrix S)
 		   real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 }
 
+/* Dot p selected columns of X with q in Y, starting at ix and iy.
+   Stores the result in U, starting at column iu, with 
+   S1 and S2 as scratch matrices. */
+void evectmatrix_XtY_slice2(sqmatrix U, evectmatrix X, evectmatrix Y,
+                            int ix, int iy, int p, int q, int iu,
+                            sqmatrix S1, sqmatrix S2)
+{
+    int i, j;
+    CHECK(ix + p <= X.p && iy + q <= Y.p && ix >= 0 && iy >= 0 && X.n == Y.n
+          && p == U.p && q <= p && p <= S1.alloc_p && p <= S2.alloc_p, "invalid arguments to XtY_slice2");
+    
+    memset(S1.data, 0, sizeof(scalar) * (U.p * U.p));
+    blasglue_gemm('C', 'N', p, q, X.n,
+                  1.0, X.data + ix, X.p, Y.data + iy, Y.p, 0.0,
+                  S1.data, q);
+    evectmatrix_flops += X.N * X.c * q * (2*p);
+    
+    mpi_allreduce(S1.data, S2.data, p * q * SCALAR_NUMVALS,
+                  real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
+    for (i = 0; i < p; ++i)
+        for (j = 0; j < q; ++j)
+            U.data[i*p + j + iu] = S2.data[i*q + j];
+}
+
 /* Dot p selected columns of X with those in Y, starting at ix and iy.
    Stores the result in U, with S a scratch matrix. */
 void evectmatrix_XtY_slice(sqmatrix U, evectmatrix X, evectmatrix Y,
 			   int ix, int iy, int p, sqmatrix S)
 {
-     CHECK(ix + p <= X.p && iy + p <= Y.p && ix >= 0 && iy >= 0 && X.n == Y.n
-           && p == U.p && p <= S.alloc_p, "invalid arguments to XtY_slice");
-
-     memset(S.data, 0, sizeof(scalar) * (U.p * U.p));
-     blasglue_gemm('C', 'N', p, p, X.n,
-                   1.0, X.data + ix, X.p, Y.data + iy, Y.p, 0.0, S.data, U.p);
-     evectmatrix_flops += X.N * X.c * p * (2*p);
-
-     mpi_allreduce(S.data, U.data, U.p * U.p * SCALAR_NUMVALS,
-                   real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
+    evectmatrix_XtY_slice2(U, X, Y, ix, iy, p, p, 0, S, U);
 }
 
 /* compute U = adjoint(X) * Y, with S a scratch matrix. */
