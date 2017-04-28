@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/stevengj/mpb.svg?branch=master)](https://travis-ci.org/stevengj/mpb)
+
 MIT Photonic-Bands: http://ab-initio.mit.edu/mpb
 
 A program for computing photonic band structures, developed by Steven

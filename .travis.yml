@@ -1,0 +1,30 @@
+language: c
+sudo: false
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          packages:
+          - autoconf
+          - automake
+          - libtool
+          - guile-2.0-dev
+          - liblapack-dev
+          - libfftw3-dev
+          - libhdf5-dev
+          - libctl-dev
+      script:
+        - sh autogen.sh --prefix=`pwd`/.local
+        - make && make check && make install
+        - rm -rf * ~/.local
+    - os: osx
+      install:
+        - brew tap homebrew/science
+        - brew update
+        - brew install guile autoconf automake libtool fftw lapack blas libctl
+      script:
+        - sh autogen.sh --prefix=`pwd`/.local
+        - make && make check && make install
+        - rm -rf * ~/.local
