@@ -13,7 +13,7 @@ matrix:
           - guile-2.0-dev
           - liblapack-dev
           - libfftw3-dev
-          - libhdf5-dev
+          - libhdf5-serial-dev
           - libctl-dev
       script:
         - sh autogen.sh --prefix=`pwd`/.local
@@ -23,7 +23,7 @@ matrix:
       install:
         - brew tap homebrew/science
         - brew update
-        - brew install guile autoconf automake libtool fftw lapack blas libctl
+        - brew install guile autoconf automake libtool fftw lapack libctl
       script:
         - sh autogen.sh --prefix=`pwd`/.local
         - make && make check && make install
