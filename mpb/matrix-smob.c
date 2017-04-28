@@ -173,7 +173,7 @@ void register_matrix_smobs(void)
      MAKE_SMOBFUNS(sqmatrix);
      REGISTER_SMOBFUNS(evectmatrix);
      REGISTER_SMOBFUNS(sqmatrix);
-#endif     
+#endif
 
      gh_new_procedure("evectmatrix?", evectmatrix_p, 1, 0, 0);
      gh_new_procedure("sqmatrix?", sqmatrix_p, 1, 0, 0);
@@ -226,7 +226,8 @@ SCM sqmatrix_mult(SCM Ao, SCM Bo)
     sqmatrix_AeBC(C, *A, 0, *B, 0);
     obj = sqmatrix2scm(C);
     destroy_sqmatrix(C);
-    scm_remember_upto_here_2(Ao, Bo);
+    scm_remember_upto_here_1(Ao);
+    scm_remember_upto_here_1(Bo);
     return obj;
 }
 
@@ -305,7 +306,7 @@ SCM dot_eigenvectors(SCM mo, integer b_start)
              maxwell_compute_H_from_B(mdata, H, Hblock,
                                       (scalar_complex *) mdata->fft_data,
                                       ib, 0, Hblock.p);
-             
+
              evectmatrix_XtY_slice2(U, *m, Hblock, 0, 0, m->p, Hblock.p,
                                     ib-(b_start-1), S1, S2);
          }
@@ -333,7 +334,7 @@ void scale_eigenvector(integer b, cnumber scale)
 #ifndef SCALAR_COMPLEX
      CHECK(fabs(cnumber_im(scale) * cnumber_re(scale)) < 1e-14,
 	   "scale-eigenvector must be called with real argument in mpbi");
-#endif     
+#endif
      ASSIGN_SCALAR(s, cnumber_re(scale), cnumber_im(scale));
      blasglue_scal(H.n, s, H.data + b-1, H.p);
      curfield_reset();
@@ -354,7 +355,7 @@ SCM input_eigenvectors(char *filename, integer num_bands)
 	  evectmatrix *m = assert_evectmatrix_smob(mo);
 	  evectmatrixio_readall_raw(filename, *m);
      }
-     scm_remember_upto_here_1(mo);     
+     scm_remember_upto_here_1(mo);
      return mo;
 }
 
