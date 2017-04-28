@@ -56,7 +56,7 @@
 
 ; checks whether list X and list Y are almost equal
 (define (check-almost-equal X Y)
-  (if (fold-left and true (map almost-equal? X Y))
+  (if (fold-left (lambda (x y) (and x y)) true (map almost-equal? X Y))
       (print "check-almost-equal: PASSED\n")
       (error "check-almost-equal: FAILED\n" X Y)))
 
