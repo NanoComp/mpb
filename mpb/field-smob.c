@@ -78,7 +78,7 @@ static int print_field_smob(SCM obj, SCM port, scm_print_state *pstate)
 	      break;
      }
      if (pf->local_ny < pf->ny) {
-	  sprintf(buf, ", y=%d-%d local", 
+	  sprintf(buf, ", y=%d-%d local",
 		  pf->local_y_start, pf->local_y_start + pf->local_ny - 1);
 	  scm_puts(buf, port);
      }
@@ -157,7 +157,7 @@ field_smob *update_curfield_smob(void)
 	  if (!curfield_smob.f.rs)
 	       curfield_smob.f.rs = (real *) mdata->fft_data;
 	  return 0;
-     }	  
+     }
      return &curfield_smob;
 }
 
@@ -245,7 +245,7 @@ void cvector_field_nonblochB(SCM f)
      field_smob *pf = assert_field_smob(f);
      pf->type_char = 'v';
      update_curfield(pf);
-     scm_remember_upto_here_1(f);     
+     scm_remember_upto_here_1(f);
 }
 
 SCM field_make(SCM f0)
@@ -284,7 +284,7 @@ boolean fields_conformp(SCM f1o, SCM f2o)
 static void field_set(field_smob *fd, field_smob *fs)
 {
      int i;
-     
+
      CHECK(fd->type == fs->type && fields_conform(fd, fs),
 	   "fields for field-set! must conform");
      switch (fs->type) {
@@ -313,7 +313,8 @@ void field_setB(SCM dest, SCM src)
      field_smob *fd = assert_field_smob(dest);
      field_smob *fs = assert_field_smob(src);
      field_set(fd, fs);
-     scm_remember_upto_here_2(dest, src);     
+     scm_remember_upto_here_1(dest);
+     scm_remember_upto_here_1(src);
 }
 
 void field_load(SCM src)
@@ -352,7 +353,7 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 			item = cnumber2scm(cscalar2cnumber(ps[j]->f.cs[i]));
 			break;
 		   case CVECTOR_FIELD_SMOB:
-			item = 
+			item =
 			     cvector32scm(cscalar32cvector3(ps[j]->f.cv+3*i));
 			break;
 	       }
@@ -382,7 +383,7 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 		   pd->type_char = 'C';
 		   break;
 	      case CVECTOR_FIELD_SMOB:
-		   pd->type_char = 'c'; 
+		   pd->type_char = 'c';
 		   break;
 	  }
      free(ps);
@@ -423,14 +424,14 @@ cnumber integrate_fieldL(function f, SCM_list fields)
      if (fields.num_items > 0) {
 	  n1 = pf[0]->nx; n2 = pf[0]->ny; n3 = pf[0]->nz;
 	  n_other = pf[0]->other_dims;
-	  n_last = pf[0]->last_dim_size 
+	  n_last = pf[0]->last_dim_size
 	       / (sizeof(scalar_complex)/sizeof(scalar));
 	  last_dim = pf[0]->last_dim;
      }
      else {
 	  n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
 	  n_other = mdata->other_dims;
-	  n_last = mdata->last_dim_size 
+	  n_last = mdata->last_dim_size
 	       / (sizeof(scalar_complex)/sizeof(scalar));
 	  last_dim = mdata->last_dim;
      }
@@ -447,7 +448,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 	upon whether we are using complex or real and serial or
         parallel transforms.  Each loop must define, in its body,
         variables (i2,j2,k2) describing the coordinate of the current
-        point, and "index" describing the corresponding index in 
+        point, and "index" describing the corresponding index in
 	the curfield array.
 
         This was all stolen from maxwell_eps.c...it would be better
@@ -456,7 +457,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 #ifdef SCALAR_COMPLEX
 
 #  ifndef HAVE_MPI
-     
+
      for (i = 0; i < n1; ++i)
 	  for (j = 0; j < n2; ++j)
 	       for (k = 0; k < n3; ++k)
@@ -522,7 +523,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
      }
      else
 	  local_n3 = 1;
-     
+
      /* first two dimensions are transposed in MPI output: */
      for (j = 0; j < local_n2; ++j)
           for (i = 0; i < n1; ++i)
@@ -577,7 +578,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 #  else
 		    last_index = j;
 #  endif
-		    
+
 		    if (last_index != 0 && 2*last_index != last_dim) {
 			 int i2c, j2c, k2c;
 			 i2c = i2 ? (n1 - i2) : 0;
@@ -587,7 +588,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
                          p.y = j2c * s2 - c2;
 			 p.z = k2c * s3 - c3;
 			 arg_list = SCM_EOL;
-			 for (ifield = fields.num_items - 1; 
+			 for (ifield = fields.num_items - 1;
 			      ifield >= 0; --ifield) {
 			      SCM item = SCM_UNDEFINED;
 			      switch (pf[ifield]->type) {
@@ -608,7 +609,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
 			      arg_list = gh_cons(item, arg_list);
 			 }
 			 arg_list = gh_cons(vector32scm(p), arg_list);
-			 integrand = 
+			 integrand =
 			      ctl_convert_cnumber_to_c(gh_apply(f, arg_list));
 			 integral.re += integrand.re;
 			 integral.im += integrand.im;
@@ -624,7 +625,7 @@ cnumber integrate_fieldL(function f, SCM_list fields)
      integral.im *= Vol / (n1 * n2 * n3);
      {
 	  cnumber integral_sum;
-	  mpi_allreduce(&integral, &integral_sum, 2, number, 
+	  mpi_allreduce(&integral, &integral_sum, 2, number,
 			MPI_DOUBLE, MPI_SUM, mpb_comm);
 	  return integral_sum;
      }
