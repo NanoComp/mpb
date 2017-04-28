@@ -277,8 +277,7 @@ boolean fields_conformp(SCM f1o, SCM f2o)
      field_smob *f1 = assert_field_smob(f1o);
      field_smob *f2 = assert_field_smob(f2o);
      boolean ret = fields_conform(f1, f2);
-     scm_remember_upto_here_1(f1o);
-     scm_remember_upto_here_1(f2o);
+     scm_remember_upto_here_2(f1o, f2o);
      return ret;
 }
 
@@ -314,8 +313,7 @@ void field_setB(SCM dest, SCM src)
      field_smob *fd = assert_field_smob(dest);
      field_smob *fs = assert_field_smob(src);
      field_set(fd, fs);
-     scm_remember_upto_here_1(dest);
-     scm_remember_upto_here_1(src);
+     scm_remember_upto_here_2(dest, src);
 }
 
 void field_load(SCM src)
@@ -387,7 +385,6 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 		   pd->type_char = 'c';
 		   break;
 	  }
-     scm_remember_upto_here_1(src);
      free(ps);
      update_curfield(pd);
      scm_remember_upto_here_1(dest);

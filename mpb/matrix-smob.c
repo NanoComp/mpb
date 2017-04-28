@@ -226,8 +226,7 @@ SCM sqmatrix_mult(SCM Ao, SCM Bo)
     sqmatrix_AeBC(C, *A, 0, *B, 0);
     obj = sqmatrix2scm(C);
     destroy_sqmatrix(C);
-    scm_remember_upto_here_1(Ao);
-    scm_remember_upto_here_1(Bo);
+    scm_remember_upto_here_2(Ao,Bo);
     return obj;
 }
 
