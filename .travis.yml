@@ -19,16 +19,14 @@ matrix:
           - git
       script:
         - git clone https://github.com/stevengj/libctl
-        - (cd libctl && git checkout 7d51710e63952d343ce8f241cf92b5cbfd5f1ada && sh autogen.sh --prefix=`pwd`/../local && make && make install)
-        - sh autogen.sh --enable-maintainer-mode --prefix=`pwd`/.local --with-libctl=`pwd`/.local/share/libctl CPPFLAGS=-I`pwd`/.local LDFLAGS=-L`pwd`/.local
+        - (cd libctl && git checkout 7d51710e63952d343ce8f241cf92b5cbfd5f1ada && sh autogen.sh --prefix=$HOME/local && make && make install)
+        - sh autogen.sh --enable-maintainer-mode --prefix=$HOME/local --with-libctl=$HOME/local/share/libctl CPPFLAGS=-I$HOME/local LDFLAGS=-L$HOME/local
         - make && make check && make install
-        - rm -rf * ~/.local
     - os: osx
       install:
         - brew tap homebrew/science
         - brew update
         - brew install guile autoconf automake libtool fftw lapack libctl
       script:
-        - sh autogen.sh --prefix=`pwd`/.local
+        - sh autogen.sh --prefix=$HOME/local
         - make && make check && make install
-        - rm -rf * ~/.local
