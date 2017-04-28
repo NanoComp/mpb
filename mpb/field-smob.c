@@ -387,10 +387,10 @@ void field_mapLB(SCM dest, function f, SCM_list src)
 		   pd->type_char = 'c';
 		   break;
 	  }
+     scm_remember_upto_here_1(src);
      free(ps);
      update_curfield(pd);
      scm_remember_upto_here_1(dest);
-     scm_remember_upto_here_1(src);
 }
 
 /*************************************************************************/
