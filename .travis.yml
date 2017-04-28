@@ -12,14 +12,14 @@ matrix:
           - libtool
           - guile-2.0-dev
           - liblapack-dev
+          - libblas-dev
           - libfftw3-dev
           - libhdf5-serial-dev
           - git
       script:
         - git clone https://github.com/stevengj/libctl
         - (cd libctl && git checkout 7d51710e63952d343ce8f241cf92b5cbfd5f1ada && sh autogen.sh --prefix=`pwd`/../local && make && make install)
-        - sh autogen.sh
-        - ./configure --enable-maintainer-mode --prefix=`pwd`/.local --with-libctl=`pwd`/.local CPPFLAGS=-I`pwd`/.local LDFLAGS=-L`pwd`/.local
+        - sh autogen.sh --enable-maintainer-mode --prefix=`pwd`/.local --with-libctl=`pwd`/.local CPPFLAGS=-I`pwd`/.local LDFLAGS=-L`pwd`/.local
         - make && make check && make install
         - rm -rf * ~/.local
     - os: osx
