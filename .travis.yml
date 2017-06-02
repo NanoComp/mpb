@@ -28,5 +28,7 @@ matrix:
         - brew update
         - brew install guile autoconf automake libtool fftw lapack libctl
       script:
-        - sh autogen.sh --prefix=$HOME/local
+        - sh autogen.sh --prefix=$HOME/local --with-hermitian-eps
+        - make && make check && make install
+        - ./configure --prefix=$HOME/local --with-inv-symmetry
         - make && make check && make install
