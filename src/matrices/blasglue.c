@@ -114,15 +114,18 @@ extern void FR(syev,SYEV) (char *, char *, int *, real *, int *, real *,
 extern void F(hegv,HEGV) (int *, char *, char *, int *, scalar *, int *, scalar *, int *, real *, scalar *, int *, real *, int *);
 extern void FR(sygv,SYGV) (int *, char *, char *, int *, real *, int *, real *, int *, real *, real *, int *, int *);
 
+#ifdef SCALAR_COMPLEX
 extern void F(geev,GEEV) (char *jobvl, char *jobvr, int *n,
                           scalar *A, int *lda, scalar *w,
                           scalar *VL, int *ldvl, scalar *VR, int *ldvr,
                           scalar *work, int *lwork, real *rwork, int *info);
+#else
 extern void FR(geev,GEEV) (char *jobvl, char *jobvr, int *n,
                            scalar *A, int *lda, real *wr, real *wi,
                            scalar *VL, int *ldvl, scalar *VR, int *ldvr,
                            scalar *work, int *lwork, int *info);
-    
+#endif
+
 #ifdef __cplusplus0
 }                               /* extern "C" */
 #endif                          /* __cplusplus */
@@ -201,7 +204,7 @@ void blasglue_gemm(char transa, char transb, int m, int n, int k,
      }
 
      CHECK(A != C && B != C, "gemm output array must be distinct");
-     
+
      ASSIGN_REAL(alpha,a);
      ASSIGN_REAL(beta,b);
 
@@ -225,7 +228,7 @@ void blasglue_herk(char uplo, char trans, int n, int k,
      }
 
      CHECK(A != C, "herk output array must be distinct");
-     
+
      uplo = uplo == 'U' ? 'L' : 'U';
      trans = (trans == 'C' || trans == 'T') ? 'N' : 'C';
 
@@ -300,7 +303,7 @@ int lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
      return (info == 0);
 }
 
-void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA, 
+void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
 		     real *w, scalar *work, int lwork, real *rwork)
 {
      int info;
@@ -335,7 +338,7 @@ void lapackglue_geev(char jobvl, char jobvr, int n,
      wi = wr + n;
      (void) rwork; /* unused */
      FR(geev,GEEV) (&jobvl, &jobvr, &n, A, &fdA, wr, wi, VL, &fdVL, VR, &fdVR,
-                   work, &lwork, rwork, &info);
+                   work, &lwork, &info);
      for (i = 0; i < n; ++i)
          CASSIGN_SCALAR(w[i], wr[i], wi[i]);
      free(wr);
@@ -345,7 +348,7 @@ void lapackglue_geev(char jobvl, char jobvr, int n,
 }
 
 void lapackglue_hegv(int itype, char jobz, char uplo, int n,
-                     scalar *A, int fdA, scalar *B, int fdB, 
+                     scalar *A, int fdA, scalar *B, int fdB,
 		     real *w, scalar *work, int lwork, real *rwork)
 {
      int info;
@@ -363,7 +366,7 @@ void lapackglue_hegv(int itype, char jobz, char uplo, int n,
      CHECK(info <= 0, "failure to converge in hegv");
 }
 
-void lapackglue_syev(char jobz, char uplo, int n, real *A, int fdA, 
+void lapackglue_syev(char jobz, char uplo, int n, real *A, int fdA,
 		     real *w, real *work, int lwork)
 {
      int info;

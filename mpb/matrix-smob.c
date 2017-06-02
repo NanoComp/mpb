@@ -236,9 +236,9 @@ SCM sqmatrix_diagm(cnumber_list d)
     SCM obj;
     sqmatrix D = create_sqmatrix(p);
     for (i = 0; i < p*p; ++i)
-        CASSIGN_ZERO(D.data[i]);
+        ASSIGN_ZERO(D.data[i]);
     for (i = 0; i < p; ++i)
-        CASSIGN_SCALAR(D.data[i*p+i], d.items[i].re, d.items[i].im);
+        ASSIGN_SCALAR(D.data[i*p+i], d.items[i].re, d.items[i].im);
     obj = sqmatrix2scm(D);
     destroy_sqmatrix(D);
     return obj;
