@@ -24,20 +24,17 @@ markdown_extensions:
 extra_javascript: ['https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML','mathjaxhelper.js']
 
 pages:
- - MIT_Photonic_Bands.md
- - MPB_download.md
- - MPB_release_notes.md
- - Citing_MPB.md
- - MPB_manual.md
- - MPB_Introduction.md
- - MPB_Installation.md
- - MPB_User_Tutorial.md
- - MPB_Data_Analysis_Tutorial.md
- - MPB_User_Reference.md
- - MPB_Developer_Information.md
- - MPB_Acknowledgements.md
- - MPB_License_and_Copyright.md
- - MPB_on_Debian.md
- - MPB_tutorial.md
- - The_MPB_Manual.md
- - The_run_function_is_not_a_loop.md
+ - MIT Photonic Bands:
+     - MPB.md
+     - Download.md
+     - Release_Notes.md
+ - MPB Manual:
+     - Introduction.md
+     - Installation.md
+     - Scheme_Tutorial.md
+     - Data_Analysis_Tutorial.md
+     - Scheme_User_Interface.md
+     - Developer_Information.md
+     - Guile_and_Scheme_Information.md
+ - Acknowledgements.md
+ - License_and_Copyright.md
