@@ -24,8 +24,8 @@ markdown_extensions:
 extra_javascript: ['https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML','mathjaxhelper.js']
 
 pages:
- - MIT Photonic Bands:
-     - MPB.md
+ - MPB Overview:
+     - 'About MPB': MPB.md
      - Download.md
      - Release_Notes.md
  - MPB Manual:
@@ -36,5 +36,5 @@ pages:
      - Scheme_User_Interface.md
      - Developer_Information.md
      - Guile_and_Scheme_Information.md
- - Acknowledgements.md
- - License_and_Copyright.md
+     - Acknowledgements.md
+     - License_and_Copyright.md
