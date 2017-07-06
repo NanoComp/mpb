@@ -39,8 +39,6 @@ We have published a paper on the computational methods underlying MPB:
 
 Steven G. Johnson and J. D. Joannopoulos, [Block-iterative frequency-domain methods for Maxwell's equations in a planewave basis](http://www.opticsinfobase.org/abstract.cfm?URI=oe-8-3-173), *Optics Express* **8**, no. 3, 173-190 (2001).
 
-See also our [referencing suggestions](/Citing_MPB "wikilink") for how to cite MPB in your work.
-
 ### Mailing Lists
 
 The MPB mailing lists and their archives are another source of information about MPB.
@@ -54,7 +52,7 @@ For bug reports and feature requests, please [file an MPB Github issue](https://
 Acknowledgements
 ----------------
 
-Many people and groups have contributed to the development of this software, both directly and indirectly. Please see the [acknowledgements section](/MPB_Acknowledgements "wikilink") of the manual for those to whom we feel especially grateful.
+Many people and groups have contributed to the development of this software, both directly and indirectly. Please see the [acknowledgements section](Acknowledgements.md) of the manual for those to whom we feel especially grateful.
 
 Contacts and Feedback
 ---------------------

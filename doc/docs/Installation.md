@@ -17,7 +17,7 @@ It is important that you use the *same Fortran compiler* to compile Fortran libr
 Installation on MacOS X
 -----------------------
 
-See [Meep installation on OS X](http://meep.readthedocs.io/en/latest/Installation/#installation-on-macos-x) for the easiest way to do this.
+See the [installation guide for Meep on OS X](http://meep.readthedocs.io/en/latest/Installation/#installation-on-macos-x) for the easiest way to do this.
 
 Unix Installation Basics
 ------------------------

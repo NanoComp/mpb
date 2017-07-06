@@ -21,7 +21,7 @@ Please subscribe to the **mpb-announce** mailing list to receive notifications w
 MPB on Amazon Web Services (AWS)
 ---------------------------------
 
-The latest version of Meep preinstalled on [Ubuntu](https://en.wikipedia.org/wiki/Ubuntu) can be accessed for free on Amazon Web Services (AWS) Elastic Compute Cloud (EC2) as an [Amazon Machine Image (AMI)](https://aws.amazon.com/marketplace/pp/B01KHWH0AS). Instructions for accessing this AMI are provided by [Simpetus](http://www.simpetuscloud.com/launchsims.html).
+The latest version of MPB preinstalled on [Ubuntu](https://en.wikipedia.org/wiki/Ubuntu) can be accessed for free on Amazon Web Services (AWS) Elastic Compute Cloud (EC2) as an [Amazon Machine Image (AMI)](https://aws.amazon.com/marketplace/pp/B01KHWH0AS). Instructions for accessing this AMI are provided by [Simpetus](http://www.simpetuscloud.com/launchsims.html).
 
 Precompiled MPB Packages for Debian and Ubuntu
 -----------------------------------------------

@@ -452,7 +452,7 @@ Find the wavevectors in the current geometry/structure for the bands from `band-
 -   `tol`: the fractional tolerance with which to solve for the wavevector; `1e-4` is usually sufficient. (Like the `tolerance` input variable, this is only the tolerance of the numerical iteration...it does not have anything to do with e.g. the error from finite grid `resolution`.)
 -   `kmag-guess`: an initial guess for the k magnitude (along *`kdir`*) of the wavevector at *`omega`*. Can either be a list (one guess for each band from *`band-min`* to *`band-max`*) or a single number (same guess for all bands, which is usually sufficient).
 -   `kmag-min`, *`kmag-max`*: a range of k magnitudes to search; should be large enough to include the correct k values for all bands.
--   `band-func`: zero or more [band functions](/#Band/output_functions "wikilink"), just as in `(run)`, which are evaluated at the computed k points for each band.
+-   `band-func`: zero or more [band functions](Scheme_User_Interface.md#bandoutput-functions), just as in `(run)`, which are evaluated at the computed k points for each band.
 
 The `find-k` routine also prints a line suitable for grepping:
 

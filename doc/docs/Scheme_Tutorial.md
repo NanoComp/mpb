@@ -264,7 +264,7 @@ Gap from band 2 (0.223977612336924) to band 3 (0.274704473679751), 20.3
 
 If we had computed the TM and TE bands separately, we would have found that the lower edge of the complete gap in this case comes from the TM gap, and the upper edge comes from the TE gap.
 
-Finding a Point-defect State
+Finding a Point-Defect State
 ----------------------------
 
 Here, we consider the problem of finding a point-defect state in our square lattice of rods. This is a state that is localized in a small region by creating a point defect in the crystal — e.g., by removing a single rod. The resulting mode will have a frequency within, and be confined by, the gap. See [our online textbook](http://ab-initio.mit.edu/book), ch. 5.
@@ -350,7 +350,7 @@ Instead of computing all those bands, we can instead take advantage of a special
 
 Now, we just call `(run-tm)` as before. Convergence requires more iterations this time, both because we've decreased the tolerance and because of the nature of the eigenproblem that is now being solved, but only by about 3-4 times in this case. Since we now have to compute only a single band, however, we arrive at an answer much more quickly than before. The result, of course, is again the defect band, with a frequency of 0.378166.
 
-Tuning the Point-defect Mode
+Tuning the Point-Defect Mode
 ----------------------------
 
 As another example utilizing the programming capability of Scheme, we will write a script to "tune" the defect mode to a particular frequency. Instead of forming a defect by simply removing a rod, we can decrease the radius or the dielectric constant of the defect rod, thereby changing the corresponding mode frequency. In this case, we'll vary the dielectric constant, and try to find a mode with a frequency of, say, 0.314159 (a random number).

@@ -202,7 +202,7 @@ Note that, because we used `define-param` and `set-param!` to define/set some va
 
 ### Important Note on Units for the Diamond/FCC Lattice
 
-[As usual,](/MPB_User_Tutorial#A_Few_Words_on_Units "wikilink") all distances are in the dimensionless units determined by the length of the lattice vectors. We refer to these units as *a*, and frequencies are given in units of *c/a*. By default, the lattice/basis vectors are unit vectors, but in the case of fcc lattices this conflicts with the convention in the literature. In particular, the canonical *a* for fcc is the edge-length of a cubic supercell containing the lattice.
+[As usual](Scheme_Tutorial.md#a-few-words-on-units), all distances are in the dimensionless units determined by the length of the lattice vectors. We refer to these units as *a*, and frequencies are given in units of *c/a*. By default, the lattice/basis vectors are unit vectors, but in the case of fcc lattices this conflicts with the convention in the literature. In particular, the canonical *a* for fcc is the edge-length of a cubic supercell containing the lattice.
 
 In order to follow this convention, we set the length of our basis vectors appropriately using the `basis-size` property of `geometry-lattice`. The lattice vectors default to the same length as the basis vectors. If the cubic supercell edge has unit length (*a*), then the fcc lattice vectors have length sqrt(0.5), or `(sqrt 0.5)` in Scheme.
 
