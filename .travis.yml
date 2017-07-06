@@ -26,7 +26,7 @@ matrix:
       install:
         - brew tap homebrew/science
         - brew update
-        - brew install guile autoconf automake libtool fftw lapack libctl
+        - brew install guile fftw lapack libctl
       script:
         - sh autogen.sh --prefix=$HOME/local --with-hermitian-eps
         - make && make check && make install
