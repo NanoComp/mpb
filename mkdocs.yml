@@ -1,0 +1,40 @@
+site_name: MPB Documentation
+site_author: S. G. Johnson et al.
+repo_url: https://github.com/stevengj/mpb/
+
+docs_dir: 'doc/docs'
+site_dir: 'doc/site'
+
+theme_dir: 'doc/mpb-mkdocs-theme'
+theme: readthedocs
+
+python:
+   version: 2 # for unicode
+   setup_py_install: True
+
+markdown_extensions:
+    - wikilinks
+    - toc:
+        title: Table of Contents
+    - attr_list
+    - fenced_code
+    - mdx_math:
+        enable_dollar_delimiter: True
+
+extra_javascript: ['https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML','mathjaxhelper.js']
+
+pages:
+ - MPB Overview:
+     - 'About MPB': MPB.md
+     - Download.md
+     - Release_Notes.md
+ - MPB Manual:
+     - Introduction.md
+     - Installation.md
+     - Scheme_Tutorial.md
+     - Data_Analysis_Tutorial.md
+     - Scheme_User_Interface.md
+     - Developer_Information.md
+     - Guile_and_Scheme_Information.md
+     - Acknowledgements.md
+     - License_and_Copyright.md
