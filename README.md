@@ -1,3 +1,4 @@
+[![Latest Docs](https://readthedocs.org/projects/pip/badge/?version=latest)](http://mpb.readthedocs.io/en/latest/MPB/)
 [![Build Status](https://travis-ci.org/stevengj/mpb.svg?branch=master)](https://travis-ci.org/stevengj/mpb)
 
 MIT Photonic-Bands: http://ab-initio.mit.edu/mpb
@@ -11,6 +12,8 @@ See the MIT Photonic-Bands web page, for a complete description of the
 package and its user interface, as well as installation instructions,
 the license and copyright, contact addresses, and other important
 information.
+
+The latest documentation is available on [readthedocs](http://mpb.readthedocs.io/en/latest/MPB/).
 
 To build MPB from git (on a Unix-like system), do:
 ```
