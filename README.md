@@ -23,4 +23,4 @@ sh autogen.sh
 make
 ```
 To build it, you will need various dependencies installed as described
-in the [MPB Installation Manual](http://ab-initio.mit.edu/wiki/index.php/MPB_Installation).
+in the [MPB Installation Manual](http://mpb.readthedocs.io/en/latest/Installation/)
