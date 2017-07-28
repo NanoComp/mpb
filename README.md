@@ -1,4 +1,4 @@
-[![Latest Docs](https://readthedocs.org/projects/pip/badge/?version=latest)](http://mpb.readthedocs.io/en/latest/MPB/)
+[![Latest Docs](https://readthedocs.org/projects/pip/badge/?version=latest)](http://mpb.readthedocs.io/en/latest/)
 [![Build Status](https://travis-ci.org/stevengj/mpb.svg?branch=master)](https://travis-ci.org/stevengj/mpb)
 
 MIT Photonic-Bands: http://ab-initio.mit.edu/mpb
