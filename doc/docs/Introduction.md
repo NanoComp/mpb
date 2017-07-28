@@ -6,7 +6,7 @@
 
 This manual assumes that the reader is familiar with concepts from solid-state physics such as eigenstates, band structures, and Bloch's theorem. We also do not attempt to instruct the reader on photonic crystals or other optical applications for which this code might be useful. For an excellent introduction to all of these topics in the context of photonic crystals, see the book [Photonic Crystals: Molding the Flow of Light](http://ab-initio.mit.edu/book), by J. D. Joannopoulos, S. G. Johnson, R. D. Meade, and J. N. Winn (Princeton, 2008).
 
-Some of the main design goals we were thinking about when we developed this package were the following. See also the [feature list](MPB.md#features) at the MPB home page.
+Some of the main design goals we were thinking about when we developed this package were the following. See also the [feature list](index.md#features) at the MPB home page.
 
 -   Fully vectorial, three-dimensional calculations for arbitrary Bloch wavevectors. The only approximation is the spatial discretization, or equivalently the planewave cutoff.
 -   Flexible interface. Readable, extensible, scriptable. See also the [libctl design goals](http://ab-initio.mit.edu/wiki/index.php/Libctl_Introduction).

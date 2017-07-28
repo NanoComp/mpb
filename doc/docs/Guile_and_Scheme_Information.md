@@ -68,7 +68,7 @@ In Scheme, we would then use
 
 The variable *foo* would then be a list of numbers '(1 3 12.2 14.5 16 18).
 
-### Tricks Specific to Libctl-Using Programs such as [MPB](MPB.md) or [Meep](http://meep.readthedocs.io/en/latest/Meep/)
+### Tricks Specific to Libctl-Using Programs such as [MPB](index.md) or [Meep](http://meep.readthedocs.io/en/latest/Meep/)
 
 [libctl](http://ab-initio.mit.edu/wiki/index.php/Libctl) has a couple of built-in functions `arith-sequence` and `interpolate` (see the [user reference](http://ab-initio.mit.edu/wiki/index.php/Libctl_User_Reference)) to construct lists of a regular sequence of values, which you can use in conjunction with `map` as above:
 
