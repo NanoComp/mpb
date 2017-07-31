@@ -9,7 +9,7 @@ MPB 1.5
 
 <small>April 2, 2014</small>
 
--   MPB now also installs a library, for use from within [Meep](http://meep.readthedocs.io/en/latest/Meep/) 1.2 or later.
+-   MPB now also installs a library, for use from within [Meep](https://meep.readthedocs.io) 1.2 or later.
 -   Support Guile 2.x.
 -   Support FFTW version 3.x in addition to FFTW 2.x. Version 3.3 or later is required for MPI parallelism.
 -   Support for OpenMP parallelism.

@@ -1,15 +1,15 @@
 ---
-MPB Data Analysis Tutorial
+Data Analysis Tutorial
 ---
 
-In the previous section, we focused on how to perform a calculation in MPB. Now, we'll give a brief tutorial on what you might do with the results of the calculations, and in particular how you might visualize the results. We'll focus on two systems, one two-dimensional and one three-dimensional.
+In the [Tutorial](Scheme_Tutorial.md), we focused on how to perform a calculation. Now, we'll provide a brief description on what you might do with the results of the calculations, and in particular how you might visualize the results. We'll focus on two systems: 2d and 3d.
 
 [TOC]
 
 Triangular Lattice of Rods
 --------------------------
 
-First, we'll return to the two-dimensional [triangular lattice of rods](Scheme_Tutorial.md#bands-of-a-triangular-lattice) in air.  See also [our online textbook](http://ab-initio.mit.edu/book), ch. 5. The control file for this calculation, which can also be found in `mpb-ctl/examples/tri-rods.ctl`, will consist of:
+First, we'll return to the two-dimensional [triangular lattice of rods](Scheme_Tutorial.md#bands-of-a-triangular-lattice) in air.  See also [our online textbook](http://ab-initio.mit.edu/book), ch. 5. The control file for this calculation, which can also be found in `mpb/examples/tri-rods.ctl`, will consist of:
 
 ### The tri-rods.ctl Control File
 
@@ -46,7 +46,7 @@ It should finish in a few seconds.
 
 In most cases, the first thing we'll want to do is to look at the dielectric function, to make sure that we specified the correct geometry. We can do this by looking at the `epsilon.h5` output file.
 
-The first thing that might come to mind would be to examine `epsilon.h5` directly, say by converting it to a PNG image with `h5topng` from [h5utils](http://ab-initio.mit.edu/h5utils/), magnifying it by 3:
+The first thing that might come to mind would be to examine `epsilon.h5` directly, say by converting it to a PNG image with `h5topng` from [h5utils](https://github.com/stevengj/h5utils), magnifying it by 3:
 
 ```
 unix% h5topng -S 3 epsilon.h5
@@ -198,7 +198,7 @@ As before, run the calculation, directing the output to a file. This will take a
 unix% nohup mpb diamond.ctl >& diamond.out &
 ```
 
-Note that, because we used `define-param` and `set-param!` to define/set some variables (see the [libctl reference](http://ab-initio.mit.edu/wiki/index.php/Libctl_User_Reference), we can change them from the command line. For example, to use a radius of 0.3 and a resolution of 20, we can just type `mpb r=0.3 resolution=20 diamond.ctl`. This is an extremely useful feature, because it allows you to use one generic control file for many variations on the same structure.
+Note that, because we used `define-param` and `set-param!` to define/set some variables (see the [libctl reference](https://libctl.readthedocs.io/en/latest/Libctl_User_Reference/), we can change them from the command line. For example, to use a radius of 0.3 and a resolution of 20, we can just type `mpb r=0.3 resolution=20 diamond.ctl`. This is an extremely useful feature, because it allows you to use one generic control file for many variations on the same structure.
 
 ### Important Note on Units for the Diamond/FCC Lattice
 
