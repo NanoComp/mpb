@@ -5,7 +5,7 @@ Markdown (.md) files for MPB documentation live in $(top_src_dir)/doc/docs.
 To build and visualize the HTML documentation locally using the
 mkdocs package (useful for verifying on your local machine before
 committing), install the `mkdocs` package, then run the 
-following command from the top-level meep repository tree:
+following command from the top-level mpb repository tree:
 
 % mkdocs serve
 

@@ -2,9 +2,7 @@
 # Installation
 ---
 
-[TOC]
-
-**Important Note**: Installing MPB from source can be challenging for novice users. As a simple workaround, the latest version of MPB preinstalled on Ubuntu can be accessed on Amazon Web Services (AWS) Elastic Compute Cloud (EC2) as a free [Amazon Machine Image (AMI)](https://aws.amazon.com/marketplace/pp/B01KHWH0AS). To access this AMI, follow these [instructions](http://www.simpetuscloud.com/launchsims.html).
+**Note**: Installing MPB from source can be challenging for novice users. As a simple workaround, the latest version of MPB preinstalled on Ubuntu can be accessed on Amazon Web Services (AWS) Elastic Compute Cloud (EC2) as a free [Amazon Machine Image (AMI)](https://aws.amazon.com/marketplace/pp/B01KHWH0AS). To access this AMI, follow these [instructions](http://www.simpetuscloud.com/launchsims.html).
 
 In this section, we outline the procedure for installing MPB. Mainly, this consists of downloading and installing various prerequisites. As much as possible, we have attempted to take advantage of existing packages such as BLAS, LAPACK, FFTW, and Guile, in order to make our code smaller, more robust, faster, and more flexible. Unfortunately, this may make the installation of MPB more complicated if you do not already have these packages.
 
@@ -14,10 +12,12 @@ Many of these libraries may be available in precompiled binary form, especially 
 
 It is important that you use the *same Fortran compiler* to compile Fortran libraries (like LAPACK) and for configuring MPB. Different Fortran compilers often have incompatible linking schemes. The Fortran compiler for MPB can be set via the `F77` environment variable.
 
-Installation on MacOS X
------------------------
+[TOC]
 
-See the [installation guide for Meep on OS X](http://meep.readthedocs.io/en/latest/Installation/#installation-on-macos-x) for the easiest way to do this.
+Installation on macOS
+---------------------
+
+See the [installation guide for Meep on macOS](https://meep.readthedocs.io/en/latest/Installation/#installation-on-macos) for the easiest way to do this.
 
 Unix Installation Basics
 ------------------------
@@ -83,6 +83,8 @@ If you are installing on your personal Linux or BSD machine, then precompiled bi
 
 One thing to watch out for is that libraries like LAPACK, Guile, HDF5, etcetera, will often come split up into two or more packages: e.g. a `guile` package and a `guile-devel` package. You need to install **both** of these to compile software using the library.
 
+To build the latest version of MPB from source on Ubuntu 16.04, follow these [instructions](http://www.mail-archive.com/mpb-discuss@ab-initio.mit.edu/msg01039.html).
+
 
 BLAS and LAPACK
 ---------------
@@ -128,7 +130,7 @@ If you use MPB with MPI, you should compile HDF5 with MPI support as well. See b
 
 Also, in order to get good performance, you'll need fast interconnect hardware such as Gigabit Ethernet, InfiniBand, or Myrinet. The speed bottleneck comes from the FFT, which requires most of the communications in MPB. FFTW's MPI transforms ([see below](Installation.md#fftw)) come with benchmark programs that will give you a good idea of whether you can get speedups on your system. Of course, even with slow communications, you can still benefit from the memory savings per CPU for large problems.
 
-As described below, when you configure MPB with MPI support (`--with-mpi`), it installs itself as `mpb-mpi`. See also the [manual](Scheme_User_Interface.md) for information on using MPB on parallel machines. Normally, you should *also* install the serial version of MPB, if only to get the `mpb-data` utility, which is not installed with the MPI version.
+As described below, when you configure MPB with MPI support (`--with-mpi`), it installs itself as `mpb-mpi`. See also the [User Interface](Scheme_User_Interface.md) for information on using MPB on parallel machines. Normally, you should *also* install the serial version of MPB, if only to get the `mpb-data` utility, which is not installed with the MPI version.
 
 HDF5 (recommended)
 -----------------------------------
@@ -137,7 +139,7 @@ We require a portable, standard binary format for outputting the electromagnetic
 
 HDF is a widely-used, free, portable library and file format for multi-dimensional scientific data, developed in the National Center for Supercomputing Applications (NCSA) at the University of Illinois. You can get HDF and learn about it on the [HDF Home Page](http://www.hdfgroup.org).
 
-We require HDF5 which is supported by a number scientific of visualization tools including our own [h5utils](http://ab-initio.mit.edu/wiki/index.php/H5utils) utilities.
+We require HDF5 which is supported by a number scientific of visualization tools including our own [h5utils](https://github.com/stevengj/h5utils) utilities.
 
 HDF5 includes parallel I/O support under MPI, which can be enabled by configuring it with `--enable-parallel`. You may also have to set the `CC` environment variable to `mpicc`. Unfortunately, the parallel HDF5 library then does not work with serial code, so you have may have to choose one or the other.
 
@@ -174,12 +176,12 @@ If you want to be a developer of the MPB package as opposed to merely a user, yo
 libctl
 ------
 
-[libctl](http://ab-initio.mit.edu/wiki/index.php/Libctl), which requires Guile, is required to use the Scheme interface, and is strongly r
+[libctl](https://libctl.readthedocs.io), which requires Guile, is required to use the Scheme interface, and is strongly r
 ecommended. If you don't install it, you can only use the C++ interface. libctl version **3.2 or later** is required.
 
 Instead of using Guile directly, we separated much of the user interface code into a package called libctl, in the hope that this might be
  more generally useful. libctl automatically handles the communication between the program and Guile, converting complicated data structur
- es and so on, to make it even easier to use Guile to control scientific applications. Download libctl from the [libctl page](http://ab-initio.mit.edu/libctl), unpack it, and run the usual `configure`, `make`, `make install` sequence. You'll also want to browse the [libctl manual](http://ab-initio.mit.edu/wiki/index.php/The_libctl_Manual), as this will give you a general overview of what the user interface will be like.
+ es and so on, to make it even easier to use Guile to control scientific applications. Download libctl from the [libctl page](https://libctl.readthedocs.io), unpack it, and run the usual `configure`, `make`, `make install` sequence. You'll also want to browse the [libctl manual](https://libctl.readthedocs.io), as this will give you a general overview of what the user interface will be like.
 
 If you are not the system administrator of your machine, and/or want to install libctl somewhere else like your home directory, you can do so with the standard `--prefix=dir` option to `configure`. The default prefix is `/usr/local`. In this case, however, you'll need to specify the location of the libctl shared files for MPB, using the `--with-libctl=dir/share/libctl` option to our `configure` script.
 

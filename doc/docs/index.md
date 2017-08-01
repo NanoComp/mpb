@@ -2,42 +2,36 @@
 # MPB
 ---
 
-The **MIT Photonic-Bands** (**MPB**) package is a [free](http://www.gnu.org/philosophy/free-sw.en.html) program for computing the band structures, or dispersion relations, and electromagnetic modes of periodic dielectric structures, on both serial and parallel computers. MPB computes definite-frequency eigenstates, or harmonic modes, of [Maxwell's equations](https://en.wikipedia.org/wiki/Maxwell%27s_equations) in periodic dielectric structures for arbitrary wavevectors, using fully-vectorial and three-dimensional methods. It is applicable to many problems in optics, such as waveguides and resonator systems, and [photonic crystals](http://ab-initio.mit.edu/book). For example, it can solve for the modes of waveguides with arbitrary cross-sections.
+**MPB** is a free software package for computing the band structures, or dispersion relations, and electromagnetic modes of periodic dielectric structures, on both serial and parallel computers. MPB is an acronym for *MIT Photonic Bands*. MPB computes definite-frequency eigenstates, or harmonic modes, of [Maxwell's equations](https://en.wikipedia.org/wiki/Maxwell%27s_equations) in periodic dielectric structures for arbitrary wavevectors, using fully-vectorial and three-dimensional methods. It is applicable to many problems in optics, such as waveguides and resonator systems, and [photonic crystals](http://ab-initio.mit.edu/book). For example, it can solve for the modes of waveguides with arbitrary cross-sections.
 
-See also our complementary [Meep](http://meep.readthedocs.io/en/latest/Meep/) package for time-domain simulations, reflection/transmission spectra, etc.
+See also our complementary [Meep](https://meep.readthedocs.io/) package for time-domain simulations, reflection/transmission spectra, etc.
 
 Features
 --------
 
--   Free software under the GNU General Public License. See the [License and Copyright](License_and_Copyright.md).
--   Fully-vectorial, three-dimensional calculation. Iterative eigensolver techniques are employed to make large, three-dimensional calculations possible. Can also handle 2D and 1D problems.
--   Direct, frequency-domain eigensolver as opposed to indirect methods, e.g. time-domain. For one thing, this means that you get both eigenvalues (frequencies) and eigenstates (electromagnetic modes) at the same time. See a [comparison of time-domain and frequency-domain techniques](Introduction.md#frequency-domain-vs-time-domain).
--   Targeted eigensolver. Normally, iterative eigensolvers provide you with the states (optical bands/modes) with the lowest few frequencies. Our software can alternatively compute the modes whose frequencies are closest to a specified target frequency. This greatly reduces the number of bands that must be computed in guided or resonant mode calculations.
--   Flexible, scriptable user interface based on the [Guile](http://www.gnu.org/software/guile/) extension & scripting language.
--   Support for arbitrary, anisotropic dielectric structures including gyrotropic/magneto-optic materials and non-orthogonal unit cells.
--   Field output in [HDF5](https://support.hdfgroup.org/HDF5/) format for input into many popular graphing and visualization tools.
--   Portable to most Unix-like operating systems. See the [installation guide](Installation.md).
--   Support for parallel machines with MPI.
+-   **Free software** under the [GNU GPL](https://en.wikipedia.org/wiki/GNU_General_Public_License).
+-   Portable to any Unix-like system such as [Linux](https://en.wikipedia.org/wiki/Linux) and [macOS](https://en.wikipedia.org/wiki/MacOS).
+-   Support for **parallel** machines with MPI.
+-   Fully-vectorial **1d, 2d, 3d** calculations. Iterative eigensolver techniques are employed to make large calculations possible.
+-   **Direct, frequency-domain eigensolver** as opposed to indirect methods, e.g. time-domain. This means that you get both eigenvalues (frequencies) and eigenstates (electromagnetic modes) at the same time. See a [comparison of time-domain and frequency-domain techniques](Introduction.md#frequency-domain-vs-time-domain).
+-   **Targeted eigensolver**. Normally, iterative eigensolvers provide you with the states (photonic bands/modes) with the lowest few frequencies. MPB can alternatively compute the modes whose frequencies are closest to a specified target frequency. This greatly reduces the number of bands that must be computed in guided or resonant mode calculations.
+-   Flexible, scriptable user interface based on [Scheme](https://en.wikipedia.org/wiki/Scheme_programming_language). A [Python](https://en.wikipedia.org/wiki/Python_programming_language) interface is under development.
+-   Support for arbitrary, **anisotropic** dielectricstructures including **gyrotropic/magneto-optic** materials and **non-orthogonal** unit cells.
+-   Field output in [HDF5](https://support.hdfgroup.org/HDF5/) format supported by many visualization tools.
 
-To give you some feel for how long these calculations take, let us consider one typical data point. For the 3d band-structure of a [diamond lattice of dielectric spheres in air](Data_Analysis_Tutorial.md#diamond-lattice-of-spheres), computing the lowest 10 bands on a 16×16×16 grid at 31 k-points, MPB took 8 seconds on a 2.8 GHz AMD Opteron under Linux with the [ATLAS](http://www.netlib.org/atlas/) optimized BLAS library. Thus, at each k-point, MPB was minimizing a function with 81920 degrees of freedom in 0.26 seconds on average.
+To give you some feel for how long these calculations take, let us consider one typical data point. For the 3d band-structure of a [diamond lattice of dielectric spheres in air](Data_Analysis_Tutorial.md#diamond-lattice-of-spheres), computing the lowest 10 bands on a 16×16×16 grid at 31 k-points, MPB took 8 seconds on a 2.8 GHz AMD Opteron under Debian with the [ATLAS](http://www.netlib.org/atlas/) optimized BLAS library. Thus, at each k-point, MPB was minimizing a function with 81920 degrees of freedom in 0.26 seconds on average.
 
-MPB Download
+Download
 ------------
 
-You can [download](Download.md) the full source code in ANSI C for MPB under the [GPL](License_and_Copyright.md). The [installation guide](Installation.md) describes how to install it; mainly, this consists of downloading and installing various prerequisites if you do not have them already.
-
-The current version is **1.5**. See the [release notes](Release_Notes.md) for what is new in each version.
-
-You can also download the latest development sources from [MPB on Github](https://github.com/stevengj/mpb).
+The latest development sources are available on [GitHub](https://github.com/stevengj/mpb). The source tarballs are available on the [Download](Download.md) page. The release history is described in the [Release Notes](Release_Notes.md). The installation instructions can be found in the [Installation](Installation.md) page.
 
 Documentation
 -------------
 
-This manual is readable online and is also part of the code repository. The [tutorials](Scheme_Tutorial.md) demonstrate what it is like to use the program. You may be also interested in the [libctl manual](http://ab-initio.mit.edu/libctl), which describes a Guile/Scheme-based scripting library that we build our interface on top of, and also additional information on [Guile and Scheme](Guile_and_Scheme_Information.md).
+See the navigation sidebar at left. The [Tutorial](Scheme_Tutorial.md) demonstrates what it is like to use the program.
 
-We have published a paper on the computational methods underlying MPB:
-
-Steven G. Johnson and J. D. Joannopoulos, [Block-iterative frequency-domain methods for Maxwell's equations in a planewave basis](http://www.opticsinfobase.org/abstract.cfm?URI=oe-8-3-173), *Optics Express* **8**, no. 3, 173-190 (2001).
+Please [cite MPB](Acknowledgements.md#referencing) in any publication for which you found it useful.
 
 ### Mailing Lists
 
@@ -52,11 +46,11 @@ For bug reports and feature requests, please [file an MPB Github issue](https://
 Acknowledgements
 ----------------
 
-Many people and groups have contributed to the development of this software, both directly and indirectly. Please see the [acknowledgements section](Acknowledgements.md) of the manual for those to whom we feel especially grateful.
+The MPB project is maintained by [Simpetus](http://www.simpetuscloud.com) and the open-source community on [GitHub](https://github.com/stevengj/mpb). Please see the [Acknowledgements](Acknowledgements.md) for a more complete listing of those to whom we are grateful.
 
 Contacts and Feedback
 ---------------------
 
 If you have questions or problems regarding MPB, you are encouraged to query the [mailing list](https://www.mail-archive.com/mpb-discuss@ab-initio.mit.edu/).
 
-For professional consulting as well as free access to MPB in the public cloud via Amazon Web Services (AWS), see [Simpetus](http://www.simpetuscloud.com).
+Professional consulting services as well as free access to MPB in the public cloud via Amazon Web Services (AWS) are provided by [Simpetus](http://www.simpetuscloud.com).

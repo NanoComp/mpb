@@ -2,7 +2,7 @@
 # Scheme User Interface
 ---
 
-The user interface is documented in this page. We do not document the Scheme language or the functions provided by [libctl](http://ab-initio.mit.edu/wiki/index.php/Libctl). See also the [libctl User Reference](http://ab-initio.mit.edu/wiki/index.php/Libctl_User_Reference) section of the [libctl manual](http://ab-initio.mit.edu/wiki/index.php/Libctl_manual).
+The Scheme user interface is documented in this page. We do not document the Scheme language or the functions provided by [libctl](https://libctl.readthedocs.io). See also the [libctl User Reference](https://libctl.readthedocs.io/en/latest/Libctl_User_Reference/) section of the [libctl manual](https://libctl.readthedocs.io).
 
 [TOC]
 
@@ -136,7 +136,7 @@ Classes are complex datatypes with various "properties" which may have default v
 (make class (prop1 val1) (prop2 val2) ...)
 ```
 
-See also the [libctl manual](http://ab-initio.mit.edu/wiki/index.php/Libctl_manual).
+See also the [libctl manual](https://libctl.readthedocs.io).
 
 MPB defines several types of classes, the most numerous of which are the various geometric object classes. You can also get a list of the available classes, along with their property types and default values, at runtime with the `(help)` command.
 
@@ -303,7 +303,7 @@ Functions
 
 Here, we describe the functions that are defined by MPB. There are many types of functions defined ranging from utility functions for duplicating geometric objects to run functions that start the computation.
 
-See also the [reference section](http://ab-initio.mit.edu/wiki/index.php/Libctl_User_Reference) of the libctl manual, which describes a number of useful functions defined by libctl.
+See also the [reference section](https://libctl.readthedocs.io/en/latest/Libctl_User_Reference/) of the libctl manual, which describes a number of useful functions defined by libctl.
 
 ### Geometry Utilities
 
@@ -323,7 +323,7 @@ Same as `geometric-object-duplicates`, except operates on a list of objects, `ob
 
 **`(geometric-objects-lattice-duplicates obj-list [ ux uy uz ])`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Duplicates the objects in `obj-list` by multiples of the lattice basis vectors, making all possible shifts of the "primitive cell" (see below) that fit inside the lattice cell. This is useful for supercell calculations. See the [tutorial](Scheme_Tutorial.md). The primitive cell to duplicate is `ux` by `uy` by `uz`, in units of the basis vectors. These three parameters are optional; any that you do not specify are assumed to be `1`.
+Duplicates the objects in `obj-list` by multiples of the lattice basis vectors, making all possible shifts of the "primitive cell" (see below) that fit inside the lattice cell. This is useful for supercell calculations. See the [Tutorial](Scheme_Tutorial.md). The primitive cell to duplicate is `ux` by `uy` by `uz`, in units of the basis vectors. These three parameters are optional; any that you do not specify are assumed to be `1`.
 
 **`(point-in-object? point obj)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -353,7 +353,7 @@ Like the above, except that they convert to/from reciprocal space (the basis of 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Convert between the reciprocal and lattice bases, where the conversion again leaves out the factor of 2&#960; (i.e. the lattice-basis vectors are assumed to be in units of 2&#960;).
 
-Also, a couple of rotation functions are defined, for convenience, so that you don't have to explicitly convert to cartesian coordinates in order to use libctl's `rotate-vector3` function. See the [Libctl User Reference](http://ab-initio.mit.edu/wiki/index.php/Libctl_User_Reference):
+Also, a couple of rotation functions are defined, for convenience, so that you don't have to explicitly convert to cartesian coordinates in order to use libctl's `rotate-vector3` function. See the [Libctl User Reference](https://libctl.readthedocs.io/en/latest/Libctl_User_Reference/):
 
 **`(rotate-lattice-vector3 axis theta v)`, `(rotate-reciprocal-vector3 axis theta v)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -576,7 +576,7 @@ Field Manipulation
 
 MPB provides a number of ways to take the field of a band and manipulate, process, or output it. These methods usually work in two stages. First, one loads a field into memory, computing it in position space, by calling one of the `get` functions below. Then, other functions can be called to transform or manipulate the field.
 
-The simplest class of operations involve only the currently-loaded field, which we describe in the [second subsection](Scheme_User_Interface.md#loading-and-manipulating-the-current-field) below. To perform more sophisticated operations, involving more than one field, one must copy or transform the current field into a new field variable, and then call one of the functions that operate on multiple field variables described in the [third subsection](Scheme_User_Interface.md#storing-and-combining-multiple-fields).
+The simplest class of operations involve only the currently-loaded field, which we describe in the [second subsection](Scheme_User_Interface.md#loading-and-manipulating-the-current-field) below. To perform more sophisticated operations, involving more than one field, one must copy or transform the current field into a new field variable, and then call one of the functions that operate on multiple field variables described [below](Scheme_User_Interface.md#storing-and-combining-multiple-fields).
 
 ### Field Normalization
 
@@ -847,7 +847,7 @@ We provide two methods by which you can parallelize MPB. The first, using MPI, i
 
 ### MPB with MPI Parallelization
 
-If you `configure` MPB with the `--with-mpi` flag, then the program is compiled to take advantage of distributed-memory parallel machines with [MPI](http://www-unix.mcs.anl.gov/mpi/index.html), and is installed as `mpb-mpi`. See also the [installation guide](Installation.md#mpi-parallel-machines). This means that computations will potentially run more quickly and take up less memory per processor than for the serial code. Normally, you should also install the serial version of MPB, if only to get the `mpb-data` program, which is not installed with `mpb-mpi`.
+If you `configure` MPB with the `--with-mpi` flag, then the program is compiled to take advantage of distributed-memory parallel machines with [MPI](http://www-unix.mcs.anl.gov/mpi/index.html), and is installed as `mpb-mpi`. See also the [Installation manual](Installation.md#mpi-parallel-machines). This means that computations will potentially run more quickly and take up less memory per processor than for the serial code. Normally, you should also install the serial version of MPB, if only to get the `mpb-data` program, which is not installed with `mpb-mpi`.
 
 Using the parallel MPB is almost identical to using the serial version(s), with a couple of minor exceptions. The same ctl files should work for both. Running a program that uses MPI requires slightly different invocations on different systems, but will typically be something like:
 

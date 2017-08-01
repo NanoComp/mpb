@@ -21,11 +21,6 @@ You should have received a copy of the GNU General Public License along with thi
 
 The file `minpack2-linmin.c` was derived from the [MINPACK-2](ftp://info.mcs.anl.gov/pub/MINPACK-2/) package. It is copyright © 1996 by [Jorge J. Moré](http://www-unix.mcs.anl.gov/~more/), who has graciously granted us permission to distribute it along with MPB under the GNU General Public License.
 
-As a clarification, we should note that Scheme control (`ctl`) files, written by the user (i.e. not containing code distributed with MIT Photonic-Bands) and loaded at runtime by the MIT Photonic-Bands software, are *not* considered derived works of MIT Photonic-Bands and do *not* fall thereby under the restrictions of the GNU General Public License.
+As a clarification, we should note that Scheme control (`ctl`) files, written by the user (i.e. not containing code distributed with MPB) and loaded at runtime by MPB, are *not* considered derived works of MPB and do *not* fall thereby under the restrictions of the GNU General Public License.
 
-In addition, all of the example Scheme code in this manual, as well as the example ctl files in the `mpb-ctl/examples/` directory, may be freely used, modified, and redistributed, without any restrictions. The warranty disclaimer still applies, of course.
-
-Referencing
------------
-
-We kindly ask you to reference MPB and its authors in any publication for which you used MPB. You are not legally *required* to do so; it is up to your common sense to decide whether you want to comply with this request or not.
+In addition, all of the example Scheme code in this manual, as well as the example ctl files in the `mpb/examples/` directory, may be freely used, modified, and redistributed, without any restrictions. The warranty disclaimer still applies, of course.
