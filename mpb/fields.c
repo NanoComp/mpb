@@ -27,6 +27,7 @@
 #include <mpiglue.h>
 #include <mpi_utils.h>
 #include <maxwell.h>
+#include <xyz_loop.h>
 
 #include <ctl-io.h>
 #include <ctlgeom.h>
@@ -78,7 +79,7 @@ void get_dfield(int which_band)
 
      /* Here, we correct for the fact that compute_d_from_H actually
 	computes just (k+G) x H, whereas the actual D field is
-	i/omega i(k+G) x H...so, there is an added factor of -1/omega. 
+	i/omega i(k+G) x H...so, there is an added factor of -1/omega.
 
         We also divide by the cell volume so that the integral of H*B
         or of D*E is unity.  (From the eigensolver + FFT, they are
@@ -241,9 +242,9 @@ double compute_field_energy_internal(real comp_sum[6])
 
 	  /* energy is either |curfield|^2 / mu or |curfield|^2 / epsilon,
 	     depending upon whether it is B or D. */
-	  if (curfield_type == 'd') 
+	  if (curfield_type == 'd')
 	       assign_symmatrix_vector(field, mdata->eps_inv[i], curfield+3*i);
-	  else if (curfield_type == 'b' && mdata->mu_inv != NULL) 
+	  else if (curfield_type == 'b' && mdata->mu_inv != NULL)
 	       assign_symmatrix_vector(field, mdata->mu_inv[i], curfield+3*i);
 	  else {
 	       field[0] =   curfield[3*i];
@@ -263,7 +264,7 @@ double compute_field_energy_internal(real comp_sum[6])
 	     since energy_density[i] is guaranteed to come at or before
 	     curfield[i] (which we are now done with). */
 
-	  energy_sum += energy_density[i] = 
+	  energy_sum += energy_density[i] =
 	       comp_sqr0+comp_sqr1+comp_sqr2+comp_sqr3+comp_sqr4+comp_sqr5;
 #ifndef SCALAR_COMPLEX
 	  /* most points need to be counted twice, by rfftw output symmetry: */
@@ -475,7 +476,7 @@ void fix_field_phase(void)
 	maximum |real part| of the jmax component (after multiplying
 	by phase), and then finding the last spatial index at which
 	|real part| is at least half of this value.  The sign is then
-	chosen to make the real part positive at that point. 
+	chosen to make the real part positive at that point.
 
         (Note that we can't just make the point of maximum |real part|
          positive, as that would be ambiguous in the common case of an
@@ -511,7 +512,7 @@ void fix_field_phase(void)
      if (i >= 0)  /* convert index to global index in distributed array: */
 	  maxabs_index += mdata->local_y_start * mdata->nx * mdata->nz;
      {
-	  /* compute maximum index and corresponding sign over all the 
+	  /* compute maximum index and corresponding sign over all the
 	     processors, using the MPI_MAXLOC reduction operation: */
 	  struct twoint_struct {int i; int s;} x;
 	  x.i = maxabs_index; x.s = maxabs_sign;
@@ -536,7 +537,7 @@ void fix_field_phase(void)
 	  curfield[i].im = a*SCALAR_IM(phase) + b*SCALAR_RE(phase);
      }
      for (i = 0; i < H.n; ++i) {
-          ASSIGN_MULT(H.data[i*H.p + curfield_band - 1], 
+          ASSIGN_MULT(H.data[i*H.p + curfield_band - 1],
 		      H.data[i*H.p + curfield_band - 1], phase);
      }
 }
@@ -618,7 +619,7 @@ static real interp_val(vector3 p, int nx, int ny, int nz, int last_dim_size,
 #undef D
 }
 
-static scalar_complex interp_cval(vector3 p, 
+static scalar_complex interp_cval(vector3 p,
 				  int nx, int ny, int nz, int last_dim_size,
 				  real *data, int stride)
 {
@@ -711,7 +712,7 @@ cvector3 get_field_point(vector3 p)
      field[2] = f_interp_cval(p, mdata, &curfield[2].re, 6);
 
      if (curfield_type != 'v') {
-	  double phase_phi = TWOPI * 
+	  double phase_phi = TWOPI *
 	       (cur_kvector.x * (p.x/geometry_lattice.size.x) +
 		cur_kvector.y * (p.y/geometry_lattice.size.y) +
 		cur_kvector.z * (p.z/geometry_lattice.size.z));
@@ -731,7 +732,7 @@ cnumber get_bloch_cscalar_point(vector3 p)
 {
      CHECK(curfield && strchr("C", curfield_type),
 	   "cscalar must be must be loaded before get-*cscalar*-point");
-     
+
      return cscalar2cnumber(f_interp_cval(p, mdata, &curfield[0].re, 2));
 }
 
@@ -741,12 +742,12 @@ cnumber get_cscalar_point(vector3 p)
 
      CHECK(curfield && strchr("C", curfield_type),
 	   "cscalar must be must be loaded before get-*cscalar*-point");
-     
+
      s = f_interp_cval(p, mdata, &curfield[0].re, 2);
 
      if (curfield_type == 'C') {
 	  scalar_complex phase;
-	  double phase_phi = TWOPI * 
+	  double phase_phi = TWOPI *
 	       (cur_kvector.x * (p.x/geometry_lattice.size.x) +
 		cur_kvector.y * (p.y/geometry_lattice.size.y) +
 		cur_kvector.z * (p.z/geometry_lattice.size.z));
@@ -760,7 +761,7 @@ cnumber get_cscalar_point(vector3 p)
 number rscalar_field_get_point(SCM fo, vector3 p)
 {
      field_smob *f = assert_field_smob(fo);
-     CHECK(f->type == RSCALAR_FIELD_SMOB, 
+     CHECK(f->type == RSCALAR_FIELD_SMOB,
 	   "invalid argument to rscalar-field-get-point");
      return f_interp_val(p, f, f->f.rs, 1, 0);
 }
@@ -770,7 +771,7 @@ cvector3 cvector_field_get_point_bloch(SCM fo, vector3 p)
      scalar_complex field[3];
      cvector3 F;
      field_smob *f = assert_field_smob(fo);
-     CHECK(f->type == CVECTOR_FIELD_SMOB, 
+     CHECK(f->type == CVECTOR_FIELD_SMOB,
 	   "invalid argument to cvector-field-get-point");
      field[0] = f_interp_cval(p, f, &f->f.cv[0].re, 6);
      field[1] = f_interp_cval(p, f, &f->f.cv[1].re, 6);
@@ -786,16 +787,16 @@ cvector3 cvector_field_get_point(SCM fo, vector3 p)
      scalar_complex field[3];
      cvector3 F;
      field_smob *f = assert_field_smob(fo);
-     CHECK(f->type == CVECTOR_FIELD_SMOB, 
+     CHECK(f->type == CVECTOR_FIELD_SMOB,
 	   "invalid argument to cvector-field-get-point");
 
      field[0] = f_interp_cval(p, f, &f->f.cv[0].re, 6);
      field[1] = f_interp_cval(p, f, &f->f.cv[1].re, 6);
      field[2] = f_interp_cval(p, f, &f->f.cv[2].re, 6);
-     
+
      if (f->type_char != 'v') { /* v fields have no kvector */
 	  scalar_complex phase;
-	  double phase_phi = TWOPI * 
+	  double phase_phi = TWOPI *
 	       (cur_kvector.x * (p.x/geometry_lattice.size.x) +
 		cur_kvector.y * (p.y/geometry_lattice.size.y) +
 		cur_kvector.z * (p.z/geometry_lattice.size.z));
@@ -814,7 +815,7 @@ cvector3 cvector_field_get_point(SCM fo, vector3 p)
 cnumber cscalar_field_get_point_bloch(SCM fo, vector3 p)
 {
      field_smob *f = assert_field_smob(fo);
-     CHECK(f->type == CSCALAR_FIELD_SMOB, 
+     CHECK(f->type == CSCALAR_FIELD_SMOB,
 	   "invalid argument to cscalar-field-get-point-bloch");
      return cscalar2cnumber(f_interp_cval(p, f, &f->f.cv[0].re, 2));
 }
@@ -823,14 +824,14 @@ cnumber cscalar_field_get_point(SCM fo, vector3 p)
 {
      scalar_complex s;
      field_smob *f = assert_field_smob(fo);
-     CHECK(f->type == CSCALAR_FIELD_SMOB, 
+     CHECK(f->type == CSCALAR_FIELD_SMOB,
 	   "invalid argument to cscalar-field-get-point");
 
      s = f_interp_cval(p, f, &f->f.cv[0].re, 2);
-     
+
      if (f->type_char == 'C') { /* have kvector */
 	  scalar_complex phase;
-	  double phase_phi = TWOPI * 
+	  double phase_phi = TWOPI *
 	       (cur_kvector.x * (p.x/geometry_lattice.size.x) +
 		cur_kvector.y * (p.y/geometry_lattice.size.y) +
 		cur_kvector.z * (p.z/geometry_lattice.size.z));
@@ -901,7 +902,7 @@ static char *fix_fname(const char *fname, const char *prefix,
 {
      char *s;
      CHK_MALLOC(s, char,
-		(fname ? strlen(fname) : 0) + 
+		(fname ? strlen(fname) : 0) +
 		(prefix ? strlen(prefix) : 0) + 20);
      strcpy(s, prefix ? prefix : "");
      strcat(s, fname ? fname : "");
@@ -927,10 +928,10 @@ static void output_scalarfield(real *vals,
 {
      matrixio_id data_id = {-1, 1};
 
-     fieldio_write_real_vals(vals, 3, dims, 
-			     local_dims, start, file_id, 0, 
+     fieldio_write_real_vals(vals, 3, dims,
+			     local_dims, start, file_id, 0,
 			     dataname, &data_id);
-     
+
 #ifndef SCALAR_COMPLEX
      {
 	  int start_new[3], local_dims_new[3];
@@ -953,17 +954,17 @@ static void output_scalarfield(real *vals,
 		  then write the start_new[0] slab. */
 	       fieldio_write_real_vals(vals +
 				       local_dims_new[1] * local_dims_new[2],
-				       3, dims, local_dims_new, start_new, 
+				       3, dims, local_dims_new, start_new,
 				       file_id, 1, dataname, &data_id);
 	       local_dims_new[0] = 1;
 	       start_new[0] = 0;
-	       fieldio_write_real_vals(vals, 3, dims, 
+	       fieldio_write_real_vals(vals, 3, dims,
 				       local_dims_new, start_new,
 				       file_id, 1, dataname, &data_id);
 	  }
 	  else {
-	       fieldio_write_real_vals(vals, 3, dims, 
-				       local_dims_new, start_new, 
+	       fieldio_write_real_vals(vals, 3, dims,
+				       local_dims_new, start_new,
 				       file_id, 1, dataname, &data_id);
 	  }
      }
@@ -975,7 +976,7 @@ static void output_scalarfield(real *vals,
 
 /* given the field in curfield, store it to HDF (or whatever) using
    the matrixio (fieldio) routines.  Allow the component to be specified
-   (which_component 0/1/2 = x/y/z, -1 = all) for vector fields. 
+   (which_component 0/1/2 = x/y/z, -1 = all) for vector fields.
    Also allow the user to specify a prefix string for the filename. */
 void output_field_to_file(integer which_component, string filename_prefix)
 {
@@ -993,11 +994,11 @@ void output_field_to_file(integer which_component, string filename_prefix)
      int write_start0_special = 0;
 
      if (!curfield) {
-	  mpi_one_fprintf(stderr, 
+	  mpi_one_fprintf(stderr,
 		  "fields, energy dens., or epsilon must be loaded first.\n");
 	  return;
      }
-     
+
 #ifdef HAVE_MPI
      /* The first two dimensions (x and y) of the position-space fields
 	are transposed when we use MPI, so we need to transpose everything. */
@@ -1076,7 +1077,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 
      if (strchr("Rv", curfield_type)) /* generic scalar/vector field */
 	  output_k[0] = output_k[1] = output_k[2] = 0.0; /* don't know k */
-     
+
      if (strchr("dhbecv", curfield_type)) { /* outputting vector field */
 	  matrixio_id data_id[6] = {{-1,1},{-1,1},{-1,1},{-1,1},{-1,1},{-1,1}};
 	  int i;
@@ -1089,7 +1090,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	       strcat(fname, comp_str);
 	  }
 	  sprintf(description, "%c field, kpoint %d, band %d, freq=%g",
-		  curfield_type, kpoint_index, curfield_band, 
+		  curfield_type, kpoint_index, curfield_band,
 		  freqs.items[curfield_band - 1]);
 	  fname2 = fix_fname(fname, filename_prefix, mdata, 1);
 	  mpi_one_printf("Outputting fields to %s...\n", fname2);
@@ -1111,10 +1112,10 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	       /* The conjugated array half may be discontiguous.
 		  First, write the part not containing start[0], and
 		  then write the start[0] slab. */
-	       fieldio_write_complex_field(curfield + 
+	       fieldio_write_complex_field(curfield +
 					   3 * local_dims[1] * local_dims[2],
 					   3, dims, local_dims, start,
-					   which_component, 3, NULL, 
+					   which_component, 3, NULL,
 					   file_id, 1, data_id);
 	       local_dims[0] = 1;
 	       start[0] = 0;
@@ -1142,7 +1143,7 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	  sprintf(fname, "%c.k%02d.b%02d",
 		  curfield_type, kpoint_index, curfield_band);
 	  sprintf(description, "%c field, kpoint %d, band %d, freq=%g",
-		  curfield_type, kpoint_index, curfield_band, 
+		  curfield_type, kpoint_index, curfield_band,
 		  freqs.items[curfield_band - 1]);
 	  fname2 = fix_fname(fname, filename_prefix, mdata, 1);
 	  mpi_one_printf("Outputting complex scalar field to %s...\n", fname2);
@@ -1164,10 +1165,10 @@ void output_field_to_file(integer which_component, string filename_prefix)
 	       /* The conjugated array half may be discontiguous.
 		  First, write the part not containing start[0], and
 		  then write the start[0] slab. */
-	       fieldio_write_complex_field(curfield + 
+	       fieldio_write_complex_field(curfield +
 					   local_dims[1] * local_dims[2],
 					   3, dims, local_dims, start,
-					   which_component, 1, NULL, 
+					   which_component, 1, NULL,
 					   file_id, 1, data_id);
 	       local_dims[0] = 1;
 	       start[0] = 0;
@@ -1202,17 +1203,17 @@ void output_field_to_file(integer which_component, string filename_prefix)
 		       tolower(curfield_type), kpoint_index, curfield_band);
 	       sprintf(description,
 		       "%c field energy density, kpoint %d, band %d, freq=%g",
-		       curfield_type, kpoint_index, curfield_band, 
+		       curfield_type, kpoint_index, curfield_band,
 		       freqs.items[curfield_band - 1]);
 	  }
-	  fname2 = fix_fname(fname, filename_prefix, mdata, 
+	  fname2 = fix_fname(fname, filename_prefix, mdata,
 			     /* no parity suffix for epsilon: */
 			     curfield_type != 'n' && curfield_type != 'm');
 	  mpi_one_printf("Outputting %s...\n", fname2);
 	  file_id = matrixio_create(fname2);
 	  free(fname2);
 
-	  output_scalarfield((real *) curfield, dims, 
+	  output_scalarfield((real *) curfield, dims,
 			     local_dims, start, file_id, "data",
 			     last_dim_index, last_dim_start, last_dim_size,
 			     first_dim_start, first_dim_size,
@@ -1312,94 +1313,16 @@ number compute_energy_in_object_list(geometric_object_list objects)
      c2 = n2 <= 1 ? 0 : geometry_lattice.size.y * 0.5;
      c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
 
-     /* Here we have different loops over the coordinates, depending
-	upon whether we are using complex or real and serial or
-        parallel transforms.  Each loop must define, in its body,
-        variables (i2,j2,k2) describing the coordinate of the current
-        point, and "index" describing the corresponding index in 
-	the curfield array.
-
-        This was all stolen from maxwell_eps.c...it would be better
-        if we didn't have to cut and paste, sigh. */
-
-#ifdef SCALAR_COMPLEX
-
-#  ifndef HAVE_MPI
-     
-     for (i = 0; i < n1; ++i)
-	  for (j = 0; j < n2; ++j)
-	       for (k = 0; k < n3; ++k)
-     {
-	  int i2 = i, j2 = j, k2 = k;
-	  int index = ((i * n2 + j) * n3 + k);
-
-#  else /* HAVE_MPI */
-
-     local_n2 = mdata->local_ny;
-     local_y_start = mdata->local_y_start;
-
-     /* first two dimensions are transposed in MPI output: */
-     for (j = 0; j < local_n2; ++j)
-          for (i = 0; i < n1; ++i)
-	       for (k = 0; k < n3; ++k)
-     {
-	  int i2 = i, j2 = j + local_y_start, k2 = k;
-	  int index = ((j * n1 + i) * n3 + k);
-
-#  endif /* HAVE_MPI */
-
-#else /* not SCALAR_COMPLEX */
-
-#  ifndef HAVE_MPI
-
-     for (i = 0; i < n_other; ++i)
-	  for (j = 0; j < n_last; ++j)
-     {
-	  int index = i * n_last + j;
-	  int i2, j2, k2;
-	  switch (rank) {
-	      case 2: i2 = i; j2 = j; k2 = 0; break;
-	      case 3: i2 = i / n2; j2 = i % n2; k2 = j; break;
-	      default: i2 = j; j2 = k2 = 0;  break;
-	  }
-
-#  else /* HAVE_MPI */
-
-     local_n2 = mdata->local_ny;
-     local_y_start = mdata->local_y_start;
-
-     /* For a real->complex transform, the last dimension is cut in
-	half.  For a 2d transform, this is taken into account in local_ny
-	already, but for a 3d transform we must compute the new n3: */
-     if (n3 > 1)
-	  local_n3 = mdata->last_dim_size / 2;
-     else
-	  local_n3 = 1;
-     
-     /* first two dimensions are transposed in MPI output: */
-     for (j = 0; j < local_n2; ++j)
-          for (i = 0; i < n1; ++i)
-	       for (k = 0; k < local_n3; ++k)
-     {
-#         define i2 i
-	  int j2 = j + local_y_start;
-#         define k2 k
-	  int index = ((j * n1 + i) * local_n3 + k);
-
-#  endif /* HAVE_MPI */
-
-#endif /* not SCALAR_COMPLEX */
-
-	  {
+     LOOP_XYZ(mdata) {
 	       vector3 p;
 	       int n;
-	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
+	       p.x = i1 * s1 - c1; p.y = i2 * s2 - c2; p.z = i3 * s3 - c3;
 	       for (n = objects.num_items - 1; n >= 0; --n)
 		    if (point_in_periodic_fixed_objectp(p, objects.items[n])) {
 			 if (objects.items[n].material.which_subclass
 			     == MATERIAL_TYPE_SELF)
 			      break; /* treat as a "nothing" object */
-			 energy_sum += energy[index];
+			 energy_sum += energy[xyz_index];
 #ifndef SCALAR_COMPLEX
 			 {
 			      int last_index;
@@ -1412,13 +1335,12 @@ number compute_energy_in_object_list(geometric_object_list objects)
 			      last_index = j;
 #  endif
 			      if (last_index != 0 && 2*last_index != last_dim)
-				   energy_sum += energy[index];
+				   energy_sum += energy[xyz_index];
 			 }
 #endif
 			 break;
 		    }
-	  }
-     }
+	}}}
 
      mpi_allreduce_1(&energy_sum, real, SCALAR_MPI_TYPE,
 		     MPI_SUM, mpb_comm);
@@ -1463,98 +1385,20 @@ cnumber compute_field_integral(function f)
      c2 = n2 <= 1 ? 0 : geometry_lattice.size.y * 0.5;
      c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
 
-     /* Here we have different loops over the coordinates, depending
-	upon whether we are using complex or real and serial or
-        parallel transforms.  Each loop must define, in its body,
-        variables (i2,j2,k2) describing the coordinate of the current
-        point, and "index" describing the corresponding index in 
-	the curfield array.
-
-        This was all stolen from maxwell_eps.c...it would be better
-        if we didn't have to cut and paste, sigh. */
-
-#ifdef SCALAR_COMPLEX
-
-#  ifndef HAVE_MPI
-     
-     for (i = 0; i < n1; ++i)
-	  for (j = 0; j < n2; ++j)
-	       for (k = 0; k < n3; ++k)
-     {
-	  int i2 = i, j2 = j, k2 = k;
-	  int index = ((i * n2 + j) * n3 + k);
-
-#  else /* HAVE_MPI */
-
-     local_n2 = mdata->local_ny;
-     local_y_start = mdata->local_y_start;
-
-     /* first two dimensions are transposed in MPI output: */
-     for (j = 0; j < local_n2; ++j)
-          for (i = 0; i < n1; ++i)
-	       for (k = 0; k < n3; ++k)
-     {
-	  int i2 = i, j2 = j + local_y_start, k2 = k;
-	  int index = ((j * n1 + i) * n3 + k);
-
-#  endif /* HAVE_MPI */
-
-#else /* not SCALAR_COMPLEX */
-
-#  ifndef HAVE_MPI
-
-     for (i = 0; i < n_other; ++i)
-	  for (j = 0; j < n_last; ++j)
-     {
-	  int index = i * n_last + j;
-	  int i2, j2, k2;
-	  switch (rank) {
-	      case 2: i2 = i; j2 = j; k2 = 0; break;
-	      case 3: i2 = i / n2; j2 = i % n2; k2 = j; break;
-	      default: i2 = j; j2 = k2 = 0;  break;
-	  }
-
-#  else /* HAVE_MPI */
-
-     local_n2 = mdata->local_ny;
-     local_y_start = mdata->local_y_start;
-
-     /* For a real->complex transform, the last dimension is cut in
-	half.  For a 2d transform, this is taken into account in local_ny
-	already, but for a 3d transform we must compute the new n3: */
-     if (n3 > 1)
-	  local_n3 = mdata->last_dim_size / 2;
-     else
-	  local_n3 = 1;
-     
-     /* first two dimensions are transposed in MPI output: */
-     for (j = 0; j < local_n2; ++j)
-          for (i = 0; i < n1; ++i)
-	       for (k = 0; k < local_n3; ++k)
-     {
-#         define i2 i
-	  int j2 = j + local_y_start;
-#         define k2 k
-	  int index = ((j * n1 + i) * local_n3 + k);
-
-#  endif /* HAVE_MPI */
-
-#endif /* not SCALAR_COMPLEX */
-
-	  {
+     LOOP_XYZ(mdata) {
 	       real epsilon;
 	       vector3 p;
 
-	       epsilon = mean_medium_from_matrix(mdata->eps_inv + index);
-	       
-	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
+	       epsilon = mean_medium_from_matrix(mdata->eps_inv + xyz_index);
+
+	       p.x = i1 * s1 - c1; p.y = i2 * s2 - c2; p.z = i3 * s3 - c3;
 	       if (integrate_energy) {
 		    integral.re +=
 			 ctl_convert_number_to_c(
 			      gh_call3(f,
-				     ctl_convert_number_to_scm(energy[index]),
+				     ctl_convert_number_to_scm(energy[xyz_index]),
 				       ctl_convert_number_to_scm(epsilon),
-				       ctl_convert_vector3_to_scm(p)));	  
+				       ctl_convert_vector3_to_scm(p)));
 	       }
 	       else {
 		    cvector3 F;
@@ -1562,17 +1406,17 @@ cnumber compute_field_integral(function f)
 		    scalar_complex phase;
 		    cnumber integrand;
 
-		    phase_phi = TWOPI * 
+		    phase_phi = TWOPI *
 			 (kvector.x * (p.x/geometry_lattice.size.x) +
 			  kvector.y * (p.y/geometry_lattice.size.y) +
 			  kvector.z * (p.z/geometry_lattice.size.z));
 		    CASSIGN_SCALAR(phase, cos(phase_phi), sin(phase_phi));
-		    CASSIGN_MULT_RE(F.x.re, curfield[3*index+0], phase);
-		    CASSIGN_MULT_IM(F.x.im, curfield[3*index+0], phase);
-		    CASSIGN_MULT_RE(F.y.re, curfield[3*index+1], phase);
-		    CASSIGN_MULT_IM(F.y.im, curfield[3*index+1], phase);
-		    CASSIGN_MULT_RE(F.z.re, curfield[3*index+2], phase);
-		    CASSIGN_MULT_IM(F.z.im, curfield[3*index+2], phase);
+		    CASSIGN_MULT_RE(F.x.re, curfield[3*xyz_index+0], phase);
+		    CASSIGN_MULT_IM(F.x.im, curfield[3*xyz_index+0], phase);
+		    CASSIGN_MULT_RE(F.y.re, curfield[3*xyz_index+1], phase);
+		    CASSIGN_MULT_IM(F.y.im, curfield[3*xyz_index+1], phase);
+		    CASSIGN_MULT_RE(F.z.re, curfield[3*xyz_index+2], phase);
+		    CASSIGN_MULT_IM(F.z.im, curfield[3*xyz_index+2], phase);
 		    integrand =
 			 ctl_convert_cnumber_to_c(
                               gh_call3(f,
@@ -1594,20 +1438,20 @@ cnumber compute_field_integral(function f)
 #  else
 		    last_index = j;
 #  endif
-		    
+
 		    if (last_index != 0 && 2*last_index != last_dim) {
-			 int i2c, j2c, k2c;
-			 i2c = i2 ? (n1 - i2) : 0;
-			 j2c = j2 ? (n2 - j2) : 0;
-			 k2c = k2 ? (n3 - k2) : 0;
-			 p.x = i2c * s1 - c1; 
-			 p.y = j2c * s2 - c2; 
-			 p.z = k2c * s3 - c3;
+			 int i1c, i2c, i3c;
+			 i1c = i1 ? (n1 - i1) : 0;
+			 i2c = i2 ? (n2 - i2) : 0;
+			 i3c = i3 ? (n3 - i3) : 0;
+			 p.x = i1c * s1 - c1;
+			 p.y = i2c * s2 - c2;
+			 p.z = i3c * s3 - c3;
 			 if (integrate_energy)
-			      integral.re += 
+			      integral.re +=
 				   ctl_convert_number_to_c(
 					gh_call3(f,
-				      ctl_convert_number_to_scm(energy[index]),
+				      ctl_convert_number_to_scm(energy[xyz_index]),
 				      ctl_convert_number_to_scm(epsilon),
 				      ctl_convert_vector3_to_scm(p)));
 			 else {
@@ -1615,20 +1459,20 @@ cnumber compute_field_integral(function f)
 			      double phase_phi;
 			      scalar_complex phase, Fx, Fy, Fz;
 			      cnumber integrand;
-			      
-			      Fx = curfield[3*index+0];
-			      Fy = curfield[3*index+1];
-			      Fz = curfield[3*index+2];
+
+			      Fx = curfield[3*xyz_index+0];
+			      Fy = curfield[3*xyz_index+1];
+			      Fz = curfield[3*xyz_index+2];
 			      Fx.im= -Fx.im; Fy.im= -Fy.im; Fz.im= -Fz.im;
 
-			      phase_phi = TWOPI * 
-				   (kvector.x 
+			      phase_phi = TWOPI *
+				   (kvector.x
 				    * (p.x/geometry_lattice.size.x) +
-				    kvector.y 
+				    kvector.y
 				    * (p.y/geometry_lattice.size.y) +
-				    kvector.z 
+				    kvector.z
 				    * (p.z/geometry_lattice.size.z));
-			      CASSIGN_SCALAR(phase, 
+			      CASSIGN_SCALAR(phase,
 					     cos(phase_phi), sin(phase_phi));
 			      CASSIGN_MULT_RE(F.x.re, Fx, phase);
 			      CASSIGN_MULT_IM(F.x.im, Fx, phase);
@@ -1649,14 +1493,13 @@ cnumber compute_field_integral(function f)
 		    }
 	       }
 #endif
-	  }
-     }
+	}}}
 
      integral.re *= Vol / H.N;
      integral.im *= Vol / H.N;
      {
 	  cnumber integral_sum;
-	  mpi_allreduce(&integral, &integral_sum, 2, number, 
+	  mpi_allreduce(&integral, &integral_sum, 2, number,
 			MPI_DOUBLE, MPI_SUM, mpb_comm);
 	  return integral_sum;
      }

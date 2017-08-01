@@ -24,6 +24,7 @@
 #include <matrixio.h>
 #include <mpiglue.h>
 #include <mpi_utils.h>
+#include <xyz_loop.h>
 
 #include "mpb.h"
 
@@ -117,14 +118,14 @@ double matgrid_val(vector3 p, geom_box_tree tp, int oi,
 	  p.x = no_size_x ? 0 : p.x / geometry_lattice.size.x;
 	  p.y = no_size_y ? 0 : p.y / geometry_lattice.size.y;
 	  p.z = no_size_z ? 0 : p.z / geometry_lattice.size.z;
-	  u = material_grid_val(p, 
+	  u = material_grid_val(p,
 				default_material.subclass.material_grid_data);
 	  if (u < umin) umin = u;
 	  uprod *= u;
 	  usum += u; ++matgrid_val_count;
      }
      return (mg->material_grid_kind == U_MIN ? umin
-	     : (mg->material_grid_kind == U_PROD ? uprod 
+	     : (mg->material_grid_kind == U_PROD ? uprod
 		: usum / matgrid_val_count));
 }
 
@@ -231,7 +232,7 @@ void material_grids_get(double *u, const material_grid *grids, int ngrids)
    the minimum u contribute, and for other grids the gradient is zero.
    This unfortunately makes the gradient only piecewise continuous.
 
-   For U_PROD: The gradient is multiplied by the product of u's from 
+   For U_PROD: The gradient is multiplied by the product of u's from
    overlapping grids, divided by the u from the current grid.  This
    unfortunately makes the gradient zero when two or more u's are zero,
    stalling convergence, although we try to avoid this by making the
@@ -246,10 +247,10 @@ void material_grids_get(double *u, const material_grid *grids, int ngrids)
    function in epsilon_file.c) to data ... this has to be changed if
    linear_interpolate is changed!! ...also multiply by scaleby
    etc. for different gradient types */
-static void add_interpolate_weights(real rx, real ry, real rz, real *data, 
+static void add_interpolate_weights(real rx, real ry, real rz, real *data,
 				    int nx, int ny, int nz, int stride,
 				    double scaleby,
-				    const real *udata, 
+				    const real *udata,
 				    int ukind, double uval)
 {
      int x, y, z, x2, y2, z2;
@@ -288,7 +289,7 @@ static void add_interpolate_weights(real rx, real ry, real rz, real *data,
 	in row-major order (the order used by HDF5): */
 #define D(x,y,z) (data[(((x)*ny + (y))*nz + (z)) * stride])
 #define U(x,y,z) (udata[(((x)*ny + (y))*nz + (z)) * stride])
-     
+
      u = (((U(x,y,z)*(1.0-dx) + U(x2,y,z)*dx) * (1.0-dy) +
 	   (U(x,y2,z)*(1.0-dx) + U(x2,y2,z)*dx) * dy) * (1.0-dz) +
 	  ((U(x,y,z2)*(1.0-dx) + U(x2,y,z2)*dx) * (1.0-dy) +
@@ -296,7 +297,7 @@ static void add_interpolate_weights(real rx, real ry, real rz, real *data,
 
      if (ukind == U_MIN && u != uval) return;
      if (ukind == U_PROD) scaleby *= uval / u;
-     
+
      D(x,y,z) += (1.0-dx) * (1.0-dy) * (1.0-dz) * scaleby;
      D(x2,y,z) += dx * (1.0-dy) * (1.0-dz) * scaleby;
      D(x,y2,z) += (1.0-dx) * dy * (1.0-dz) * scaleby;
@@ -309,9 +310,9 @@ static void add_interpolate_weights(real rx, real ry, real rz, real *data,
 #undef D
 }
 
-static void material_grids_addgradient_point(double *v, 
+static void material_grids_addgradient_point(double *v,
 					     vector3 p, double scalegrad,
-					     const material_grid *grids, 
+					     const material_grid *grids,
 					     int ngrids)
 {
      geom_box_tree tp;
@@ -319,7 +320,7 @@ static void material_grids_addgradient_point(double *v,
      material_grid *mg;
      double uval;
      int kind;
-     
+
      tp = geom_tree_search(p, geometry_tree, &oi);
      if (tp && tp->objects[oi].o->material.which_subclass == MATERIAL_GRID)
           mg = tp->objects[oi].o->material.subclass.material_grid_data;
@@ -345,12 +346,12 @@ static void material_grids_addgradient_point(double *v,
 					    .subclass.material_grid_data))
 			 break;
 		    else
-			 vcur += (int) (grids[i].size.x * grids[i].size.y 
+			 vcur += (int) (grids[i].size.x * grids[i].size.y
 					* grids[i].size.z);
 	       }
 	       CHECK(i < ngrids, "bug in material_grid_gradient_point");
 	       ucur = material_grid_array(grids+i);
-	       add_interpolate_weights(pb.x, pb.y, pb.z, 
+	       add_interpolate_weights(pb.x, pb.y, pb.z,
 				       vcur, sz.x, sz.y, sz.z, 1, scalegrad,
 				       ucur, kind, uval);
 	       material_grid_array_release(grids+i);
@@ -367,7 +368,7 @@ static void material_grids_addgradient_point(double *v,
 				       .subclass.material_grid_data))
 		    break;
 	       else
-		    vcur += (int) (grids[i].size.x * grids[i].size.y 
+		    vcur += (int) (grids[i].size.x * grids[i].size.y
 				   * grids[i].size.z);
 	  }
 	  CHECK(i < ngrids, "bug in material_grid_gradient_point");
@@ -375,7 +376,7 @@ static void material_grids_addgradient_point(double *v,
 	  pb.y = no_size_y ? 0 : p.y / geometry_lattice.size.y;
 	  pb.z = no_size_z ? 0 : p.z / geometry_lattice.size.z;
 	  ucur = material_grid_array(grids+i);
-	  add_interpolate_weights(pb.x, pb.y, pb.z, 
+	  add_interpolate_weights(pb.x, pb.y, pb.z,
 				  vcur, sz.x, sz.y, sz.z, 1, scalegrad,
 				  ucur, kind, uval);
 	  material_grid_array_release(grids+i);
@@ -415,91 +416,13 @@ void material_grids_addgradient(double *v,
      c2 = n2 <= 1 ? 0 : geometry_lattice.size.y * 0.5;
      c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
 
-     /* Here we have different loops over the coordinates, depending
-	upon whether we are using complex or real and serial or
-        parallel transforms.  Each loop must define, in its body,
-        variables (i2,j2,k2) describing the coordinate of the current
-        point, and "index" describing the corresponding index in 
-	the curfield array.
-
-        This was all stolen from fields.c...it would be better
-        if we didn't have to cut and paste, sigh. */
-
-#ifdef SCALAR_COMPLEX
-
-#  ifndef HAVE_MPI
-     
-     for (i = 0; i < n1; ++i)
-	  for (j = 0; j < n2; ++j)
-	       for (k = 0; k < n3; ++k)
-     {
-	  int i2 = i, j2 = j, k2 = k;
-	  int index = ((i * n2 + j) * n3 + k);
-
-#  else /* HAVE_MPI */
-
-     local_n2 = mdata->local_ny;
-     local_y_start = mdata->local_y_start;
-
-     /* first two dimensions are transposed in MPI output: */
-     for (j = 0; j < local_n2; ++j)
-          for (i = 0; i < n1; ++i)
-	       for (k = 0; k < n3; ++k)
-     {
-	  int i2 = i, j2 = j + local_y_start, k2 = k;
-	  int index = ((j * n1 + i) * n3 + k);
-
-#  endif /* HAVE_MPI */
-
-#else /* not SCALAR_COMPLEX */
-
-#  ifndef HAVE_MPI
-
-     for (i = 0; i < n_other; ++i)
-	  for (j = 0; j < n_last; ++j)
-     {
-	  int index = i * n_last + j;
-	  int i2, j2, k2;
-	  switch (rank) {
-	      case 2: i2 = i; j2 = j; k2 = 0; break;
-	      case 3: i2 = i / n2; j2 = i % n2; k2 = j; break;
-	      default: i2 = j; j2 = k2 = 0;  break;
-	  }
-
-#  else /* HAVE_MPI */
-
-     local_n2 = mdata->local_ny;
-     local_y_start = mdata->local_y_start;
-
-     /* For a real->complex transform, the last dimension is cut in
-	half.  For a 2d transform, this is taken into account in local_ny
-	already, but for a 3d transform we must compute the new n3: */
-     if (n3 > 1)
-	  local_n3 = mdata->last_dim_size / 2;
-     else
-	  local_n3 = 1;
-     
-     /* first two dimensions are transposed in MPI output: */
-     for (j = 0; j < local_n2; ++j)
-          for (i = 0; i < n1; ++i)
-	       for (k = 0; k < local_n3; ++k)
-     {
-#         define i2 i
-	  int j2 = j + local_y_start;
-#         define k2 k
-	  int index = ((j * n1 + i) * local_n3 + k);
-
-#  endif /* HAVE_MPI */
-
-#endif /* not SCALAR_COMPLEX */
-
-	  {
+     LOOP_XYZ(mdata) {
 	       vector3 p;
 
-	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
+	       p.x = i1 * s1 - c1; p.y = i2 * s2 - c2; p.z = i3 * s3 - c3;
 
 	       material_grids_addgradient_point(
-		    v, p, Esqr[index]*scalegrad, grids,ngrids);
+		    v, p, Esqr[xyz_index]*scalegrad, grids,ngrids);
 
 #ifndef SCALAR_COMPLEX
 	       {
@@ -512,25 +435,23 @@ void material_grids_addgradient(double *v,
 #  else
 		    last_index = j;
 #  endif
-		    
+
 		    if (last_index != 0 && 2*last_index != last_dim) {
-			 int i2c, j2c, k2c;
-			 i2c = i2 ? (n1 - i2) : 0;
-			 j2c = j2 ? (n2 - j2) : 0;
-			 k2c = k2 ? (n3 - k2) : 0;
-			 p.x = i2c * s1 - c1; 
-			 p.y = j2c * s2 - c2; 
-			 p.z = k2c * s3 - c3;
-			 
+			 int i1c, i2c, i3c;
+			 i1c = i1 ? (n1 - i1) : 0;
+			 i2c = i2 ? (n2 - i2) : 0;
+			 i3c = i3 ? (n3 - i3) : 0;
+			 p.x = i1c * s1 - c1;
+			 p.y = i2c * s2 - c2;
+			 p.z = i3c * s3 - c3;
+
 			 material_grids_addgradient_point(
-			      v, p, Esqr[index]*scalegrad, grids,ngrids);
+			      v, p, Esqr[xyz_index]*scalegrad, grids,ngrids);
 		    }
 	       }
 #endif /* !SCALAR_COMPLEX */
 
-	  }
-
-     }
+	}}}
 }
 
 /**************************************************************************/
@@ -550,7 +471,7 @@ void print_material_grids_gradient(integer band)
      free(grids);
 }
 
-number material_grids_approx_gradient(vector3 kpoint, integer band, 
+number material_grids_approx_gradient(vector3 kpoint, integer band,
 				      integer iu, number du)
 {
      int ngrids;
@@ -600,7 +521,7 @@ void print_material_grids_deps_du(void)
 	upon whether we are using complex or real and serial or
         parallel transforms.  Each loop must define, in its body,
         variables (i2,j2,k2) describing the coordinate of the current
-        point, and "index" describing the corresponding index in 
+        point, and "index" describing the corresponding index in
 	the curfield array.
 
         This was all stolen from fields.c...it would be better
@@ -620,11 +541,11 @@ void print_material_grids_deps_du(void)
 	       double uval;
 	       int kind;
 	       double scalegrad;
-     
+
 	       memset(v, 0, sizeof(double) * ntot);
 
 	       p.x = i * s1 - c1; p.y = j * s2 - c2; p.z = k * s3 - c3;
-	       
+
      tp = geom_tree_search(p, geometry_tree, &oi);
      if (tp && tp->objects[oi].o->material.which_subclass == MATERIAL_GRID)
           mg = tp->objects[oi].o->material.subclass.material_grid_data;
@@ -650,12 +571,12 @@ void print_material_grids_deps_du(void)
 					    .subclass.material_grid_data))
 			 break;
 		    else
-			 vcur += (int) (grids[ig].size.x * grids[ig].size.y 
+			 vcur += (int) (grids[ig].size.x * grids[ig].size.y
 					* grids[ig].size.z);
 	       }
 	       CHECK(ig < ngrids, "bug in material_grid_gradient_point");
 	       ucur = material_grid_array(grids+ig);
-	       add_interpolate_weights(pb.x, pb.y, pb.z, 
+	       add_interpolate_weights(pb.x, pb.y, pb.z,
 				       vcur, sz.x, sz.y, sz.z, 1, scalegrad,
 				       ucur, kind, uval);
 	       material_grid_array_release(grids+ig);
@@ -672,7 +593,7 @@ void print_material_grids_deps_du(void)
 				       .subclass.material_grid_data))
 		    break;
 	       else
-		    vcur += (int) (grids[ig].size.x * grids[ig].size.y 
+		    vcur += (int) (grids[ig].size.x * grids[ig].size.y
 				   * grids[ig].size.z);
 	  }
 	  CHECK(ig < ngrids, "bug in material_grid_gradient_point");
@@ -680,14 +601,14 @@ void print_material_grids_deps_du(void)
 	  pb.y = no_size_y ? 0 : p.y / geometry_lattice.size.y;
 	  pb.z = no_size_z ? 0 : p.z / geometry_lattice.size.z;
 	  ucur = material_grid_array(grids+ig);
-	  add_interpolate_weights(pb.x, pb.y, pb.z, 
+	  add_interpolate_weights(pb.x, pb.y, pb.z,
 				  vcur, sz.x, sz.y, sz.z, 1, scalegrad,
 				  ucur, kind, uval);
 	  material_grid_array_release(grids+ig);
      }
 
 	  gotmyv:
-     mpi_one_printf("depsdu:, %g, %d", 
+     mpi_one_printf("depsdu:, %g, %d",
 		    mean_medium_from_matrix(mdata->eps_inv + index), index);
      for (ig = 0; ig < ntot; ++ig)
 	  mpi_one_printf(", %g", v[ig]);
@@ -736,7 +657,7 @@ void print_material_grids_deps_du_numeric(double du)
 		    for (k = 0; k < n3; ++k)
 		    {
 			 int index = ((i * n2 + j) * n3 + k);
-			 double epn = 
+			 double epn =
 			      mean_medium_from_matrix(mdata->eps_inv + index);
 			 v[index*ntot + iu] = (epn - ep[index]) / du;
 		    }
@@ -753,7 +674,7 @@ void print_material_grids_deps_du_numeric(double du)
 	       mpi_one_printf(", %g", v[index*ntot + iu]);
 	  mpi_one_printf("\n");
      }
-     
+
      material_grids_set(u, grids, ngrids);
      reset_epsilon();
 
@@ -800,7 +721,7 @@ void save_material_grid(material_grid g, string filename)
 	  matrixio_id file_id, data_id;
 	  int dims[3], rank, start[3] = {0,0,0};
 	  double *grid;
-	  
+
 	  dims[0] = g.size.x;
 	  dims[1] = g.size.y;
 	  dims[2] = g.size.z;
@@ -855,7 +776,7 @@ void load_material_gridB(material_grid g, string filename, vector3 supercell)
 			 grid[(ix * ny + iy) * nz + iz] = val;
 		    }
 	  material_grid_array_release(&g);
-	  
+
 	  free(data);
      }
      synchronize_material_grid(&g);
@@ -920,7 +841,7 @@ static double match_eps_func(int n, const double *u, double *grad, void *data)
 	upon whether we are using complex or real and serial or
         parallel transforms.  Each loop must define, in its body,
         variables (i2,j2,k2) describing the coordinate of the current
-        point, and "index" describing the corresponding index in 
+        point, and "index" describing the corresponding index in
 	the curfield array.
 
         This was all stolen from fields.c...it would be better
@@ -929,7 +850,7 @@ static double match_eps_func(int n, const double *u, double *grad, void *data)
 #ifdef SCALAR_COMPLEX
 
 #  ifndef HAVE_MPI
-     
+
      for (i = 0; i < n1; ++i)
 	  for (j = 0; j < n2; ++j)
 	       for (k = 0; k < n3; ++k)
@@ -979,7 +900,7 @@ static double match_eps_func(int n, const double *u, double *grad, void *data)
 	  local_n3 = mdata->last_dim_size / 2;
      else
 	  local_n3 = 1;
-     
+
      /* first two dimensions are transposed in MPI output: */
      for (j = 0; j < local_n2; ++j)
           for (i = 0; i < n1; ++i)
@@ -1006,7 +927,7 @@ static double match_eps_func(int n, const double *u, double *grad, void *data)
 					 eps, eps_nx, eps_ny, eps_nz, 1);
 	       val += (epsilon - eps0) * (epsilon - eps0);
 	       scalegrad = 2.0 * scaleby * (epsilon - eps0);
-	       
+
 	       if (grad) {
 		    p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
 		    material_grids_addgradient_point(work, p, scalegrad,
@@ -1024,24 +945,24 @@ static double match_eps_func(int n, const double *u, double *grad, void *data)
 #  else
 		    last_index = j;
 #  endif
-		    
-		    if (last_index != 0 && 2*last_index != last_dim) {
-			 int i2c, j2c, k2c;
-			 i2c = i2 ? (n1 - i2) : 0;
-			 j2c = j2 ? (n2 - j2) : 0;
-			 k2c = k2 ? (n3 - k2) : 0;
 
-			 eps0 = linear_interpolate((i2c + 0.5) / n1,
-						   (j2c + 0.5) / n2,
-						   (k2c + 0.5) / n3, eps, 
+		    if (last_index != 0 && 2*last_index != last_dim) {
+			 int i1c, i2c, i3c;
+			 i1c = i2 ? (n1 - i2) : 0;
+			 i2c = j2 ? (n2 - j2) : 0;
+			 i3c = k2 ? (n3 - k2) : 0;
+
+			 eps0 = linear_interpolate((i1c + 0.5) / n1,
+						   (i2c + 0.5) / n2,
+						   (i3c + 0.5) / n3, eps,
 						   eps_nx, eps_ny, eps_nz, 1);
 			 val += (epsilon - eps0) * (epsilon - eps0);
 
 			 if (grad) {
-			      p.x = i2c * s1 - c1; 
-			      p.y = j2c * s2 - c2; 
-			      p.z = k2c * s3 - c3;
-			      
+			      p.x = i1c * s1 - c1;
+			      p.y = i2c * s2 - c2;
+			      p.z = i3c * s3 - c3;
+
 			      material_grids_addgradient_point(work, p,
 							       scalegrad,
 							       grids, ngrids);
@@ -1052,7 +973,7 @@ static double match_eps_func(int n, const double *u, double *grad, void *data)
 	  }
      }
      if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
-	  mpi_allreduce(work, grad, n, double, MPI_DOUBLE, 
+	  mpi_allreduce(work, grad, n, double, MPI_DOUBLE,
 			MPI_SUM, mpb_comm);
      {
 	  double valtmp = val * scaleby;
@@ -1069,13 +990,13 @@ void material_grids_match_epsilon_fileB(string filename, number eps_tol)
      matrixio_id file_id;
      match_eps_data d;
      int i, n, have_uprod;
-     double *u, *lb, *ub, *u_tol, func_min;
+     double *u, *lb, *ub, *u_tol, func_min = 0;
 
      file_id = matrixio_open_serial(filename, 1);
      d.eps = matrixio_read_real_data(file_id, NULL, &rank,dims, 0,0,0,0);
      CHECK(d.eps, "couldn't find dataset in epsilon file");
      matrixio_close(file_id);
-     
+
      d.eps_nx = dims[0];
      d.eps_ny = dims[1];
      d.eps_nz = dims[2];
