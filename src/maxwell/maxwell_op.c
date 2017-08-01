@@ -21,10 +21,11 @@
 
 #include "imaxwell.h"
 #include <check.h>
+#include "xyz_loop.h"
 
 /**************************************************************************/
 
-/* assign a = v going from transverse to cartesian coordinates.  
+/* assign a = v going from transverse to cartesian coordinates.
    Here, a = (a[0],a[1],a[2]) is in cartesian coordinates.
    (v[0],v[vstride]) is in the transverse basis of k.m and k.n. */
 static void assign_t2c(scalar *a, const k_data k,
@@ -57,7 +58,7 @@ static void project_c2t(scalar *v, int vstride, const k_data k,
 
 /* assign a = k x v (cross product), going from transverse to
    cartesian coordinates.
-  
+
    Here, a = (a[0],a[1],a[2]) and k = (k.kx,k.ky,k.kz) are in
    cartesian coordinates.  (v[0],v[vstride]) is in the transverse basis of
    k.m and k.n. */
@@ -90,7 +91,7 @@ static void assign_cross_t2c(scalar *a, const k_data k,
 
 /* assign v = scale * k x a (cross product), going from cartesian to
    transverse coordinates.
-  
+
    Here, a = (a[0],a[1],a[2]) and k = (k.kx,k.ky,k.kz) are in
    cartesian coordinates.  (v[0],v[vstride]) is in the transverse basis of
    k.m and k.n. */
@@ -165,8 +166,8 @@ static void assign_ucross_t2c(scalar *a, const real u[3], const k_data k,
 
 /**************************************************************************/
 
-void maxwell_compute_fft(int dir, maxwell_data *d, 
-			 scalar *array_in, scalar *array_out, 
+void maxwell_compute_fft(int dir, maxwell_data *d,
+			 scalar *array_in, scalar *array_out,
 			 int howmany, int stride, int dist)
 {
 #if defined(HAVE_FFTW3)
@@ -189,14 +190,14 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 #  ifdef SCALAR_COMPLEX
 #    ifdef HAVE_MPI
 	  CHECK(stride==howmany && dist==1, "bug: unsupported stride/dist");
-	  plan = FFTW(mpi_plan_many_dft)(3, np, howmany, 
+	  plan = FFTW(mpi_plan_many_dft)(3, np, howmany,
 					 FFTW_MPI_DEFAULT_BLOCK,
 					 FFTW_MPI_DEFAULT_BLOCK,
 					 carray_in, carray_out,
 					 mpb_comm, FFTW_BACKWARD,
 					 FFTW_ESTIMATE
 					 | FFTW_MPI_TRANSPOSED_IN);
-	  iplan = FFTW(mpi_plan_many_dft)(3, np, howmany, 
+	  iplan = FFTW(mpi_plan_many_dft)(3, np, howmany,
 					  FFTW_MPI_DEFAULT_BLOCK,
 					  FFTW_MPI_DEFAULT_BLOCK,
 					  carray_in, carray_out,
@@ -218,13 +219,13 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 	       nr[rnk-1] = 2*(nr[rnk-1]/2 + 1);
 #    ifdef HAVE_MPI
 	  CHECK(stride==howmany && dist==1, "bug: unsupported stride/dist");
-	  plan = FFTW(mpi_plan_many_dft_c2r)(rnk, np, howmany, 
+	  plan = FFTW(mpi_plan_many_dft_c2r)(rnk, np, howmany,
 					     FFTW_MPI_DEFAULT_BLOCK,
 					     FFTW_MPI_DEFAULT_BLOCK,
 					     carray_in, rarray_out,
 					     mpb_comm, FFTW_ESTIMATE
 					     | FFTW_MPI_TRANSPOSED_IN);
-	  iplan = FFTW(mpi_plan_many_dft_r2c)(rnk, np, howmany, 
+	  iplan = FFTW(mpi_plan_many_dft_r2c)(rnk, np, howmany,
 					      FFTW_MPI_DEFAULT_BLOCK,
 					      FFTW_MPI_DEFAULT_BLOCK,
 					      rarray_in, carray_out,
@@ -246,7 +247,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
      }
 
      /* note that the new-array execute functions should be safe
-	since we only apply maxwell_compute_fft to fftw_malloc'ed data 
+	since we only apply maxwell_compute_fft to fftw_malloc'ed data
 	(so we don't ever have misaligned arrays), and we check above
 	that the strides etc. match */
 #  ifdef SCALAR_COMPLEX
@@ -298,7 +299,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 
      CHECK(stride == howmany && dist == 1,
 	   "weird strides and dists don't work with fftwnd_mpi");
-     
+
      fftwnd_mpi((fftplan) (dir < 0 ? d->plans[0] : d->iplans[0]),
 		howmany,
 		(fftw_complex *) array_in, (fftw_complex *) NULL,
@@ -325,7 +326,7 @@ void maxwell_compute_fft(int dir, maxwell_data *d,
 
      CHECK(stride == howmany && dist == 1,
 	   "weird strides and dists don't work with rfftwnd_mpi");
-     
+
      rfftwnd_mpi((fftplan) (dir < 0 ? d->plans[0] : d->iplans[0]),
 		 howmany, array_in, (scalar *) NULL,
 		 FFTW_TRANSPOSED_ORDER);
@@ -390,12 +391,12 @@ void assign_symmatrix_vector(scalar_complex *newv,
    taking the curl and then Fourier transforming.  The output array,
    dfield, is fft_output_size x cur_num_bands x 3, where
    fft_output_size is the local spatial indices and 3 is the field
-   components. 
+   components.
 
    Note: actually, this computes just (k+G) x H, whereas the actual D
    field is i/omega i(k+G) x H...so, we are really computing -omega*D,
    here. */
-void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin, 
+void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin,
 			      scalar_complex *dfield,
 			      int cur_band_start, int cur_num_bands)
 {
@@ -415,12 +416,12 @@ void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Hin,
 	       int ij = i * d->last_dim + j;
 	       int ij2 = i * d->last_dim_size + j;
 	       k_data cur_k = d->k_plus_G[ij];
-	       
+
 	       for (b = 0; b < cur_num_bands; ++b)
-		    assign_cross_t2c(&fft_data_in[3 * (ij2*cur_num_bands 
-						    + b)], 
-				     cur_k, 
-				     &Hin.data[ij * 2 * Hin.p + 
+		    assign_cross_t2c(&fft_data_in[3 * (ij2*cur_num_bands
+						    + b)],
+				     cur_k,
+				     &Hin.data[ij * 2 * Hin.p +
 					      b + cur_band_start],
 				     Hin.p);
 	  }
@@ -450,7 +451,7 @@ void maxwell_compute_e_from_d_(maxwell_data *d,
 	       int ib = 3 * (i * cur_num_bands + b);
 	       assign_symmatrix_vector(&dfield[ib], eps_inv, &dfield[ib]);
 	  }
-     }	  
+     }
 }
 void maxwell_compute_e_from_d(maxwell_data *d,
 			      scalar_complex *dfield,
@@ -462,11 +463,11 @@ void maxwell_compute_e_from_d(maxwell_data *d,
 /* Compute the magnetic (H) field in Fourier space from the electric
    field (e) in position space; this amounts to Fourier transforming and
    then taking the curl.  Also, multiply by scale.  Other
-   parameters are as in compute_d_from_H. 
+   parameters are as in compute_d_from_H.
 
    Note: we actually compute (k+G) x E, whereas the actual H field
    is -i/omega i(k+G) x E...so, we are actually computing omega*H, here. */
-void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout, 
+void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout,
 			      scalar_complex *efield,
 			      int cur_band_start, int cur_num_bands,
 			      real scale)
@@ -484,19 +485,19 @@ void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout,
      /* convert back to Fourier space */
      maxwell_compute_fft(-1, d, fft_data, fft_data_out,
 			 cur_num_bands*3, cur_num_bands*3, 1);
-     
+
      /* then, compute Hout = curl(fft_data) (* scale factor): */
-     
+
      for (i = 0; i < d->other_dims; ++i)
 	  for (j = 0; j < d->last_dim; ++j) {
 	       int ij = i * d->last_dim + j;
 	       int ij2 = i * d->last_dim_size + j;
 	       k_data cur_k = d->k_plus_G[ij];
-	       
+
 	       for (b = 0; b < cur_num_bands; ++b)
-		    assign_cross_c2t(&Hout.data[ij * 2 * Hout.p + 
+		    assign_cross_c2t(&Hout.data[ij * 2 * Hout.p +
 					       b + cur_band_start],
-				     Hout.p, cur_k, 
+				     Hout.p, cur_k,
 				     &fft_data_out[3 * (ij2*cur_num_bands+b)],
 				     scale);
 	  }
@@ -505,7 +506,7 @@ void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout,
 
 /* Compute H field in position space from Hin.  Parameters and output
    formats are the same as for compute_d_from_H, above. */
-void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin, 
+void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 			      scalar_complex *hfield,
 			      int cur_band_start, int cur_num_bands)
 {
@@ -519,19 +520,19 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
      CHECK(cur_band_start >= 0 && cur_band_start + cur_num_bands <= Hin.p,
 	   "invalid range of bands for computing fields");
 
-     /* first, compute fft_data = Hin, with the vector field converted 
+     /* first, compute fft_data = Hin, with the vector field converted
 	from transverse to cartesian basis: */
      for (i = 0; i < d->other_dims; ++i)
 	  for (j = 0; j < d->last_dim; ++j) {
 	       int ij = i * d->last_dim + j;
 	       int ij2 = i * d->last_dim_size + j;
                k_data cur_k = d->k_plus_G[ij];
-	       
+
 	       for (b = 0; b < cur_num_bands; ++b)
-		    assign_t2c(&fft_data_in[3 * (ij2*cur_num_bands 
-					      + b)], 
+		    assign_t2c(&fft_data_in[3 * (ij2*cur_num_bands
+					      + b)],
 			       cur_k,
-			       &Hin.data[ij * 2 * Hin.p + 
+			       &Hin.data[ij * 2 * Hin.p +
 					b + cur_band_start],
 			       Hin.p);
 	  }
@@ -541,7 +542,7 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 			 cur_num_bands*3, cur_num_bands*3, 1);
 }
 
-void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin, 
+void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
                               evectmatrix Hout, scalar_complex *hfield,
 			      int Bin_band_start, int Hout_band_start,
                               int cur_num_bands)
@@ -550,7 +551,7 @@ void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
      scalar *fft_data_out = d->fft_data2 == d->fft_data ? fft_data : (fft_data == d->fft_data ? d->fft_data2 : d->fft_data);
      int i, j, b;
      real scale = 1.0 / Hout.N; /* scale factor to normalize FFTs */
-     
+
      if (d->mu_inv == NULL) {
          if (Bin.data != Hout.data)
              evectmatrix_copy_slice(Hout, Bin,
@@ -558,14 +559,14 @@ void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
                                     cur_num_bands);
          return;
      }
-     
+
      maxwell_compute_h_from_H(d, Bin, hfield, Bin_band_start, cur_num_bands);
      maxwell_compute_e_from_d_(d, hfield, cur_num_bands, d->mu_inv);
-     
+
      /* convert back to Fourier space */
      maxwell_compute_fft(-1, d, fft_data, fft_data_out,
                          cur_num_bands*3, cur_num_bands*3, 1);
-     
+
      /* then, compute Hout = (transverse component)(fft_data) * scale factor */
      for (i = 0; i < d->other_dims; ++i)
          for (j = 0; j < d->last_dim; ++j) {
@@ -573,14 +574,95 @@ void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
              int ij2 = i * d->last_dim_size + j;
              k_data cur_k = d->k_plus_G[ij];
              for (b = 0; b < cur_num_bands; ++b)
-                 project_c2t(&Hout.data[ij * 2 * Hout.p + 
+                 project_c2t(&Hout.data[ij * 2 * Hout.p +
                                         b + Hout_band_start],
-                             Hout.p, cur_k, 
+                             Hout.p, cur_k,
                                &fft_data_out[3 * (ij2*cur_num_bands+b)],
                              scale);
          }
 }
 
+
+/**************************************************************************/
+/* This function is defined for the purpose of computing the "Bott" index.
+   It computes the "H" field (projected onto the transverse basis) from
+   the B field, similar to above, but *also* performs a shift on the B
+   field in reciprocal space.
+
+   The shift in reciprocal space corresponds to shifting each Fourier
+   amplitude at a reciprocal vector G to the amplitude at G+s.   It
+   is actually more convenient to perform this shift in position space,
+   along with the multiplication by mu_inv, by multiplying by a phase
+   factor exp(isx) via the shift theorem.
+
+   The shift is specified by three integers (s1,s2,s3) indicating the
+   number of reciprocal lattice vectors to shift by in each direction.
+*/
+void maxwell_compute_H_from_shifted_B(maxwell_data *d, evectmatrix Bin,
+                                      evectmatrix Hout, scalar_complex *hfield,
+                                      int s1, int s2, int s3,
+			                             int Bin_band_start, int Hout_band_start,
+                                      int cur_num_bands)
+{
+   scalar *fft_data = (scalar *) hfield;
+   scalar *fft_data_out = d->fft_data2 == d->fft_data ? fft_data : (fft_data == d->fft_data ? d->fft_data2 : d->fft_data);
+   int i, j, b;
+   real scale = 1.0 / Hout.N; /* scale factor to normalize FFTs */
+   const double twopi = 6.2831853071795864769252867665590057683943388;
+   double twopi_1 = s1 * twopi / d->nx;
+   double twopi_2 = s2 * twopi / d->ny;
+   double twopi_3 = s3 * twopi / d->nz;
+
+   maxwell_compute_h_from_H(d, Bin, hfield, Bin_band_start, cur_num_bands);
+
+   /* adapted from maxwell_compute_e_from_d_: multiply by mu_inv and shift */
+   if (d->mu_inv) {
+      LOOP_XYZ(d) {
+         symmetric_matrix mu_inv = d->mu_inv[xyz_index];
+         double phase = twopi_1 * i1 + twopi_2 * i2 + twopi_3 * i3;
+         scalar_complex cphase;
+         CASSIGN_SCALAR(cphase, cos(phase), sin(phase));
+         for (b = 0; b < cur_num_bands; ++b) {
+            int ib = 3 * (xyz_index * cur_num_bands + b);
+            assign_symmatrix_vector(&hfield[ib], mu_inv, &hfield[ib]);
+            CASSIGN_MULT(hfield[ib], hfield[ib], cphase)
+            CASSIGN_MULT(hfield[ib+1], hfield[ib+1], cphase)
+            CASSIGN_MULT(hfield[ib+2], hfield[ib+2], cphase)
+         }
+      }}}
+   }
+   else {
+      LOOP_XYZ(d) {
+         double phase = twopi_1 * i1 + twopi_2 * i2 + twopi_3 * i3;
+         scalar_complex cphase;
+         CASSIGN_SCALAR(cphase, cos(phase), sin(phase));
+         for (b = 0; b < cur_num_bands; ++b) {
+            int ib = 3 * (xyz_index * cur_num_bands + b);
+            CASSIGN_MULT(hfield[ib], hfield[ib], cphase)
+            CASSIGN_MULT(hfield[ib+1], hfield[ib+1], cphase)
+            CASSIGN_MULT(hfield[ib+2], hfield[ib+2], cphase)
+         }
+      }}}
+   }
+
+   /* convert back to Fourier space */
+   maxwell_compute_fft(-1, d, fft_data, fft_data_out,
+                       cur_num_bands*3, cur_num_bands*3, 1);
+
+   /* then, compute Hout = (transverse component)(fft_data) * scale factor */
+   for (i = 0; i < d->other_dims; ++i)
+      for (j = 0; j < d->last_dim; ++j) {
+         int ij = i * d->last_dim + j;
+         int ij2 = i * d->last_dim_size + j;
+         k_data cur_k = d->k_plus_G[ij];
+         for (b = 0; b < cur_num_bands; ++b)
+            project_c2t(&Hout.data[ij * 2 * Hout.p +
+                        b + Hout_band_start],
+                        Hout.p, cur_k,
+                        &fft_data_out[3 * (ij2*cur_num_bands+b)],
+                        scale);
+      }
+}
 
 /**************************************************************************/
 
@@ -693,7 +775,7 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
      phasey += phasez;
      CASSIGN_SCALAR(pyz, cos(phasey), sin(phasey));
 
-/* convenience macros to copy vectors, vectors times phases, 
+/* convenience macros to copy vectors, vectors times phases,
    and conjugated vectors: */
 #  define ASSIGN_V(f,k,f2,k2) { f[3*(k)+0] = f2[3*(k2)+0];               \
                                 f[3*(k)+1] = f2[3*(k2)+1];               \
@@ -836,7 +918,7 @@ void maxwell_vectorfield_otherhalf(maxwell_data *d, scalar_complex *field,
 #endif /* ! SCALAR_COMPLEX */
 }
 
-/* as vectorfield_otherhalf, but operates on a complex scalar field 
+/* as vectorfield_otherhalf, but operates on a complex scalar field
    ... ugh, copy & paste job */
 void maxwell_cscalarfield_otherhalf(maxwell_data *d, scalar_complex *field,
 				    real phasex, real phasey, real phasez)
@@ -897,7 +979,7 @@ void maxwell_cscalarfield_otherhalf(maxwell_data *d, scalar_complex *field,
      phasey += phasez;
      CASSIGN_SCALAR(pyz, cos(phasey), sin(phasey));
 
-/* convenience macros to copy cscalars, cscalars times phases, 
+/* convenience macros to copy cscalars, cscalars times phases,
    and conjugated cscalars (THIS IS THE ONLY CODE THAT WAS CHANGED
    COMPARED TO vectorfield_otherhalf): */
 #  define ASSIGN_V(f,k,f2,k2) { f[k] = f2[k2]; }
@@ -1186,7 +1268,7 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
      int cur_band_start;
      scalar_complex *cdata;
      real scale;
-     
+
      CHECK(d, "null maxwell data pointer!");
      CHECK(Xin.c == 2, "fields don't have 2 components!");
 
@@ -1194,11 +1276,11 @@ void maxwell_operator(evectmatrix Xin, evectmatrix Xout, void *data,
      (void) Work;
 
      cdata = (scalar_complex *) d->fft_data;
-     scale = -1.0 / Xout.N;  /* scale factor to normalize FFT; 
+     scale = -1.0 / Xout.N;  /* scale factor to normalize FFT;
 				negative sign comes from 2 i's from curls */
 
      /* compute the operator, num_fft_bands at a time: */
-     for (cur_band_start = 0; cur_band_start < Xin.p; 
+     for (cur_band_start = 0; cur_band_start < Xin.p;
 	  cur_band_start += d->num_fft_bands) {
 	  int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
 
@@ -1227,17 +1309,17 @@ void maxwell_muinv_operator(evectmatrix Xin, evectmatrix Xout, void *data,
     maxwell_data *d = (maxwell_data *) data;
     int cur_band_start;
     scalar_complex *cdata;
-    
+
     CHECK(d, "null maxwell data pointer!");
     CHECK(Xin.c == 2, "fields don't have 2 components!");
-    
+
     (void) is_current_eigenvector;  /* unused */
     (void) Work;
-    
+
     cdata = (scalar_complex *) d->fft_data;
 
      /* compute the operator, num_fft_bands at a time: */
-     for (cur_band_start = 0; cur_band_start < Xout.p; 
+     for (cur_band_start = 0; cur_band_start < Xout.p;
 	  cur_band_start += d->num_fft_bands) {
 	  int cur_num_bands = MIN2(d->num_fft_bands, Xout.p - cur_band_start);
           maxwell_compute_H_from_B(d, Xin, Xout, cdata,
@@ -1281,7 +1363,7 @@ void maxwell_target_operator(evectmatrix Xin, evectmatrix Xout, void *data,
      maxwell_target_operator1(Work, Xout, data, is_current_eigenvector, Work);
 }
 
-/* Compute the operation Xout = curl 1/epsilon * i u x Xin, which 
+/* Compute the operation Xout = curl 1/epsilon * i u x Xin, which
    is useful operation in computing the group velocity (derivative
    of the maxwell operator).  u is a vector in cartesian coordinates. */
 void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
@@ -1306,27 +1388,27 @@ void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
      for (cur_band_start = 0; cur_band_start < Xin.p;
           cur_band_start += d->num_fft_bands) {
           int cur_num_bands = MIN2(d->num_fft_bands, Xin.p - cur_band_start);
-	  
+
 	  /* first, compute fft_data = u x Xin: */
 	  for (i = 0; i < d->other_dims; ++i)
 	       for (j = 0; j < d->last_dim; ++j) {
 		    int ij = i * d->last_dim + j;
 		    int ij2 = i * d->last_dim_size + j;
 		    k_data cur_k = d->k_plus_G[ij];
-		    
+
 		    for (b = 0; b < cur_num_bands; ++b)
 			 assign_ucross_t2c(&fft_data_in[3 * (ij2*cur_num_bands
-							  + b)], 
-					   u, cur_k, 
-					   &Xin.data[ij * 2 * Xin.p + 
+							  + b)],
+					   u, cur_k,
+					   &Xin.data[ij * 2 * Xin.p +
 						    b + cur_band_start],
 					   Xin.p);
 	       }
-	  
+
 	  /* now, convert to position space via FFT: */
 	  maxwell_compute_fft(+1, d, fft_data_in, fft_data,
 			      cur_num_bands*3, cur_num_bands*3, 1);
-	  
+
           maxwell_compute_e_from_d(d, cdata, cur_num_bands);
           maxwell_compute_H_from_e(d, Xout, cdata,
                                    cur_band_start, cur_num_bands, scale);
