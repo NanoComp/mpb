@@ -24,7 +24,7 @@
                       int xyz_index = ((i1 * n2 + i2) * n3 + i3);
 #  else /* HAVE_MPI */
      /* first two dimensions are transposed in MPI output: */
-     #define LOOP_XYZ(md, body) { \
+     #define LOOP_XYZ(md) { \
           int n1 = md->nx, n2 = md->ny, n3 = md->nz, i1, i2_, i3; \
           int local_n2 = md->local_ny, local_y_start = md->local_y_start; \
           for (i2_ = 0; i2_ < local_n2; ++i2_)
@@ -35,7 +35,7 @@
 #  endif /* HAVE_MPI */
 #else /* not SCALAR_COMPLEX */
 #  ifndef HAVE_MPI
-     #define LOOP_XYZ(md, body) { \
+     #define LOOP_XYZ(md) { \
           int n1 = md->nx, n2 = md->ny, n3 = md->nz, i1_, i2_, i1, i2, i3; \
           int n_other = md->other_dims; \
           int n_last = md->last_dim_size / 2; \
@@ -50,7 +50,7 @@
                  }
 
 #  else /* HAVE_MPI */
-     #define LOOP_XYZ(md, body) { \
+     #define LOOP_XYZ(md) { \
           int n1 = md->nx, n2 = md->ny, n3 = md->nz, i1, i2_, i3; \
           int local_n2 = md->local_ny, local_y_start = md->local_y_start; \
           int local_n3 = n3 > 1 ? md->last_dim_size / 2 : 1; \
