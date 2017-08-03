@@ -542,9 +542,20 @@ void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 			 cur_num_bands*3, cur_num_bands*3, 1);
 }
 
+void maxwell_compute_h_from_B(maxwell_data *d, evectmatrix Bin,
+                              scalar_complex *hfield,
+			                     int Bin_band_start, int cur_num_bands)
+{
+     maxwell_compute_h_from_H(d, Bin, hfield, Bin_band_start, cur_num_bands);
+     if (d->mu_inv != NULL)
+        maxwell_compute_e_from_d_(d, hfield, cur_num_bands, d->mu_inv);
+}
+
+
+
 void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
                               evectmatrix Hout, scalar_complex *hfield,
-			      int Bin_band_start, int Hout_band_start,
+			                     int Bin_band_start, int Hout_band_start,
                               int cur_num_bands)
 {
      scalar *fft_data = (scalar *) hfield;
@@ -553,15 +564,14 @@ void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
      real scale = 1.0 / Hout.N; /* scale factor to normalize FFTs */
 
      if (d->mu_inv == NULL) {
-         if (Bin.data != Hout.data)
-             evectmatrix_copy_slice(Hout, Bin,
-                                    Hout_band_start, Bin_band_start,
-                                    cur_num_bands);
-         return;
+        if (Bin.data != Hout.data)
+            evectmatrix_copy_slice(Hout, Bin,
+                                   Hout_band_start, Bin_band_start,
+                                   cur_num_bands);
+        return;
      }
 
-     maxwell_compute_h_from_H(d, Bin, hfield, Bin_band_start, cur_num_bands);
-     maxwell_compute_e_from_d_(d, hfield, cur_num_bands, d->mu_inv);
+     maxwell_compute_h_from_B(d, Bin, hfield, Bin_band_start, cur_num_bands);
 
      /* convert back to Fourier space */
      maxwell_compute_fft(-1, d, fft_data, fft_data_out,
