@@ -60,7 +60,7 @@ void sqmatrix_assert_hermitian(sqmatrix A)
 /* A = B */
 void sqmatrix_copy(sqmatrix A, sqmatrix B)
 {
-     CHECK(A.p == B.p, "arrays not conformant");
+     sqmatrix_resize(&A, B.p, 0);
      blasglue_copy(A.p * A.p, B.data, 1, A.data, 1);
 }
 
@@ -75,7 +75,7 @@ void sqmatrix_resize(sqmatrix *A, int p, short preserve_data)
 
      if (preserve_data) {
 	  int i, j;
-	  
+
 	  if (p < A->p) {
 	       for (i = 0; i < p; ++i)
 		    for (j = 0; j < p; ++j)
@@ -91,7 +91,7 @@ void sqmatrix_resize(sqmatrix *A, int p, short preserve_data)
      A->p = p;
 }
 
-/* U contains the upper triangle of a Hermitian matrix; we copy this 
+/* U contains the upper triangle of a Hermitian matrix; we copy this
    to F and also fill in the lower triangle with the adjoint of the upper. */
 void sqmatrix_copy_upper2full(sqmatrix F, sqmatrix U)
 {
@@ -115,10 +115,10 @@ void sqmatrix_symmetrize(sqmatrix Asym, sqmatrix A)
 
      CHECK(Asym.p == A.p, "arrays not conformant");
 
-     for (i = 0; i < A.p; ++i) 
+     for (i = 0; i < A.p; ++i)
 	  for (j = 0; j < A.p; ++j) {
 	       int ij = i * A.p + j, ji = j * A.p + i;
-	       ASSIGN_SCALAR(Asym.data[ij], 
+	       ASSIGN_SCALAR(Asym.data[ij],
 			     0.5 * (SCALAR_RE(A.data[ij]) +
 				    SCALAR_RE(A.data[ji])),
 			     0.5 * (SCALAR_IM(A.data[ij]) -
@@ -151,7 +151,7 @@ scalar sqmatrix_traceAtB(sqmatrix A, sqmatrix B)
      return trace;
 }
 
-/* A = B * C.  If bdagger != 0, then adjoint(B) is used; similarly for C. 
+/* A = B * C.  If bdagger != 0, then adjoint(B) is used; similarly for C.
    A must be distinct from B and C.   Note that since the matrices
    are stored in row-major order, the most efficient operation should
    be B * adjoint(C), assuming the BLAS is sane.  i.e. if C is hermitian,
@@ -196,7 +196,7 @@ void sqmatrix_aApbB(real a, sqmatrix A, real b, sqmatrix B)
 }
 
 /* U <- 1/U.  U must be Hermitian and, if positive_definite != 0,
-   positive-definite (e.g. U = Yt*Y).  Work is a scratch matrix. 
+   positive-definite (e.g. U = Yt*Y).  Work is a scratch matrix.
    Returns 1 on success, 0 if failure (e.g. matrix singular) */
 int sqmatrix_invert(sqmatrix U, short positive_definite,
 		     sqmatrix Work)
@@ -207,14 +207,14 @@ int sqmatrix_invert(sqmatrix U, short positive_definite,
      if (positive_definite) {
 	  /* factorize U: */
 	  if (!lapackglue_potrf('U', U.p, U.data, U.p)) return 0;
-	  
+
 	  /* QUESTION: would it be more efficient to stop here,
 	     returning the Cholesky factorization of U?  This
 	     could then be used to multiply by 1/U without
 	     ever calculating the inverse explicitly.  It
 	     would probably be more numerically stable, but
 	     how do the computational costs compare? */
-	  
+
 	  /* Compute 1/U (upper half only) */
 	  if (!lapackglue_potri('U', U.p, U.data, U.p)) return 0;
      }
@@ -230,10 +230,10 @@ int sqmatrix_invert(sqmatrix U, short positive_definite,
 	  /* Compute 1/U (upper half only) */
 	  if (!lapackglue_hetri('U', U.p, U.data, U.p, ipiv, Work.data))
 	       return 0;
-	  
+
 	  free(ipiv);
      }
-	  
+
      /* Now, copy the conjugate of the upper half
 	onto the lower half of U */
      for (i = 0; i < U.p; ++i)
@@ -312,7 +312,7 @@ void sqmatrix_eigenvalues(sqmatrix A, scalar_complex *eigvals)
     destroy_sqmatrix(B);
 }
 
-/* Compute Usqrt <- sqrt(U), where U must be Hermitian positive-definite. 
+/* Compute Usqrt <- sqrt(U), where U must be Hermitian positive-definite.
    W is a work array, and must be the same size as U.  Both U and
    W are overwritten. */
 void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W)
@@ -328,12 +328,12 @@ void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W)
 
      {
 	  int i;
-	  
+
 	  /* Compute W = diag(sqrt(eigenvals)) * U; i.e. the rows of W
 	     become the rows of U times sqrt(corresponding eigenvalue) */
 	  for (i = 0; i < U.p; ++i) {
 	       CHECK(eigenvals[i] > 0, "non-positive eigenvalue");
-	       
+
 	       blasglue_copy(U.p, U.data + i*U.p, 1, W.data + i*U.p, 1);
 	       blasglue_rscal(U.p, sqrt(eigenvals[i]), W.data + i*U.p, 1);
 	  }

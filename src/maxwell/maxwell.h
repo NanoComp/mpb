@@ -178,6 +178,11 @@ extern void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
                                      evectmatrix Hout, scalar_complex *hfield,
                                      int Bin_band_start, int Hout_band_start,
                                      int cur_num_bands);
+extern void maxwell_compute_H_from_shifted_B(maxwell_data *d, evectmatrix Bin,
+                                      evectmatrix Hout, scalar_complex *hfield,
+                                      int s1, int s2, int s3,
+			                       int Bin_band_start, int Hout_band_start,
+                                      int cur_num_bands);
 extern void maxwell_compute_e_from_d(maxwell_data *d,
 				     scalar_complex *dfield,
 				     int cur_num_bands);
