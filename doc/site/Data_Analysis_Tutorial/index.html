@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Data Analysis Tutorial - MPB Documentation</title>
+  
+
+  <link rel="shortcut icon" href="../img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Data_Analysis_Tutorial"
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script>
+  <script src="../js/theme.js"></script> 
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+  <script src="../mathjaxhelper.js"></script>
+
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+
+      <p align="center"
+      <a href="../MPB/">
+         <img align="center" height="auto" width="100%"
+              src="../img/Mpb-logo.jpg"
+      </a>
+
+      <div class="wy-side-nav-search">
+        <a href="../MPB/" class="icon icon-home"> MPB Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Overview</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../MPB/">About MPB</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Download/">Download</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Release_Notes/">Release Notes</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Manual</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Introduction/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Installation/">Installation</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_Tutorial/">Scheme Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Data Analysis Tutorial</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#triangular-lattice-of-rods">Triangular Lattice of Rods</a></li>
+                
+                    <li><a class="toctree-l4" href="#the-tri-rodsctl-control-file">The tri-rods.ctl Control File</a></li>
+                
+                    <li><a class="toctree-l4" href="#the-tri-rods-dielectric-function">The tri-rods Dielectric Function</a></li>
+                
+                    <li><a class="toctree-l4" href="#gaps-and-band-diagram-for-tri-rods">Gaps and Band Diagram for tri-rods</a></li>
+                
+                    <li><a class="toctree-l4" href="#the-source-of-the-tm-gap-examining-the-modes">The Source of the TM Gap: Examining the Modes</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#diamond-lattice-of-spheres">Diamond Lattice of Spheres</a></li>
+                
+                    <li><a class="toctree-l4" href="#diamond-control-file">Diamond Control File</a></li>
+                
+                    <li><a class="toctree-l4" href="#important-note-on-units-for-the-diamondfcc-lattice">Important Note on Units for the Diamond/FCC Lattice</a></li>
+                
+                    <li><a class="toctree-l4" href="#gaps-and-band-diagram-for-the-diamond-lattice">Gaps and Band Diagram for the Diamond Lattice</a></li>
+                
+                    <li><a class="toctree-l4" href="#visualizing-the-diamond-lattice-structure-and-bands">Visualizing the Diamond Lattice Structure and Bands</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_User_Interface/">Scheme User Interface</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Developer_Information/">Developer Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Guile_and_Scheme_Information/">Guile and Scheme Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Acknowledgements/">Acknowledgements</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../License_and_Copyright/">License and Copyright</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../MPB/">MPB Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../MPB/"><span class="SmallCaps">mpb</span> documentation</a> &raquo;</li>
+    
+      
+        
+          <li>MPB Manual &raquo;</li>
+        
+      
+    
+    <li>Data Analysis Tutorial</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        
+          <a href="https://github.com/stevengj/mpb/" class="icon icon-github"> Edit on GitHub</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="mpb-data-analysis-tutorial">MPB Data Analysis Tutorial</h2>
+<p>In the previous section, we focused on how to perform a calculation in MPB. Now, we'll give a brief tutorial on what you might do with the results of the calculations, and in particular how you might visualize the results. We'll focus on two systems, one two-dimensional and one three-dimensional.</p>
+<div class="toc"><span class="toctitle">Table of Contents</span><ul>
+<li><a href="#mpb-data-analysis-tutorial">MPB Data Analysis Tutorial</a></li>
+<li><a href="#triangular-lattice-of-rods">Triangular Lattice of Rods</a><ul>
+<li><a href="#the-tri-rodsctl-control-file">The tri-rods.ctl Control File</a></li>
+<li><a href="#the-tri-rods-dielectric-function">The tri-rods Dielectric Function</a></li>
+<li><a href="#gaps-and-band-diagram-for-tri-rods">Gaps and Band Diagram for tri-rods</a></li>
+<li><a href="#the-source-of-the-tm-gap-examining-the-modes">The Source of the TM Gap: Examining the Modes</a></li>
+</ul>
+</li>
+<li><a href="#diamond-lattice-of-spheres">Diamond Lattice of Spheres</a><ul>
+<li><a href="#diamond-control-file">Diamond Control File</a></li>
+<li><a href="#important-note-on-units-for-the-diamondfcc-lattice">Important Note on Units for the Diamond/FCC Lattice</a></li>
+<li><a href="#gaps-and-band-diagram-for-the-diamond-lattice">Gaps and Band Diagram for the Diamond Lattice</a></li>
+<li><a href="#visualizing-the-diamond-lattice-structure-and-bands">Visualizing the Diamond Lattice Structure and Bands</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="triangular-lattice-of-rods">Triangular Lattice of Rods</h2>
+<p>First, we'll return to the two-dimensional <a href="../Scheme_Tutorial/#bands-of-a-triangular-lattice">triangular lattice of rods</a> in air.  See also <a href="http://ab-initio.mit.edu/book">our online textbook</a>, ch. 5. The control file for this calculation, which can also be found in <code>mpb-ctl/examples/tri-rods.ctl</code>, will consist of:</p>
+<h3 id="the-tri-rodsctl-control-file">The tri-rods.ctl Control File</h3>
+<pre><code>(set! num-bands 8)
+(set! geometry-lattice (make lattice (size 1 1 no-size)
+                         (basis1 (/ (sqrt 3) 2) 0.5)
+                         (basis2 (/ (sqrt 3) 2) -0.5)))
+(set! geometry (list (make cylinder
+                       (center 0 0 0) (radius 0.2) (height infinity)
+                       (material (make dielectric (epsilon 12))))))
+(set! k-points (list (vector3 0 0 0)          ; Gamma
+                     (vector3 0 0.5 0)        ; M
+                     (vector3 (/ -3) (/ 3) 0) ; K
+                     (vector3 0 0 0)))        ; Gamma
+(set! k-points (interpolate 4 k-points))
+(set! resolution 32)
+(run-tm (output-at-kpoint (vector3 (/ -3) (/ 3) 0)
+                          fix-efield-phase output-efield-z))
+(run-te)
+</code></pre>
+
+<p>Notice that we're computing both TM and TE bands where we expect a gap in the TM bands, and are outputting the z component of the electric field for the TM bands at the K point. The <code>fix-efield-phase</code> will be explained below.</p>
+<p>Now, run the calculation, directing the output to a file, by entering the following command at the Unix prompt:</p>
+<pre><code>unix% mpb tri-rods.ctl &gt;&amp; tri-rods.out
+</code></pre>
+
+<p>It should finish in a few seconds.</p>
+<h3 id="the-tri-rods-dielectric-function">The tri-rods Dielectric Function</h3>
+<p>In most cases, the first thing we'll want to do is to look at the dielectric function, to make sure that we specified the correct geometry. We can do this by looking at the <code>epsilon.h5</code> output file.</p>
+<p>The first thing that might come to mind would be to examine <code>epsilon.h5</code> directly, say by converting it to a PNG image with <code>h5topng</code> from <a href="http://ab-initio.mit.edu/h5utils/">h5utils</a>, magnifying it by 3:</p>
+<pre><code>unix% h5topng -S 3 epsilon.h5
+</code></pre>
+
+<p><center><img alt="" src="../images/tri-rods-eps-1.gif" /></center></p>
+<p>This image initially seems wrong! Why is the rod oval-shaped and not circular? Actually, the dielectric function is correct, but the image is distorted because the primitive cell of our lattice is a rhombus with 60<sup><script type="math/tex">\circ</script></sup> acute angles. Since the output grid of MPB is defined over the non-orthogonal unit cell, while the image produced by <code>h5topng</code> and most other plotting programs is square, the image is skewed.</p>
+<p>We can fix the image in a variety of ways, but the best way is probably to use the <code>mpb-data</code> utility included and installed with MPB. <code>mpb-data</code> allows us to rearrange the data into a rectangular cell (<code>-r</code>) with the same area/volume, expand the data to include multiple periods (<code>-m</code> <em><code>periods</code></em>), and change the resolution per unit distance in each direction to a fixed value (<code>-n</code> <em><code>resolution</code></em>). <code>man</code> <code>mpb-data</code> or run <code>mpb-data</code> <code>-h</code> for more options. In this case, we'll rectify the cell, expand it to three periods in each direction, and fix the resolution to 32 pixels per <em>a</em>:</p>
+<pre><code>unix% mpb-data -r -m 3 -n 32 epsilon.h5
+</code></pre>
+
+<p>It's important to use <code>-n</code> when you use <code>-r</code>, as otherwise the non-square unit cell output by <code>-r</code> will have a different density of grid points in each direction, and appear distorted. The output of <code>mpb-data</code> is by default an additional dataset within the input file, as we can see by running <code>h5ls</code>:</p>
+<pre><code>unix% h5ls epsilon.h5 
+data                     Dataset {32, 32}
+data-new                 Dataset {96, 83}
+description              Dataset {SCALAR}
+lattice\ copies          Dataset {3}
+lattice\ vectors         Dataset {3, 3}
+</code></pre>
+
+<p><center><img alt="" src="../images/tri-rods-eps-2.gif" /></center></p>
+<p>Here the new dataset output by <code>mpb-data</code> is the one called <code>data-new</code>. We can examine it by running <code>h5topng</code> again, this time explicitly specifying the name of the dataset (and no longer magnifying):</p>
+<pre><code>unix% h5topng epsilon.h5:data-new
+</code></pre>
+
+<p>The new <code>epsilon.png</code> output image is shown at right. As you can see, the rods are now circular as desired, and they clearly form a triangular lattice.</p>
+<h3 id="gaps-and-band-diagram-for-tri-rods">Gaps and Band Diagram for tri-rods</h3>
+<p>At this point, let's check for band gaps by picking out lines with the word "Gap" in them:</p>
+<pre><code>unix% grep Gap tri-rods.out
+Gap from band 1 (0.275065617068082) to band 2 (0.446289918847647), 47.4729292989213%
+Gap from band 3 (0.563582903703468) to band 4 (0.593059066215511), 5.0968516236891%
+Gap from band 4 (0.791161222813268) to band 5 (0.792042731370125), 0.111357548663006%
+Gap from band 5 (0.838730315053238) to band 6 (0.840305955160638), 0.187683867865441%
+Gap from band 6 (0.869285340346465) to band 7 (0.873496724070656), 0.483294361375001%
+Gap from band 4 (0.821658212109559) to band 5 (0.864454087942874), 5.07627823271133%
+</code></pre>
+
+<p>The first five gaps are for the TM bands (which we ran first), and the last gap is for the TE bands. Note, however that the &lt; 1% gaps are probably false positives due to band crossings, as described in the <a href="../Scheme_Tutorial/#our-first-band-structure">tutorial</a>. There are no complete (overlapping TE/TM) gaps, and the largest gap is the 47% TM gap as expected. See <a href="http://ab-initio.mit.edu/book">our online textbook</a>, appendix C. To be absolutely sure of this and other band gaps, we would also check k-points within the interior of the Brillouin zone, but we'll omit that step here.</p>
+<p>Next, let's plot out the band structure. To do this, we'll first extract the TM and TE bands as comma-delimited text, which can then be imported and plotted in our favorite spreadsheet/plotting program.</p>
+<pre><code>unix% grep tmfreqs tri-rods.out &gt; tri-rods.tm.dat
+unix% grep tefreqs tri-rods.out &gt; tri-rods.te.dat
+</code></pre>
+
+<p>The TM and TE bands are both plotted below against the "k index" column of the data, with the special k-points labelled. TM bands are shown in blue (filled circles) with the gaps shaded light blue, while TE bands are shown in red (hollow circles) with the gaps shaded light red.</p>
+<p><center><img alt="" src="../images/tri-rods-bands.gif" /></center></p>
+<p>Note that we truncated the upper frequencies at a cutoff of 1.0 c/a. Although some of our bands go above that frequency, we didn't compute enough bands to fill in all of the states in that range. Besides, we only really care about the states around the gap(s), in most cases.</p>
+<h3 id="the-source-of-the-tm-gap-examining-the-modes">The Source of the TM Gap: Examining the Modes</h3>
+<p>Now, let's actually examine the electric-field distributions for some of the bands which were saved at the K point, remember. Besides looking neat, the field patterns will tell us about the characters of the modes and provide some hints regarding the origin of the band gap.</p>
+<p>As before, we'll run <code>mpb-data</code> on the field output files (named <code>e.k11.b*.z.tm.h5</code>), and then run <code>h5topng</code> to view the results:</p>
+<pre><code>unix% mpb-data -r -m 3 -n 32 e.k11.b*.z.tm.h5
+unix% h5topng -C epsilon.h5:data-new -c bluered -Z -d z.r-new e.k11.b*.z.tm.h5
+</code></pre>
+
+<p>Here, we've used the <code>-C</code> option to superimpose black contours of the dielectric function over the fields, <code>-c</code> <code>bluered</code> to use a blue-white-red color table, <code>-Z</code> to center the color scale at zero (white), and <code>-d</code> to specify the dataset name for all of the files at once. <code>man h5topng</code> for more information. There are plenty of data-visualization programs available if you want more sophisticated plotting capabilities than what <code>h5topng</code> offers, of course; you can use <code>h5totxt</code> to convert the data to a format suitable for import into e.g. spreadsheets.</p>
+<p>Note that the dataset name is <code>z.r-new</code>, which is the real part of the z component of the output of <code>mpb-data</code>. Since these are TM fields, the z component is the only non-zero part of the electric field. The real and imaginary parts of the fields correspond to what the fields look like at half-period intervals in time, and in general they are different. However, at K they are redundant, due to the inversion symmetry of that k-point (proof left as an exercise for the reader). Usually, looking at the real parts alone gives you a pretty good picture of the state, especially if you use <code>fix-efield-phase</code> (see below), which chooses the phase to maximize the field energy in the real part. Sometimes, though, you have to be careful: if the real part happens to be zero, what you'll see is essentially numerical noise and you should switch to the imaginary part.</p>
+<p>The resulting field images are shown below:</p>
+<table>
+<thead>
+<tr>
+<th>TM band 1</th>
+<th>TM band 2</th>
+<th>TM band 3</th>
+<th>TM band 4</th>
+<th>TM band 5</th>
+<th>TM band 6</th>
+<th>TM band 7</th>
+<th>TM band 8</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><img alt="center" src="../images/tri-rods-ez1.gif" /></td>
+<td><img alt="center" src="../images/tri-rods-ez2.gif" /></td>
+<td><img alt="center" src="../images/tri-rods-ez3.gif" /></td>
+<td><img alt="center" src="../images/tri-rods-ez4.gif" /></td>
+<td><img alt="center" src="../images/tri-rods-ez5.gif" /></td>
+<td><img alt="center" src="../images/tri-rods-ez6.gif" /></td>
+<td><img alt="center" src="../images/tri-rods-ez7.gif" /></td>
+<td><img alt="center" src="../images/tri-rods-ez8.gif" /></td>
+</tr>
+</tbody>
+</table>
+<p>Your images should look the same as the ones above. If we hadn't included <code>fix-efield-phase</code> before <code>output-efield-z</code> in the ctl file, on the other hand, yours would have differed slightly (e.g. by a sign or a lattice shift), because by default the phase is <em>random</em>.</p>
+<p>When we look at the real parts of the fields, we are really looking at the fields of the modes at a particular instant in time and the imaginary part is half a period later. The point in time relative to the periodic oscillation of the state is determined by the phase of the eigenstate. The <code>fix-efield-phase</code> band function picks a canonical phase for the eigenstate, giving us a deterministic picture.</p>
+<p>We can see several things from these plots:</p>
+<p>First, the origin of the band gap is apparent. The lowest band is concentrated within the dielectric rods in order to minimize its frequency. The next bands, in order to be orthogonal, are forced to have a node within the rods, imposing a large "kinetic energy" (and/or "potential energy") cost and hence a gap. See <a href="http://ab-initio.mit.edu/book">our online textbook</a>, ch. 5. Successive bands have more and more complex nodal structures in order to maintain orthogonality. The contrasting absence of a large TE gap has to do with boundary conditions. The perpendicular component of the displacement field must be continuous across the dielectric boundary, but the parallel component need not be.</p>
+<p>We can also see the deep impact of symmetry on the states. The K point has C<sub>3v</sub> symmetry and not quite the full C<sub>6v</sub> symmetry of the dielectric structure. This symmetry group has only one two-dimensional representation--that is what gives rise to the degenerate pairs of states (2/3, 4/5, and 7/8), all of which fall into this "p-like" category where the states transform like two orthogonal dipole field patterns, essentially. The other two bands, 1 and 6, transform under the trivial "s-like" representation with band 6 just a higher-order version of 1.</p>
+<h2 id="diamond-lattice-of-spheres">Diamond Lattice of Spheres</h2>
+<p>Now, let us turn to a three-dimensional structure, a diamond lattice of dielectric spheres in air. See <a href="http://ab-initio.mit.edu/book">our online textbook</a>, ch. 6. The basic techniques to compute and analyze the modes of this structure are the same as in two dimensions, but of course, everything becomes more complicated in 3d. It's harder to find a structure with a complete gap, the modes are no longer polarized, the computations are bigger, and visualization is more difficult, for starters.</p>
+<p>The control file for this calculation, which can also be found in <code>mpb-ctl/examples/diamond.ctl</code>, consists of:</p>
+<h3 id="diamond-control-file">Diamond Control File</h3>
+<pre><code> (set! geometry-lattice (make lattice
+                          (basis-size (sqrt 0.5) (sqrt 0.5) (sqrt 0.5))
+                          (basis1 0 1 1)
+                          (basis2 1 0 1)
+                          (basis3 1 1 0)))
+
+; Corners of the irreducible Brillouin zone for the fcc lattice,
+; in a canonical order:
+ (set! k-points (interpolate 4 (list
+                                (vector3 0 0.5 0.5)            ; X
+                                (vector3 0 0.625 0.375)        ; U
+                                (vector3 0 0.5 0)              ; L
+                                (vector3 0 0 0)                ; Gamma
+                                (vector3 0 0.5 0.5)            ; X
+                                (vector3 0.25 0.75 0.5)        ; W
+                                (vector3 0.375 0.75 0.375))))  ; K
+
+ ; define a couple of parameters (which we can set from the command-line)
+ (define-param eps 11.56) ; the dielectric constant of the spheres
+ (define-param r 0.25)    ; the radius of the spheres
+
+ (define diel (make dielectric (epsilon eps)))
+
+ ; A diamond lattice has two &quot;atoms&quot; per unit cell:
+ (set! geometry (list (make sphere (center 0.125 0.125 0.125) (radius r)
+                            (material diel))
+                      (make sphere (center -0.125 -0.125 -0.125) (radius r)
+                            (material diel))))
+
+ ; (A simple fcc lattice would have only one sphere/object at the origin.)
+
+ (set-param! resolution 16) ; use a 16x16x16 grid
+ (set-param! mesh-size 5)
+ (set-param! num-bands 5)
+
+ ; run calculation, outputting electric-field energy density at the U point:
+ (run (output-at-kpoint (vector3 0 0.625 0.375) output-dpwr))
+</code></pre>
+
+<p>As before, run the calculation, directing the output to a file. This will take a minute. We'll put it in the background with <code>nohup</code> so that it will finish even if we log out:</p>
+<pre><code>unix% nohup mpb diamond.ctl &gt;&amp; diamond.out &amp;
+</code></pre>
+
+<p>Note that, because we used <code>define-param</code> and <code>set-param!</code> to define/set some variables (see the <a href="http://ab-initio.mit.edu/wiki/index.php/Libctl_User_Reference">libctl reference</a>, we can change them from the command line. For example, to use a radius of 0.3 and a resolution of 20, we can just type <code>mpb r=0.3 resolution=20 diamond.ctl</code>. This is an extremely useful feature, because it allows you to use one generic control file for many variations on the same structure.</p>
+<h3 id="important-note-on-units-for-the-diamondfcc-lattice">Important Note on Units for the Diamond/FCC Lattice</h3>
+<p><a href="../MPB_User_Tutorial#A_Few_Words_on_Units" title="wikilink">As usual,</a> all distances are in the dimensionless units determined by the length of the lattice vectors. We refer to these units as <em>a</em>, and frequencies are given in units of <em>c/a</em>. By default, the lattice/basis vectors are unit vectors, but in the case of fcc lattices this conflicts with the convention in the literature. In particular, the canonical <em>a</em> for fcc is the edge-length of a cubic supercell containing the lattice.</p>
+<p>In order to follow this convention, we set the length of our basis vectors appropriately using the <code>basis-size</code> property of <code>geometry-lattice</code>. The lattice vectors default to the same length as the basis vectors. If the cubic supercell edge has unit length (<em>a</em>), then the fcc lattice vectors have length sqrt(0.5), or <code>(sqrt 0.5)</code> in Scheme.</p>
+<h3 id="gaps-and-band-diagram-for-the-diamond-lattice">Gaps and Band Diagram for the Diamond Lattice</h3>
+<p>The diamond lattice has a complete band gap:</p>
+<pre><code>unix% grep Gap diamond.out
+Gap from band 2 (0.396348703007373) to band 3 (0.440813418580596), 10.6227251392791%
+</code></pre>
+
+<p>We can also plot its band diagram, much as for the tri-rods case except that now we can't classify the bands by polarization.</p>
+<pre><code>unix% grep freqs diamond.out &gt; diamond.dat
+</code></pre>
+
+<p>The resulting band diagram, with the complete band gap shaded yellow, is shown below. Note that we only computed 5 bands, so in reality the upper portion of the plot would contain a lot more bands which are of less interest than the bands adjoining the gap.</p>
+<p><center><img alt="" src="../images/diamond-bands.gif" /></center></p>
+<h3 id="visualizing-the-diamond-lattice-structure-and-bands">Visualizing the Diamond Lattice Structure and Bands</h3>
+<p>Visualizing fields in a useful way for general three-dimensional structures is fairly difficult, but we'll show you what we can with the help of the free <a href="http://vis5d.sourceforge.net/">Vis5D</a> volumetric-visualization program, and the <code>h5tov5d</code> conversion program from <a href="http://ab-initio.mit.edu/h5utils/">h5utils</a>.</p>
+<p>First, of course, we've got to rectangularize the unit cell using <code>mpb-data</code>, as before. We'll also expand it to two periods in each direction.</p>
+<pre><code>unix% mpb-data -m 2 -r -n 32 epsilon.h5 dpwr.k06.b*.h5
+</code></pre>
+
+<p>Then, we'll use <code>h5tov5d</code> to convert the resulting datasets to Vis5D format, joining all the datasets into a single file (<code>diamond.v5d</code>) so that we can view them simultaneously if we want to:</p>
+<pre><code>unix% h5tov5d -o diamond.v5d -d data-new epsilon.h5 dpwr.k06.b*.h5
+</code></pre>
+
+<p>Note that all of the datasets are named <code>data-new</code> from the original datasets called <code>data</code> since we are looking at scalar data (the time-averaged electric-field energy density). No messy field components or real and imaginary parts this time; we have enough to deal with already.</p>
+<p>Now we can open the file with Vis5D and play around with various plots of the data:</p>
+<pre><code>unix% vis5d diamond.v5d &amp;
+</code></pre>
+
+<p>If you stare at the dielectric function long enough from various angles, you can convince yourself that it is a diamond lattice:</p>
+<p><center><img alt="" src="../images/diamond-eps.gif" /></center></p>
+<p>The lowest two bands have their fields concentrated within the spheres as you might expect, flowing along more-or-less linear paths. The second band differs from the first mainly by the orientation of its field paths. The fields for the first band at U are depicted below, with the strongest fields (highest energy density) shown as the most opaque, blue pixels. Next to it is the same plot but with an isosurface at the boundary of the dielectric superimposed, so you can see that the energy is concentrated inside the dielectric.</p>
+<p><center><img alt="" src="../images/diamond-b1.gif" /></center></p>
+<p><center><img alt="" src="../images/diamond-b1-eps.gif" /></center></p>
+<p>The first band above the gap is band 3. Its field energy densities are depicted below in the same manner as above. The field patterns are considerably harder to make out than for the lower band, but they seem to be more diffuse and "clumpy," the latter likely indicating the expected field oscillations for orthogonality with the lower bands.</p>
+<p><center><img alt="" src="../images/diamond-b3.gif" /></center></p>
+<p><center><img alt="" src="../images/diamond-b3-eps.gif" /></center></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Scheme_User_Interface/" class="btn btn-neutral float-right" title="Scheme User Interface"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../Scheme_Tutorial/" class="btn btn-neutral" title="Scheme Tutorial"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    <!-- Copyright etc -->
+    </p>
+  </div>
+
+  <a href="http://https://github.com/stevengj/mpb">
+    <span class="SmallCaps">mpb</span> </a> documentation
+
+  <p>
+  <font size=-1>
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> 
+  using a customized theme modeled 
+  after the 
+  <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>
+  provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  </font>
+
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../Scheme_Tutorial/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../Scheme_User_Interface/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>

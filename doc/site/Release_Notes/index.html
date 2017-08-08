@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Release Notes - MPB Documentation</title>
+  
+
+  <link rel="shortcut icon" href="../img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Release_Notes"
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script>
+  <script src="../js/theme.js"></script> 
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+  <script src="../mathjaxhelper.js"></script>
+
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+
+      <p align="center"
+      <a href="../MPB/">
+         <img align="center" height="auto" width="100%"
+              src="../img/Mpb-logo.jpg"
+      </a>
+
+      <div class="wy-side-nav-search">
+        <a href="../MPB/" class="icon icon-home"> MPB Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Overview</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../MPB/">About MPB</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Download/">Download</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Release Notes</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#mpb-15">MPB 1.5</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-142">MPB 1.4.2</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-141">MPB 1.4.1</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-14">MPB 1.4</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-13">MPB 1.3</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-122">MPB 1.2.2</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-121">MPB 1.2.1</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-12">MPB 1.2</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-111">MPB 1.1.1</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-11">MPB 1.1</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-10">MPB 1.0</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-013">MPB 0.13</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-012">MPB 0.12</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-011">MPB 0.11</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-010">MPB 0.10</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-091">MPB 0.9.1</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-09">MPB 0.9</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-081">MPB 0.8.1</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb-08">MPB 0.8</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Manual</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Introduction/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Installation/">Installation</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_Tutorial/">Scheme Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Data_Analysis_Tutorial/">Data Analysis Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_User_Interface/">Scheme User Interface</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Developer_Information/">Developer Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Guile_and_Scheme_Information/">Guile and Scheme Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Acknowledgements/">Acknowledgements</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../License_and_Copyright/">License and Copyright</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../MPB/">MPB Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../MPB/"><span class="SmallCaps">mpb</span> documentation</a> &raquo;</li>
+    
+      
+        
+          <li>MPB Overview &raquo;</li>
+        
+      
+    
+    <li>Release Notes</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        
+          <a href="https://github.com/stevengj/mpb/" class="icon icon-github"> Edit on GitHub</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="release-notes">Release Notes</h1>
+<hr />
+<p>Here, we describe what has changed between releases of MPB. You can also refer to the <code>NEWS</code> file in the MPB package, or the <code>ChangeLog</code> file for a more detailed listing.</p>
+<h2 id="mpb-15">MPB 1.5</h2>
+<p><small>April 2, 2014</small></p>
+<ul>
+<li>MPB now also installs a library, for use from within <a href="http://meep.readthedocs.io/en/latest/Meep/">Meep</a> 1.2 or later.</li>
+<li>Support Guile 2.x.</li>
+<li>Support FFTW version 3.x in addition to FFTW 2.x. Version 3.3 or later is required for MPI parallelism.</li>
+<li>Support for OpenMP parallelism.</li>
+<li>Use more accurate subpixel averaging algorithm for interfaces between anisotropic materials. See <a href="http://math.mit.edu/~stevenj/papers/papers_abstracts.html#KottkeFa08">Kottke et al, PRE 77, 036611, 2008</a>.</li>
+<li>Use more accurate geometry routines in recent libctl versions which improves and speeds subpixel averaging.</li>
+<li>Support using a different <strong>k</strong> origin in <code>find-k</code>.</li>
+<li>Added <code>epsilon-func</code> wrapper for <code>material-func</code> (similar to Meep).</li>
+<li>Added <code>compute-1-group-velocity</code> to compute group velocity of a single band.</li>
+<li>Added <code>kinterpolate-uniform</code> function, to interpolate with roughly uniform spacing in reciprocal space.</li>
+<li>Added <code>optimize-grid-size!</code> function to round the grid size to a size that can be handled more efficiently. Only affects resolution, not lattice vectors.</li>
+<li>Allow user to set <code>filename-prefix</code> to false to disable its use.</li>
+<li>Added <code>mpb-data -P &lt;angle&gt;</code> option to change the phase angle of the output.</li>
+<li>Added <code>compute-field-divergence</code> and routines to get and output the bound charge density: <code>get-charge-density</code> and <code>output-charge-density</code>.</li>
+<li><code>resolution</code> is now an arbitrary real number, not just an integer, although of course MPB eventually computes an integer grid size.</li>
+<li>Support HDF5 1.8.</li>
+<li>Fix recurring <code>non positive-definite matrix in potrf</code> errors that were arising due to roundoff errors preventing matrix inversion.</li>
+<li>Fix <code>output-at-kpoint</code> to avoid sensitivity to roundoff errors.</li>
+<li>Bug fix in parallel HDF5 support: HDF5 compiled for parallel I/O (MPI) now works.</li>
+<li>Bug fix in <code>field-map!</code>, thanks to Karen Lee for the bug report.</li>
+<li>Bug fix for <code>first-brillouin-zone-k</code>, thanks to Mischa Megens.</li>
+<li>Bug fix: <code>get-field</code> and <code>compute-field-integral</code> now use fields with the same phase as the outputted fields. Thanks to Jim West for the bug report.</li>
+<li>Miscellaneous bug fixes.</li>
+</ul>
+<h2 id="mpb-142">MPB 1.4.2</h2>
+<p><small>March 3, 2003</small></p>
+<ul>
+<li>Interactive prompt is now <code>mpb&gt;</code> not <code>guile&gt;</code>.</li>
+<li>Output <code>freqs:</code> line lists headings as <code>k1,</code> <code>k2,</code> <code>k3</code> instead of <code>kx,</code> <code>ky,</code> <code>kz</code> since they are in reciprocal-lattice, not Cartesian, coordinates. Thanks to Theis Peter Hanson for the suggestion.</li>
+<li>Bug fix in <code>find-k</code> for non-orthogonal lattices; thanks to Suxia (Susan) Yang for tracking down this bug.</li>
+<li>Fixed SunOS problem where k vectors along <code>no-size</code> dimensions failed; thanks to Benjamin Cowan for the bug report.</li>
+<li>Fixed <code>find-k</code> to work for <code>band-min</code> &gt; 1; thanks to M. Povinelli for the bug report.</li>
+<li>Fixed <code>find-k</code> to work for thunk band functions which take no arguments and are called only once instead of per-band.</li>
+</ul>
+<h2 id="mpb-141">MPB 1.4.1</h2>
+<p><small>September 16, 2002</small></p>
+<ul>
+<li>Fixed <code>NaN</code> in field normalization when basis determinant was negative. Thanks to Rumen Iliew for the bug report.</li>
+<li>Fixed compatibility problems with versions of Guile prior to 1.4. Thanks to Cazimir G. Bostan for bug reports.</li>
+<li>Don't resize lattice basis for <code>grid-size</code>=1 unless <code>no-size</code> was explicitly specified; thanks to Tairan Wang for the suggestion.</li>
+</ul>
+<h2 id="mpb-14">MPB 1.4</h2>
+<p><small>September 12, 2002</small></p>
+<ul>
+<li>New <code>find-k</code> routine to find k as a function of frequency, instead of vice-versa.</li>
+<li>The Great Field Renormalization: all fields are now normalized to have unit <strong>integral</strong> of their energy density instead of unit sum over the grid points, which is much more useful e.g., for perturbation theory. See <a href="../Scheme_User_Interface/#field-normalization">field normalization</a> in manual.</li>
+<li>You can now save fields in Scheme variables to perform computations combining different fields. Example routines, e.g., to output the Poynting vector, are included.</li>
+<li>Functions to export and import the raw eigenvectors (planewave amplitudes), as well as to compute dot products of eigenvectors from different k-points (e.g., for detecting band crossings).</li>
+<li><code>allow-negative-epsilon</code> function to enable negative-dielectric support.</li>
+<li>Added <code>examples/dos.scm</code> to compute density of states via simple Gaussian histogram, suggested by Xavier Gonze and Doug Allan.</li>
+<li>Bug fix: allow real offdiagonal epsilon elements without requiring <code>--with-hermitian-eps</code>. Thanks to Doug Allan for the bug report.</li>
+<li>Eliminated floating-point error on Alpha for homogeneous structure. Thanks to F. Lopez-Tejeira for the bug report.</li>
+<li>Added man page for <code>mpb-split</code>.</li>
+<li>Minor installation fixes.</li>
+</ul>
+<h2 id="mpb-13">MPB 1.3</h2>
+<p><small>March 10, 2002</small></p>
+<ul>
+<li>You can now specify the grid size via the <code>resolution</code> input variable, instead of via <code>grid-size</code>. In this case, you make e.g., a 2d simulation by creating a lattice with size <code>no-size</code> in one dimension. The old syntax is still supported, but the new style is encouraged. All examples have been updated to the new style.</li>
+<li>New functions to retrieve fields, dielectric functions, etcetera at any point, interpolated from the grid if necessary; see the <code>get-*-point</code> functions in the <a href="../Scheme_User_Interface/#loading-and-manipulating-the-current-field">manual</a>.</li>
+<li>New <code>compute-field-integral</code> function, analogous to <code>compute-energy-integral</code>; thanks to Marin Soljacic for the suggestion.</li>
+<li>Support Scheme complex numbers where appropriate (e.g., in <code>epsilon-offdiag</code> or in the new field integration functions).</li>
+<li>Got rid of <code>NaN</code> when computing the undefined group velocity for zero-frequency states at the Gamma point; arbitrarily return zero here instead. Thanks to Dmitry N. Chigrin for reporting floating-point exceptions on Alphas.</li>
+<li>Fixed compilation failure for Fortran compilers that use all upper case; thanks to Steve Lantz of Cornell.</li>
+<li>Added "Fun with Fortran" section to <a href="../Installation/">Installation</a> describing common Fortran pitfalls; thanks to Steve Lantz for the suggestion.</li>
+<li>Improved BLAS/LAPACK detection; new <code>--with-blas</code> and <code>--with-lapack</code> options to specify these libraries manually.</li>
+<li>Shortened <code>--with-hermitian-epsilon</code> configure option to <code>--with-hermitian-eps</code>.</li>
+<li>The data-analysis tutorial is now consistent with h5topng 1.7.</li>
+<li>Use new API from libctl 2.0.</li>
+</ul>
+<h2 id="mpb-122">MPB 1.2.2</h2>
+<p><small>December 7, 2001</small></p>
+<ul>
+<li>Fixed bug that caused erroneous/failed convergence when <code>EVEN-Y</code>/<code>ODD-Y</code> constraints were used in three dimensions. Thanks to Rumen Iliew for the bug report.</li>
+<li>Added convenience functions <code>run-yeven</code>, <code>run-yodd</code>, <code>run-yeven-zeven</code>, ...</li>
+</ul>
+<h2 id="mpb-121">MPB 1.2.1</h2>
+<p><small>November 20, 2001</small></p>
+<ul>
+<li>Fixed serious crashing bug in 1.2; thanks to Karl Koch for the bug report.</li>
+</ul>
+<h2 id="mpb-12">MPB 1.2</h2>
+<p><small>November 15, 2001</small></p>
+<ul>
+<li>Added new y-parity computation and constraints. See the new <code>run-parity</code> function, which allows you to simultaneously specify the parity through the y=0 and z=0 planes, for symmetric structures. See also the <code>display-yparities</code> function.</li>
+<li>z parity is no longer computed by default; see the new <code>display-yparities</code> and <code>display-zparities</code> functions to pass to <code>(run)</code>.</li>
+<li>Return more-accurate average epsilon, fill factor, and scalar epsilon values (eigenfrequencies are not affected). Thanks to Mischa Megens for bugging me.</li>
+<li>Now outputs D and H in consistent units (previously, D and E were multiplied by a factor of -frequency). Thanks to Michelle Povinelli for worrying.</li>
+<li><code>epsilon.h5</code> file now includes extra datasets for all components of the effective dielectric tensor. This feature is not yet supported if you <code>configure</code> <code>--with-inv-symmetry</code> <code>--with-hermitian-epsilon</code>.</li>
+<li><code>run-polarization</code> is replaced by <code>run-parity</code>, and <code>run-even</code>/<code>run-odd</code> are deprecated in favor of <code>run-zeven</code>/<code>run-zodd</code>. <code>run-te</code>/<code>run-tm</code> are now equivalent to <code>run-zeven</code>/<code>run-zodd</code> when invoked for 3d systems.</li>
+<li>Noted new <code>basis-size</code> property of <code>geometry-lattice</code>, from libctl 1.5. This makes it easier to use conventional units in the fcc lattice.</li>
+<li>Group-velocity computation no longer silently invalidates fields that have been loaded with <code>get-dfield</code>, etcetera. Thanks to Marin Soljacic for the bug report.</li>
+<li>The configure script now checks that <code>guile</code> is in the <code>$PATH</code>. Thanks to Bing Li and Giridhar Malalahalli for their bug reports.</li>
+<li>Rotated the W and K points of the diamond-lattice example so that they are oriented similarly to those in the <a href="http://ab-initio.mit.edu/book">Photonic Crystals</a> book by Joannopoulos <em>et al.</em> (eigenfrequencies are not affected). Thanks to Robert Sheldon for pointing out that this was confusing.</li>
+<li>Added <code>honey-rods.ctl</code> example file: a 2d honeycomb lattice of rods.</li>
+<li>Added <code>line-defect.ctl</code> example file: a line-defect waveguide in a 2d triangular lattice of dielectric rods, formed by a missing row of rods.</li>
+</ul>
+<h2 id="mpb-111">MPB 1.1.1</h2>
+<p><small>July 4, 2001</small></p>
+<ul>
+<li>Fixed bug in H-field output that caused subtly incorrect H-field files only for 3d problems when NOT using <code>mpbi</code>.</li>
+<li>Fixed bug that caused <code>mpbi</code> to output incorrect results for 1d problems (e.g. outputted dielectric functions with zeros).</li>
+<li>Changed default eigensolver tolerance from 1e-4 to 1e-7.</li>
+<li>Added <code>retrieve-gap</code> convenience function to return the gap between two specified bands.</li>
+<li>Fixed typo that prevented compilation of MPI (parallel) version.</li>
+<li>C compiler flags <code>-O3</code> are no longer used by default, since they don't work with some compilers; most of the performance depends upon the BLAS and FFTW anyway. Users wishing greater optimization can set the <code>CFLAGS</code> environment variable. Thanks to Giridhar Malalahalli for the bug report.</li>
+</ul>
+<h2 id="mpb-11">MPB 1.1</h2>
+<p><small>May 6, 2001</small></p>
+<ul>
+<li>Added <code>compute-energy-integral</code> function to make it easier to compute arbitrary field-energy integrals for perturbation theory; thanks to Marin Soljacic for the suggestion.</li>
+<li>Fixed bug in <code>output-field</code> routines for the case of a nonzero k<sub>z</sub> component, that caused the fields to be multiplied by an exp(ikx) phase with a k in the wrong direction. Thanks to Jesper Riishede for the bug report.</li>
+</ul>
+<h2 id="mpb-10">MPB 1.0</h2>
+<p><small>February 23, 2001</small></p>
+<ul>
+<li>At long last, support for distributed-memory parallel machines with MPI. The computation time and memory usage can often improve nearly linearly with the number of processors. Thanks to Clarendon Photonics for funding this work.</li>
+<li>Also added <code>mpb-split</code> script to parallelize in a simpler way, without MPI, on e.g. SMP machines, by dividing up the list of k-points among a number of serial mpb processes.</li>
+<li>Fixed bug in <code>mpbi</code> where artifacts could be introduced in 3d field and dielectric-function output files. This only affected the output files, not the frequency eigenvalues, etcetera. Thanks to Michelle Povinelli for the bug report.</li>
+<li>Added new <code>material-function</code> material type, so that you can now specify that the dielectric tensor be an arbitrary function of position. Thanks to Peter Bermel for needing this.</li>
+<li>If MPB is configured with the flag <code>--with-hermitian-epsilon</code>, then complex-hermitian dielectric tensors corresponding to magnetic materials, which break time-reversal symmetry are supported. Thanks to Shanhui Fan for pestering me about this.</li>
+<li>Eliminated <code>output-copies</code> input variable; if you want to visualize multiple unit cells, you should use <code>mpb-data</code>.</li>
+<li>Added new <code>nothing</code> material that punches a hole through other objects to the background. This is distinct from <code>default-material</code> when <code>epsilon-input-file</code> is used, or for <code>compute-energy-in-objects</code>.</li>
+<li>Fixed inability of MPB 0.13 to run under an old version (1.2) of Guile.</li>
+<li>Now gives an error if k-point or dielectric tensor is incompatible with <code>run-te</code>/<code>run-tm</code>, or if the dielectric tensor is not positive-definite.</li>
+<li>Default to vendor <code>cc</code> instead of <code>gcc</code>, so that C and Fortran compilers are in sync. We default to the vendor <code>f77</code> because it was probably used to compile LAPACK/BLAS, and Fortran libraries are picky.</li>
+<li>The manual now cites our recent publication on the methods behind MPB.</li>
+<li>Bug fix in <code>compute-energy-in-object-list</code> for non-orthogonal lattices.</li>
+<li>Bug fix in <code>combine-band-functions</code> and other functions of band functions, which did not handle functions of no arguments ("thunks") correctly (crashing with an error message). Thanks to Michelle Povinelli for the bug report.</li>
+<li>Fixed a floating-point sensitivity bug in <code>mpb-data</code> that could cause a crash on the Alpha; thanks to Dominique Caron for the bug report and debugging information.</li>
+</ul>
+<h2 id="mpb-013">MPB 0.13</h2>
+<p><small>January 7, 2001</small></p>
+<ul>
+<li>Can now take advantage of <a href="../Scheme_User_Interface/#inversion-symmetry">inversion symmetry</a> in the geometry, gaining at least a factor of two in speed and a factor of two in memory. To use this, you <a href="../Installation/">configure MPB</a> with <code>--with-inv-symmetry</code>; the resulting executable is installed as <code>mpbi</code> and only supports inversion symmetry, so you will usually want to install the ordinary MPB as well.</li>
+<li>Added new <code>eigensolver-block-size</code> input variable, so that MPB can optionally solve for only a few bands at a time instead of all at once, reducing memory requirements and often increasing speed.</li>
+<li>Improved handling of the singular (zero-frequency) solutions at the Gamma (k=0) point. This k point should no longer converge slowly or cause additional problems in the targeted eigensolver.</li>
+<li>Manual updates: please see expanded table of contents; we now use more conventional units in <a href="../Data_Analysis_Tutorial/#diamond-lattice-of-spheres">diamond</a>/fcc example.</li>
+<li>You can now pass a "thunk" (function of no arguments) to <code>run</code>, and it will be evaluated once per k-point instead of once per band per k-point as for ordinary band functions.</li>
+<li><code>compute-field-energy</code> function now also returns the fraction of the energy in the various field components. Thanks to Karl Koch for the suggestion.</li>
+<li>The <code>filename-prefix</code> variable is now read each time an output function is called, instead of once per <code>(run)</code>, so it can be changed frequently if desired. Thanks to Karl Koch for the suggestion.</li>
+<li>Added <code>first-brillouin-zone</code> function to transform an arbitrary k-point into an equivalent point in the first Brillouin zone. Thanks to Payam Rabiei for the suggestion.</li>
+<li>In <code>mpb-data</code>, the center of the output cell is now always identical to the origin of the coordinate system. Thanks to Michelle Povinelli for pointing out this deficiency.</li>
+<li>Used improved spherical-quadrature formula in computing the effective dielectric tensor in 3d; this should increase accuracy somewhat at lower grid resolutions. Thanks to Doug Allan for helpful discussions.</li>
+</ul>
+<h2 id="mpb-012">MPB 0.12</h2>
+<p><small>July 9, 2000</small></p>
+<ul>
+<li>Added <code>fix-*field-phase</code> functions to allow a deterministic phase in the output fields, thanks to a suggestion by Doug Allan.</li>
+<li>Added group-velocity calculation functions (<code>display-group-velocities</code>, etcetera).</li>
+<li>Added <code>-e x,y,z</code> option to <code>mpb-data</code> so that you can now specify an orientation of the output cell (e.g., to make the first axis the 111 direction of an fcc crystal).</li>
+<li>Added <code>(index</code> <code>n)</code> substitute for <code>epsilon</code> property of dielectrics, equivalent to <code>(epsilon</code> <code>(*</code> <code>n</code> <code>n))</code>.</li>
+<li>Documented new libgeom features: <code>cone</code> geometric object, coordinate conversion functions (<code>reciprocal-&gt;lattice</code>, <code>lattice-&gt;cartesian</code>, etc.), and vector/matrix rotation.</li>
+<li><code>compute-field-energy</code> now returns the total, unnormalized energy in the corresponding field; combined with <code>compute-energy-in-objects</code>, this makes it easy to do some perturbation theory and related calculations.</li>
+<li>Eigensolver improvements. Periodic reorthogonalization and renormalization to combat some numerical problems. New line-minimization code, included with permission from <a href="ftp://info.mcs.anl.gov/pub/MINPACK-2/">MINPACK-2</a> by <a href="http://www-unix.mcs.anl.gov/~more/">Jorge J. Moré</a>.</li>
+<li>Fixed breaking of 90-degree rotational symmetry-breaking by the mesh in 2d; thanks to Jim West and Doug Allan of Corning for the bug report. In general, some symmetry-breaking by the discretization seems hard to avoid, however.</li>
+<li>Fixed bug in field output routines that could cause crashes for grid sizes not a multiple of 4.</li>
+<li>Bug fix in dielectric function construction for 2d systems: we now use the xy plane at z=0 as documented, instead of z=-0.5.</li>
+</ul>
+<h2 id="mpb-011">MPB 0.11</h2>
+<p><small>February 12, 2000</small></p>
+<ul>
+<li><code>configure</code> script can now detect and link <a href="http://www.netlib.org/atlas/">ATLAS</a> 3.0 accelerated BLAS.</li>
+<li>Added <code>band-range-data</code> output variable.</li>
+<li>Running <code>mpb-data</code> multiple times on the same file now replaces the results of the previous run, instead of appending <code>-new2</code>, <code>-new3</code>, etcetera.</li>
+<li>Fixed bug in <code>run-even</code>/<code>run-odd</code> that could seriously slow or even prevent eigensolver convergence. Thanks to Payam Rabiei for the bug report.</li>
+<li>Fixed compilation <code>--without-hdf5</code>, or when HDF5 is not found. Thanks to Rajesh Rengarajan for the bug report.</li>
+</ul>
+<h2 id="mpb-010">MPB 0.10</h2>
+<p><small>January 28, 2000</small></p>
+<ul>
+<li>Added <code>mpb-data</code> utility for post-processing data (e.g., for unskewing non-orthogonal lattices). See the new data-analysis tutorial or <code>man mpb-data</code> for more information.</li>
+<li>Added new data-analysis tutorial to the manual, describing how to analyze and visualize the results of two sample calculations.</li>
+<li>Added support for a new material type, <code>dielectric-anisotropic</code>, so that you can specify arbitrary real/symmetric dielectric tensors.</li>
+<li>Added new <code>output-at-kpoint</code> function to make it easier to output fields only at a single k-point in a band-structure calculation.</li>
+<li>When outputting fields, output all field components (x, y, z, and real and imaginary parts) to a single HDF5 file. Also include info on the lattice and k-point vectors to facilitate post-processing.</li>
+<li>Added new subsection to the installation manual describing some generic installation path issues on Unix that were confusing people.</li>
+<li>Use <code>CPPFLAGS</code> environment variable instead of the less-standard <code>INCLUDES</code> to pass <code>-I</code> flags to the configure script for header files in non-standard locations.</li>
+<li>Added <code>diamond.ctl</code> example file for a 3d diamond (fcc) lattice of spheres.</li>
+<li>Added brief mpb <code>man</code> page.</li>
+<li>Fixed z-parity output and <code>run-even</code>/<code>odd</code> functions for 2d grids.</li>
+<li>Fixed bug in <code>output-dpwr-in-objects</code>. Thanks to Mihai Ibanescu for the bug report.</li>
+<li>Compilation fixes. We need to set <code>SHELL</code> in the <code>Makefile</code> for <code>make</code> on some systems. Also added rule to insure <code>ctl-io.h</code> is created before <code>main.c</code> is compiled. Thanks to Christoph Becher for the bug reports.</li>
+</ul>
+<h2 id="mpb-091">MPB 0.9.1</h2>
+<p><small>January 7, 2000</small></p>
+<ul>
+<li>Fixed eigensolver bug where special handling of Gamma (k=0) point could screw up convergence for subsequent k-points, causing incorrect results.</li>
+<li>Fixed behavior of <code>filename-prefix</code> input variable; thanks to Karl Koch for the bug report</li>
+</ul>
+<h2 id="mpb-09">MPB 0.9</h2>
+<p><small>January 2, 2000</small></p>
+<ul>
+<li>Added <code>run-even</code> and <code>run-odd</code> functions, so you can now compute only even/odd states with respect to a z=0 mirror plane in systems with sufficient symmetry. See also the new <code>z-parity</code> output variable.</li>
+<li>Added <code>epsilon-input-file</code> variable, so that you can now read an arbitrary dielectric function from a file.</li>
+<li>Field file names now include the polarization (e.g. <code>.tm</code>).</li>
+<li>Some optimizations in the eigensolver.</li>
+<li>Some documentation improvements; thanks to Edmond Chow for his comments.</li>
+<li><code>configure</code> should work even when there is no Fortran compiler on your system assuming your BLAS, etc., libraries work without Fortran libs. Thanks to Antti Renko for the bug report.</li>
+<li>Fixed problems detecting BLAS and LAPACK shared libraries in <code>configure</code>. Thanks to Karri Varris for the bug report.</li>
+<li>Fixed trailing spaces in <code>sed</code> command, which were breaking <code>make install</code> on some systems. Thanks to Ron Chase for the bug report.</li>
+</ul>
+<h2 id="mpb-081">MPB 0.8.1</h2>
+<p><small>November 22, 1999</small></p>
+<ul>
+<li>Added <code>output-hfield-x</code>, <code>output-dfield-y</code>, etcetera, functions for outputting only specific field components.</li>
+<li>Sped up HDF5 field output routines.</li>
+<li>Added <code>output-copies</code> variable to set the number of periods output by the band output functions.</li>
+</ul>
+<h2 id="mpb-08">MPB 0.8</h2>
+<p><small>November 19, 1999</small></p>
+<ul>
+<li>Initial public release.</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Introduction/" class="btn btn-neutral float-right" title="Introduction"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../Download/" class="btn btn-neutral" title="Download"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    <!-- Copyright etc -->
+    </p>
+  </div>
+
+  <a href="http://https://github.com/stevengj/mpb">
+    <span class="SmallCaps">mpb</span> </a> documentation
+
+  <p>
+  <font size=-1>
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> 
+  using a customized theme modeled 
+  after the 
+  <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>
+  provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  </font>
+
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../Download/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../Introduction/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Scheme User Interface - MPB Documentation</title>
+  
+
+  <link rel="shortcut icon" href="../img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Scheme_User_Interface"
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script>
+  <script src="../js/theme.js"></script> 
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+  <script src="../mathjaxhelper.js"></script>
+
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+
+      <p align="center"
+      <a href="../MPB/">
+         <img align="center" height="auto" width="100%"
+              src="../img/Mpb-logo.jpg"
+      </a>
+
+      <div class="wy-side-nav-search">
+        <a href="../MPB/" class="icon icon-home"> MPB Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Overview</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../MPB/">About MPB</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Download/">Download</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Release_Notes/">Release Notes</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Manual</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Introduction/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Installation/">Installation</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_Tutorial/">Scheme Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Data_Analysis_Tutorial/">Data Analysis Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Scheme User Interface</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#input-variables">Input Variables</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#predefined-variables">Predefined Variables</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#output-variables">Output Variables</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#classes">Classes</a></li>
+                
+                    <li><a class="toctree-l4" href="#lattice">lattice</a></li>
+                
+                    <li><a class="toctree-l4" href="#material-type">material-type</a></li>
+                
+                    <li><a class="toctree-l4" href="#geometric-object">geometric-object</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#functions">Functions</a></li>
+                
+                    <li><a class="toctree-l4" href="#geometry-utilities">Geometry Utilities</a></li>
+                
+                    <li><a class="toctree-l4" href="#coordinate-conversion-functions">Coordinate Conversion Functions</a></li>
+                
+                    <li><a class="toctree-l4" href="#run-functions">Run Functions</a></li>
+                
+                    <li><a class="toctree-l4" href="#the-inverse-problem-k-as-a-function-of-frequency">The Inverse Problem: k as a Function of Frequency</a></li>
+                
+                    <li><a class="toctree-l4" href="#bandoutput-functions">Band/Output Functions</a></li>
+                
+                    <li><a class="toctree-l4" href="#miscellaneous-functions">Miscellaneous Functions</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#field-manipulation">Field Manipulation</a></li>
+                
+                    <li><a class="toctree-l4" href="#field-normalization">Field Normalization</a></li>
+                
+                    <li><a class="toctree-l4" href="#loading-and-manipulating-the-current-field">Loading and Manipulating the Current Field</a></li>
+                
+                    <li><a class="toctree-l4" href="#storing-and-combining-multiple-fields">Storing and Combining Multiple Fields</a></li>
+                
+                    <li><a class="toctree-l4" href="#manipulating-the-raw-eigenvectors">Manipulating the Raw Eigenvectors</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#inversion-symmetry">Inversion Symmetry</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#parallel-mpb">Parallel MPB</a></li>
+                
+                    <li><a class="toctree-l4" href="#mpb-with-mpi-parallelization">MPB with MPI Parallelization</a></li>
+                
+                    <li><a class="toctree-l4" href="#alternative-parallelization-mpb-split">Alternative Parallelization: mpb-split</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Developer_Information/">Developer Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Guile_and_Scheme_Information/">Guile and Scheme Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Acknowledgements/">Acknowledgements</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../License_and_Copyright/">License and Copyright</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../MPB/">MPB Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../MPB/"><span class="SmallCaps">mpb</span> documentation</a> &raquo;</li>
+    
+      
+        
+          <li>MPB Manual &raquo;</li>
+        
+      
+    
+    <li>Scheme User Interface</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        
+          <a href="https://github.com/stevengj/mpb/" class="icon icon-github"> Edit on GitHub</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="scheme-user-interface">Scheme User Interface</h1>
+<hr />
+<p>The user interface is documented in this page. We do not document the Scheme language or the functions provided by <a href="http://ab-initio.mit.edu/wiki/index.php/Libctl">libctl</a>. See also the <a href="http://ab-initio.mit.edu/wiki/index.php/Libctl_User_Reference">libctl User Reference</a> section of the <a href="http://ab-initio.mit.edu/wiki/index.php/Libctl_manual">libctl manual</a>.</p>
+<div class="toc"><span class="toctitle">Table of Contents</span><ul>
+<li><a href="#scheme-user-interface">Scheme User Interface</a><ul>
+<li><a href="#input-variables">Input Variables</a></li>
+<li><a href="#predefined-variables">Predefined Variables</a></li>
+<li><a href="#output-variables">Output Variables</a></li>
+<li><a href="#classes">Classes</a><ul>
+<li><a href="#lattice">lattice</a></li>
+<li><a href="#material-type">material-type</a></li>
+<li><a href="#geometric-object">geometric-object</a></li>
+</ul>
+</li>
+<li><a href="#functions">Functions</a><ul>
+<li><a href="#geometry-utilities">Geometry Utilities</a></li>
+<li><a href="#coordinate-conversion-functions">Coordinate Conversion Functions</a></li>
+<li><a href="#run-functions">Run Functions</a></li>
+<li><a href="#the-inverse-problem-k-as-a-function-of-frequency">The Inverse Problem: k as a Function of Frequency</a></li>
+<li><a href="#bandoutput-functions">Band/Output Functions</a></li>
+<li><a href="#miscellaneous-functions">Miscellaneous Functions</a><ul>
+<li><a href="#parity">Parity</a></li>
+<li><a href="#group-velocities">Group Velocities</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#field-manipulation">Field Manipulation</a><ul>
+<li><a href="#field-normalization">Field Normalization</a></li>
+<li><a href="#loading-and-manipulating-the-current-field">Loading and Manipulating the Current Field</a></li>
+<li><a href="#storing-and-combining-multiple-fields">Storing and Combining Multiple Fields</a><ul>
+<li><a href="#stored-fields-and-bloch-phases">Stored Fields and Bloch Phases</a></li>
+</ul>
+</li>
+<li><a href="#manipulating-the-raw-eigenvectors">Manipulating the Raw Eigenvectors</a></li>
+</ul>
+</li>
+<li><a href="#inversion-symmetry">Inversion Symmetry</a></li>
+<li><a href="#parallel-mpb">Parallel MPB</a><ul>
+<li><a href="#mpb-with-mpi-parallelization">MPB with MPI Parallelization</a></li>
+<li><a href="#alternative-parallelization-mpb-split">Alternative Parallelization: mpb-split</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="input-variables">Input Variables</h2>
+<p>These are global variables that you can set to control various parameters of the MPB computation. They are also listed, along with their current values, by the <code>(help)</code> command. In brackets after each variable is the type of value that it should hold. The classes, complex datatypes like <code>geometric-object</code>, are described in a later subsection. The basic datatypes, like <code>integer</code>, <code>boolean</code>, <code>cnumber</code>, and <code>vector3</code>, are defined by libctl.</p>
+<p><strong><code>geometry</code> [ list of <code>geometric-object</code> class ]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Specifies the geometric objects making up the structure being simulated. When objects overlap, later objects in the list take precedence. Defaults to no objects (empty list).</p>
+<p><strong><code>default-material</code> [ <code>material-type</code> class ]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Holds the default material that is used for points not in any object of the geometry list. Defaults to air (epsilon of 1). See also <code>epsilon-input-file</code>, below.</p>
+<p><strong><code>ensure-periodicity</code> [<code>boolean</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If true (the default), then geometric objects are treated as if they were shifted by all possible lattice vectors; i.e. they are made periodic in the lattice.</p>
+<p><strong><code>geometry-lattice</code> [<code>lattice</code> class ]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Specifies the basis vectors and lattice size of the computational cell which is centered on the origin of the coordinate system. These vectors form the basis for all other 3-vectors in the geometry, and the lattice size determines the size of the primitive cell. If any dimension of the lattice size is the special value <code>no-size</code>, then the dimension of the lattice is reduced (i.e. it becomes two- or one-dimensional). That is, the dielectric function becomes two-dimensional; it is still, in principle, a three dimensional system, and the k-point vectors can be three-dimensional. Generally, you should make any <code>no-size</code> dimension(s) perpendicular to the others. Defaults to the orthogonal x-y-z vectors of unit length (i.e. a square/cubic lattice).</p>
+<p><strong><code>resolution</code> [<code>number</code> or <code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Specifies the computational grid resolution, in pixels per lattice unit (a lattice unit is one basis vector in a given direction). If <code>resolution</code> is a <code>vector3</code>, then specifies a different resolution for each direction; otherwise the resolution is uniform. The grid size is then the product of the lattice size and the resolution, rounded up to the next positive integer. Defaults to <code>10</code>. You can call <code>(optimize-grid-size!)</code> <em>after</em> setting the <code>resolution</code> and <code>geometry-lattice</code> to adjust the grid size for maximal performance. This rounds the grid size in each direction to the nearest integer with small factors, to improve FFT speed.</p>
+<p><strong><code>grid-size</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Specifies the size of the discrete computational grid along each of the lattice directions. <em>Deprecated:</em> the preferred method is to use the <code>resolution</code> variable, above, in which case the <code>grid-size</code> defaults to <code>false</code>. To get the grid size you should instead use the <code>(get-grid-size)</code> function.</p>
+<p><strong><code>dimensions</code> [<code>integer</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Explicitly specifies the dimensionality of the simulation; if the value is less than 3, the sizes of the extra dimensions in <code>grid-size</code> are ignored (assumed to be one). Defaults to 3. <em>Deprecated:</em> the preferred method is to set <code>geometry-lattice</code> to have size no-size in any unwanted dimensions.</p>
+<p><strong><code>k-points</code> [ list of <code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+List of Bloch wavevectors to compute the bands at, expressed in the basis of the reciprocal lattice vectors. The reciprocal lattice vectors are defined as follows (see <a href="http://ab-initio.mit.edu/book">our online textbook</a>, appendix B): Given the lattice vectors R<sub>i</sub> (<em>not</em> the basis vectors), the reciprocal lattice vector G<sub>j</sub> satisfies R<sub>i</sub> * G<sub>j</sub> = 2<em>&#960;</em>&#948;<sub>i,j</sub>, where &#948;<sub>i,j</sub> is the Kronecker delta (1 for <code>i=j</code> and 0 otherwise). R<sub>i</sub> for any <code>no-size</code> dimensions is taken to be the corresponding basis vector. Normally, the wavevectors should be in the first Brillouin zone (<a href="./#coordinate-conversion-functions">see below</a>). <code>k-points</code> defaults to none (empty list).</p>
+<p><strong><code>num-bands</code> [<code>integer</code>]</strong> <br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Number of bands (eigenvectors) to compute at each k point. Defaults to 1.</p>
+<p><strong><code>target-freq</code> [<code>number</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If zero, the lowest-frequency <code>num-bands</code> states are solved for at each k point (ordinary eigenproblem). If non-zero, solve for the <code>num-bands</code> states whose frequencies have the smallest absolute difference with <code>target-freq</code> (special, "targeted" eigenproblem). Beware that the targeted solver converges more slowly than the ordinary eigensolver and may require a lower <code>tolerance</code> to get reliable results. Defaults to 0.</p>
+<p><strong><code>tolerance</code> [<code>number</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Specifies when convergence of the eigensolver is judged to have been reached when the eigenvalues have a fractional change less than <code>tolerance</code> between iterations. Defaults to 1.0e-7.</p>
+<p><strong><code>filename-prefix</code> [<code>string</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A string prepended to all output filenames. Defaults to <code>"FILE-"</code>, where your control file is FILE.ctl. You can change this to <code>false</code> to use no prefix.</p>
+<p><strong><code>epsilon-input-file</code> [<code>string</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If this string is not <code>""</code> (the default), then it should be the name of an HDF5 file whose first/only dataset defines a dielectric function over some discrete grid. This dielectric function is then used in place of <code>default-material</code> (<em>i.e.</em> where there are no <code>geometry</code> objects). The grid of the epsilon file dataset need not match <code>grid-size</code>; it is scaled and/or linearly interpolated as needed. The lattice vectors for the epsilon file are assumed to be the same as <code>geometry-lattice</code>. Note that, even if the grid sizes match and there are no geometric objects, the dielectric function used by MPB will not be exactly the dielectric function of the epsilon file, unless you also set <code>mesh-size</code> to 1 (see above).</p>
+<p><strong><code>eigensolver-block-size</code> [<code>integer</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The eigensolver uses a "block" algorithm, which means that it solves for several bands simultaneously at each k-point. <code>eigensolver-block-size</code> specifies this number of bands to solve for at a time; if it is zero or &gt;= <code>num-bands</code>, then all the bands are solved for at once. If <code>eigensolver-block-size</code> is a negative number, -<em>n</em>, then MPB will try to use nearly-equal block-sizes close to <em>n</em>. Making the block size a small number can reduce the memory requirements of MPB, but block sizes &gt; 1 are usually more efficient. There is typically some optimum size for any given problem. Defaults to -11 (i.e. solve for around 11 bands at a time).</p>
+<p><strong><code>simple-preconditioner?</code> [<code>boolean</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Whether or not to use a simplified preconditioner. Defaults to <code>false</code> which is fastest most of the time. Turning this on increases the number of iterations, but decreases the time for each iteration.</p>
+<p><strong><code>deterministic?</code> [<code>boolean</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Since the fields are initialized to random values at the start of each run, there are normally slight differences in the number of iterations, etcetera, between runs. Setting <code>deterministic?</code> to <code>true</code> makes things deterministic. The default is <code>false</code>.</p>
+<p><strong><code>eigensolver-flags</code> [<code>integer</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This variable is undocumented and reserved for use by Jedi Masters only.</p>
+<h2 id="predefined-variables">Predefined Variables</h2>
+<p>Variables predefined for your convenience and amusement.</p>
+<p><strong><code>air</code>, <code>vacuum</code> [<code>material-type</code> class ]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Two aliases for a predefined material type with a dielectric constant of 1.</p>
+<p><strong><code>nothing</code> [<code>material-type</code> class ]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A material that, effectively, punches a hole through other objects to the background (<code>default-material</code> or <code>epsilon-input-file</code>).</p>
+<p><strong><code>infinity</code> [<code>number</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A big number (1e20) to use for "infinite" dimensions of objects.</p>
+<h2 id="output-variables">Output Variables</h2>
+<p>Global variables whose values are set upon completion of the eigensolver.</p>
+<p><strong><code>freqs</code> [ list of <code>number</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A list of the frequencies of each band computed for the last k point. Guaranteed to be sorted in increasing order. The frequency of band <code>b</code> can be retrieved via <code>(list-ref freqs (- b 1))</code>.</p>
+<p><strong><code>iterations</code> [<code>integer</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The number of iterations required for convergence of the last k point.</p>
+<p><strong><code>parity</code> [<code>string</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A string describing the current required parity/polarization (<code>te</code>, <code>zeven</code>, etcetera, or "" for none). Useful for prefixing output lines for grepping.</p>
+<p>Yet more global variables are set by the <code>run</code> function and its variants, for use after <code>run</code> completes or by a band function which is called for each band during the execution of <code>run</code>.</p>
+<p><strong><code>current-k</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The k point most recently solved from the <code>k-points</code> list.</p>
+<p><strong><code>gap-list</code> [ list of (<em><code>percent freq-min freq-max</code></em>) lists ]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This is a list of the gaps found by the eigensolver, and is set by the <code>run</code> functions when two or more k-points are solved. It is the empty list if no gaps are found.</p>
+<p><strong><code>band-range-data</code> [ list of ((<em><code>min .  kpoint</code></em>) . (<em><code>max . kpoint</code></em>)) ]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+For each band, this list contains the minimum and maximum frequencies of the band, and the associated k points where the extrema are achieved. Note that the bands are defined by sorting the frequencies in increasing order, so this can be confused if two bands cross.</p>
+<h2 id="classes">Classes</h2>
+<p>Classes are complex datatypes with various "properties" which may have default values. Classes can be "subclasses" of other classes; subclasses inherit all the properties of their superclass, and can be used any place the superclass is expected. An object of a class is constructed with:</p>
+<pre><code>(make class (prop1 val1) (prop2 val2) ...)
+</code></pre>
+
+<p>See also the <a href="http://ab-initio.mit.edu/wiki/index.php/Libctl_manual">libctl manual</a>.</p>
+<p>MPB defines several types of classes, the most numerous of which are the various geometric object classes. You can also get a list of the available classes, along with their property types and default values, at runtime with the <code>(help)</code> command.</p>
+<h3 id="lattice">lattice</h3>
+<p>The lattice class is normally used only for the <code>geometry-lattice</code> variable and specifies the three lattice directions of the crystal and the lengths of the corresponding lattice vectors.</p>
+<p><strong><code>basis1, basis2, basis3</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The three lattice directions of the crystal, specified in the cartesian basis. The lengths of these vectors are ignored--only their directions matter. The lengths are determined by the <code>basis-size</code> property, below. These vectors are then used as a basis for all other 3-vectors in the ctl file. They default to the x, y, and z directions, respectively.</p>
+<p><strong><code>basis-size</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The components of <code>basis-size</code> are the lengths of the three basis vectors, respectively. They default to unit lengths.</p>
+<p><strong><code>size</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The size of the lattice (i.e. the length of the lattice vectors R<sub>i</sub>, in which the crystal is periodic) in units of the basis vectors. Thus, the actual lengths of the lattice vectors are given by the components of <code>size</code> multiplied by the components of <code>basis-size</code>. Alternatively, you can think of <code>size</code> as the vector between opposite corners of the primitive cell, specified in the lattice basis. Defaults to unit lengths.</p>
+<p>If any dimension has the special size <code>no-size</code>, then the dimensionality of the problem is reduced by one. Strictly speaking, the dielectric function is taken to be uniform along that dimension. In this case, the <code>no-size</code> dimension should generally be orthogonal to the other dimensions.</p>
+<h3 id="material-type">material-type</h3>
+<p>This class is used to specify the materials that geometric objects are made of. Currently, there are three subclasses, <code>dielectric</code>, <code>dielectric-anisotropic</code>, and <code>material-function</code>.</p>
+<p><strong><code>dielectric</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A uniform, isotropic, linear dielectric material, with one property:</p>
+<p><strong><code>epsilon</code> [<code>number</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The dielectric constant (must be positive). No default value. You can also use <code>(index n)</code> as a synonym for <code>(epsilon (* n n))</code>.</p>
+<p><strong><code>dielectric-anisotropic</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A uniform, possibly anisotropic, linear dielectric material. For this material type, you specify the dielectric tensor <script type="math/tex">\varepsilon</script>, which is real-symmetric or possibly complex-hermitian, relative to the cartesian xyz axes:</p>
+<p>\begin{pmatrix} a &amp; u &amp; v \\ u^* &amp; b &amp; w \\ v^* &amp; w^* &amp; c \end{pmatrix}</p>
+<p>This allows your dielectric to have different dielectric constants for fields polarized in different directions. The epsilon tensor must be positive-definite (have all positive eigenvalues); if it is not, MPB exits with an error. This does <em>not</em> imply that all of the entries of the epsilon matrix need be positive. The components of the tensor are specified via three properties:</p>
+<p><strong><code>epsilon-diag</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The diagonal elements (a b c) of the dielectric tensor. No default value.</p>
+<p><strong><code>epsilon-offdiag</code> [<code>cvector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The off-diagonal elements (u v w) of the dielectric tensor. Defaults to zero. This is a <code>cvector3</code>, which simply means that the components may be complex numbers (e.g. <code>3+0.1i</code>). If non-zero imaginary parts are specified, then the dielectric tensor is complex-hermitian. This is only supported when MPB is configured with the <code>--with-hermitian-eps</code> flag. This is not dissipative (the eigenvalues of epsilon are real), but rather breaks time-reversal symmetry, corresponding to a gyrotropic (magneto-optic) material (see <a href="http://ab-initio.mit.edu/book">our online textbook</a>, ch. 2). Note that <a href="./#inversion-symmetry">inversion symmetry</a> may not mean what you expect for complex-hermitian epsilon, so be cautious about using <code>mpbi</code> in this case.</p>
+<p><strong><code>epsilon-offdiag-imag</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<strong>Deprecated:</strong> The imaginary parts of the off-diagonal elements (u v w) of the dielectric tensor; defaults to zero. Setting the imaginary parts directly by specifying complex numbers in <code>epsilon-offdiag</code> is preferred.</p>
+<p>For example, a material with a dielectric constant of 3.0 for P-polarization and 5.0 for S-polarization would be specified via <code>(make (dielectric-anisotropic (epsilon-diag 3 3 5)))</code>. Please <a href="./#run-functions">be aware</a> that not all 2d anisotropic dielectric structures will have P- and S-polarized modes, however.</p>
+<p><strong><code>material-function</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This material type allows you to specify the material as an arbitrary function of position. For an example of this, see the <code>bragg-sine.ctl</code> file in the <code>examples/</code> directory. It has one property:</p>
+<p><strong><code>material-func</code> [<code>function</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A function of one argument, the position <code>vector3</code> in lattice coordinates, that returns the material at that point. Note that the function you supply can return <em>any</em> material; wild and crazy users could even return another <code>material-function</code> object which would then have its function invoked in turn.</p>
+<p>Instead of <code>material-func</code>, you can use <code>epsilon-func</code>: for <code>epsilon-func</code>, you give it a function of position that returns the dielectric constant at that point.</p>
+<p>Normally, the dielectric constant is required to be positive or positive-definite, for a tensor. However, MPB does have a somewhat experimental feature allowing negative dielectrics (e.g. in a plasma). To use it, call the function <code>(allow-negative-epsilon)</code> before <code>(run)</code>. In this case, it will output the (real) frequency <em>squared</em> in place of the (possibly imaginary) frequencies. Convergence will be somewhat slower because the eigenoperator is not positive definite.</p>
+<h3 id="geometric-object">geometric-object</h3>
+<p>This class, and its descendants, are used to specify the solid geometric objects that form the dielectric structure being simulated. The properties are:</p>
+<p><strong><code>material</code> [<code>material-type</code> class ]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The material that the object is made of which is usually some sort of dielectric. No default value. Must be specified.</p>
+<p><strong><code>center</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Center point of the object. No default value.</p>
+<p>One normally does not create objects of type <code>geometric-object</code> directly, however; instead, you use one of the following subclasses. Recall that subclasses inherit the properties of their superclass, so these subclasses automatically have the <code>material</code> and <code>center</code> properties which must be specified, since they have no default values.</p>
+<p>Recall that all 3-vectors, including the center of an object, its axes, and so on, are specified in the basis of the normalized lattice vectors normalized to <code>basis-size</code>. Note also that 3-vector properties can be specified by either <code>(property (vector3 x y z))</code> or, equivalently, <code>(property x y z)</code>.</p>
+<p>In a two-dimensional calculation, only the intersections of the objects with the x-y plane are considered.</p>
+<p><strong><code>sphere</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A sphere. Properties:</p>
+<p><strong><code>radius</code> [<code>number</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Radius of the sphere. No default value.</p>
+<p><strong><code>cylinder</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A cylinder, with circular cross-section and finite height. Properties:</p>
+<p><strong><code>radius</code> [<code>number</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Radius of the cylinder's cross-section. No default value.</p>
+<p><strong><code>height</code> [<code>number</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Length of the cylinder along its axis. No default value.</p>
+<p><strong><code>axis</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Direction of the cylinder's axis; the length of this vector is ignored. Defaults to point parallel to the z axis.</p>
+<p><strong><code>cone</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A cone, or possibly a truncated cone. This is actually a subclass of <code>cylinder</code>, and inherits all of the same properties, with one additional property. The radius of the base of the cone is given by the <code>radius</code> property inherited from <code>cylinder</code>, while the radius of the tip is given by the new property, <code>radius2</code>. The <code>center</code> of a cone is halfway between the two circular ends.</p>
+<p><strong><code>radius2</code> [<code>number</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Radius of the tip of the cone (i.e. the end of the cone pointed to by the <code>axis</code> vector). Defaults to zero (a "sharp" cone).</p>
+<p><strong><code>block</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A parallelepiped (i.e., a brick, possibly with non-orthogonal axes). Properties:</p>
+<p><strong><code>size</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The lengths of the block edges along each of its three axes. Not really a 3-vector (at least, not in the lattice basis), but it has three components, each of which should be nonzero. No default value.</p>
+<p><strong><code>e1</code>, <code>e2</code>, <code>e3</code> [<code>vector3</code>]</strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The directions of the axes of the block; the lengths of these vectors are ignored. Must be linearly independent. They default to the three lattice directions.</p>
+<p><strong><code>ellipsoid</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+An ellipsoid. This is actually a subclass of <code>block</code>, and inherits all the same properties, but defines an ellipsoid inscribed inside the block.</p>
+<p>Here are some examples of geometric objects created using the above classes, assuming that the lattice directions (the basis) are just the ordinary unit axes, and <code>m</code> is some material we have defined:</p>
+<pre><code>; A cylinder of infinite radius and height 0.25 pointing along the x axis,
+; centered at the origin:
+(make cylinder (center 0 0 0) (material m) 
+               (radius infinity) (height 0.25) (axis 1 0 0))
+</code></pre>
+
+<pre><code>; An ellipsoid with its long axis pointing along (1,1,1), centered on
+; the origin (the other two axes are orthogonal and have equal
+; semi-axis lengths):
+(make ellipsoid (center 0 0 0) (material m)
+                (size 0.8 0.2 0.2)
+               (e1 1 1 1)
+               (e2 0 1 -1)
+               (e3 -2 1 1))
+</code></pre>
+
+<pre><code>; A unit cube of material m with a spherical air hole of radius 0.2 at
+; its center, the whole thing centered at (1,2,3):
+(set! geometry (list
+               (make block (center 1 2 3) (material m) (size 1 1 1))
+               (make sphere (center 1 2 3) (material air) (radius 0.2))))
+</code></pre>
+
+<h2 id="functions">Functions</h2>
+<p>Here, we describe the functions that are defined by MPB. There are many types of functions defined ranging from utility functions for duplicating geometric objects to run functions that start the computation.</p>
+<p>See also the <a href="http://ab-initio.mit.edu/wiki/index.php/Libctl_User_Reference">reference section</a> of the libctl manual, which describes a number of useful functions defined by libctl.</p>
+<h3 id="geometry-utilities">Geometry Utilities</h3>
+<p>Some utility functions are provided to help you manipulate geometric objects:</p>
+<p><strong><code>(shift-geometric-object obj shift-vector)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Translate <code>obj</code> by the 3-vector <code>shift-vector</code>.</p>
+<p><strong><code>(geometric-object-duplicates shift-vector min-multiple max-multiple obj)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Return a list of duplicates of <code>obj</code>, shifted by various multiples of <code>shift-vector</code> from <code>min-multiple</code> to <code>max-multiple</code>, inclusive, in steps of 1.</p>
+<p><strong><code>(geometric-objects-duplicates shift-vector min-multiple max-multiple obj-list)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Same as <code>geometric-object-duplicates</code>, except operates on a list of objects, <code>obj-list</code>. If <em>A</em> appears before <em>B</em> in the input list, then all the duplicates of <em>A</em> appear before all the duplicates of <em>B</em> in the output list.</p>
+<p><strong><code>(geometric-objects-lattice-duplicates obj-list [ ux uy uz ])</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Duplicates the objects in <code>obj-list</code> by multiples of the lattice basis vectors, making all possible shifts of the "primitive cell" (see below) that fit inside the lattice cell. This is useful for supercell calculations. See the <a href="../Scheme_Tutorial/">tutorial</a>. The primitive cell to duplicate is <code>ux</code> by <code>uy</code> by <code>uz</code>, in units of the basis vectors. These three parameters are optional; any that you do not specify are assumed to be <code>1</code>.</p>
+<p><strong><code>(point-in-object? point obj)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Returns whether or not the given 3-vector <code>point</code> is inside the geometric object <code>obj</code>.</p>
+<p><strong><code>(point-in-periodic-object? point obj)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+As <code>point-in-object?</code>, but also checks translations of the given object by the lattice vectors.</p>
+<p><strong><code>(display-geometric-object-info indent-by obj)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Outputs some information about the given <code>obj</code>, indented by <code>indent-by</code> spaces.</p>
+<h3 id="coordinate-conversion-functions">Coordinate Conversion Functions</h3>
+<p>The following functions allow you to easily convert back and forth between the lattice, cartesian, and reciprocal bases. See also the <a href="../Scheme_Tutorial/#a-few-words-on-units">note on units</a> in the tutorial.</p>
+<p><strong><code>(lattice-&gt;cartesian x)</code>, <code>(cartesian-&gt;lattice x)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Convert <code>x</code> between the lattice basis (the basis of the lattice vectors normalized to <code>basis-size</code>) and the ordinary cartesian basis, where <code>x</code> is either a <code>vector3</code> or a <code>matrix3x3</code>, returning the transformed vector/matrix. In the case of a matrix argument, the matrix is treated as an operator on vectors in the given basis, and is transformed into the same operator on vectors in the new basis.</p>
+<p><strong><code>(reciprocal-&gt;cartesian x)</code>, <code>(cartesian-&gt;reciprocal x)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Like the above, except that they convert to/from reciprocal space (the basis of the reciprocal lattice vectors). Also, the cartesian vectors output/input are in units of 2&#960;.</p>
+<p><strong><code>(reciprocal-&gt;lattice x)</code>, <code>(lattice-&gt;reciprocal x)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Convert between the reciprocal and lattice bases, where the conversion again leaves out the factor of 2&#960; (i.e. the lattice-basis vectors are assumed to be in units of 2&#960;).</p>
+<p>Also, a couple of rotation functions are defined, for convenience, so that you don't have to explicitly convert to cartesian coordinates in order to use libctl's <code>rotate-vector3</code> function. See the <a href="http://ab-initio.mit.edu/wiki/index.php/Libctl_User_Reference">Libctl User Reference</a>:</p>
+<p><strong><code>(rotate-lattice-vector3 axis theta v)</code>, <code>(rotate-reciprocal-vector3 axis theta v)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Like <code>rotate-vector3</code> , except that <code>axis</code> and <code>v</code> are specified in the lattice/reciprocal bases.</p>
+<p>Usually, k-points are specified in the first Brillouin zone, but sometimes it is convenient to specify an arbitrary k-point. However, the accuracy of MPB degrades as you move farther from the first Brillouin zone due to the choice of a fixed planewave set for a basis. This is easily fixed: simply transform the k-point to a corresponding point in the first Brillouin zone, and a completely equivalent solution (identical frequency, fields, etcetera) is obtained with maximum accuracy. The following function accomplishes this:</p>
+<p><strong><code>(first-brillouin-zone k)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given a k-point <em><code>k</code></em> in the basis of the reciprocal lattice vectors, as usual, return an equivalent point in the first Brillouin zone of the current lattice (<code>geometry-lattice</code>).</p>
+<p>Note that <code>first-brillouin-zone</code> can be applied to the entire <code>k-points</code> list with the Scheme expression: <code>(map first-brillouin-zone k-points)</code>.</p>
+<h3 id="run-functions">Run Functions</h3>
+<p>These are functions to help you run and control the simulation. The ones you will most commonly use are the <code>run</code> function and its variants. The syntax of these functions, and one lower-level function, is:</p>
+<p><strong><code>(run</code> <em><code>band-func</code></em> <code>...)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This runs the simulation described by the input parameters (see above), with no constraints on the polarization of the solution. That is, it reads the input parameters, initializes the simulation, and solves for the requested eigenstates of each k-point. The dielectric function is outputted to <code>epsilon.h5</code> before any eigenstates are computed. <code>run</code> takes as arguments zero or more "band functions" <code>band-func</code>. A band function should be a function of one integer argument, the band index, so that <code>(band-func</code> <code>which-band)</code> performs some operation on the band <code>which-band</code> (e.g. outputting fields). After every k-point, each band function is called for the indices of all the bands that were computed. Alternatively, a band function may be a "thunk" (function of zero arguments), in which case <code>(band-func)</code> is called exactly once per k-point.</p>
+<p><strong><code>(run-zeven</code> <em><code>band-func</code></em> <code>...)</code>, <code>(run-zodd</code> <em><code>band-func</code></em> <code>...)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+These are the same as the <code>run</code> function except that they constrain their solutions to have even and odd symmetry with respect to the z=0 plane. You should use these functions <em>only</em> for structures that are symmetric through the z=0 mirror plane, where the third basis vector is in the z direction (0,0,1) and is orthogonal to the other two basis vectors, and when the k vectors are in the xy plane. Under these conditions, the eigenmodes always have either even or odd symmetry. In two dimensions, even/odd parities are equivalent to P/S polarizations, respectively and are often strongly analogous even in 3d. Such a symmetry classification is useful for structures such as waveguides and photonic-crystal slabs. See the <a href="http://ab-initio.mit.edu/book">online book</a> (ch. 3).</p>
+<p><strong><code>(run-te</code> <em><code>band-func</code></em> <code>...)</code>, <code>(run-tm</code> <em><code>band-func</code></em> <code>...)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+These are the same as the <code>run</code> function except that they constrain their solutions to be TE- and TM-polarized, respectively, in two dimensions. The TE and TM polarizations are defined has having electric and magnetic fields in the xy plane, respectively. Equivalently, the H/E field of TE/TM light has only a z component (making it easier to visualize).</p>
+<p>These functions are actually equivalent to calling <code>run-zeven</code> and <code>run-zodd</code>, respectively. Note that for the modes to be segregated into TE and TM polarizations, the dielectric function must have mirror symmetry for reflections through the xy plane. If you use <a href="./#material-type">anisotropic dielectrics</a>, you should be aware that they break this symmetry if the z direction is not one of the principle axes. If you use <code>run-te</code> or <code>run-tm</code> in such a case of broken symmetry, MPB will exit with an error.</p>
+<p><strong><code>(run-yeven</code> <em><code>band-func</code></em> <code>...)</code>, <code>(run-yodd</code> <em><code>band-func</code></em> <code>...)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+These functions are analogous to <code>run-zeven</code> and <code>run-zodd</code>, except that they constrain their solutions to have even and odd symmetry with respect to the y=0 plane. You should use these functions <em>only</em> for structures that are symmetric through the y=0 mirror plane, where the second basis vector is in the y direction (0,1,0) and is orthogonal to the other two basis vectors, and when the k vectors are in the xz plane.</p>
+<p><strong><code>run-yeven-zeven</code>, <code>run-yeven-zodd</code>, <code>run-yodd-zeven</code>, <code>run-yodd-zodd</code>, <code>run-te-yeven</code>, <code>run-te-yodd</code>, <code>run-tm-yeven</code>, <code>run-tm-yodd</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+These <code>run</code>-like functions combine the <code>yeven</code>/<code>yodd</code> constraints with <code>zeven</code>/<code>zodd</code> or <code>te</code>/<code>tm</code>. See also <code>run-parity</code>, below.</p>
+<p><strong><code>(run-parity</code> <em><code>p reset-fields band-func</code></em> <code>...)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Like the <code>run</code> function, except that it takes two extra parameters, a parity <code>p</code> and a boolean (<code>true</code>/<code>false</code>) value <code>reset-fields</code>. <code>p</code> specifies a parity constraint, and should be one of the predefined variables:</p>
+<ul>
+<li><code>NO-PARITY</code>: equivalent to <code>run</code></li>
+<li><code>EVEN-Z</code> (or <code>TE</code>): equivalent to <code>run-zeven</code> or <code>run-te</code></li>
+<li><code>ODD-Z</code> (or <code>TM</code>): equivalent to <code>run-zodd</code> or <code>run-tm</code></li>
+<li><code>EVEN-Y</code> (like <code>EVEN-Z</code> but for y=0 plane)</li>
+<li><code>ODD-Y</code> (like <code>ODD-Z</code> but for y=0 plane)</li>
+</ul>
+<p>It is possible to specify more than one symmetry constraint simultaneously by adding them, e.g. <code>(+</code> <code>EVEN-Z</code> <code>ODD-Y)</code> requires the fields to be even through z=0 and odd through y=0. It is an error to specify incompatible constraints (e.g. <code>(+</code> <code>EVEN-Z</code> <code>ODD-Z)</code>). <strong>Important:</strong> if you specify the z/y parity, the dielectric structure <em>and</em> the k vector <strong>must</strong> be symmetric about the z/y=0 plane, respectively. If <code>reset-fields</code> is <code>false</code>, the fields from any previous calculation will be reused as the starting point from this calculation, if possible; otherwise, the fields are reset to random values. The ordinary <code>run</code> functions use a default <code>reset-fields</code> of<code>true</code>. Alternatively, <code>reset-fields</code> may be a string, the name of an HDF5 file to load the initial fields from as exported by <code>save-eigenvectors</code>, as shown <a href="./#manipulating-the-raw-eigenvectors">below</a>.</p>
+<p><strong><code>(display-eigensolver-stats)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Display some statistics on the eigensolver convergence; this function is useful mainly for MPB developers in tuning the eigensolver.</p>
+<p>Several band functions for outputting the eigenfields are defined for your convenience, and are described in the <a href="./#bandoutput-functions">section below</a>. You can also define your own band functions, and for this purpose the functions described in the section <strong>Field manipulation functions</strong>, below, are useful. A band function takes the form:</p>
+<pre><code>(define (my-band-func which-band)
+...do stuff here with band index which-band...
+)
+</code></pre>
+
+<p>Note that the output variable <code>freqs</code> may be used to retrieve the frequency of the band (see above). Also, a global variable <code>current-k</code> is defined holding the current k-point vector from the <code>k-points</code> list.</p>
+<p>There are also some even lower-level functions that you can call, although you should not need to do most of the time:</p>
+<p><strong><code>(init-params p reset-fields?)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Read the input variables and initialize the simulation in preparation for computing the eigenvalues. The parameters are the same as the first two parameters of <code>run-parity</code>. This function <em>must</em> be called before any of the other simulation functions below. Note, however, that the <code>run</code> functions all call <code>init-params</code>.</p>
+<p><strong><code>(set-parity p)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+After calling <code>init-params</code>, you can change the parity constraint without resetting the other parameters by calling this function. Beware that this does not randomize the fields (see below); you don't want to try to solve for, say, the TM eigenstates when the fields are initialized to TE states from a previous calculation.</p>
+<p><strong><code>(randomize-fields)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Initialize the fields to random values.</p>
+<p><strong><code>(solve-kpoint k)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Solve for the requested eigenstates at the Bloch wavevector <code>k</code>.</p>
+<h3 id="the-inverse-problem-k-as-a-function-of-frequency">The Inverse Problem: k as a Function of Frequency</h3>
+<p>MPB's <code>(run)</code> function(s) and its underlying algorithms compute the frequency <code>w</code> as a function of wavevector <code>k</code>. Sometimes, however, it is desirable to solve the inverse problem, for <code>k</code> at a given frequency <code>w</code>. This is useful, for example, when studying coupling in a waveguide between different bands at the same frequency since frequency is conserved even when wavevector is not. One also uses <code>k(w)</code> to construct wavevector diagrams, which aid in understanding diffraction (e.g. negative-diffraction materials and super-prisms). To solve such problems, therefore, we provide the <code>find-k</code> function described below, which inverts <code>w(k)</code> via a few iterations of Newton's method using the group velocity <code>dw/dk</code>. Because it employs a root-finding method, you need to specify bounds on <code>k</code> and a <em>crude</em> initial guess where order of magnitude is usually good enough.</p>
+<p><strong><code>(find-k p omega band-min band-max kdir tol kmag-guess kmag-min kmag-max [band-func...])</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Find the wavevectors in the current geometry/structure for the bands from <code>band-min</code> to <code>band-max</code> at the frequency <code>omega</code> along the <code>kdir</code> direction in k-space. Returns a list of the wavevector magnitudes for each band; the actual wavevectors are <code>(vector3-scale magnitude (unit-vector3 kdir))</code>. The arguments of <code>find-k</code> are:</p>
+<ul>
+<li><code>p</code>: parity (same as first argument to <code>run-parity</code>, <a href="./#run-functions">above</a>).</li>
+<li><code>omega</code>: the frequency at which to find the bands</li>
+<li><code>band-min</code>, <em><code>band-max</code></em>: the range of bands to solve for the wavevectors of (inclusive).</li>
+<li><code>kdir</code>: the direction in k-space in which to find the wavevectors. (The magnitude of <em><code>kdir</code></em> is ignored.)</li>
+<li><code>tol</code>: the fractional tolerance with which to solve for the wavevector; <code>1e-4</code> is usually sufficient. (Like the <code>tolerance</code> input variable, this is only the tolerance of the numerical iteration...it does not have anything to do with e.g. the error from finite grid <code>resolution</code>.)</li>
+<li><code>kmag-guess</code>: an initial guess for the k magnitude (along <em><code>kdir</code></em>) of the wavevector at <em><code>omega</code></em>. Can either be a list (one guess for each band from <em><code>band-min</code></em> to <em><code>band-max</code></em>) or a single number (same guess for all bands, which is usually sufficient).</li>
+<li><code>kmag-min</code>, <em><code>kmag-max</code></em>: a range of k magnitudes to search; should be large enough to include the correct k values for all bands.</li>
+<li><code>band-func</code>: zero or more <a href="../#Band/output_functions" title="wikilink">band functions</a>, just as in <code>(run)</code>, which are evaluated at the computed k points for each band.</li>
+</ul>
+<p>The <code>find-k</code> routine also prints a line suitable for grepping:</p>
+<pre><code>kvals: omega, band-min, band-max, kdir1, kdir2, kdir3, k magnitudes...
+</code></pre>
+
+<h3 id="bandoutput-functions">Band/Output Functions</h3>
+<p>All of these are functions that, given a band index, output the corresponding field or compute some function thereof in the primitive cell of the lattice. They are designed to be passed as band functions to the <code>run</code> routines, although they can also be called directly. See also the section on <a href="./#field-normalization">field normalizations</a>.</p>
+<p><strong><code>(output-hfield which-band)</code></strong><br />
+<strong><code>(output-hfield-x which-band)</code></strong><br />
+<strong><code>(output-hfield-y which-band)</code></strong><br />
+<strong><code>(output-hfield-z which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the magnetic (<script type="math/tex">\mathbf{H}</script>) field for <code>which-band</code>; either all or one of the Cartesian components, respectively.</p>
+<p><strong><code>(output-dfield which-band)</code></strong><br />
+<strong><code>(output-dfield-x which-band)</code></strong><br />
+<strong><code>(output-dfield-y which-band)</code></strong><br />
+<strong><code>(output-dfield-z which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the electric displacement (<script type="math/tex">\mathbf{D}</script>) field for <code>which-band</code>; either all or one of the Cartesian components, respectively.</p>
+<p><strong><code>(output-efield which-band)</code></strong><br />
+<strong><code>(output-efield-x which-band)</code></strong><br />
+<strong><code>(output-efield-y which-band)</code></strong><br />
+<strong><code>(output-efield-z which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the electric (<script type="math/tex">\mathbf{E}</script>) field for <code>which-band</code>; either all or one of the Cartesian components, respectively.</p>
+<p><strong><code>(output-hpwr which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the time-averaged magnetic-field energy density (hpwr = <script type="math/tex">|\mathbf{H}|^2</script>) for <code>which-band</code>.</p>
+<p><strong><code>(output-dpwr which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the time-averaged electric-field energy density (dpwr = <script type="math/tex">\varepsilon|\mathbf{E}|^2</script>) for <code>which-band</code>.</p>
+<p><strong><code>(fix-hfield-phase which-band)</code></strong><br />
+<strong><code>(fix-dfield-phase which-band)</code></strong><br />
+<strong><code>(fix-efield-phase which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Fix the phase of the given eigenstate in a canonical way based on the given spatial field. See also <code>fix-field-phase</code>, below. Otherwise, the phase is random. These functions also maximize the real part of the given field so that one can hopefully just visualize the real part. To fix the phase for output, pass one of these functions to <code>run</code> before the corresponding output function, e.g. <code>(run-tm fix-dfield-phase output-dfield-z)</code></p>
+<p>Although we try to maximize the "real-ness" of the field, this has a couple of limitations. First, the phase of the different field components cannot, of course, be chosen independently, so an individual field component may still be imaginary. Second, if you use <code>mpbi</code> to take advantage of <a href="./#inversion-symmetry">inversion symmetry</a> in your problem, the phase is mostly determined elsewhere in the program; <code>fix-Xfield-phase</code> in that case only determines the sign.</p>
+<p>See also below for the <code>output-poynting</code> and <code>output-tot-pwr</code> functions to output the Poynting vector and the total electromagnetic energy density, respectively, and the <code>output-charge-density</code> function to output the bound charge density.</p>
+<p>Sometimes, you only want to output certain bands. For example, here is a function that, given an band/output function like the ones above, returns a new output function that only calls the first function for bands with a large fraction of their energy in an object(s). This is useful for picking out defect states in supercell calculations.</p>
+<p><strong><code>(output-dpwr-in-objects</code> <em><code>band-func min-energy objects</code></em><code>...)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given a band function <code>band-func</code>, returns a new band function that only calls <code>band-func</code> for bands having a fraction of their electric-field energy greater than <code>min-energy</code> inside the given objects (zero or more geometric objects). Also, for each band, prints the fraction of their energy in the objects in the following form which is suitable for grepping:</p>
+<pre><code>dpwr:, band-index, frequency, energy-in-objects
+</code></pre>
+
+<p><code>output-dpwr-in-objects</code> only takes a single band function as a parameter, but if you want it to call several band functions, you can easily combine them into one with the following routine:</p>
+<p><strong><code>(combine-band-functions</code> <em><code>band-funcs</code></em><code>...)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given zero or more band functions, returns a new band function that calls all of them in sequence. When passed zero parameters, returns a band function that does nothing.</p>
+<p>It is also often useful to output the fields only at a certain k-point, to let you look at typical field patterns for a given band while avoiding gratuitous numbers of output files. This can be accomplished via:</p>
+<p><strong><code>(output-at-kpoint</code> <em><code>k-point band-funcs</code></em><code>...)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given zero or more band functions, returns a new band function that calls all of them in sequence, but only at the specified <code>k-point</code>. For other k-points, does nothing.</p>
+<h3 id="miscellaneous-functions">Miscellaneous Functions</h3>
+<p><strong><code>(retrieve-gap lower-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Return the frequency gap from the band <em><code>lower-band</code></em> to the band <em><code>lower-band+1</code></em>, as a percentage of mid-gap frequency. The "gap" may be negative if the maximum of the lower band is higher than the minimum of the upper band. The gap is computed from the <code>band-range-data</code> of the previous run.</p>
+<h4 id="parity">Parity</h4>
+<p>Given a set of eigenstates at a k-point, MPB can compute their <em>parities</em> with respect to the z=0 or y=0 plane. The z/y parity of a state is defined as the expectation value under the usual inner product of the mirror-flip operation through z/y=0, respectively. For true even and odd eigenstates (see e.g. <code>run-zeven</code> and <code>run-zodd</code>), this will be +1 and -1, respectively; for other states it will be something in between.</p>
+<p>This is useful e.g. when you have a nearly symmetric structure, such as a waveguide with a substrate underneath, and you want to tell which bands are even-like (parity &gt; 0) and odd-like (parity &lt; 0). Indeed, any state can be decomposed into purely even and odd functions, with absolute-value-squared amplitudes of (1+parity)/2 and (1-parity)/2, respectively.</p>
+<p><strong><code>display-zparities</code>, <code>display-yparities</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+These are band functions, designed to be passed to <code>(run)</code>, which output all of the z/y parities, respectively, at each k-point in comma-delimited format suitable for grepping.</p>
+<p><strong><code>(compute-zparities)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Returns a list of the parities about the z=0 plane, one number for each band computed at the last k-point.</p>
+<p><strong><code>(compute-yparities)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Returns a list of the parities about the y=0 plane, one number for each band computed at the last k-point.</p>
+<p>Note that the magnetic field is only a pseudo-vector, and is therefore multiplied by -1 under mirror-flip operations. For this reason, the magnetic field <em>appears</em> to have opposite symmetry from the electric field, but is really the same.</p>
+<h4 id="group-velocities">Group Velocities</h4>
+<p>Given a set of eigenstates at a given k-point, MPB can compute their group velocities (the derivative <script type="math/tex">d\omega/d\mathbf{k}</script> of frequency with respect to wavevector) using the Hellman-Feynmann theorem. Three functions are provided for this purpose, and we document them here from highest-level to lowest-level.</p>
+<p><strong><code>display-group-velocities</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+This is a band function, designed to be passed to <code>(run)</code>, which outputs all of the group velocity vectors (in the Cartesian basis, in units of <em>c</em>) at each k-point.</p>
+<p><strong><code>(compute-group-velocities)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Returns a list of group-velocity vectors (in the Cartesian basis, units of <em>c</em>) for the bands at the last-computed k-point.</p>
+<p><strong><code>(compute-group-velocity-component direction)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Returns a list of the group-velocity components (units of <em>c</em>) in the given <em>direction</em>, one for each band at the last-computed k-point. <em>direction</em> is a vector in the reciprocal-lattice basis like the k-points and its length is ignored. This has the advantage of being three times faster than <code>compute-group-velocities</code>.</p>
+<p><strong><code>(compute-1-group-velocity which-band)</code>, <code>(compute-1-group-velocity-component direction which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+As above, but returns the group velocity or component thereof only for band <code>which-band</code>.</p>
+<h2 id="field-manipulation">Field Manipulation</h2>
+<p>MPB provides a number of ways to take the field of a band and manipulate, process, or output it. These methods usually work in two stages. First, one loads a field into memory, computing it in position space, by calling one of the <code>get</code> functions below. Then, other functions can be called to transform or manipulate the field.</p>
+<p>The simplest class of operations involve only the currently-loaded field, which we describe in the <a href="./#loading-and-manipulating-the-current-field">second subsection</a> below. To perform more sophisticated operations, involving more than one field, one must copy or transform the current field into a new field variable, and then call one of the functions that operate on multiple field variables described in the <a href="./#storing-and-combining-multiple-fields">third subsection</a>.</p>
+<h3 id="field-normalization">Field Normalization</h3>
+<p>In order to perform useful operations on the fields, it is important to understand how they are normalized. We normalize the fields in the way that is most convenient for perturbation and coupled-mode theory (see <a href="https://doi.org/10.1103/PhysRevE.65.066611">S.G. Johnson et al., (2002)</a> and also <a href="http://ab-initio.mit.edu/book">our online textbook</a>, ch. 2), so that their energy densities have unit integral. In particular, we normalize the electric (<script type="math/tex">\mathbf{E}</script>), displacement (<script type="math/tex">\mathbf{D} = \varepsilon \mathbf{E}</script>) and magnetic (<script type="math/tex">\mathbf{H} = -\frac{i}{\omega} \nabla \times \mathbf{E}</script>) fields, so that:</p>
+<table>
+<thead>
+<tr>
+<th>-   (\int \varepsilon</th>
+<th>\mathbf{E}</th>
+<th>^2  d^3\mathbf{x} = 1)</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+<p>where the integrals are over the computational cell. Note the volume element <script type="math/tex">d^3\mathbf{x}</script> which is the volume of a grid pixel/voxel. If you simply sum <script type="math/tex">|\mathbf{H}|^2</script> over all the grid points, therefore, you will get (# grid points) / (volume of cell).</p>
+<p>Note that we have dropped the pesky factors of 1/2, π, etcetera from the energy densities, since these do not appear in e.g. perturbation theory, and the fields have arbitrary units anyway. The functions to compute/output energy densities below similarly use <script type="math/tex">\varepsilon |\mathbf{E}|^2</script> and <script type="math/tex">|\mathbf{H}|^2</script> without any prefactors.</p>
+<h3 id="loading-and-manipulating-the-current-field">Loading and Manipulating the Current Field</h3>
+<p>In order to load a field into memory, call one of the <code>get</code> functions follow. They should only be called after the eigensolver has run or after <code>init-params</code>, in the case of <code>get-epsilon</code>. One normally calls them after <code>run</code>, or in one of the band functions passed to <code>run</code>.</p>
+<p><strong><code>(get-hfield which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Loads the magnetic (<script type="math/tex">\mathbf{H}</script>) field for the band <code>which-band</code>.</p>
+<p><strong><code>(get-dfield which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Loads the electric displacement (<script type="math/tex">\mathbf{D}</script>) field for the band <code>which-band</code>.</p>
+<p><strong><code>(get-efield which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Loads the electric (<script type="math/tex">\mathbf{E}</script>) field for the band <code>which-band</code>. This function actually calls <code>get-dfield</code> followed by <code>get-efield-from-dfield</code>, below.</p>
+<p><strong><code>(get-charge-density which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Loads the bound charge density <script type="math/tex">\nabla \cdot \mathbf{E}</script> for the band <code>which-band</code>.</p>
+<p><strong><code>(get-epsilon)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Loads the dielectric function.</p>
+<p>Once loaded, the field can be transformed into another field or a scalar field:</p>
+<p><strong><code>(get-efield-from-dfield)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Multiplies by the inverse dielectric tensor to compute the electric field from the displacement field. Only works if a <script type="math/tex">\mathbf{D}</script> field has been loaded.</p>
+<p><strong><code>(fix-field-phase)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Fix the currently-loaded eigenstate's phase which is normally random in a canonical way, based on the spatial field (<script type="math/tex">\mathbf{H}</script>, <script type="math/tex">\mathbf{D}</script>, or <script type="math/tex">\mathbf{E}</script>) that has currently been loaded. The phase is fixed to make the real part of the spatial field as big as possible so that you can hopefully visualize just the real part of the field, and a canonical sign is chosen. See also the <code>fix-Xfield-phase</code> band functions, above, which are convenient wrappers around <code>fix-field-phase</code>.</p>
+<p><strong><code>(compute-field-energy)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given the <script type="math/tex">\mathbf{H}</script> or <script type="math/tex">\mathbf{D}</script> fields, computes the corresponding energy density function normalized by the total energy in <script type="math/tex">\mathbf{H}</script> or <script type="math/tex">\mathbf{D}</script>, respectively. Also prints the fraction of the field in each of its Cartesian components in the following form which is suitable for grepping:</p>
+<pre><code>f-energy-components:, k-index, band-index, x-fraction, y-fraction, z-fraction
+</code></pre>
+
+<p>where <code>f</code> is either <code>h</code> or <code>d</code>. The return value of <code>compute-field-energy</code> is a list of 7 numbers: <code>(U xr xi yr yi zr zi)</code>. <code>U</code> is the total, unnormalized energy, which is in arbitrary units deriving from the normalization of the eigenstate (e.g. the total energy for <script type="math/tex">\mathbf{H}</script> is always 1.0). <code>xr</code> is the fraction of the energy in the real part of the field's x component, <code>xi</code> is the fraction in the imaginary part of the x component, etcetera (<code>yr + yi = y-fraction</code>, and so on).</p>
+<p><strong><code>(compute-field-divergence)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given a vector field, compute its divergence.</p>
+<p>Various integrals and other information about the eigenstate can be accessed by the following functions, useful e.g. for perturbation theory. Functions dealing with the field vectors require a field to be loaded, and functions dealing with the energy density require an energy density to be loaded via <code>compute-field-energy</code>.</p>
+<p><strong><code>(compute-energy-in-dielectric min-eps max-eps)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Returns the fraction of the energy that resides in dielectrics with epsilon in the range <code>min-eps</code> to <code>max-eps</code>.</p>
+<p><strong><code>(compute-energy-in-objects objects...)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Returns the fraction of the energy inside zero or more geometric objects.</p>
+<p><strong><code>(compute-energy-integral f)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<code>f</code> is a function <code>(f u eps r)</code> that returns a number given three parameters: <code>u</code>, the energy density at a point; <code>eps</code>, the dielectric constant at the same point; and <code>r</code>, the position vector in lattice coordinates of the point. <code>compute-energy-integral</code> returns the integral of <code>f</code> over the unit cell. The integral is computed simply as the sum over the grid points times the volume of a grid pixel/voxel. This can be useful e.g. for perturbation-theory calculations.</p>
+<p><strong><code>(compute-field-integral f)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Like <code>compute-energy-integral</code>, but <code>f</code> is a function <code>(f F eps r)</code> that returns a number, possibly complex, where <code>F</code> is the complex field vector at the given point.</p>
+<p><strong><code>(get-epsilon-point r)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given a position vector <em><code>r</code></em> (in lattice coordinates), return the interpolated dielectric constant at that point. (Since MPB uses a an effective dielectric tensor internally, this actually returns the mean dielectric constant.)</p>
+<p><strong><code>(get-epsilon-inverse-tensor-point r)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given a position vector <code>r</code> in lattice coordinates, return the interpolated inverse dielectric tensor (a 3x3 matrix) at that point. Near a dielectric interface, the effective dielectric constant is a tensor even if you input only scalar dielectrics; see the <a href="../Developer_Information/#dielectric-function-computation">epsilon overview</a> for more information. The returned matrix may be complex-Hermetian if you are employing magnetic materials.</p>
+<p><strong><code>(get-energy-point r)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given a position vector <code>r</code> in lattice coordinates, return the interpolated energy density at that point.</p>
+<p><strong><code>(get-field-point r)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given a position vector <code>r</code> in lattice coordinates, return the interpolated (complex) field vector at that point.</p>
+<p><strong><code>(get-bloch-field-point r)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given a position vector <code>r</code> in lattice coordinates, return the interpolated complex Bloch field vector at that point. This is the field without the exp(ikx) envelope.</p>
+<p>Finally, we have the following functions to output fields (either the vector fields, the scalar energy density, or epsilon), with the option of outputting several periods of the lattice.</p>
+<p><strong><code>(output-field [ nx [ ny [ nz ] ] ])</code></strong><br />
+<strong><code>(output-field-x [ nx [ ny [ nz ] ] ])</code></strong><br />
+<strong><code>(output-field-y [ nx [ ny [ nz ] ] ])</code></strong><br />
+<strong><code>(output-field-z [ nx [ ny [ nz ] ] ])</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the currently-loaded field. The optional (as indicated by the brackets) parameters <code>nx</code>, <code>ny</code>, and <code>nz</code> indicate the number of periods to be outputted along each of the three lattice directions. Omitted parameters are assumed to be 1. For vector fields, <code>output-field</code> outputs all of the Cartesian components, while the other variants output only one component.</p>
+<p><strong><code>(output-epsilon [ nx [ ny [ nz ] ] ])</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A shortcut for calling <code>get-epsilon</code> followed by <code>output-field</code>. Note that, because epsilon is a tensor, a number of datasets are outputted in <code>"epsilon.h5"</code>:</p>
+<ul>
+<li><code>"data"</code>: 3/trace(1/epsilon)</li>
+<li><code>"epsilon.{xx,xy,xz,yy,yz,zz}"</code>: the (Cartesian) components of the (symmetric) dielectric tensor.</li>
+<li><code>"epsilon_inverse.{xx,xy,xz,yy,yz,zz}"</code>: the (Cartesian) components of the (symmetric) inverse dielectric tensor.</li>
+</ul>
+<h3 id="storing-and-combining-multiple-fields">Storing and Combining Multiple Fields</h3>
+<p>In order to perform operations involving multiple fields, e.g. computing the Poynting vector <script type="math/tex">\mathbf{E}^* \times \mathbf{H}</script>, they must be stored in field variables. Field variables come in three flavors, real-scalar (rscalar) fields, complex-scalar (cscalar) fields, and complex-vector (cvector) fields. There is a pre-defined field variable <code>cur-field</code> representing the currently-loaded field (see above), and you can "clone" it to create more field variables with one of:</p>
+<p><strong><code>(field-make f)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Return a new field variable of the same type and size as the field variable <code>f</code>. Does <em>not</em> copy the field contents. See <code>field-copy</code> and <code>field-set!</code>, below.</p>
+<p><strong><code>(rscalar-field-make f)</code></strong><br />
+<strong><code>(cscalar-field-make f)</code></strong><br />
+<strong><code>(cvector-field-make f)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Like <code>field-make</code>, but return a real-scalar, complex-scalar, or complex-vector field variable, respectively, of the same size as <code>f</code> but ignoring <code>f</code>'s type.</p>
+<p><strong><code>(cvector-field-nonbloch! f)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+By default, complex vector fields are assumed to be Bloch-periodic and are multiplied by <em>e</em><sup>ikx</sup> in output routines. This function tells MPB that the complex vector field <code>f</code> should never be multiplied by Bloch phases.</p>
+<p><strong><code>(field-set! fdest fsrc)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Set <code>fdest</code> to store the same field values as <code>fsrc</code>, which must be of the same size and type.</p>
+<p><strong><code>(field-copy f)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Return a new field variable that is exact copy of <code>f</code>; this is equivalent to calling <code>field-make</code> followed by <code>field-set!</code>.</p>
+<p><strong><code>(field-load f)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Loads the field <code>f</code> as the current field, at which point you can use all of the functions in the <a href="./#loading-and-manipulating-the-current-field">previous section</a> to operate on it or output it.</p>
+<p>Once you have stored the fields in variables, you probably want to compute something with them. This can be done in three ways: combining fields into new fields with <code>field-map!</code> (e.g. combine <script type="math/tex">\mathbf{E}</script> and <script type="math/tex">\mathbf{H}</script> to <script type="math/tex">\mathbf{E}^* \times \mathbf{H}</script>), integrating some function of the fields with <code>integrate-fields</code> (e.g. to compute coupling integrals for perturbation theory), and getting the field values at arbitrary points with <code>*-field-get-point</code> (e.g. to do a line or surface integral). These three functions are described below:</p>
+<p><strong><code>(field-map! fdest func [f1 f2 ...])</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Compute the new field <code>fdest</code> to be <code>(func f1-val f2-val ...)</code> at each point in the grid, where <code>f1-val</code> etcetera is the corresponding value of <code>f1</code> etcetera. All the fields must be of the same size, and the argument and return types of <code>func</code> must match those of the <code>f1...</code> and <code>fdest</code> fields, respectively. <code>fdest</code> may be the same field as one of the <code>f1...</code> arguments. Note: all fields are <em>without</em> Bloch phase factors exp(ikx).</p>
+<p><strong><code>(integrate-fields func [f1 f2 ...])</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Compute the integral of the function <code>(func r [f1 f2 ...])</code> over the computational cell, where <code>r</code> is the position in the usual lattice basis and <code>f1</code> etc. are fields which must all be of the same size. The integral is computed simply as the sum over the grid points times the volume of a grid pixel/voxel. Note: all fields are <em>without</em> Bloch phase factors exp(ikx). See also the note <a href="./#stored-fields-and-bloch-phases">below</a>.</p>
+<p><strong><code>(cvector-field-get-point f r)</code></strong><br />
+<strong><code>(cvector-field-get-point-bloch f r)</code></strong><br />
+<strong><code>(rscalar-field-get-point f r)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Given a position vector <code>r</code> in lattice coordinates, return the interpolated field cvector/rscalar from <code>f</code> at that point. <code>cvector-field-get-point-bloch</code> returns the field <em>without</em> the exp(ikx) Bloch wavevector, in analogue to <code>get-bloch-field-point</code>.</p>
+<p>You may be wondering how to get rid of the field variables once you are done with them: you don't, since they are <a href="https://en.wikipedia.org/wiki/Garbage_collection_(computer_science)">garbage collected</a> automatically.</p>
+<p>We also provide functions, in analogue to e.g <code>get-efield</code> and <code>output-efield</code> above, to "get" various useful functions as the <a href="./#loading-and-manipulating-the-current-field">current field</a> and to output them to a file:</p>
+<p><strong><code>(get-poynting which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Loads the Poynting vector <script type="math/tex">\mathbf{E}^* \times \mathbf{H}</script> for the band <code>which-band</code>, the flux density of electromagnetic energy flow, as the current field. 1/2 of the real part of this vector is the time-average flux density which can be combined with the imaginary part to determine the amplitude and phase of the time-dependent flux.</p>
+<p><strong><code>(output-poynting which-band)</code></strong><br />
+<strong><code>(output-poynting-x which-band)</code></strong><br />
+<strong><code>(output-poynting-y which-band)</code></strong><br />
+<strong><code>(output-poynting-z which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the Poynting vector field for <code>which-band</code>; either all or one of the Cartesian components, respectively.</p>
+<p><strong><code>(get-tot-pwr which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Load the time-averaged electromagnetic-field energy density (<script type="math/tex">|\mathbf{H}|^2 + \varepsilon |\mathbf{E}|^2</script>) for <code>which-band</code>. If you multiply the real part of the Poynting vector by a factor of 1/2, above, you should multiply by a factor of 1/4 here for consistency.</p>
+<p><strong><code>(output-tot-pwr which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the time-averaged electromagnetic-field energy density (above) for <code>which-band</code>.</p>
+<p><strong><code>(output-charge-density which-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Output the bound charge density (above) for <code>which-band</code>.</p>
+<p>As an example, below is the Scheme source code for the <code>get-poynting</code> function, illustrating the use of the various field functions:</p>
+<pre><code>(define (get-poynting which-band)
+  (get-efield which-band)                     ; put E in cur-field
+  (let ((e (field-copy cur-field)))           ; ... and copy to local var.
+    (get-hfield which-band)                   ; put H in cur-field
+    (field-map! cur-field                     ; write ExH to cur-field
+                (lambda (e h) (vector3-cross (vector3-conj e) h))
+                e cur-field)
+    (cvector-field-nonbloch! cur-field)))     ; see below
+</code></pre>
+
+<h4 id="stored-fields-and-bloch-phases">Stored Fields and Bloch Phases</h4>
+<p>Complex vector fields like <strong>E</strong> and <strong>H</strong> as computed by MPB are physically of the Bloch form: exp(ikx) times a periodic function. What MPB actually stores, however, is just the periodic function, the Bloch envelope, and only multiplies by exp(ikx) when the fields are output or passed to the user (e.g. in integration functions). This is mostly transparent, with a few exceptions noted above for functions that do not include the exp(ikx) Bloch phase. It is somewhat faster to operate without including the phase.</p>
+<p>On some occasions, however, when you create a field with <code>field-map!</code>, the resulting field should <em>not</em> have any Bloch phase. For example, for the Poynting vector <strong>E</strong><sup><small>*</small></sup>x<strong>H</strong>, the exp(ikx) cancels because of the complex conjugation. After creating this sort of field, we must use the special function <code>cvector-field-nonbloch!</code> to tell MPB that the field is purely periodic:</p>
+<p><strong><code>(cvector-field-nonbloch! f)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Specify that the field <code>f</code> is <em>not</em> of the Bloch form, but rather that it is purely periodic.</p>
+<p>Currently, all fields must be either Bloch or non-Bloch (i.e. periodic), which covers most physically meaningful possibilities.</p>
+<p>There is another wrinkle: even for fields in Bloch form, the exp(ikx) phase currently always uses the <em>current</em> k-point, even if the field was computed from another k-point. So, if you are performing computations combining fields from different k-points, you should take care to always use the periodic envelope of the field, putting the Bloch phase in manually if necessary.</p>
+<h3 id="manipulating-the-raw-eigenvectors">Manipulating the Raw Eigenvectors</h3>
+<p>MPB also includes a few low-level routines to manipulate the raw eigenvectors that it computes in a transverse planewave basis.</p>
+<p>The most basic operations involve copying, saving, and restoring the current set of eigenvectors or some subset thereof:</p>
+<p><strong><code>(get-eigenvectors first-band num-bands)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Return an eigenvector object that is a copy of <code>num-bands</code> current eigenvectors starting at <code>first-band</code>. e.g. to get a copy of all of the eigenvectors, use <code>(get-eigenvectors 1 num-bands)</code>.</p>
+<p><strong><code>(set-eigenvectors ev first-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Set the current eigenvectors, starting at <code>first-band</code>, to those in the <code>ev</code> eigenvector object (as returned by <code>get-eigenvectors</code>). Does not work if the grid sizes don't match.</p>
+<p><strong><code>(load-eigenvectors filename)</code></strong><br />
+<strong><code>(save-eigenvectors filename)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Read/write the current eigenvectors (raw planewave amplitudes) to/from an HDF5 file named <code>filename</code>. Instead of using <code>load-eigenvectors</code> directly, you can pass the <code>filename</code> as the <em><code>reset-fields</code></em> parameter of <code>run-parity</code>, as <a href="./#run-functions">shown above</a>. Loaded eigenvectors must be of the same size (same grid size and #bands) as the current settings.</p>
+<p>Currently, there's only one other interesting thing you can do with the raw eigenvectors, and that is to compute the dot-product matrix between a set of saved eigenvectors and the current eigenvectors. This can be used, e.g., to detect band crossings or to set phases consistently at different k points. The dot product is returned as a "sqmatrix" object, whose elements can be read with the <code>sqmatrix-size</code> and <code>sqmatrix-ref</code> routines.</p>
+<p><strong><code>(dot-eigenvectors ev first-band)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Returns a sqmatrix object containing the dot product of the saved eigenvectors <code>ev</code> with the current eigenvectors, starting at <code>first-band</code>. That is, the (<code>i,j</code>)th output matrix element contains the dot product of the (<code>i+1</code>)th vector of <code>ev</code> conjugated with the (<code>first-band+j</code>)th eigenvector. Note that the eigenvectors, when computed, are orthonormal, so the dot product of the eigenvectors with themselves is the identity matrix.</p>
+<p><strong><code>(sqmatrix-size sm)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Return the size <em>n</em> of an <em>n</em>x<em>n</em> sqmatrix <code>sm</code>.</p>
+<p><strong><code>(sqmatrix-ref sm i j)</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Return the (<code>i</code>,<code>j</code>)th element of the <em>n</em>x<em>n</em> sqmatrix <em><code>sm</code></em>, where {<code>i</code>,<code>j</code>} range from 0..<em>n</em>-1.</p>
+<h2 id="inversion-symmetry">Inversion Symmetry</h2>
+<p>If you <code>configure</code> MPB with the <code>--with-inv-symmetry</code> flag, then the program is configured to assume inversion symmetry in the dielectric function. This allows it to run at least twice as fast and use half as much memory as the more general case. This version of MPB is by default installed as <code>mpbi</code>, so that it can coexist with the usual <code>mpb</code> program.</p>
+<p>Inversion symmetry means that if you transform (x,y,z) to (-x,-y,-z) in the coordinate system, the dielectric structure is not affected. Or, more technically, that (see <a href="http://ab-initio.mit.edu/book">our online textbook</a>, ch. 3):</p>
+<p>
+<script type="math/tex; mode=display">\varepsilon(\mathbf{x}) = \varepsilon(-\mathbf{x})^*</script>
+</p>
+<p>where the conjugation is significant for complex-hermitian dielectric tensors. This symmetry is very common; all of the examples in this manual have inversion symmetry, for example.</p>
+<p>Note that inversion symmetry is defined with respect to a specific origin, so that you may "break" the symmetry if you define a given structure in the wrong way—this will prevent <code>mpbi</code> from working properly. For example, the <a href="../Data_Analysis_Tutorial/#diamond-lattice-of-spheres">diamond structure</a> that we considered earlier would not have possessed inversion symmetry had we positioned one of the "atoms" to lie at the origin.</p>
+<p>You might wonder what happens if you pass a structure lacking inversion symmetry to <code>mpbi</code>. As it turns out, <code>mpbi</code> only looks at half of the structure, and infers the other half by the inversion symmetry, so the resulting structure <em>always</em> has inversion symmetry, even if its original description did not. So, you should be careful, and look at the <code>epsilon.h5</code> output to make sure it is what you expected.</p>
+<h2 id="parallel-mpb">Parallel MPB</h2>
+<p>We provide two methods by which you can parallelize MPB. The first, using MPI, is the most sophisticated and potentially provides the greatest and most general benefits. The second, which involves a simple script to split e.g. the <code>k-points</code> list among several processes, is less general but may be useful in many cases.</p>
+<h3 id="mpb-with-mpi-parallelization">MPB with MPI Parallelization</h3>
+<p>If you <code>configure</code> MPB with the <code>--with-mpi</code> flag, then the program is compiled to take advantage of distributed-memory parallel machines with <a href="http://www-unix.mcs.anl.gov/mpi/index.html">MPI</a>, and is installed as <code>mpb-mpi</code>. See also the <a href="../Installation/#mpi-parallel-machines">installation guide</a>. This means that computations will potentially run more quickly and take up less memory per processor than for the serial code. Normally, you should also install the serial version of MPB, if only to get the <code>mpb-data</code> program, which is not installed with <code>mpb-mpi</code>.</p>
+<p>Using the parallel MPB is almost identical to using the serial version(s), with a couple of minor exceptions. The same ctl files should work for both. Running a program that uses MPI requires slightly different invocations on different systems, but will typically be something like:</p>
+<pre><code>unix% mpirun -np 4 mpb-mpi foo.ctl
+</code></pre>
+
+<p>to run on e.g. 4 processors. A second difference is that 1D systems are currently not supported in the MPI code, but the serial code should be fast enough for those anyway. A third difference is that the output HDF5 files (epsilon, fields, etcetera) from <code>mpb-mpi</code> have their first two dimensions (x and y) <em>transposed</em>; i.e. they are output as YxXxZ arrays. This doesn't prevent you from visualizing them, but the coordinate system is left-handed; to un-transpose the data, you can process it with <code>mpb-data</code> and the <code>-T</code> option in addition to any other options.</p>
+<p>In order to get optimal benefit (time and memory savings) from <code>mpb-mpi</code>, the first two dimensions (n<sub><small>x</small></sub> and n<sub><small>y</small></sub>) of your grid should <em>both</em> be divisible by the number of processes. If you violate this constraint, MPB will still work, but the load balance between processors will be uneven. At worst, e.g. if either n<sub><small>x</small></sub> or n<sub><small>y</small></sub> is smaller than the number of processes, then some of the processors will be idle for part or all of the computation. When using <a href="./#inversion-symmetry">inversion symmetry</a> (<code>mpbi-mpi</code>) for 2D grids only, the optimal case is somewhat more complicated: n<sub><small>x</small></sub> and (n<sub><small>y</small></sub>/2 + 1), not n<sub><small>y</small></sub>, should both be divisible by the number of processes.</p>
+<p><code>mpb-mpi</code> divides each band at each k-point between the available processors. This means that, even if you have only a single k-point (e.g. in a defect calculation) and/or a single band, it can benefit from parallelization. Moreover, memory usage per processor is inversely proportional to the number of processors used. For sufficiently large problems, the speedup is also nearly linear.</p>
+<h3 id="alternative-parallelization-mpb-split">Alternative Parallelization: mpb-split</h3>
+<p>There is an alternative method of parallelization when you have multiple k points: do each k-point on a different processor. This does not provide any memory benefits, and does not allow one k-point to benefit by starting with the fields of the previous k-point, but is easy and may be the only effective way to parallelize calculations for small problems. This method also does not require MPI: it can utilize the unmodified serial <code>mpb</code> program. To make it even easier, we supply a simple script called <code>mpb-split</code> (or <code>mpbi-split</code>) to break the <code>k-points</code> list into chunks for you. Running:</p>
+<pre><code>unix% mpb-split num-split foo.ctl
+</code></pre>
+
+<p>will break the <code>k-points</code> list in <code>foo.ctl</code> into <code>num-split</code> more-or-less equal chunks, launch <code>num-split</code> processes of <code>mpb</code> in parallel to process each chunk, and output the results of each in order. Each process is an ordinary <code>mpb</code> execution, except that it numbers its <code>k-points</code> depending upon which chunk it is in, so that output files will not overwrite one another and you can still <code>grep</code> for frequencies as usual.</p>
+<p>Of course, this will only benefit you on a system where different processes will run on different processors, such as an SMP or a cluster with automatic process migration (e.g. <a href="http://www.mosix.org/">MOSIX</a>). <code>mpb-split</code> is actually a trivial shell script, though, so you can easily modify it if you need to use a special command to launch processes on other processors/machines (e.g. via <a href="https://www.gnu.org/software/parallel/">GNU Parallel</a>).</p>
+<p>The general syntax for <code>mpb-split</code> is:</p>
+<pre><code>unix% mpb-split num-split mpb-arguments...
+</code></pre>
+
+<p>where all of the arguments following <code>num-split</code> are passed along to <code>mpb</code>. What <code>mpb-split</code> technically does is to set the MPB variable <code>k-split-num</code> to <code>num-split</code> and <code>k-split-index</code> to the index (starting with 0) of the chunk for each process.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Developer_Information/" class="btn btn-neutral float-right" title="Developer Information"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../Data_Analysis_Tutorial/" class="btn btn-neutral" title="Data Analysis Tutorial"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    <!-- Copyright etc -->
+    </p>
+  </div>
+
+  <a href="http://https://github.com/stevengj/mpb">
+    <span class="SmallCaps">mpb</span> </a> documentation
+
+  <p>
+  <font size=-1>
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> 
+  using a customized theme modeled 
+  after the 
+  <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>
+  provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  </font>
+
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../Data_Analysis_Tutorial/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../Developer_Information/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>

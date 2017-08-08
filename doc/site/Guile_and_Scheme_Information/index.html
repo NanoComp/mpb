@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Guile and Scheme Information - MPB Documentation</title>
+  
+
+  <link rel="shortcut icon" href="../img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Guile_and_Scheme_Information"
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script>
+  <script src="../js/theme.js"></script> 
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+  <script src="../mathjaxhelper.js"></script>
+
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+
+      <p align="center"
+      <a href="../MPB/">
+         <img align="center" height="auto" width="100%"
+              src="../img/Mpb-logo.jpg"
+      </a>
+
+      <div class="wy-side-nav-search">
+        <a href="../MPB/" class="icon icon-home"> MPB Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Overview</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../MPB/">About MPB</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Download/">Download</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Release_Notes/">Release Notes</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Manual</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Introduction/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Installation/">Installation</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_Tutorial/">Scheme Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Data_Analysis_Tutorial/">Data Analysis Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_User_Interface/">Scheme User Interface</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Developer_Information/">Developer Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Guile and Scheme Information</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#scheme">Scheme</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#guile">Guile</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#how-to-write-a-loop-in-scheme">How to Write a Loop in Scheme</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#how-to-read-in-values-from-a-text-file-in-scheme">How to Read In Values from a Text File in Scheme</a></li>
+                
+                    <li><a class="toctree-l4" href="#tricks-specific-to-libctl-using-programs-such-as-mpb-or-meep">Tricks Specific to Libctl-Using Programs such as MPB or Meep</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Acknowledgements/">Acknowledgements</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../License_and_Copyright/">License and Copyright</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../MPB/">MPB Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../MPB/"><span class="SmallCaps">mpb</span> documentation</a> &raquo;</li>
+    
+      
+        
+          <li>MPB Manual &raquo;</li>
+        
+      
+    
+    <li>Guile and Scheme Information</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        
+          <a href="https://github.com/stevengj/mpb/" class="icon icon-github"> Edit on GitHub</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="guile-and-scheme-information">Guile and Scheme Information</h1>
+<hr />
+<p>There are many places you can go to find out more regarding Guile and the Scheme programming language. We list a few of them here:</p>
+<div class="toc"><span class="toctitle">Table of Contents</span><ul>
+<li><a href="#guile-and-scheme-information">Guile and Scheme Information</a><ul>
+<li><a href="#scheme">Scheme</a></li>
+<li><a href="#guile">Guile</a></li>
+<li><a href="#how-to-write-a-loop-in-scheme">How to Write a Loop in Scheme</a></li>
+<li><a href="#how-to-read-in-values-from-a-text-file-in-scheme">How to Read In Values from a Text File in Scheme</a><ul>
+<li><a href="#tricks-specific-to-libctl-using-programs-such-as-mpb-or-meep">Tricks Specific to Libctl-Using Programs such as MPB or Meep</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="scheme">Scheme</h2>
+<p>Scheme is a simplified derivative of <a href="https://en.wikipedia.org/wiki/Lisp">Lisp</a>, and is a small and beautiful dynamically typed, <a href="https://en.wikipedia.org/wiki/Lexical_variable_scoping">lexically scoped</a>, <a href="https://en.wikipedia.org/wiki/Functional_programming_language">functional</a> language.</p>
+<ul>
+<li>A <a href="https://en.wikipedia.org/wiki/Scheme_programming_language">history and introduction to Scheme</a></li>
+<li><a href="http://www.swiss.ai.mit.edu/ftpdir/scheme-reports/r5rs-html/r5rs_toc.html">R5RS</a> is the official Scheme language definition and reference.</li>
+<li>A classic <a href="ftp://ftp.cs.indiana.edu/pub/scheme-repository/doc/pubs/intro.txt">introduction</a> to Scheme by Ken Dickey.</li>
+<li><a href="http://mitpress.mit.edu/sicp/sicp.html">Structure and Interpretation of Computer Programs</a> by Abelson, Sussman, and Sussman (full text online).</li>
+<li><a href="ftp://ftp.cs.utexas.edu/pub/garbage/cs345/schintro-v14/schintro_toc.html">Introduction to Scheme and its Implementation</a> (the complete book on-line) by Prof. Paul R. Wilson (<a href="http://www.cs.utexas.edu/">Univ. of Texas</a>).</li>
+<li><a href="http://ds26gte.github.io/tyscheme/index.html">Teach Yourself Scheme</a> is a nice tutorial-style introduction to Scheme programming.</li>
+<li>The <a href="http://www.swiss.ai.mit.edu/projects/scheme/index.html">MIT Scheme Home Page</a> (where do you think Scheme was invented?)<ul>
+<li>also check out the MIT <a href="http://www.ai.mit.edu/projects/su/su.html">Scheme Underground</a></li>
+</ul>
+</li>
+<li>There is the <a href="news:comp.lang.scheme">comp.lang.scheme</a> newsgroup, and its <a href="http://www.faqs.org/faqs/by-newsgroup/comp/comp.lang.scheme.html">FAQ</a>.</li>
+<li>The <a href="http://www.cs.indiana.edu/scheme-repository/">Internet Scheme Repository</a> has a lot of code and documentation.</li>
+<li><a href="http://www.schemers.org/">schemers.org</a> is another Scheme site and collection of resources.</li>
+</ul>
+<h2 id="guile">Guile</h2>
+<p>Guile is a free implementation of Scheme, designed to be plugged in to other programs as a scripting language.</p>
+<ul>
+<li>The <a href="http://www.gnu.org/software/guile/">homepage</a> for the GNU Guile project.</li>
+<li>See parts IV and V of the <a href="http://www.gnu.org/software/guile/manual/html_node/index.html">Guile Reference Manual</a> for additional Scheme functions and types defined within the Guile environment.</li>
+</ul>
+<h2 id="how-to-write-a-loop-in-scheme">How to Write a Loop in Scheme</h2>
+<p>The most frequently asked question seems to be: <strong>how do I write a loop in Scheme?</strong> We give a few answers to that here, supposing that we want to vary a parameter <em>x</em> from <em>a</em> to <em>b</em> in steps of <em>dx</em>, and do something for each value of <em>x</em>.</p>
+<p>The classic way, in Scheme, is to write a <a href="../w:Tail_recursion" title="wikilink">tail-recursive</a> function:</p>
+<p><code>(define (doit x x-max dx)</code>
+<code>(if (&lt;= x x-max)</code>
+<code>(begin</code>
+<code></code><em><code>...perform</code> <code>loop</code> <code>body</code> <code>with</code> <code>x...</code></em>
+<code>(doit (+ x dx) x-max dx))))</code>
+<code>(doit a b dx) ; execute loop from a to b in steps of dx</code></p>
+<p>There is also a <a href="http://www.swiss.ai.mit.edu/ftpdir/scheme-reports/r5rs-html/r5rs_6.html#SEC36">do-loop construct</a> in Scheme that you can use</p>
+<p><code>(do ((x a (+ x dx))) ((&gt; x b))</code><em><code>...perform</code> <code>loop</code> <code>body</code> <code>with</code> <code>x...</code></em><code>)</code></p>
+<p>If you have a list of values of <em>x</em> that you want to loop over, then you can use <code>map</code>:</p>
+<p><code>(map (lambda (x)</code><em><code>...do</code> <code>stuff</code> <code>with</code> <code>x...</code></em><code>)</code><em><code>list-of-x-values</code></em><code>)</code></p>
+<h2 id="how-to-read-in-values-from-a-text-file-in-scheme">How to Read In Values from a Text File in Scheme</h2>
+<p>A simple command to read a text file and store its values within a variable in Scheme is <code>read</code>. As an example, suppose a file <em>foo.dat</em> contains the following text, including parentheses:</p>
+<p><code>(1 3 12.2 14.5 16 18)</code></p>
+<p>In Scheme, we would then use</p>
+<p><code>(define port (open-input-file "foo.dat"))</code>
+<code>(define foo (read port))</code>
+<code>(close-input-port port)</code></p>
+<p>The variable <em>foo</em> would then be a list of numbers '(1 3 12.2 14.5 16 18).</p>
+<h3 id="tricks-specific-to-libctl-using-programs-such-as-mpb-or-meep">Tricks Specific to Libctl-Using Programs such as <a href="../MPB" title="wikilink">MPB</a> or <a href="../Meep" title="wikilink">Meep</a></h3>
+<p><a href="../libctl" title="wikilink">libctl</a> has a couple of built-in functions <code>arith-sequence</code> and <code>interpolate</code> (see the <a href="../libctl_User_Reference" title="wikilink">user reference</a>) to construct lists of a regular sequence of values, which you can use in conjunction with <code>map</code> as above:</p>
+<p><code>(map (lambda (x)</code><em><code>...do</code> <code>stuff</code> <code>with</code> <code>x...</code></em><code>) (arith-sequence x-min dx num-x))</code></p>
+<p>or</p>
+<p><code>(map (lambda (x)</code><em><code>...do</code> <code>stuff</code> <code>with</code> <code>x...</code></em><code>) (interpolate num-x (list a b)))</code></p>
+<p>Finally, if you have an entire libctl input file <em>myfile.ctl</em> that you want to loop, varying over some <a href="../Libctl_Advanced_User_Experience#Command-line_parameters" title="wikilink">parameter</a> <em>x</em>, you can do so by writing a loop on the Unix command-line. Using the <a href="https://en.wikipedia.org/wiki/bash">bash</a> shell, you could do:</p>
+<p><code>for x in `seq a dx b`; do meep x=$x myfile.ctl; done</code></p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Acknowledgements/" class="btn btn-neutral float-right" title="Acknowledgements"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../Developer_Information/" class="btn btn-neutral" title="Developer Information"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    <!-- Copyright etc -->
+    </p>
+  </div>
+
+  <a href="http://https://github.com/stevengj/mpb">
+    <span class="SmallCaps">mpb</span> </a> documentation
+
+  <p>
+  <font size=-1>
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> 
+  using a customized theme modeled 
+  after the 
+  <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>
+  provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  </font>
+
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../Developer_Information/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../Acknowledgements/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>

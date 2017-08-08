@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Developer Information - MPB Documentation</title>
+  
+
+  <link rel="shortcut icon" href="../img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Developer_Information"
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script>
+  <script src="../js/theme.js"></script> 
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+  <script src="../mathjaxhelper.js"></script>
+
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+
+      <p align="center"
+      <a href="../MPB/">
+         <img align="center" height="auto" width="100%"
+              src="../img/Mpb-logo.jpg"
+      </a>
+
+      <div class="wy-side-nav-search">
+        <a href="../MPB/" class="icon icon-home"> MPB Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Overview</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../MPB/">About MPB</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Download/">Download</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Release_Notes/">Release Notes</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Manual</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Introduction/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Installation/">Installation</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_Tutorial/">Scheme Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Data_Analysis_Tutorial/">Data Analysis Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_User_Interface/">Scheme User Interface</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Developer Information</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#the-mathematics-of-mpb">The Mathematics of MPB</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#dielectric-function-computation">Dielectric Function Computation</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#code-organization">Code Organization</a></li>
+                
+                    <li><a class="toctree-l4" href="#srcmatrices">src/matrices/</a></li>
+                
+                    <li><a class="toctree-l4" href="#srcutil">src/util/</a></li>
+                
+                    <li><a class="toctree-l4" href="#srcmatrixio">src/matrixio</a></li>
+                
+                    <li><a class="toctree-l4" href="#srcmaxwell">src/maxwell/</a></li>
+                
+                    <li><a class="toctree-l4" href="#mpb-ctl">mpb-ctl/</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Guile_and_Scheme_Information/">Guile and Scheme Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Acknowledgements/">Acknowledgements</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../License_and_Copyright/">License and Copyright</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../MPB/">MPB Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../MPB/"><span class="SmallCaps">mpb</span> documentation</a> &raquo;</li>
+    
+      
+        
+          <li>MPB Manual &raquo;</li>
+        
+      
+    
+    <li>Developer Information</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        
+          <a href="https://github.com/stevengj/mpb/" class="icon icon-github"> Edit on GitHub</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="developer-information">Developer Information</h2>
+<p>Here, we begin with a brief overview of what the program is computing, and then describe how the program and computation are broken up into different portions of the code.</p>
+<p>A <a href="http://ab-initio.mit.edu/mpb/mpb-devel-zh_CN.pdf">Chinese version</a> of this document is also available.</p>
+<div class="toc"><span class="toctitle">Table of Contents</span><ul>
+<li><a href="#developer-information">Developer Information</a></li>
+<li><a href="#the-mathematics-of-mpb">The Mathematics of MPB</a></li>
+<li><a href="#dielectric-function-computation">Dielectric Function Computation</a></li>
+<li><a href="#code-organization">Code Organization</a><ul>
+<li><a href="#srcmatrices">src/matrices/</a></li>
+<li><a href="#srcutil">src/util/</a></li>
+<li><a href="#srcmatrixio">src/matrixio</a></li>
+<li><a href="#srcmaxwell">src/maxwell/</a></li>
+<li><a href="#mpb-ctl">mpb-ctl/</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="the-mathematics-of-mpb">The Mathematics of MPB</h2>
+<p>This section provides a whirlwind tour of the mathematics of photonic band structure calculations and the algorithms that we employ. For more detailed information, see:</p>
+<ul>
+<li><a href="http://ab-initio.mit.edu/book">Photonic Crystals: Molding the Flow of Light</a>, by J. D. Joannopoulos, S. G. Johnson, R. D. Meade, and J. N. Winn (Princeton, 2008).</li>
+<li>Steven G. Johnson and J. D. Joannopoulos, <a href="http://www.opticsexpress.org/abstract.cfm?URI=OPEX-8-3-173">Block-iterative frequency-domain methods for Maxwell's equations in a planewave basis</a>, <em>Optics Express</em> <strong>8</strong>, no. 3, 173-190 (2001).</li>
+</ul>
+<p>MPB takes a periodic dielectric structure and computes the <em>eigenmodes</em> of that structure, which are the electromagnetic waves that can propagate through the structure with a definite frequency. This corresponds to solving an eigenvalue problem</p>
+<p>
+<script type="math/tex; mode=display">\hat\Theta \mathbf{H} = \frac{\omega^2}{c^2} \mathbf{H},</script> where <script type="math/tex">\mathbf{H}</script> is the magnetic field, <script type="math/tex">\omega</script> is the frequency, and <script type="math/tex">\hat\Theta</script> is the Maxwell operator</p>
+<p>
+<script type="math/tex; mode=display">\hat\Theta = \nabla\times \frac{1}{\varepsilon} \nabla\times \,.</script> We also have an additional constraint, that <script type="math/tex">\nabla \cdot \mathbf{H}</script> be zero (the magnetic field must be "transverse").</p>
+<p>Since the structure is periodic, we can also invoke Bloch's theorem to write the states in the form:</p>
+<p>
+<script type="math/tex; mode=display">\mathbf{H} = \mathbf{H}_\mathbf{k}(\mathbf{x}) e^{i \mathbf{k} \cdot \mathbf{x}},</script> where <script type="math/tex">\mathbf{H}_\mathbf{k}</script> is a periodic function (the Bloch envelope) and <script type="math/tex">\mathbf{k}</script> is the Bloch wavevector. So, at each k-point (Bloch wavevector), we need to solve for a discrete set of eigenstates, the photonic bands of the structure.</p>
+<p>To solve for the eigenstates on a computer, we must expand the magnetic field in some basis, where we truncate the basis to some finite number of points to discretize the problem. For example, we could use a traditional finite-element basis in which the field is taken on a finite number of mesh points and linearly interpolated in between. However, it is expensive to enforce the transversality constraint in this basis. Instead, we use a Fourier (spectral) basis, expanding the periodic part of the field as a sum of planewaves:</p>
+<p>
+<script type="math/tex; mode=display">\mathbf{H}_\mathbf{k} = \sum_\mathbf{G} \mathbf{h}_\mathbf{G} e^{i \mathbf{G} \cdot \mathbf{x}} \, .</script> In this basis, the transversality constraint is easy to maintain, as it merely implies that the planewave amplitudes <script type="math/tex">\mathbf{h}_\mathbf{G}</script> must be orthogonal to <script type="math/tex">\mathbf{k}+\mathbf{G}</script>.</p>
+<p>In order to find the eigenfunctions, we could compute the elements of <script type="math/tex">\hat\Theta</script> explicitly in our basis, and then call LAPACK or some similar code to find the eigenvectors and eigenvalues. For a three-dimensional calculation, this could mean finding the eigenvectors of a matrix with millions of elements on a side--daunting merely to store, much less compute. Fortunately, we only want to know a few eigenvectors, not hundreds of thousands, so we can use much less expensive <em>iterative</em> methods that don't require us to store <script type="math/tex">\hat\Theta</script> explicitly.</p>
+<p>Iterative eigensolvers require only that one supply a routine to operate <script type="math/tex">\hat\Theta</script> on a vector (function). Starting with an initial guess for the eigenvector, they then converge quickly to the actual eigenvector, stopping when the desired tolerance is achieved. There are many iterative eigensolver methods; we use a preconditioned block minimization of the Rayleigh quotient which is further described in the file <code>src/matrices/eigensolver.c</code>. In the Fourier basis, applying <script type="math/tex">\hat\Theta</script> to a function is relatively easy: the curls become cross products with <script type="math/tex">i(\mathbf{k}+\mathbf{G})</script>; the multiplication by <script type="math/tex">1/\varepsilon</script> is performed by using an <a href="https://en.wikipedia.org/wiki/Fast_Fourier_transform">FFT</a> to transform to the spatial domain, multiplying, and then transforming back with an inverse FFT. For more information and references on iterative eigensolvers, see the paper cited above.</p>
+<p>We also support a "targeted" eigensolver. A typical iterative eigensolver finds the <em>p</em> lowest eigenvalues and eigenvectors. Instead, we can find the <em>p</em> eigenvalues closest to a given frequency <script type="math/tex">\omega_0</script> by solving for the eigenvalues of <script type="math/tex">(\hat\Theta-\omega_0^2/c^2)^2</script> instead of <script type="math/tex">\hat\Theta</script>. This new operator has the same eigenvectors as <script type="math/tex">\hat\Theta</script>, but its eigenvalues have been shifted to make those closest to <script type="math/tex">\omega_0</script> the smallest. This is not really the best algorithm to find interior eigenvalues like this; a future version of MPB may use ARPACK-style shift-and-invert Arnoldi, or perhaps the Jacobi-Davidson algorithm.</p>
+<p>The eigensolver we use is preconditioned, which means that convergence can be greatly improved by suppling a good preconditioner matrix. Finding a good preconditioner involves making an approximate inverse of <script type="math/tex">\hat\Theta</script>, and is something of a black art with lots of trial and error.</p>
+<h2 id="dielectric-function-computation">Dielectric Function Computation</h2>
+<p>The initialization of the dielectric function deserves some additional discussion, both because it is crucial for good convergence, and because we use somewhat complicated algorithms for performance reasons.</p>
+<p>To ameliorate the convergence problems caused in a planewave basis by a discontinuous dielectric function, the dielectric function is smoothed (averaged) at the resolution of the grid. Another way of thinking about it is that this brings the average dielectric constant (over the grid) closer to its true value. Since different polarizations of the field prefer different averaging methods, one has to construct an effective dielectric tensor at the boundaries between dielectrics, as described by the paper referenced above.</p>
+<p>This averaging has two components. First, at each grid point the dielectric constant (<script type="math/tex">\varepsilon</script>) and its inverse are averaged over a uniform mesh extending halfway to the neighboring grid points. The mesh resolution is controlled by the <code>mesh-size</code> user input variable. Second, for grid points on the boundary between two dielectrics, we compute the vector normal to the dielectric interface; this is done by averaging the "dipole moment" of the dielectric function over a spherically-symmetric distribution of points. The normal vector and the two averages of epsilon are then combined into an effective dielectric tensor for the grid point.</p>
+<p>All of this averaging is handled by a subroutine in <code>src/maxwell/</code> (see below) that takes as input a function <script type="math/tex">\varepsilon</script>(<strong>r</strong>), which returns the dielectric constant for a given position <strong>r</strong>. This epsilon function must be as efficient as possible, because it is evaluated a large number of times: the size of the grid multiplied by <code>mesh-size</code><sup>3</sup> (in three dimensions).</p>
+<p>To specify the geometry, the user provides a list of geometric objects (blocks, spheres, cylinders and so on). These are parsed into an efficient data structure and are used to to provide the epsilon function described above. All of this is handled by the libctlgeom component of libctl, described below. At the heart of the epsilon function is a routine to return the geometric object enclosing a given point, taking into account the fact that the objects are periodic in the lattice vectors. Our first algorithm for doing this was a simple linear search through the list of objects and their translations by the lattice vectors, but this proved to be too slow, especially in supercell calculations where there are many objects. We addressed the performance problem in two ways. First, for each object we construct a bounding box, with which point inclusion can be tested rapidly. Second, we build a hierarchical tree of bounding boxes, recursively partitioning the set of objects in the cell. This allows us to search for the object containing a point in a time logarithmic in the number of objects instead of linear as before.</p>
+<h2 id="code-organization">Code Organization</h2>
+<p>The code is organized to keep the core computation independent of the user interface, and to keep the eigensolver routines independent of the operator they are computing the eigenvector of. The computational code is located in the <code>src/</code> directory, with a few major subdirectories, described below. The Guile-based user interface is completely contained within the <code>mpb-ctl/</code> directory.</p>
+<h3 id="srcmatrices">src/matrices/</h3>
+<p>This directory contains the eigensolver, in <code>eigensolver.c</code>, to which you pass an operator and it returns the eigenvectors. Eigenvectors are stored using the <code>evectmatrix</code> data structure, which holds <code>p</code> eigenvectors of length <code>n</code>, potentially distributed over <code>n</code> in MPI. See <code>src/matrices/README</code> for more information about the data structures. In particular, you should use the supplied functions (<code>create_evectmatrix</code>, etcetera) to create and manipulate the data structures, where possible.</p>
+<p>The type of the eigenvector elements is determined by <code>scalar.h</code>, which sets whether they are real or complex and single or double precision. This is, in turn, controlled by the <code>--disable-complex</code> and <code>--enable-single</code> parameters to the <code>configure</code> script at install-time. <code>scalar.h</code> contains macros to make it easier to support both real and complex numbers elsewhere in the code.</p>
+<p>Also in this directory is <code>blasglue.c</code>, a set of wrapper routines to make it convienient to call BLAS and LAPACK routines from C instead of Fortran.</p>
+<h3 id="srcutil">src/util/</h3>
+<p>As its name implies, this is simply a number of utility routines for use elsewhere in the code. Of particular note is <code>check.h</code>, which defines a <code>CHECK(condition, error-message)</code> macro that is used extensively in the code to improve robustness. There are also debugging versions of malloc/free (which perform lots of paranoia tests, enabled by <code>--enable-debug-malloc</code> in <code>configure</code>), and MPI glue routines that allow the program to operate without the MPI libraries.</p>
+<h3 id="srcmatrixio">src/matrixio</h3>
+<p>This section contains code to abstract I/O for eigenvectors and similar matrices, providing a simpler layer on top of the HDF5 interface. This could be modified to support other I/O formats.</p>
+<h3 id="srcmaxwell">src/maxwell/</h3>
+<p>The <code>maxwell/</code> directory contains all knowledge of Maxwell's equations used by the program. It implements functions to apply the Maxwell operator to a vector (in <code>maxwell_op.c</code>) and compute a good preconditioner (in <code>maxwell_pre.c</code>). These functions operate upon a representation of the fields in a transverse Fourier basis.</p>
+<p>In order to use these functions, one must first initialize a <code>maxwell_data</code> structure with <code>create_maxwell_data</code> (defined in <code>maxwell.c</code>) and specify a k point with <code>update_maxwell_data_k</code>. One must also initialize the dielectric function using <code>set_maxwell_dielectric</code> by supplying a function that returns the dielectric constant for any given coordinate. You can also restrict yourself to TE or TM polarizations in two dimensions by calling <code>set_maxwell_data_polarization</code>.</p>
+<p>This directory also contains functions <code>maxwell_compute_dfield</code>, etcetera, to compute the position-space fields from the Fourier-transform representation returned by the eigensolver.</p>
+<h3 id="mpb-ctl">mpb-ctl/</h3>
+<p>Here is the Guile-based user interface code for the eigensolver. Instead of using Guile directly, this code is built on top of the <code>libctl</code> library as described in previous sections. This means that the user-interface code (in <code>mpb.c</code>) is fairly short, consisting of a number of small functions that are callable by the user from Guile.</p>
+<p>The core of the user interface is the file <code>mpb.scm</code>, the <em>specifications file</em> for libctl as described in the <a href="http://ab-initio.mit.edu/libctl/doc/">libctl manual</a>. Actually, <code>mpb.scm</code> is generated by <code>configure</code> from <code>mpb.scm.in</code> in order to substitute in parameters like the location of the libctl library. You should only edit <code>mpb.scm.in</code> directly. You can regenerate <code>mpb.scm</code> simply by running <code>./config.status</code> instead of re-running <code>configure</code>.</p>
+<p>The specifications file defines the data structures and subroutines that are visible to the Guile user. It also defines a number of Scheme subroutines for the user to call directly, like <code>(run)</code>. It is often simpler and more flexible to define functions like this in Scheme rather than in C.</p>
+<p>All of the code to handle the geometric objects resides in libctlgeom, a set of Scheme and C utility functions included with libctl (see the file <code>utils/README</code> in the libctl package). These functions could also be useful in other programs, such as a time-domain Maxwell's equation simulator.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Guile_and_Scheme_Information/" class="btn btn-neutral float-right" title="Guile and Scheme Information"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../Scheme_User_Interface/" class="btn btn-neutral" title="Scheme User Interface"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    <!-- Copyright etc -->
+    </p>
+  </div>
+
+  <a href="http://https://github.com/stevengj/mpb">
+    <span class="SmallCaps">mpb</span> </a> documentation
+
+  <p>
+  <font size=-1>
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> 
+  using a customized theme modeled 
+  after the 
+  <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>
+  provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  </font>
+
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../Scheme_User_Interface/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../Guile_and_Scheme_Information/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>

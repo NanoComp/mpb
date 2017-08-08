@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installation - MPB Documentation</title>
+  
+
+  <link rel="shortcut icon" href="../img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Installation"
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script>
+  <script src="../js/theme.js"></script> 
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+  <script src="../mathjaxhelper.js"></script>
+
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+
+      <p align="center"
+      <a href="../MPB/">
+         <img align="center" height="auto" width="100%"
+              src="../img/Mpb-logo.jpg"
+      </a>
+
+      <div class="wy-side-nav-search">
+        <a href="../MPB/" class="icon icon-home"> MPB Documentation</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Overview</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../MPB/">About MPB</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Download/">Download</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Release_Notes/">Release Notes</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+            <li>
+    <ul class="subnav">
+    <li><span>MPB Manual</span></li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Introduction/">Introduction</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 current">
+        <a class="current" href="./">Installation</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#installation-on-macos-x">Installation on MacOS X</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#unix-installation-basics">Unix Installation Basics</a></li>
+                
+                    <li><a class="toctree-l4" href="#installation-paths">Installation Paths</a></li>
+                
+                    <li><a class="toctree-l4" href="#fun-with-fortran">Fun with Fortran</a></li>
+                
+                    <li><a class="toctree-l4" href="#picking-a-compiler">Picking a Compiler</a></li>
+                
+                    <li><a class="toctree-l4" href="#linux-and-bsd-binary-packages">Linux and BSD Binary Packages</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#blas-and-lapack">BLAS and LAPACK</a></li>
+                
+                    <li><a class="toctree-l4" href="#blas">BLAS</a></li>
+                
+                    <li><a class="toctree-l4" href="#lapack">LAPACK</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpi-parallel-machines">MPI (parallel machines)</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#hdf5-recommended">HDF5 (recommended)</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#fftw">FFTW</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#readline-optional">Readline (optional)</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#guile">Guile</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#autoconf-optional">Autoconf (optional)</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#libctl">libctl</a></li>
+                
+            
+                <li class="toctree-l3"><a href="#mpb">MPB</a></li>
+                
+            
+            </ul>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_Tutorial/">Scheme Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Data_Analysis_Tutorial/">Data Analysis Tutorial</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Scheme_User_Interface/">Scheme User Interface</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Developer_Information/">Developer Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Guile_and_Scheme_Information/">Guile and Scheme Information</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../Acknowledgements/">Acknowledgements</a>
+        
+    </li>
+
+        
+            
+    <li class="toctree-l1 ">
+        <a class="" href="../License_and_Copyright/">License and Copyright</a>
+        
+    </li>
+
+        
+    </ul>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../MPB/">MPB Documentation</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../MPB/"><span class="SmallCaps">mpb</span> documentation</a> &raquo;</li>
+    
+      
+        
+          <li>MPB Manual &raquo;</li>
+        
+      
+    
+    <li>Installation</li>
+    <li class="wy-breadcrumbs-aside">
+      
+        
+          <a href="https://github.com/stevengj/mpb/" class="icon icon-github"> Edit on GitHub</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="installation">Installation</h1>
+<hr />
+<div class="toc"><span class="toctitle">Table of Contents</span><ul>
+<li><a href="#installation">Installation</a><ul>
+<li><a href="#installation-on-macos-x">Installation on MacOS X</a></li>
+<li><a href="#unix-installation-basics">Unix Installation Basics</a><ul>
+<li><a href="#installation-paths">Installation Paths</a><ul>
+<li><a href="#paths-for-configuring">Paths for Configuring</a></li>
+<li><a href="#paths-for-running-shared-libraries">Paths for Running (Shared Libraries)</a></li>
+</ul>
+</li>
+<li><a href="#fun-with-fortran">Fun with Fortran</a></li>
+<li><a href="#picking-a-compiler">Picking a Compiler</a></li>
+<li><a href="#linux-and-bsd-binary-packages">Linux and BSD Binary Packages</a></li>
+</ul>
+</li>
+<li><a href="#blas-and-lapack">BLAS and LAPACK</a><ul>
+<li><a href="#blas">BLAS</a></li>
+<li><a href="#lapack">LAPACK</a></li>
+</ul>
+</li>
+<li><a href="#mpi-parallel-machines">MPI (parallel machines)</a></li>
+<li><a href="#hdf5-recommended">HDF5 (recommended)</a></li>
+<li><a href="#fftw">FFTW</a></li>
+<li><a href="#readline-optional">Readline (optional)</a></li>
+<li><a href="#guile">Guile</a></li>
+<li><a href="#autoconf-optional">Autoconf (optional)</a></li>
+<li><a href="#libctl">libctl</a></li>
+<li><a href="#mpb">MPB</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p><strong>Important Note</strong>: Installing MPB from source can be challenging for novice users. As a simple workaround, the latest version of MPB preinstalled on Ubuntu can be accessed on Amazon Web Services (AWS) Elastic Compute Cloud (EC2) as a free <a href="https://aws.amazon.com/marketplace/pp/B01KHWH0AS">Amazon Machine Image (AMI)</a>. To access this AMI, follow these <a href="http://www.simpetuscloud.com/launchsims.html">instructions</a>.</p>
+<p>In this section, we outline the procedure for installing MPB. Mainly, this consists of downloading and installing various prerequisites. As much as possible, we have attempted to take advantage of existing packages such as BLAS, LAPACK, FFTW, and Guile, in order to make our code smaller, more robust, faster, and more flexible. Unfortunately, this may make the installation of MPB more complicated if you do not already have these packages.</p>
+<p>You will also need an ANSI C compiler (gcc is fine) and installation will be easiest on a UNIX-like system (Linux is fine). In the following list, some of the packages are dependent upon packages listed earlier, so you should install them in more-or-less the order given.</p>
+<p>Many of these libraries may be available in precompiled binary form, especially for Linux systems. Be aware, however, that library binary packages often come in two parts, <code>library</code> and <code>library-dev</code>, and <em>both</em> are required to compile programs using it.</p>
+<p>It is important that you use the <em>same Fortran compiler</em> to compile Fortran libraries (like LAPACK) and for configuring MPB. Different Fortran compilers often have incompatible linking schemes. The Fortran compiler for MPB can be set via the <code>F77</code> environment variable.</p>
+<h2 id="installation-on-macos-x">Installation on MacOS X</h2>
+<p>See <a href="http://meep.readthedocs.io/en/latest/Installation/#installation-on-macos-x">Meep installation on OS X</a> for the easiest way to do this.</p>
+<h2 id="unix-installation-basics">Unix Installation Basics</h2>
+<h3 id="installation-paths">Installation Paths</h3>
+<p>First, let's review some important information about installing software on Unix systems, especially in regards to installing software in non-standard locations. None of these issues are specific to MPB, but they've caused a lot of confusion among users.</p>
+<p>Most of the software below, including MPB, installs under <code>/usr/local</code> by default. That is, libraries go in <code>/usr/local/lib</code>, programs in <code>/usr/local/bin</code>, etc. If you don't have <code>root</code> privileges on your machine, you may need to install somewhere else, e.g. under <code>$HOME/install</code> (the <code>install/</code> subdirectory of your home directory). Most of the programs below use a GNU-style <code>configure</code> script, which means that all you would do to install there would be:</p>
+<pre><code> ./configure --prefix=$HOME/install
+</code></pre>
+
+<p>when configuring the program. The directories <code>$HOME/install/lib</code> etc. are created automatically as needed.</p>
+<h4 id="paths-for-configuring">Paths for Configuring</h4>
+<p>There are two further complications. First, if you install in a non-standard location and <code>/usr/local</code> is considered non-standard by some proprietary compilers, you will need to tell the compilers where to find the libraries and header files that you installed. You do this by setting two environment variables:</p>
+<pre><code> setenv LDFLAGS &quot;-L/usr/local/lib&quot;
+ setenv CPPFLAGS &quot;-I/usr/local/include&quot;
+</code></pre>
+
+<p>Of course, substitute whatever installation directory you used. Do this <strong>before</strong> you run the <code>configure</code> scripts, etcetera. You may need to include multiple <code>-L</code> and <code>-I</code> flags separated by spaces if your machine has stuff installed in several non-standard locations. Bourne shell users (e.g. <code>bash</code> or <code>ksh</code>) should use the <code>export FOO=bar</code> syntax instead of <code>csh</code>'s <code>setenv FOO bar</code>, of course.</p>
+<p>You might also need to update your <code>PATH</code> so that you can run the executables you installed although <code>/usr/local/bin/</code> is in the default <code>PATH</code> on many systems. e.g. if we installed in our home directory as described above, we would do:</p>
+<pre><code> setenv PATH &quot;$HOME/install/bin:$PATH&quot;
+</code></pre>
+
+<h4 id="paths-for-running-shared-libraries">Paths for Running (Shared Libraries)</h4>
+<p>Second, many of the packages installed below (e.g. Guile) are installed as shared libraries. You need to make sure that your runtime linker knows where to find these shared libraries. The bad news is that every operating system does this in a slightly different way. The good news is that, when you run <code>make install</code> for the packages involving shared libraries, the output includes the necessary instructions specific to your system, so pay close attention! It will say something like <code>add LIBDIR to the &lt;foobar&gt; environment variable</code>, where <code>LIBDIR</code> will be your library installation directory (e.g. <code>/usr/local/lib</code>) and <code>&lt;foobar&gt;</code> is some environment variable specific to your system (e.g. <code>LD_LIBRARY_PATH</code> on some systems, including Linux). For example, you might do:</p>
+<pre><code> setenv LD_LIBRARY_PATH &quot;/usr/local/lib:$LD_LIBRARY_PATH&quot;
+</code></pre>
+
+<p>Note that we just add to the library path variable, and don't replace it in case it contains stuff already. If you use Linux and have <code>root</code> privileges, you can instead simply run <code>/sbin/ldconfig</code>, first making sure that a line <code>/usr/local/lib</code> (or whatever) is in <code>/etc/ld.so.conf</code>.</p>
+<p>If you don't want to type these commands every time you log in, you can put them in your <code>~/.cshrc</code> file or <code>~/.profile</code>, or <code>~/.bash_profile</code>, depending on your shell.</p>
+<h3 id="fun-with-fortran">Fun with Fortran</h3>
+<p>MPB, along with many of the libraries it calls, is written in C or C++, but it also calls libraries such as BLAS and LAPACK (see below) that are usually compiled from Fortran. This can cause some added difficulty because of the various linking schemes used by Fortran compilers. Our <code>configure</code> script attempts to detect the Fortran linking scheme automatically, but in order for this to work ''you must use the same Fortran compiler and options with MPB as were used to compile BLAS/LAPACK''.</p>
+<p>By default, MPB looks for a vendor Fortran compiler first (<code>f77</code>, <code>xlf</code>, etcetera) and then looks for GNU <code>g77</code>. In order to manually specify a Fortran compiler <code>foobar</code> you would configure it with <code>./configure F77=foobar ...</code>.</p>
+<p>If, when you compiled BLAS/LAPACK, you used compiler options that alter the linking scheme (e.g. <code>g77</code>'s <code>-fcase-upper</code> or <code>-fno-underscoring</code>), you will need to pass the same flags to MPB via <code>./configure FFLAGS=...flags... ...</code>.</p>
+<h3 id="picking-a-compiler">Picking a Compiler</h3>
+<p>It is often important to be consistent about which compiler you employ. This is especially true for C++ software. To specify a particular C compiler <code>foo</code>, configure with <code>./configure CC=foo</code>; to specify a particular C++ compiler <code>foo++</code>, configure with <code>./configure CXX=foo++</code>; to specify a particular Fortran compiler <code>foo90</code>, configure with <code>./configure F77=foo90</code>.</p>
+<h3 id="linux-and-bsd-binary-packages">Linux and BSD Binary Packages</h3>
+<p>If you are installing on your personal Linux or BSD machine, then precompiled binary packages are likely to be available for many of these packages, and may even have been included with your system. On Debian systems, the packages are in <code>.deb</code> format and the built-in <code>apt-get</code> program can fetch them from a central repository. On Red Hat, SuSE, and most other Linux-based systems, binary packages are in RPM format.  OpenBSD has its "ports" system, and so on.</p>
+<p><strong>Do not compile something from source if an official binary package is available.</strong>  For one thing, you're just creating pain for yourself.  Worse, the binary package may already be installed, in which case installing a different version from source will just cause trouble.</p>
+<p>One thing to watch out for is that libraries like LAPACK, Guile, HDF5, etcetera, will often come split up into two or more packages: e.g. a <code>guile</code> package and a <code>guile-devel</code> package. You need to install <strong>both</strong> of these to compile software using the library.</p>
+<h2 id="blas-and-lapack">BLAS and LAPACK</h2>
+<p>MPB requires the BLAS and LAPACK libraries for matrix computations.</p>
+<h3 id="blas">BLAS</h3>
+<p>The first thing you must have on your system is a BLAS implementation. "BLAS" stands for "Basic Linear Algebra Subroutines," and is a standard interface for operations like matrix multiplication. It is designed as a building-block for other linear-algebra applications, and is used both directly by our code and in LAPACK (see below). By using it, we can take advantage of many highly-optimized implementations of these operations that have been written to the BLAS interface. Note that you will need implementations of BLAS levels 1-3.</p>
+<p>You can find more BLAS information, as well as a basic implementation, on the <a href="http://www.netlib.org/blas/">BLAS Homepage</a>. Once you get things working with the basic BLAS implementation, it might be a good idea to try and find a more optimized BLAS code for your hardware. Vendor-optimized BLAS implementations are available as part of the Intel MKL, HP CXML, IBM ESSL, SGI sgimath, and other libraries. An excellent, high-performance, free-software BLAS implementation is  <a href="http://www.openblas.net">OpenBLAS</a>. Another is <a href="http://math-atlas.sourceforge.net/">ATLAS</a>.</p>
+<p>Note that the generic BLAS does not come with a <code>Makefile</code>; compile it with something like: </nowiki></p>
+<pre><code>  wget http://www.netlib.org/blas/blas.tgz
+  gunzip blas.tgz
+  tar xf blas.tar
+  cd BLAS
+  f77 -c -O3 *.f   # compile all of the .f files to produce .o files
+  ar rv libblas.a *.o    #  combine the .o files into a library
+  su -c &quot;cp libblas.a /usr/local/lib&quot;   # switch to root and install
+</code></pre>
+
+<p>Replace <code>-O3</code> with your favorite optimization options. On Linux, this could be <code>g77 -O3 -fomit-frame-pointer -funroll-loops -malign-double</code>. Note that MPB looks for the standard BLAS library with <code>-lblas</code>, so the library file should be called <code>libblas.a</code> and reside in a standard directory like <code>/usr/local/lib</code>. See also below for the <code>--with-blas=lib</code> option to MPB's <code>configure</code> script, to manually specify a library location.</p>
+<h3 id="lapack">LAPACK</h3>
+<p>LAPACK, the Linear Algebra PACKage, is a standard collection of routines, built on BLAS, for more-complicated (dense) linear algebra operations like matrix inversion and diagonalization. You can download LAPACK from the <a href="http://www.netlib.org/lapack">LAPACK Home Page</a>.</p>
+<p>Note that MPB looks for LAPACK by linking with <code>-llapack</code>. This means that the library must be called <code>liblapack.a</code> and be installed in a standard directory like <code>/usr/local/lib</code>. Alternatively, you can specify another directory via the <code>LDFLAGS</code> environment variable as described earlier. See also below for the <code>--with-lapack=''lib''</code> option to our <code>configure</code> script, to manually specify a library location.</p>
+<p>We currently recommend installing OpenBLAS which includes LAPACK so you do not need to install it separately.</p>
+<h2 id="mpi-parallel-machines">MPI (parallel machines)</h2>
+<p>Optionally, MPB is able to run on a distributed-memory parallel machine, and to do this we use the standard message-passing interface (MPI). You can learn about MPI from its <a href="http://www-unix.mcs.anl.gov/mpi/">homepage</a>. Most commercial supercomputers already have an MPI implementation installed. The recommended implementation is <a href="http://www.open-mpi.org/">Open MPI</a>. MPI is <strong>not required</strong> to compile the serial version of MPB.</p>
+<p>In order for the MPI version to run successfully, we have a slightly nonstandard requirement: each process must be able to read from the disk. This way, Guile can boot for each process and they can all read your control file in parallel. Most commercial supercomputers satisfy this requirement.</p>
+<p>If you use MPB with MPI, you should compile HDF5 with MPI support as well. See below.</p>
+<p>Also, in order to get good performance, you'll need fast interconnect hardware such as Gigabit Ethernet, InfiniBand, or Myrinet. The speed bottleneck comes from the FFT, which requires most of the communications in MPB. FFTW's MPI transforms (<a href="./#fftw">see below</a>) come with benchmark programs that will give you a good idea of whether you can get speedups on your system. Of course, even with slow communications, you can still benefit from the memory savings per CPU for large problems.</p>
+<p>As described below, when you configure MPB with MPI support (<code>--with-mpi</code>), it installs itself as <code>mpb-mpi</code>. See also the <a href="../Scheme_User_Interface/">manual</a> for information on using MPB on parallel machines. Normally, you should <em>also</em> install the serial version of MPB, if only to get the <code>mpb-data</code> utility, which is not installed with the MPI version.</p>
+<h2 id="hdf5-recommended">HDF5 (recommended)</h2>
+<p>We require a portable, standard binary format for outputting the electromagnetic fields and similar volumetric data, and for this we use HDF. If you don't have HDF5, you can still compile MPB, but you won't be able to output the fields or the dielectric function.</p>
+<p>HDF is a widely-used, free, portable library and file format for multi-dimensional scientific data, developed in the National Center for Supercomputing Applications (NCSA) at the University of Illinois. You can get HDF and learn about it on the <a href="http://www.hdfgroup.org">HDF Home Page</a>.</p>
+<p>We require HDF5 which is supported by a number scientific of visualization tools including our own <a href="http://ab-initio.mit.edu/wiki/index.php/H5utils">h5utils</a> utilities.</p>
+<p>HDF5 includes parallel I/O support under MPI, which can be enabled by configuring it with <code>--enable-parallel</code>. You may also have to set the <code>CC</code> environment variable to <code>mpicc</code>. Unfortunately, the parallel HDF5 library then does not work with serial code, so you have may have to choose one or the other.</p>
+<p>We have some hacks in MPB so that it can do parallel I/O even with the serial HDF5 library. These hacks work okay when you are using a small number of processors, but on large supercomputers we strongly recommend using the parallel HDF5.</p>
+<p><strong>Note:</strong> If you have a version of HDF5 compiled with MPI parallel I/O support, then you need to use the MPI compilers to link to it, even when you are compiling the serial version of MPB.  Just use <code>./configure CC=mpicc CXX=mpic++</code> or whatever your MPI compilers are when configuring.</p>
+<h2 id="fftw">FFTW</h2>
+<p>FFTW is a self-optimizing, portable, high-performance FFT implementation, including both serial and parallel FFTs. You can download FFTW and find out more about it from the <a href="http://www.fftw.org">FFTW Home Page</a>.</p>
+<p>If you want to use MPB on a parallel machine with MPI, you will also need to install the MPI FFTW libraries. This just means including <code>--enable-mpi</code> in the FFTW <code>configure</code> flags.</p>
+<h2 id="readline-optional">Readline (optional)</h2>
+<p>Readline is a library to provide command-line history, tab-completion, emacs keybindings, and other shell-like niceties to command-line programs. This is an <em>optional</em> package, but one that can be used by Guile (see below) if it is installed. We recommend installing it. You can download Readline from its <a href="ftp://ftp.gnu.org/gnu/readline">ftp site</a>. Readline is typically preinstalled on Linux systems.</p>
+<h2 id="guile">Guile</h2>
+<p>Guile is required in order to use the Scheme interface, and is strongly recommended. If you don't install it, you can only use the C++ interface.</p>
+<p>Guile is an extension/scripting language implementation based on Scheme, and we use it to provide a rich, fully-programmable user interface with minimal effort. It's free, of course, and you can download it from the <a href="http://www.gnu.org/software/guile/">Guile Home Page</a>. Guile is typically included with Linux systems.</p>
+<ul>
+<li><strong>Important:</strong> Most Linux distributions come with Guile already installed. You can check by seeing whether you can run <code>guile --version</code> from the command line. In that case, do <strong>not</strong> install your own version of Guile from source &mdash; having two versions of Guile on the same system will cause problems. However, by default most distributions install only the Guile libraries and not the programming headers &mdash; to compile libctl and MPB, you should install the <strong>guile-devel</strong> or <strong>guile-dev</strong> package.</li>
+</ul>
+<h2 id="autoconf-optional">Autoconf (optional)</h2>
+<p>If you want to be a developer of the MPB package as opposed to merely a user, you will also need the Autoconf program. Autoconf is a portability tool that generates <code>configure</code> scripts to automatically detect the capabilities of a system and configure a package accordingly. You can find out more at the <a href="https://www.gnu.org/software/autoconf/autoconf.html">Autoconf Home Page</a>. <code>autoconf</code> is typically installed by default on Linux systems. In order to install Autoconf, you will also need the GNU <code>m4</code> program if you do not already have it. See the <a href="https://www.gnu.org/software/m4/m4.html">m4 Home Page</a>.</p>
+<h2 id="libctl">libctl</h2>
+<p><a href="http://ab-initio.mit.edu/wiki/index.php/Libctl">libctl</a>, which requires Guile, is required to use the Scheme interface, and is strongly r
+ecommended. If you don't install it, you can only use the C++ interface. libctl version <strong>3.2 or later</strong> is required.</p>
+<p>Instead of using Guile directly, we separated much of the user interface code into a package called libctl, in the hope that this might be
+ more generally useful. libctl automatically handles the communication between the program and Guile, converting complicated data structur
+ es and so on, to make it even easier to use Guile to control scientific applications. Download libctl from the <a href="http://ab-initio.mit.edu/libctl">libctl page</a>, unpack it, and run the usual <code>configure</code>, <code>make</code>, <code>make install</code> sequence. You'll also want to browse the <a href="http://ab-initio.mit.edu/wiki/index.php/The_libctl_Manual">libctl manual</a>, as this will give you a general overview of what the user interface will be like.</p>
+<p>If you are not the system administrator of your machine, and/or want to install libctl somewhere else like your home directory, you can do so with the standard <code>--prefix=dir</code> option to <code>configure</code>. The default prefix is <code>/usr/local</code>. In this case, however, you'll need to specify the location of the libctl shared files for MPB, using the <code>--with-libctl=dir/share/libctl</code> option to our <code>configure</code> script.</p>
+<h2 id="mpb">MPB</h2>
+<p>If you've made it all the way here, you're ready to install the MPB package and start cranking out eigenmodes. You can obtain the latest version from the <a href="../Download/">Download page</a>. Once you've unpacked it, just run:</p>
+<pre><code>./configure
+make
+</code></pre>
+
+<p>to configure and compile the package. See below to install. Hopefully, the <code>configure</code> script will correctly detect the BLAS, FFTW, etcetera libraries which have been installed, as well as the C compiler and so on, and the <code>make</code> compilation will proceed without a hitch. If not, <code>configure</code> accepts several flags to help control its behavior. Some of these are standard, like <code>--prefix=</code><em><code>dir</code></em> to specify an installation directory prefix, and some of them are specific to the MPB package. Use <code>./configure --help</code> for more info. The <code>configure</code> flags specific to MPB are:</p>
+<p><strong><code>--with-inv-symmetry</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Assume <a href="../Scheme_User_Interface/#inversion-symmetry">inversion symmetry</a> in the dielectric function, allowing us to use real fields in Fourier space instead of complex fields. This gives a factor of 2 benefit in speed and memory. In this case, the MPB program will be installed as <code>mpbi</code> instead of <code>mpb</code>, so that you can have versions both with and without inversion symmetry installed at the same time. To install <em>both</em> <code>mpb</code> and <code>mpbi</code>, you should do:</p>
+<pre><code>./configure
+make
+sudo make install
+make distclean
+./configure --with-inv-symmetry
+make
+sudo make install
+</code></pre>
+
+<p><strong><code>--with-hermitian-eps</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Support the use of <a href="../Scheme_User_Interface/#material-type">complex-hermitian dielectric tensors</a> corresponding to magnetic materials, which break inversion symmetry.</p>
+<p><strong><code>--enable-single</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Use single precision (C <code>float</code>) instead of the default double precision (C <code>double</code>) for computations. Not recommended.</p>
+<p><strong><code>--without-hdf5</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Don't use the HDF5 library for field and dielectric function output. In which case, no field output is possible.</p>
+<p><strong><code>--with-mpi</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Attempt to compile a parallel version of MPB using MPI; the resulting program will be installed as <code>mpb-mpi</code>. Requires <a href="./#mpi-parallel-machines">MPI</a> and <a href="./#fftw">MPI FFTW</a> libraries to be installed, as described above.</p>
+<p>Does <em>not</em> compile the serial MPB, or <code>mpb-data</code>; if you want those, you should <code>make distclean</code> and compile/install them separately.</p>
+<p><strong><code>--with-mpi</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Can be used along with <code>--with-inv-symmetry</code>, in which case the program is installed as <code>mpbi-mpi</code>.</p>
+<p><strong><code>--with-openmp</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Attempt to compile a shared-memory parallel version of MPB using OpenMP. The resulting program will be installed as <code>mpb</code> and FFTs will use OpenMP parallelism. Requires OpenMP FFTW libraries to be installed.</p>
+<p><strong><code>--with-libctl=dir</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If libctl was installed in a nonstandard location (i.e. neither <code>/usr</code> nor <code>/usr/local</code>), you need to specify the location of the libctl directory, <code>dir</code>. This is either <code>prefix/share/libctl</code>, where <code>prefix</code> is the installation prefix of libctl, or the original libctl source code directory.</p>
+<p><strong><code>--with-blas=lib</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+The <code>configure</code> script automatically attempts to detect accelerated BLAS libraries, like DXML (DEC/Alpha), SCSL and SGIMATH (SGI/MIPS), ESSL (IBM/PowerPC), ATLAS, and PHiPACK. You can, however, force a specific library name to try via <code>--with-blas=lib</code>.</p>
+<p><strong><code>--with-lapack=lib</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Cause the <code>configure</code> script to look for a LAPACK library called <code>lib</code>. The default is to use <code>-llapack</code>.</p>
+<p><strong><code>--disable-checks</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Disable runtime checks. Not recommended. The disabled checks shouldn't take up a significant amount of time anyway.</p>
+<p><strong><code>--enable-prof</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Compile for performance profiling.</p>
+<p><strong><code>--enable-debug</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Compile for debugging, adding extra runtime checks and so on.</p>
+<p><strong><code>--enable-debug-malloc</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Use special memory-allocation routines for extra debugging (to check for array overwrites, memory leaks, etcetera).</p>
+<p><strong><code>--with-efence</code></strong><br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+More debugging: use the <a href="http://elinux.org/Electric_Fence">Electric Fence</a> library, if available, for extra runtime array bounds-checking.</p>
+<p>You can further control <code>configure</code> by setting various environment variables, such as:</p>
+<ul>
+<li><code>CC</code>: the C compiler command</li>
+<li><code>CFLAGS</code>: the C compiler flags (defaults to <code>-O3</code>).</li>
+<li><code>CPPFLAGS</code>: <code>-I</code><em><code>dir</code></em> flags to tell the C compiler additional places to look for header files.</li>
+<li><code>LDFLAGS</code>: <code>-L</code><em><code>dir</code></em> flags to tell the linker additional places to look for libraries.</li>
+<li><code>LIBS</code>: additional libraries to link against.</li>
+</ul>
+<p>Once compiled, the main program, as opposed to various test programs, resides in the <code>mpb-ctl/</code> subdirectory, and is called <code>mpb</code>. You can install this program under <code>/usr/local</code> or elsewhere, if you used the <code>--prefix</code> flag for <code>configure</code>, by running:</p>
+<pre><code>sudo make install
+</code></pre>
+
+<p>The "sudo" command is to switch to <code>root</code> for installation into system directories. You can just do <code>make install</code> if you are installing into your home directory instead.</p>
+<p>If you make a mistake (e.g. you forget to specify a needed <code>-L</code><em><code>dir</code></em> flag) or in general want to start over from a clean slate, you can restore MPB to a pristine state by running:</p>
+<pre><code>make distclean
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../Scheme_Tutorial/" class="btn btn-neutral float-right" title="Scheme Tutorial"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../Introduction/" class="btn btn-neutral" title="Introduction"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+    <!-- Copyright etc -->
+    </p>
+  </div>
+
+  <a href="http://https://github.com/stevengj/mpb">
+    <span class="SmallCaps">mpb</span> </a> documentation
+
+  <p>
+  <font size=-1>
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> 
+  using a customized theme modeled 
+  after the 
+  <a href="https://github.com/snide/sphinx_rtd_theme">theme</a>
+  provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  </font>
+
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+          <a class="icon icon-github" style="float: left; color: #fcfcfc"> GitHub</a>
+      
+      
+        <span><a href="../Introduction/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../Scheme_Tutorial/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>
