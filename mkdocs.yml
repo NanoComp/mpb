@@ -8,6 +8,9 @@ site_dir: 'doc/site'
 theme_dir: 'doc/mpb-mkdocs-theme'
 theme: readthedocs
 
+extra_javascript:
+- js/extra.js
+
 python:
    version: 2 # for unicode
    setup_py_install: True
