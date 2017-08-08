@@ -8,9 +8,6 @@ site_dir: 'doc/site'
 theme_dir: 'doc/mpb-mkdocs-theme'
 theme: readthedocs
 
-extra_javascript:
-- js/extra.js
-
 python:
    version: 2 # for unicode
    setup_py_install: True
@@ -24,7 +21,10 @@ markdown_extensions:
     - mdx_math:
         enable_dollar_delimiter: True
 
-extra_javascript: ['https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML','mathjaxhelper.js']
+extra_javascript:
+ - 'https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML'
+ - 'mathjaxhelper.js'
+ - 'js/extra.js'
 
 pages:
  - MPB Overview:
