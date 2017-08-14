@@ -2,6 +2,8 @@
 # MPB
 ---
 
+Howdage!
+
 **MPB** is a free software package for computing the band structures, or dispersion relations, and electromagnetic modes of periodic dielectric structures, on both serial and parallel computers. MPB is an acronym for *MIT Photonic Bands*. MPB computes definite-frequency eigenstates, or harmonic modes, of [Maxwell's equations](https://en.wikipedia.org/wiki/Maxwell%27s_equations) in periodic dielectric structures for arbitrary wavevectors, using fully-vectorial and three-dimensional methods. It is applicable to many problems in optics, such as waveguides and resonator systems, and [photonic crystals](http://ab-initio.mit.edu/book). For example, it can solve for the modes of waveguides with arbitrary cross-sections.
 
 See also our complementary [Meep](https://meep.readthedocs.io/) package for time-domain simulations, reflection/transmission spectra, etc.
