@@ -1,6 +1,6 @@
-# HR 20170807 startup javascript code to fix broken search box on readthedocs
-# inspired by similar code in the nodecmu project:
-# https://github.com/nodemcu/nodemcu-firmware/blob/master/docs/js/extra.js
+//HR 20170807 startup javascript code to fix broken search box on readthedocs
+//inspired by similar code in the nodecmu project:
+//https://github.com/nodemcu/nodemcu-firmware/blob/master/docs/js/extra.js
 
   /**
    * Analyzes the URL of the current page to find out what the selected GitHub branch is. It's usually
