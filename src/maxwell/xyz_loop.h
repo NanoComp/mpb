@@ -27,7 +27,7 @@
      #define LOOP_XYZ(md) { \
           int n1 = md->nx, n2 = md->ny, n3 = md->nz, i1, i2_, i3; \
           int local_n2 = md->local_ny, local_y_start = md->local_y_start; \
-          for (i2_ = 0; i2_ < local_n2; ++i2_)
+          for (i2_ = 0; i2_ < local_n2; ++i2_) \
                for (i1 = 0; i1 < n1; ++i1) \
      	       for (i3 = 0; i3 < n3; ++i3) { \
                       int i2 = i2_ + local_y_start; \
@@ -54,7 +54,7 @@
           int n1 = md->nx, n2 = md->ny, n3 = md->nz, i1, i2_, i3; \
           int local_n2 = md->local_ny, local_y_start = md->local_y_start; \
           int local_n3 = n3 > 1 ? md->last_dim_size / 2 : 1; \
-          for (i2_ = 0; i2_ < local_n2; ++i2_)
+          for (i2_ = 0; i2_ < local_n2; ++i2_ \
                for (i1 = 0; i1 < n1; ++i1) \
      	       for (i3 = 0; i3 < local_n3; ++i3) { \
                       int i2 = i2_ + local_y_start; \
