@@ -97,18 +97,26 @@ number_list bott_indices(integer band_start, integer n_bands)
     for (n = 1; n <= n_bands; ++n) { /* compute n-th bott index */
         sqmatrix_copy(Un, U);
         sqmatrix_copy(Wn, W);
+        Un.p = n_bands; /* sqmatrix_copy does not change the .p field (but _we_ do at every iteration */
+        Wn.p = n_bands; /* when we resize below), so to correct for that we must do it ourselves here */
+
         sqmatrix_resize(&Un, n, 1);
         sqmatrix_resize(&Wn, n, 1);
-        sqmatrix_resize(&S1, n, 0);
-        sqmatrix_resize(&S2, n, 0);
-        sqmatrix_AeBC(S1, Wn, 0, Un, 0);
+        sqmatrix_resize(&S1, n, 0); /*the .p-field-issue has no effect on scratch mat- */
+        sqmatrix_resize(&S2, n, 0); /*rices, as their initial value is unimportant */
+
+        sqmatrix_AeBC(S1, Wn, 0, Un, 0); /*do the matrix products*/
         sqmatrix_AeBC(S2, Wn, 1, Un, 1);
         sqmatrix_AeBC(Un, S1, 0, S2, 0);
+  
         sqmatrix_eigenvalues(Un, eigvals);
+
+        bott.items[n-1] = 0; /* initalize/zero (number_list gives random init) */
         for (i = 0; i < n; ++i)
             bott.items[n-1] += scalar_carg(eigvals[i]);
-        bott.items[i] /= 6.28318530717958647692528676655900; /* twopi */
+        bott.items[n-1] /= 6.28318530717958647692528676655900; /* twopi */
     }
+
     destroy_sqmatrix(Wn);
     destroy_sqmatrix(Un);
     destroy_sqmatrix(S2);
