@@ -60,7 +60,7 @@ void sqmatrix_assert_hermitian(sqmatrix A)
 /* A = B */
 void sqmatrix_copy(sqmatrix A, sqmatrix B)
 {
-     sqmatrix_resize(&A, B.p, 0);
+     CHECK("A.p == B.p", "arrays not conformant"); 
      blasglue_copy(A.p * A.p, B.data, 1, A.data, 1);
 }
 
