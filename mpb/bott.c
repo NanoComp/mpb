@@ -95,15 +95,15 @@ number_list bott_indices(integer band_start, integer n_bands)
     bott.num_items = n_bands;
     CHK_MALLOC(bott.items, number, n_bands);
     for (n = 1; n <= n_bands; ++n) { /* compute n-th bott index */
+        Un.p = Wn.p = n_bands; /* we change the .p field at every iteration (cf. resizing), but sqmatrix expects */
+                               /* the .p field to match the size of the matrix being copied; fix that here */
         sqmatrix_copy(Un, U);
         sqmatrix_copy(Wn, W);
-        Un.p = n_bands; /* sqmatrix_copy does not change the .p field (but _we_ do at every iteration */
-        Wn.p = n_bands; /* when we resize below), so to correct for that we must do it ourselves here */
 
         sqmatrix_resize(&Un, n, 1);
         sqmatrix_resize(&Wn, n, 1);
-        sqmatrix_resize(&S1, n, 0); /*the .p-field-issue has no effect on scratch mat- */
-        sqmatrix_resize(&S2, n, 0); /*rices, as their initial value is unimportant */
+        sqmatrix_resize(&S1, n, 0); /*the .p-field-issue has no impact on the scratch */
+        sqmatrix_resize(&S2, n, 0); /*matrices, as their initial value is unimportant */
 
         sqmatrix_AeBC(S1, Wn, 0, Un, 0); /*do the matrix products*/
         sqmatrix_AeBC(S2, Wn, 1, Un, 1);
