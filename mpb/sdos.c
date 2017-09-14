@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <assert.h>
 
 #include "config.h"
 
@@ -27,7 +28,7 @@
 #include <matrixio.h>
 
 #include "mpb.h"
-
+#include "matrixio.h"
 
 
 void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands, 
@@ -35,7 +36,7 @@ void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands,
                  int iG1_end,   int iG2_end,   int iG3_end)
 {
     int final_band = band_start + n_bands, n = 0, ib, ibb, i1, i2, i3, ixt, iyt, c;
-    int nx = mdata->nx, ny = mdata->ny, nz = mdata->nz, num_bands = mdata->num_bands;
+    int nx = mdata->nx, ny = mdata->ny, nz = mdata->nz;  /* # of G-vecs used in calculation along xyz */
     int nG = (iG1_end-iG1_start+1)*(iG2_end-iG2_start+1)*(iG3_end-iG3_start+1); /* # of G vecs req'ed */
     int *ix, *iy, *iz; 
     scalar_complex polsum;
@@ -43,7 +44,7 @@ void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands,
     CHK_MALLOC(iy,int,nG);
     CHK_MALLOC(iz,int,nG);
 
-    CHECK(iG1_start >= iG1_end && iG2_start >= iG2_end && iG3_start >= iG3_end,
+    CHECK(iG1_start <= iG1_end && iG2_start <= iG2_end && iG3_start <= iG3_end,
           "req'ed G vectors must be incrementing (start<=end)"); 
     CHECK( ((iG1_start > -nx/2) && (iG1_end <= nx/2))       || 
            ((iG1_start == iG1_end) && (iG1_end == nx-1) && (nx-1 == 0)),
@@ -85,22 +86,22 @@ void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands,
            evectmatrix_resize(&Hblock, final_band - ib, 0);
        }
        
-       /* Beware the notation: H is really B and Hblock is blocks of H*/
+       /* Beware the notation: H is really B and Hblock is blocks of H */
        maxwell_compute_H_from_B(mdata, H, Hblock, 
                                 (scalar_complex *) mdata->fft_data,
                                 ib, 0, Hblock.p);
 		
        /* Now we calculate a matrix BtH = Tr(H*adjoint(B)) in the G basis: 
-        * the trace works over the polarization subspace (c-indices) */
-	   for (n = 0; n < nG; ++n) {                      /* req'd G-vecs, indices from i{x,y,z} */
+        * the trace works over the polarization subspace (c-indices)      */
+	   for (n = 0; n < nG; ++n) {     /* req'd G-vecs, indices from i{x,y,z} */
           for (ibb = ib; ibb < ib + Hblock.p; ++ibb) { /* bands in the block */
              CASSIGN_ZERO(polsum);
-             for (c = 0; c < 2; ++c) {                 /* polarization (transverse basis) */
-                CACCUMULATE_SUM_CONJ_MULT( polsum, /* assign 'a += conj(b) * c' for (a,b,c) call */
-                                 H.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*H.p+ibb],
-	                        Hblock.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*Hblock.p+ibb-ib] );
+             for (c = 0; c < 2; ++c) {    /* polarization (transverse basis) */
+                CACCUMULATE_SUM_CONJ_MULT( polsum, /* a += conj(b) * c for (a,b,c) call */
+                            H.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*H.p+ibb],
+	                   Hblock.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*Hblock.p+ibb-ib] );
              }
-             BtH[n*nG+ibb-band_start] = polsum; /* row-major for BtH(n,b) with b = 0,.., n_bands */ 
+             BtH[n*nG+ibb-band_start] = polsum; /* row-major */ 
           }
        }
     }
@@ -114,29 +115,44 @@ void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands,
 }
 
 
+/* round to nearest integer; for conversion of float vector3
+ * entries to integer values (only to be safe, in case of 
+ * floating-point mischief */
+int myround(float x){
+    assert(x >= INT_MIN - 0.5);
+	assert(x <= INT_MAX + 0.5); 
+    if (x >= 0)
+       return (int) (x+0.5);
+    return (x-0.5); /* else (for negative values) */
+}
 
 
-number_list get_sdos(real freq_min, real freq_max, int freq_num, 
-                     real eta,
-                     int band_start, int n_bands, 
-                     int iG1_start, int iG2_start, int iG3_start,
-                     int iG1_end,   int iG2_end,   int iG3_end)
+/* calculate the spectral density of states (sdos) and write it 
+ * to an .h5 file */
+void get_sdos(number freq_min, number freq_max, integer freq_num, 
+                     number eta,
+                     integer band_start, integer n_bands, 
+                     vector3 iG_start, vector3 iG_end) 
 {
     int i,b,n;
-    int nG = (iG1_end-iG1_start+1)*(iG2_end-iG2_start+1)*(iG3_end-iG3_start+1); /* # of G vecs req'ed */
+	int iG1_start = myround(iG_start.x), iG2_start = myround(iG_start.y), iG3_start = myround(iG_start.z); 
+	int iG1_end = myround(iG_end.x),     iG2_end = myround(iG_end.y),     iG3_end = myround(iG_end.z); 
+    int nG1 = iG1_end-iG1_start+1,       nG2 = iG2_end-iG2_start+1,       nG3 = iG3_end-iG3_start+1; 
+    int nG = nG1 * nG2 * nG3; /* total # of G vecs req'ed */
     scalar_complex *BtH, ctemp;
     real npref = 2*Vol/3.141592653589793, *spanfreqs, *spanfreqs2, *freqs2, df, fpref;
-	number_list sdos; 
+	real *sdos; 
+	int iodims[1] = {freq_num*nG}, iostart[1] = {0}; /* for .h5 write */
+    matrixio_id file_id, data_id; 
     
-    /* allocate arrays and number_list */ 
-    CHK_MALLOC(BtH,scalar_complex,nG*n_bands); 
-    CHK_MALLOC(spanfreqs, real,freq_num);
-    CHK_MALLOC(spanfreqs2,real,freq_num);
-    CHK_MALLOC(freqs2, real, n_bands);
-    sdos.num_items = freq_num*nG; 
-    CHK_MALLOC(sdos.items,number,freq_num*nG);
+    /* allocate arrays */ 
+    CHK_MALLOC(BtH, scalar_complex, nG*n_bands); 
+    CHK_MALLOC(spanfreqs,  real, freq_num);
+    CHK_MALLOC(spanfreqs2, real, freq_num);
+    CHK_MALLOC(freqs2,     real, n_bands);
+    CHK_MALLOC(sdos,       real, freq_num*nG);
     for (i = 0; i < freq_num*nG; ++i) 
-       sdos.items[i] = 0; /* initialize to zero (initially random values) */
+       sdos[i] = 0; /* initialize to zero before we start adding anything */
  
     /* create a frequency array that spans freq_min to freq_max in freq_num steps */
     spanfreqs[0] = freq_max;
@@ -151,22 +167,26 @@ number_list get_sdos(real freq_min, real freq_max, int freq_num,
 		freqs2[b] = pow(freqs.items[b+band_start],2);
 
     /* compute the overlap between G-components of bands */
-    BtH_overlap(BtH, band_start, n_bands, iG1_start, iG2_start, iG3_start, iG1_end, iG2_end, iG3_end);
+    BtH_overlap(BtH, band_start, n_bands, iG1_start, iG2_start, iG3_start,
+                iG1_end, iG2_end, iG3_end);
      
-
     /* calculate the sdos by summation of terms */
-    for (i = 0; i < freq_num; ++i) {        /* frequency loop */
+    for (i = 0; i < freq_num; ++i) {      /* frequency loop */
        fpref = npref*spanfreqs[i];
-       for (n = 0; n < nG; ++n) {           /* G-vector loop */
-          for (b = 0; b < n_bands; ++b); {  /* band loop */
-             CASSIGN_SCALAR( ctemp, freqs2[b]-spanfreqs2[i], -eta ); /* = omegan^2 - omega^2 - i*eta (= denom) */
-             CASSIGN_DIV( ctemp, *(BtH+n+nG+b), ctemp ); /* = BtH/denom (= fraction) */
-             sdos.items[i*nG+n] += CSCALAR_IM( ctemp );  /* += Im(fraction) | sum over included bands */
+       for (n = 0; n < nG; ++n) {         /* G-vector loop */
+          for (b = 0; b < n_bands; ++b) { /* band loop */
+             CASSIGN_SCALAR(ctemp, freqs2[b]-spanfreqs2[i], -eta); /* = omegan^2 - omega^2 - i*eta (= denom) */
+             CASSIGN_DIV(ctemp, *(BtH+n+nG+b), ctemp); /* = BtH/denom (= fraction) */
+             sdos[i*nG+n] += CSCALAR_IM(ctemp);  /* += Im(fraction) | sum over included bands */
           }
-          sdos.items[i*nG+n] *= fpref; /* multiply by prefactor */
+          sdos[i*nG+n] *= fpref; /* multiply by prefactor */
        }
     }
 
-    return sdos;
+    /* write contents of sdos to hdf5 format; so just as one long 1d array to */ 
+    file_id = matrixio_create("temporary_save_name");
+    data_id = matrixio_create_dataset(file_id,"sdos",NULL, 1, iodims);
+    matrixio_write_real_data(data_id, iodims, iostart, 1, sdos); 
+    matrixio_close_dataset(data_id);
+    matrixio_close(file_id);
 }
-

@@ -251,11 +251,10 @@
   'string)
 (define-external-function bott-indices false false (make-list-type 'number)
   'integer 'integer)
-(define-external-function get-sdos false false (make-list-type 'number) 
-  'number 'number 'integer 'number ; freq_min freq_max freq_num eta
-  'integer 'integer                ; band_start n_bands
-  'integer 'integer 'integer       ; G1_start G2_start G3_start
-  'integer 'integer 'integer)      ; G1_end G2_end G3_end
+(define-external-function get-sdos     false false no-return-value 
+  'number 'number 'integer 'number 'integer 'integer 'vector3 'vector3) 
+; input: freq_min freq_max freq_num eta band_start n_bands G_start G_end
+
 
 (define cur-field 'cur-field)
 (define-external-function cur-field? false false 'boolean 'SCM)
