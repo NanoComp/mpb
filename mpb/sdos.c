@@ -78,6 +78,12 @@ void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands,
        }
     }
 
+    printf("\n");
+    printf("   iG1_start = %3d, iG2_start = %3d, iG3_start = %3d\n", iG1_start, iG2_start, iG3_start);
+    printf("   iG1_end =   %3d, iG2_end =   %3d, iG3_end =   %3d\n", iG1_end, iG2_end, iG3_end);
+    printf("   nx =        %3d, ny =        %3d, nz =        %3d\n", nx, ny, nz);
+    printf("   nG = %d, nG_avail = %d, n_bands = %d\n\n", nG, nx*ny*nz,n_bands);
+
     /* ...we have to do this in blocks of eigensolver_block_size since   
      * the work matrix W[0] may not have enough space to do it at once. */
     for (ib = band_start; ib < final_band; ib += Hblock.alloc_p) {
@@ -101,10 +107,11 @@ void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands,
                             H.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*H.p+ibb],
 	                   Hblock.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*Hblock.p+ibb-ib] );
              }
-             BtH[n*nG+ibb-band_start] = polsum; /* row-major */ 
+             BtH[n*n_bands+ibb-band_start] = polsum; /* row-major */ 
           }
        }
     }
+    
 
     /* Reset matrix sizes and free memory */
     evectmatrix_resize(&Hblock, Hblock.alloc_p, 0);
@@ -151,32 +158,40 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
     CHK_MALLOC(spanfreqs2, real, freq_num);
     CHK_MALLOC(freqs2,     real, n_bands);
     CHK_MALLOC(sdos,       real, freq_num*nG);
-    for (i = 0; i < freq_num*nG; ++i) 
-       sdos[i] = 0; /* initialize to zero before we start adding anything */
  
     /* create a frequency array that spans freq_min to freq_max in freq_num steps */
-    spanfreqs[0] = freq_max;
-    df = (freq_max-freq_min)/freq_num;
-    for (i = 1; i < freq_num; ++i) {
+    spanfreqs[0] = freq_min;
+    df = (freq_max-freq_min)/(freq_num-1);
+    for (i = 1; i < freq_num; ++i) 
        spanfreqs[i] = spanfreqs[i-1]+df;
+    for (i = 0; i < freq_num; ++i) 
        spanfreqs2[i] = pow(spanfreqs[i],2);
-    }
+    
     
     /* get the squared eigenfrequencies starting from band_start */
     for (b = 0; b < n_bands; ++b) 
-		freqs2[b] = pow(freqs.items[b+band_start],2);
+	   freqs2[b] = pow(freqs.items[b+band_start],2);
 
     /* compute the overlap between G-components of bands */
     BtH_overlap(BtH, band_start, n_bands, iG1_start, iG2_start, iG3_start,
                 iG1_end, iG2_end, iG3_end);
      
+    /* for (b = 0; b < n_bands; ++b) {
+       CASSIGN_ZERO(ctemp);
+       for (n = 0; n < nG; ++n) {
+          CACCUMULATE_SUM(ctemp,BtH[n*n_bands+b]);
+       }
+       printf("   G-summed BtH at band %d = %.5g+i%.5g\n", b+1, CSCALAR_RE(ctemp), CSCALAR_IM(ctemp));
+    } */
+
     /* calculate the sdos by summation of terms */
     for (i = 0; i < freq_num; ++i) {      /* frequency loop */
        fpref = npref*spanfreqs[i];
        for (n = 0; n < nG; ++n) {         /* G-vector loop */
+          sdos[i*nG+n] = 0;               /* init = 0 before adding anything */
           for (b = 0; b < n_bands; ++b) { /* band loop */
              CASSIGN_SCALAR(ctemp, freqs2[b]-spanfreqs2[i], -eta); /* = omegan^2 - omega^2 - i*eta (= denom) */
-             CASSIGN_DIV(ctemp, *(BtH+n+nG+b), ctemp); /* = BtH/denom (= fraction) */
+             CASSIGN_DIV(ctemp, *(BtH+n*n_bands+b), ctemp); /* = BtH/denom (= fraction) */
              sdos[i*nG+n] += CSCALAR_IM(ctemp);  /* += Im(fraction) | sum over included bands */
           }
           sdos[i*nG+n] *= fpref; /* multiply by prefactor */
