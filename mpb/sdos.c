@@ -77,11 +77,12 @@ void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands,
           }
        }
     }
-
-    printf("\n   iG1_min = %3d, iG2_min = %3d, iG3_min = %3d\n", iG1_min, iG2_min, iG3_min);
-    printf("   iG1_max = %3d, iG2_max = %3d, iG3_max = %3d\n", iG1_max, iG2_max, iG3_max);
-    printf("   nx =      %3d, ny =      %3d, nz =      %3d\n", nx, ny, nz);
-    printf("   nG = %d, nG_avail = %d, n_bands = %d\n\n", nG, nx*ny*nz,n_bands);
+    
+    mpi_one_printf("\nSDOS calculation info:\n");
+    mpi_one_printf("   iG1_min = %3d, iG2_min = %3d, iG3_min = %3d\n", iG1_min, iG2_min, iG3_min);
+    mpi_one_printf("   iG1_max = %3d, iG2_max = %3d, iG3_max = %3d\n", iG1_max, iG2_max, iG3_max);
+    mpi_one_printf("   nx =      %3d, ny =      %3d, nz =      %3d\n", nx, ny, nz);
+    mpi_one_printf("   nG = %d, nG_avail = %d, n_bands = %d\n\n", nG, nx*ny*nz,n_bands);
 
     /* ...we have to do this in blocks of eigensolver_block_size since   
      * the work matrix W[0] may not have enough space to do it at once. */
@@ -158,7 +159,8 @@ static char *fix_fname(const char *fname, const char *prefix,
 
 
 /* calculate the spectral density of states (sdos) and write it 
- * to an .h5 file */
+ * to an .h5 file. The variable band_start follows the Guile 
+ * convention and starts at 1 (conversion to 0-index'ing inside) */
 void get_sdos(number freq_min, number freq_max, integer freq_num, 
               number eta,
               integer band_start, integer n_bands, 
@@ -170,13 +172,13 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
 	int iG1_max = myround(iG_max.x), iG2_max = myround(iG_max.y), iG3_max = myround(iG_max.z); 
     int nG1 = iG1_max-iG1_min+1,     nG2 = iG2_max-iG2_min+1,     nG3 = iG3_max-iG3_min+1; 
     int nG = nG1 * nG2 * nG3; /* total # of G vecs req'ed */
-    real iGspan[6] = {iG1_min, iG1_max, iG2_min, iG2_max, iG2_min, iG2_max}; /* requires C99 (or >) */
-    real freqspan[3] = {freq_min, freq_max, freq_num};                       /* requires C99 (or >) */
+    real iGspan[6] = {iG1_min, iG1_max, iG2_min, iG2_max, iG3_min, iG3_max}, /* requires C99 (or >) */
+         freqspan[3] = {freq_min, freq_max, freq_num};
     scalar_complex *BtH, ctemp;
-    real npref = 2*Vol/3.141592653589793, *spanfreqs, *spanfreqs2, *freqs2, df, fpref;
-	real *sdos; 
+    real *spanfreqs, *spanfreqs2, *freqs2re, *freqs2im, *sdos, 
+         df, fpref, npref = 2*Vol/3.141592653589793; 
 	int iodims0[1] = {freq_num*nG}, iodims1[1] = {3}, iodims2[1] = {6}, 
-        iodims3[1] = {1}, iostart[1] = {0}; /* for .h5 write */
+        iodims3[1] = {3}, iodims4[1] = {1}, iostart[1] = {0}; /* for .h5 write */
     matrixio_id file_id, data_id; 
     char *savename; 
     
@@ -184,9 +186,13 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
     CHK_MALLOC(BtH, scalar_complex, nG*n_bands); 
     CHK_MALLOC(spanfreqs,  real, freq_num);
     CHK_MALLOC(spanfreqs2, real, freq_num);
-    CHK_MALLOC(freqs2,     real, n_bands);
+    CHK_MALLOC(freqs2re,   real, n_bands);
+    CHK_MALLOC(freqs2im,   real, n_bands);
     CHK_MALLOC(sdos,       real, freq_num*nG);
     CHK_MALLOC(savename,   char, 256); /* assume savename less than 256 chars */
+
+    /* in Guile interface, band_start is considered to start at 1; in C it is zero-index */
+    band_start -= 1;
  
     /* create a frequency array that spans freq_min to freq_max in freq_num steps */
     spanfreqs[0] = freq_min;
@@ -196,22 +202,27 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
     for (i = 0; i < freq_num; ++i) 
        spanfreqs2[i] = pow(spanfreqs[i],2);
     
-    
-    /* get the squared eigenfrequencies starting from band_start */
-    for (b = 0; b < n_bands; ++b) 
-	   freqs2[b] = pow(freqs.items[b+band_start],2);
+    mpi_one_printf(" n_bands = %d\n", n_bands);
+    /* get the squared eigenfrequencies (real and imag), starting from band_start */
+    for (b = 0; b < n_bands; ++b){ 
+	   freqs2re[b] = pow(freqs.items[b+band_start],2) - pow(eta,2);
+       freqs2im[b] = -2*freqs.items[b+band_start]*eta;
+    }
 
     /* compute the overlap between G-components of bands */
     BtH_overlap(BtH, band_start, n_bands, iG1_min, iG2_min, iG3_min,
                 iG1_max, iG2_max, iG3_max);
-     
-    /* for (b = 0; b < n_bands; ++b) {
+    
+    /* print G-sum of BtH (per band) shows how much of each band the 
+     * req'd G-vectors effectively cover (= 1 is all of it) */
+    mpi_one_printf("G-summed BtH of bands in SDOS (sum over req'd G-vectors)\n   (band, |sum|^2) = ");
+    for (b = 0; b < n_bands; ++b) {
        CASSIGN_ZERO(ctemp);
        for (n = 0; n < nG; ++n) {
           CACCUMULATE_SUM(ctemp,BtH[n*n_bands+b]);
        }
-       printf("   G-summed BtH at band %d = %.5g+i%.5g\n", b+1, CSCALAR_RE(ctemp), CSCALAR_IM(ctemp));
-    } */
+       mpi_one_printf("(%d, %.3g)%s", b+1, CSCALAR_NORMSQR(ctemp), (b == (n_bands-1)) ? "\n" : ", ");
+    } 
 
     /* calculate the sdos by summation of terms */
     for (i = 0; i < freq_num; ++i) {      /* frequency loop */
@@ -219,7 +230,9 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
        for (n = 0; n < nG; ++n) {         /* G-vector loop */
           sdos[i*nG+n] = 0;               /* init = 0 before adding anything */
           for (b = 0; b < n_bands; ++b) { /* band loop */
-             CASSIGN_SCALAR(ctemp, freqs2[b]-spanfreqs2[i], -eta); /* = omegan^2 - omega^2 - i*eta (= denom) */
+             CASSIGN_SCALAR(ctemp, /* = (omegan-i*eta)^2 - omega^2 (= denom) */
+                            freqs2re[b]-spanfreqs2[i], 
+                            freqs2im[b]); 
              CASSIGN_DIV(ctemp, *(BtH+n*n_bands+b), ctemp); /* = BtH/denom (= fraction) */
              sdos[i*nG+n] += CSCALAR_IM(ctemp);  /* += Im(fraction) | sum over included bands */
           }
@@ -228,7 +241,7 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
     }
 
     /* construct a savename from saveprefix and misc meta info */
-    sprintf(savename, "-sdos.k%d", kpoint_index);
+    sprintf(savename, "sdos.k%d", kpoint_index);
     savename = fix_fname(savename, saveprefix, mdata, 1);
 
     /* write contents of sdos to hdf5 format; so far just as one long 1d array to */ 
@@ -245,8 +258,11 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
                  "iG1_min, iG1_max, iG2_min, iG2_max, iG3_min, iG3_max", 1, iodims2);
     matrixio_write_real_data(data_id, iodims2, iostart, 1, iGspan);
 
-    data_id = matrixio_create_dataset(file_id, "kpoint", "NULL", 1, iodims3);
+    data_id = matrixio_create_dataset(file_id, "kpoint", "kx, ky, kz", 1, iodims3);
     matrixio_write_real_data(data_id, iodims3, iostart, 1, mdata->current_k);
+
+    data_id = matrixio_create_dataset(file_id, "eta", "imag part in omegan - i*eta", 1, iodims4);
+    matrixio_write_real_data(data_id, iodims4, iostart, 1, (real *) &eta); 
 
     matrixio_close_dataset(data_id);
     matrixio_close(file_id);
@@ -255,6 +271,7 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
     free(BtH); 
     free(spanfreqs);
     free(spanfreqs2);
-    free(freqs2);
+    free(freqs2re);
+    free(freqs2im);
     free(sdos);
 }
