@@ -31,11 +31,11 @@
 #include "matrixio.h"
 
 
-void BtH_overlap(scalar_complex *BtH, int band_min, int n_bands, 
+void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands, 
                  int iG1_min, int iG2_min, int iG3_min,
                  int iG1_max,   int iG2_max,   int iG3_max)
 {
-    int final_band = band_min + n_bands, n = 0, ib, ibb, i1, i2, i3, ixt, iyt, c;
+    int final_band = band_start + n_bands, n = 0, ib, ibb, i1, i2, i3, ixt, iyt, c;
     int nx = mdata->nx, ny = mdata->ny, nz = mdata->nz;  /* # of G-vecs used in calculation along xyz */
     int nG = (iG1_max-iG1_min+1)*(iG2_max-iG2_min+1)*(iG3_max-iG3_min+1); /* # of G vecs req'ed */
     int *ix, *iy, *iz; 
@@ -57,7 +57,7 @@ void BtH_overlap(scalar_complex *BtH, int band_min, int n_bands,
            "iG3 out of bounds");
 
     CHECK(mdata, "init-params must be called before shift_overlap");
-    CHECK(band_min + n_bands <= num_bands, "not enough bands in shift_overlap");
+    CHECK(band_start + n_bands <= num_bands, "not enough bands in shift_overlap");
  
 
     /* -- construct lists for the _specific_ G vectors we actually want to pick out -- 
@@ -78,15 +78,14 @@ void BtH_overlap(scalar_complex *BtH, int band_min, int n_bands,
        }
     }
 
-    printf("\n");
-    printf("   iG1_min = %3d, iG2_min = %3d, iG3_min = %3d\n", iG1_min, iG2_min, iG3_min);
-    printf("   iG1_max =   %3d, iG2_max =   %3d, iG3_max =   %3d\n", iG1_max, iG2_max, iG3_max);
-    printf("   nx =        %3d, ny =        %3d, nz =        %3d\n", nx, ny, nz);
+    printf("\n   iG1_min = %3d, iG2_min = %3d, iG3_min = %3d\n", iG1_min, iG2_min, iG3_min);
+    printf("   iG1_max = %3d, iG2_max = %3d, iG3_max = %3d\n", iG1_max, iG2_max, iG3_max);
+    printf("   nx =      %3d, ny =      %3d, nz =      %3d\n", nx, ny, nz);
     printf("   nG = %d, nG_avail = %d, n_bands = %d\n\n", nG, nx*ny*nz,n_bands);
 
     /* ...we have to do this in blocks of eigensolver_block_size since   
      * the work matrix W[0] may not have enough space to do it at once. */
-    for (ib = band_min; ib < final_band; ib += Hblock.alloc_p) {
+    for (ib = band_start; ib < final_band; ib += Hblock.alloc_p) {
        if (ib + Hblock.alloc_p > final_band) {
            maxwell_set_num_bands(mdata, final_band - ib);
            evectmatrix_resize(&Hblock, final_band - ib, 0);
@@ -107,7 +106,7 @@ void BtH_overlap(scalar_complex *BtH, int band_min, int n_bands,
                             H.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*H.p+ibb],
 	                   Hblock.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*Hblock.p+ibb-ib] );
              }
-             BtH[n*n_bands+ibb-band_min] = polsum; /* row-major */ 
+             BtH[n*n_bands+ibb-band_start] = polsum; /* row-major */ 
           }
        }
     }
@@ -162,7 +161,7 @@ static char *fix_fname(const char *fname, const char *prefix,
  * to an .h5 file */
 void get_sdos(number freq_min, number freq_max, integer freq_num, 
               number eta,
-              integer band_min, integer n_bands, 
+              integer band_start, integer n_bands, 
               vector3 iG_min, vector3 iG_max,
               char *saveprefix) 
 {
@@ -198,12 +197,12 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
        spanfreqs2[i] = pow(spanfreqs[i],2);
     
     
-    /* get the squared eigenfrequencies starting from band_min */
+    /* get the squared eigenfrequencies starting from band_start */
     for (b = 0; b < n_bands; ++b) 
-	   freqs2[b] = pow(freqs.items[b+band_min],2);
+	   freqs2[b] = pow(freqs.items[b+band_start],2);
 
     /* compute the overlap between G-components of bands */
-    BtH_overlap(BtH, band_min, n_bands, iG1_min, iG2_min, iG3_min,
+    BtH_overlap(BtH, band_start, n_bands, iG1_min, iG2_min, iG3_min,
                 iG1_max, iG2_max, iG3_max);
      
     /* for (b = 0; b < n_bands; ++b) {
