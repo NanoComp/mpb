@@ -251,9 +251,9 @@
   'string)
 (define-external-function bott-indices false false (make-list-type 'number)
   'integer 'integer)
-(define-external-function get-sdos     false false no-return-value 
-  'number 'number 'integer 'number 'integer 'integer 'vector3 'vector3) 
-; input: freq_min freq_max freq_num eta band_start n_bands G_start G_end
+(define-external-function get-sdos false false no-return-value 
+  'number 'number 'integer 'number 'integer 'integer 'vector3 'vector3 'string) 
+; input: freq_min freq_max freq_num eta band_start n_bands G_min G_max saveprefix
 
 
 (define cur-field 'cur-field)
