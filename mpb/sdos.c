@@ -202,7 +202,6 @@ void get_sdos(number freq_min, number freq_max, integer freq_num,
     for (i = 0; i < freq_num; ++i) 
        spanfreqs2[i] = pow(spanfreqs[i],2);
     
-    mpi_one_printf(" n_bands = %d\n", n_bands);
     /* get the squared eigenfrequencies (real and imag), starting from band_start */
     for (b = 0; b < n_bands; ++b){ 
 	   freqs2re[b] = pow(freqs.items[b+band_start],2) - pow(eta,2);
