@@ -44,7 +44,7 @@
      	  for (i2_ = 0; i2_ < n_last; ++i2_) { \
                  int xyz_index = i1_ * n_last + i2_; \
           	  switch (rank) { \
-          	      case 2: i1 = i1_; i2 = i2_; k2 = 0; break; \
+          	      case 2: i1 = i1_; i2 = i2_; i3 = 0; break; \
           	      case 3: i1 = i1_ / n2; i2 = i1_ % n2; i3 = i2_; break; \
           	      default: i1 = i2_; i2 = i3 = 0;  break; \
                  }
