@@ -33,7 +33,7 @@
 
 void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands, 
                  int iG1_min, int iG2_min, int iG3_min,
-                 int iG1_max,   int iG2_max,   int iG3_max)
+                 int iG1_max, int iG2_max, int iG3_max)
 {
     int final_band = band_start + n_bands, n = 0, ib, ibb, i1, i2, i3, ixt, iyt, c;
     int nx = mdata->nx, ny = mdata->ny, nz = mdata->nz;  /* # of G-vecs used in calculation along xyz */
@@ -99,17 +99,22 @@ void BtH_overlap(scalar_complex *BtH, int band_start, int n_bands,
 		
        /* Now we calculate a matrix BtH = Tr(H*adjoint(B)) in the G basis: 
         * the trace works over the polarization subspace (c-indices)      */
-	   for (n = 0; n < nG; ++n) {     /* req'd G-vecs, indices from i{x,y,z} */
-          for (ibb = ib; ibb < ib + Hblock.p; ++ibb) { /* bands in the block */
-             CASSIGN_ZERO(polsum);
-             for (c = 0; c < 2; ++c) {    /* polarization (transverse basis) */
-                CACCUMULATE_SUM_CONJ_MULT( polsum, /* a += conj(b) * c for (a,b,c) call */
-                            H.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*H.p+ibb],
-	                   Hblock.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*Hblock.p+ibb-ib] );
+       #ifndef HAVE_MPI /* without MPI */
+          for (n = 0; n < nG; ++n) {     /* req'd G-vecs, indices from i{x,y,z} */
+             for (ibb = ib; ibb < ib + Hblock.p; ++ibb) { /* bands in the block */
+                CASSIGN_ZERO(polsum);
+                for (c = 0; c < 2; ++c) {    /* polarization (transverse basis) */
+                   CACCUMULATE_SUM_CONJ_MULT( polsum, /* a += conj(b) * c for (a,b,c) call */
+                               H.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*H.p     +ibb   ],
+   	                      Hblock.data[(((ix[n]*ny+iy[n])*nz+iz[n])*2+c)*Hblock.p+ibb-ib] );
+                }
+                BtH[n*n_bands+ibb-band_start] = polsum; /* row-major */ 
              }
-             BtH[n*n_bands+ibb-band_start] = polsum; /* row-major */ 
           }
-       }
+       #else /* with MPI */
+       /* Scaffolding for MPI implementation */
+       /* int local_n2 = mdata->local_ny, local_y_start = mdata->local_y_start; */
+       #endif
     }
     
 
