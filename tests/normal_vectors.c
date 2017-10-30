@@ -125,7 +125,7 @@ static vector3 make_vector3(double x, double y, double z)
    diameter roughly 1 */
 geometric_object random_object(void)
 {
-     material_type m = { 0 };
+     void* m = NULL;
      vector3 c = { 0, 0, 0 };
      geometric_object o;
      switch (rand() % 5) {
