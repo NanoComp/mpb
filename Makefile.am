@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS=-I m4
 
-SUBDIRS = src tests mpb utils examples # meb
+SUBDIRS = src tests mpb utils examples
 
 EXTRA_DIST = COPYRIGHT TODO m4 README.md
 
