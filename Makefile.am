@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS=-I m4
 
-SUBDIRS = src tests # meb
+SUBDIRS = src tests
 
 if WITH_LIBCTL
 SUBDIRS += mpb examples
