@@ -1,4 +1,7 @@
-noinst_PROGRAMS = malloctest blastest eigs_test maxwell_test normal_vectors
+noinst_PROGRAMS = malloctest blastest eigs_test maxwell_test
+if WITH_LIBCTLGEOM
+noinst_PROGRAMS += normal_vectors
+endif
 EXTRA_DIST = blastest.real.out blastest.complex.out
 
 LIBMPB = $(top_builddir)/src/libmpb@MPB_SUFFIX@.la
@@ -18,7 +21,7 @@ maxwell_test_LDADD = $(LIBMPB)
 
 normal_vectors_SOURCES = normal_vectors.c
 normal_vectors_LDADD = -lctlgeom $(LIBMPB)
-normal_vectors_CPPFLAGS = $(CTL_H_CPPFLAG) $(AM_CPPFLAGS)
+normal_vectors_CPPFLAGS = $(CTLGEOM_H_CPPFLAG) $(AM_CPPFLAGS)
 
 blastest.out: blastest
 	./blastest | sed 's/\-0\.000\([ ,)]\)/ 0.000\1/g' | sed 's/\-0\.000$$/ 0.000/g' > $@

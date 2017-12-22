@@ -464,6 +464,35 @@ CPPFLAGS=$save_CPPFLAGS
 
 fi # with_libctl
 
+
+##############################################################################
+# check for libctlgeom, used to build mpb-data ... doesn't require guile
+
+AC_CHECK_LIB(ctlgeom, vector3_dot, [with_libctlgeom=yes], [with_libctlgeom=no])
+
+if test "x$with_libctlgeom" = xyes; then
+	# check for ctlgeom.h (Fedora may put it in /usr/include/ctl)
+	CTLGEOM_H_CPPFLAG=""
+	AC_CHECK_HEADER(ctlgeom.h, [CTLGEOM_H_CPPFLAG=" "], [
+	  save_CPPFLAGS=$CPPFLAGS
+	  AC_MSG_CHECKING([for alternate ctlgeom.h location])
+	  for ctl_h_path in /usr/include/ctl /usr/local/include/ctl; do
+	     CPPFLAGS="$save_CPPFLAGS -I$ctl_h_path"
+	     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <ctlgeom.h>]],[])], [CTLGEOM_H_CPPFLAG=-I$ctl_h_path; break])
+	  done
+	  AC_MSG_RESULT([$CTLGEOM_H_CPPFLAG])
+	  CPPFLAGS="$save_CPPFLAGS"])
+	if test "x$CTLGEOM_H_CPPFLAG" = "x"; then
+	  with_libctlgeom=no
+	fi
+	AC_SUBST(CTLGEOM_H_CPPFLAG)
+fi
+
+if test "x$with_libctlgeom" = xno; then
+	AC_MSG_WARN([Couldn't find libctlgeom, won't build mpb-data])
+fi
+AM_CONDITIONAL(WITH_LIBCTLGEOM, test x"$with_libctlgeom" = "xyes")
+
 ##############################################################################
 # check for nlopt library
 
