@@ -23,8 +23,8 @@ nodist_pkgdata_DATA = $(SPECIFICATION_FILE)
 MY_SOURCES = medium.c epsilon_file.c field-smob.c fields.c	\
 material_grid.c material_grid_opt.c matrix-smob.c mpb.c field-smob.h matrix-smob.h mpb.h my-smob.h
 
-MY_LIBS = $(top_builddir)/src/matrixio/libmatrixio.a $(top_builddir)/src/libmpb@MPB_SUFFIX@.la $(NLOPT_LIB)
-MY_CPPFLAGS = -I$(top_srcdir)/src/util -I$(top_srcdir)/src/matrices -I$(top_srcdir)/src/matrixio -I$(top_srcdir)/src/maxwell
+MY_LIBS = $(top_builddir)/src/matrixio/libmatrixio.a $(top_builddir)/src/libmpb@MPB_SUFFIX@.la $(NLOPT_LIB) -lctl $(GUILE_LIBS)
+MY_CPPFLAGS = $(GUILE_CPPFLAGS) -I$(top_srcdir)/src/util -I$(top_srcdir)/src/matrices -I$(top_srcdir)/src/matrixio -I$(top_srcdir)/src/maxwell
 MY_DEFS = -DHAVE_CTL_HOOKS=1 -DHAVE_CTL_EXPORT_HOOK=1
 
 # what is printed out when invoking your program with --version:
@@ -67,7 +67,7 @@ nodist_mpb@MPB_SUFFIX@_SOURCES = main.c geom.c ctl-io.h ctl-io.c
 BUILT_SOURCES = $(nodist_mpb@MPB_SUFFIX@_SOURCES) mu.c
 mpb@MPB_SUFFIX@_LDADD = $(MY_LIBS)
 mpb@MPB_SUFFIX@_LDFLAGS = $(MY_LDFLAGS)
-mpb@MPB_SUFFIX@_CPPFLAGS = $(MY_CPPFLAGS) $(MY_DEFS) $(CTL_DEFS)  $(CTL_H_CPPFLAG)
+mpb@MPB_SUFFIX@_CPPFLAGS = $(CTL_H_CPPFLAG) $(MY_CPPFLAGS) $(MY_DEFS) $(CTL_DEFS)
 
 if MAINTAINER_MODE
 

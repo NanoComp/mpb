@@ -271,7 +271,22 @@ if test "$ok" = "yes"; then
 fi
 
 ##############################################################################
+
+AC_ARG_WITH(libctl, [AC_HELP_STRING([--with-libctl=<dir>],[specify libctl directory])], with_libctl=$withval, with_libctl=yes)
+if test "x$with_libctl" != "xyes" -a "x$with_libctl" != "xno"; then
+	LIBCTL_DIR="$with_libctl"
+	with_libctl=yes
+fi
+
+AM_CONDITIONAL(WITH_LIBCTL, test "x$with_libctl" != xno)
+
+##############################################################################
 # Check for Guile library and flags:
+
+if test "x$with_libctl" != xno; then
+
+save_LIBS=$LIBS
+save_CPPFLAGS=$CPPFLAGS
 
 AC_CHECK_PROG(guile_ok, guile, yes, no)
 if test x"$guile_ok" = xno; then
@@ -286,9 +301,12 @@ if test "x$GUILE_CONFIG" = "xunknown"; then
         AC_CHECK_LIB(guile, gh_eval_str, [],
                      [AC_CHECK_LIB(guile, scm_eval_string, [],
 		         [AC_MSG_ERROR([linking to guile failed])])])
+		GUILE_LIBS="-lguile -lguile-ltdl -ldl -lreadline"
 else
-        CPPFLAGS="$CPPFLAGS `$GUILE_CONFIG compile`"
-        LIBS="`$GUILE_CONFIG link` $LIBS"
+	GUILE_LIBS=`$GUILE_CONFIG link`
+	GUILE_CPPFLAGS=`$GUILE_CONFIG compile`
+	CPPFLAGS="$CPPFLAGS $GUILE_CPPFLAGS"
+	LIBS="$GUILE_LIBS $LIBS"
 	AC_MSG_CHECKING([if linking to guile works])
 	AC_TRY_LINK_FUNC(gh_enter, AC_MSG_RESULT(yes),
  	  [AC_TRY_LINK_FUNC(scm_boot_guile, AC_MSG_RESULT(yes),
@@ -361,16 +379,23 @@ else
 fi
 fi
 AC_SUBST(ACTIVATE_READLINE)
+AC_SUBST(GUILE_LIBS)
+AC_SUBST(GUILE_CPPFLAGS)
+
+LIBS=$save_LIBS
+CPPFLAGS=$save_CPPFLAGS
+
+fi # with_libctl
 
 ##############################################################################
 # Check for libctl library and files
 
-AC_ARG_WITH(libctl, [AC_HELP_STRING([--with-libctl=<dir>],[specify libctl directory])], ok=$withval, ok=yes)
-if test "$ok" = "no"; then
-        AC_MSG_ERROR([libctl is required and you may not disable it])
-elif test "$ok" != "yes"; then
-	LIBCTL_DIR="$ok"
-fi
+if test "x$with_libctl" != xno; then
+
+save_LIBS=$LIBS
+save_CPPFLAGS=$CPPFLAGS
+LIBS="$GUILE_LIBS $LIBS"
+CPPFLAGS="$CPPFLAGS $GUILE_CPPFLAGS"
 
 AC_MSG_CHECKING([for libctl dir])
 if test x != x"$LIBCTL_DIR" -a ! -r "$LIBCTL_DIR/base/ctl.scm"; then
@@ -380,10 +405,10 @@ if test x = x"$LIBCTL_DIR" -a -r /usr/local/share/libctl/base/ctl.scm; then
 	LIBCTL_DIR="/usr/local/share/libctl"
 fi
 if test x = x"$LIBCTL_DIR" -a -r /usr/share/libctl3/base/ctl.scm; then
-        LIBCTL_DIR="/usr/share/libctl3"
+	LIBCTL_DIR="/usr/share/libctl3"
 fi
 if test x = x"$LIBCTL_DIR" -a -r /usr/share/libctl/base/ctl.scm; then
-        LIBCTL_DIR="/usr/share/libctl"
+	LIBCTL_DIR="/usr/share/libctl"
 fi
 if test x = x"$LIBCTL_DIR"; then
 	AC_MSG_ERROR([could not find libctl files; use --with-libctl=<dir>])
@@ -434,8 +459,10 @@ else
    AC_MSG_RESULT(no)
 fi
 
-# On IRIX, basename/dirname functions in libctl/main.c require -lgen
-AC_CHECK_LIB(gen, basename)
+LIBS=$save_LIBS
+CPPFLAGS=$save_CPPFLAGS
+
+fi # with_libctl
 
 ##############################################################################
 # check for nlopt library
@@ -496,12 +523,16 @@ AC_SUBST(EIGS_FLAGS_SCM)
 
 ##############################################################################
 
+if test "x$with_libctl" != xno; then
+
 # Find a shell that supports job control, for mpb-split:
 AC_PATH_PROG(SH_JOB, bash ksh ash, sh)
 
 if test x"$SH_JOB" = xsh; then
 	AC_MSG_WARN([Couldn't find bash or ksh shell on your system.  The mpb-split command may not work if your sh doesn't support job control.])
 fi
+
+fi # with_libctl
 
 ##############################################################################
 # The following function is used only for debugging.  Note that

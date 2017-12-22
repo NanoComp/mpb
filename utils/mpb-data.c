@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <math.h>
 
-#include <ctl.h>
+#include <ctlgeom.h>
 
 #include "config.h"
 
@@ -85,15 +85,15 @@ void add_cmplx_times_phase(real *sum_re, real *sum_im,
 #define MAX2(a,b) ((a) >= (b) ? (a) : (b))
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
 
-void map_data(real *d_in_re, real *d_in_im, int n_in[3], 
-	      real *d_out_re, real *d_out_im, int n_out[3], 
+void map_data(real *d_in_re, real *d_in_im, int n_in[3],
+	      real *d_out_re, real *d_out_im, int n_out[3],
 	      matrix3x3 coord_map,
 	      real *kvector,
 	      short pick_nearest, short transpose)
 {
      int i, j, k;
      real s[3]; /* phase difference per cell in each lattice direction */
-     real min_out_re = 1e20, max_out_re = -1e20, 
+     real min_out_re = 1e20, max_out_re = -1e20,
 	  min_out_im = 1e20, max_out_im = -1e20;
      real shiftx, shifty, shiftz;
 
@@ -137,7 +137,7 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 			 ijk = (j * n_out[0] + i) * n_out[2] + k;
 		    else
 			 ijk = (i * n_out[1] + j) * n_out[2] + k;
-		    
+
 		    /* find the point corresponding to d_out[i,j,k] in
 		       the input array, and also find the next-nearest
 		       points. */
@@ -170,7 +170,7 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
 		    mdx = 1.0 - dx;
 		    mdy = 1.0 - dy;
 		    mdz = 1.0 - dz;
-		    
+
 		    /* Now, linearly interpolate the input to get the
 		       output.  If the input/output are complex, we
 		       also need to multiply by the appropriate phase
@@ -246,10 +246,10 @@ void map_data(real *d_in_re, real *d_in_im, int n_in[3],
      }
 }
 
-void handle_dataset(matrixio_id in_file, matrixio_id out_file, 
+void handle_dataset(matrixio_id in_file, matrixio_id out_file,
 		    const char *name_re, const char *name_im,
 		    matrix3x3 Rout, matrix3x3 coord_map,
-		    real *kvector, double resolution, 
+		    real *kvector, double resolution,
 		    scalar_complex scaleby, real multiply_size[3],
 		    int pick_nearest, int transpose)
 {
@@ -276,7 +276,7 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
 		       name_re, name_im);
 	       goto done;
 	  }
-	  
+
 	  for (i = 0; i < 3; ++i) {
 	       CHECK(out_dims[i] == in_dims[i],
 		     "re/im datasets must have same size!");
@@ -369,13 +369,13 @@ void handle_dataset(matrixio_id in_file, matrixio_id out_file,
      free(d_out_im);
 }
 
-void handle_cvector_dataset(matrixio_id in_file, matrixio_id out_file, 
+void handle_cvector_dataset(matrixio_id in_file, matrixio_id out_file,
 			    matrix3x3 Rout,
 			    matrix3x3 coord_map,
 			    matrix3x3 cart_map,
-			    real *kvector, 
-			    double resolution, 
-			    scalar_complex scaleby, 
+			    real *kvector,
+			    double resolution,
+			    scalar_complex scaleby,
 			    real multiply_size[3],
 			    int pick_nearest, int transpose)
 {
@@ -392,7 +392,7 @@ void handle_cvector_dataset(matrixio_id in_file, matrixio_id out_file,
 
 	       nam[0] = 'x' + dim;
 	       nam[2] = ri ? 'i' : 'r';
-	       d_in[dim][ri] 
+	       d_in[dim][ri]
 		    = matrixio_read_real_data(in_file, nam, &rnk, dims,
 					      0, 0, 0, NULL);
 	       if (!d_in[dim][ri])
@@ -472,7 +472,7 @@ void handle_cvector_dataset(matrixio_id in_file, matrixio_id out_file,
 	  CHK_MALLOC(d_out_re, real, N);
 	  CHK_MALLOC(d_out_im, real, N);
 
-	  map_data(d_in[dim][0], d_in[dim][1], in_dims, 
+	  map_data(d_in[dim][0], d_in[dim][1], in_dims,
 		   d_out_re, d_out_im, out_dims,
 		   coord_map, kvector, pick_nearest, transpose);
 
@@ -533,7 +533,7 @@ void handle_cvector_dataset(matrixio_id in_file, matrixio_id out_file,
 
 void handle_file(const char *fname, const char *out_fname,
 		 const char *data_name,
-		 int rectify,  int have_ve, vector3 ve, double resolution, 
+		 int rectify,  int have_ve, vector3 ve, double resolution,
 		 scalar_complex scaleby, real multiply_size[3],
 		 int pick_nearest, int transpose)
 {
@@ -544,18 +544,18 @@ void handle_file(const char *fname, const char *out_fname,
      matrix3x3 cart_map = {{1,0,0},{0,1,0},{0,0,1}};
 #define NUM_DATANAMES 13
      char datanames[NUM_DATANAMES][30] = {
-	  "data", 
-	  "epsilon.xx", 
-	  "epsilon.xy", 
-	  "epsilon.xz", 
-	  "epsilon.yy", 
-	  "epsilon.yz", 
-	  "epsilon.zz", 
-	  "epsilon_inverse.xx", 
-	  "epsilon_inverse.xy", 
-	  "epsilon_inverse.xz", 
-	  "epsilon_inverse.yy", 
-	  "epsilon_inverse.yz", 
+	  "data",
+	  "epsilon.xx",
+	  "epsilon.xy",
+	  "epsilon.xz",
+	  "epsilon.yy",
+	  "epsilon.yz",
+	  "epsilon.zz",
+	  "epsilon_inverse.xx",
+	  "epsilon_inverse.xy",
+	  "epsilon_inverse.xz",
+	  "epsilon_inverse.yy",
+	  "epsilon_inverse.yz",
 	  "epsilon_inverse.zz"
      };
      int i;
@@ -587,7 +587,7 @@ void handle_file(const char *fname, const char *out_fname,
      else if (verbose)
 	  printf("Read Bloch wavevector (%g, %g, %g)\n",
 		 kvector[0], kvector[1], kvector[2]);
-     
+
      copies = matrixio_read_data_attr(in_file, "lattice copies",
 				      &rank, 1, dims);
      if (copies && rank == 1 && dims[0] == 3) {
@@ -639,13 +639,13 @@ void handle_file(const char *fname, const char *out_fname,
 								Rout.c2),
 						  ve),
 				  ve);
-	  
+
 	  /* Now, orthogonalize c1 and c2: */
-	  Rout.c1 = vector3_minus(Rout.c1, 
+	  Rout.c1 = vector3_minus(Rout.c1,
 				  vector3_scale(vector3_dot(ve, Rout.c1), ve));
-	  Rout.c2 = vector3_minus(Rout.c2, 
+	  Rout.c2 = vector3_minus(Rout.c2,
 				  vector3_scale(vector3_dot(ve, Rout.c2), ve));
-	  Rout.c2 = vector3_minus(Rout.c2, 
+	  Rout.c2 = vector3_minus(Rout.c2,
 				vector3_scale(vector3_dot(Rout.c1, Rout.c2) /
 					      vector3_dot(Rout.c1, Rout.c1),
 					      Rout.c1));
@@ -714,7 +714,7 @@ void handle_file(const char *fname, const char *out_fname,
      handle_cvector_dataset(in_file, out_file,
 			    Rout, coord_map, cart_map, kvector, resolution,
 			    scaleby, multiply_size, pick_nearest, transpose);
-     
+
      free(kvector);
 
      matrixio_close(in_file);
@@ -846,7 +846,7 @@ int main(int argc, char **argv)
                    break;
 	      case 'e':
 		   have_ve = 1;
-		   if (3 != sscanf(optarg, "%lf,%lf,%lf", 
+		   if (3 != sscanf(optarg, "%lf,%lf,%lf",
 				   &ve.x, &ve.y, &ve.z)) {
 			fprintf(stderr,
 				"Invalid -e argument \"%s\"\n", optarg);
@@ -868,21 +868,21 @@ int main(int argc, char **argv)
           return EXIT_FAILURE;
      }
 
-     CASSIGN_SCALAR(phase, 
+     CASSIGN_SCALAR(phase,
 		    cos(TWOPI * phaseangle / 360.0),
 		    sin(TWOPI * phaseangle / 360.0));
      CASSIGN_MULT(scaleby, scaleby, phase);
-     
+
      for (ifile = optind; ifile < argc; ++ifile) {
 	  char *dname, *h5_fname;
           h5_fname = split_fname(argv[ifile], &dname);
 	  if (!dname[0])
                dname = data_name;
 
-	  handle_file(h5_fname, out_fname, dname, 
-		      rectify, have_ve, ve, resolution, 
+	  handle_file(h5_fname, out_fname, dname,
+		      rectify, have_ve, ve, resolution,
 		      scaleby, multiply_size, pick_nearest, transpose);
-	  
+
 	  if (out_fname)
                free(out_fname);
           out_fname = NULL;

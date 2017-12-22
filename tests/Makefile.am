@@ -18,6 +18,7 @@ maxwell_test_LDADD = $(LIBMPB)
 
 normal_vectors_SOURCES = normal_vectors.c
 normal_vectors_LDADD = -lctlgeom $(LIBMPB)
+normal_vectors_CPPFLAGS = $(CTL_H_CPPFLAG) $(AM_CPPFLAGS)
 
 blastest.out: blastest
 	./blastest | sed 's/\-0\.000\([ ,)]\)/ 0.000\1/g' | sed 's/\-0\.000$$/ 0.000/g' > $@
