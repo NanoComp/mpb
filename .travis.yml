@@ -31,7 +31,7 @@ matrix:
       script:
         - git clone https://github.com/stevengj/libctl
         - (cd libctl && git checkout master && sh autogen.sh --prefix=$HOME/local && make && make install)
-        - sh autogen.sh --prefix=$HOME/local --with-hermitian-eps
+        - sh autogen.sh --prefix=$HOME/local --with-hermitian-eps --with-libctl=$HOME/local/share/libctl GEN_CTL_IO=$HOME/local/bin/gen-ctl-io CPPFLAGS=-I$HOME/local/include LDFLAGS=-L$HOME/local/lib
         - make && make check && make install
-        - ./configure --prefix=$HOME/local --with-inv-symmetry
+        - ./configure --prefix=$HOME/local --with-inv-symmetry --with-libctl=$HOME/local/share/libctl GEN_CTL_IO=$HOME/local/bin/gen-ctl-io CPPFLAGS=-I$HOME/local/include LDFLAGS=-L$HOME/local/lib
         - make && make check && make install
