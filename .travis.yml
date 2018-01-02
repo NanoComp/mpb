@@ -19,16 +19,19 @@ matrix:
           - git
       script:
         - git clone https://github.com/stevengj/libctl
-        - (cd libctl && git checkout 7d51710e63952d343ce8f241cf92b5cbfd5f1ada && sh autogen.sh --prefix=$HOME/local && make && make install)
+        - (cd libctl && git checkout master && sh autogen.sh --prefix=$HOME/local && make && make install)
         - sh autogen.sh --enable-maintainer-mode --prefix=$HOME/local --with-libctl=$HOME/local/share/libctl GEN_CTL_IO=$HOME/local/bin/gen-ctl-io CPPFLAGS=-I$HOME/local/include LDFLAGS=-L$HOME/local/lib
         - make && make check && make install
     - os: osx
       install:
         - brew tap homebrew/science
         - brew update
-        - brew install guile fftw lapack libctl
+        - brew cask uninstall oclint # travis issue #8826
+        - brew install guile fftw lapack
       script:
-        - sh autogen.sh --prefix=$HOME/local --with-hermitian-eps
+        - git clone https://github.com/stevengj/libctl
+        - (cd libctl && git checkout master && sh autogen.sh --prefix=$HOME/local && make && make install)
+        - sh autogen.sh --prefix=$HOME/local --with-hermitian-eps --with-libctl=$HOME/local/share/libctl GEN_CTL_IO=$HOME/local/bin/gen-ctl-io CPPFLAGS=-I$HOME/local/include LDFLAGS=-L$HOME/local/lib
         - make && make check && make install
-        - ./configure --prefix=$HOME/local --with-inv-symmetry
+        - ./configure --prefix=$HOME/local --with-inv-symmetry --with-libctl=$HOME/local/share/libctl GEN_CTL_IO=$HOME/local/bin/gen-ctl-io CPPFLAGS=-I$HOME/local/include LDFLAGS=-L$HOME/local/lib
         - make && make check && make install
