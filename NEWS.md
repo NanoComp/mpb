@@ -9,6 +9,8 @@ To be released January 2018.
   * Support for magnetic materials (mu) via `mu`/`mu-diag`/`mu-offdiag`
     material properties (thanks to Ling Lu).
 
+  * libmpb (for use in Meep) can now be built without Guile.
+
   * `sqmatrix-diagm` and `sqmatrix-eigvals` functions (thanks to Ling Lu).
 
   * Migrated documentation to github/markdown/readthedocs (#22).
