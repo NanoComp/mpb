@@ -8,7 +8,6 @@
 #include <sphere-quad.h>
 
 #include <maxwell.h>
-#include <ctl.h>
 #include <ctlgeom.h>
 
 /* return a random number in [0,1]: */
@@ -141,7 +140,7 @@ geometric_object random_object(void)
 			    random_unit_vector3(), myurand(0.5,1.5));
 	      break;
 	 case 3:
-	      o = make_block(m, c, 
+	      o = make_block(m, c,
 			     random_unit_vector3(),
 			     random_unit_vector3(),
 			     random_unit_vector3(),
@@ -150,7 +149,7 @@ geometric_object random_object(void)
 					  myurand(0.5,1.5)));
 	      break;
 	 case 4:
-	      o = make_ellipsoid(m, c, 
+	      o = make_ellipsoid(m, c,
 				 random_unit_vector3(),
 				 random_unit_vector3(),
 				 random_unit_vector3(),
@@ -173,7 +172,7 @@ int main(void)
 
      printf("Testing spherical quadratures for normals to %d surfaces.\n\n",
 	    NUM_PLANES);
-     
+
      /* compute the minimum angle between pairs of points: */
      for (i = 0; i < num_sphere_quad[2]; ++i)
 	  for (j = i + 1; j < num_sphere_quad[2]; ++j) {
@@ -191,14 +190,14 @@ int main(void)
 	  }
      printf("%d-point formula: minimum angle is %g degrees.\n",
 	    num_sphere_quad[2], min_angle);
-     
+
 	  /* Normals to planes: */
      err_mean = err_std = err_max = 0.0;
      missed = 0;
      for (i = 0; i < NUM_PLANES; ++i) {
 	  vector3 n, nsum = {0,0,0};
 	  double d;
-	  
+
 	  n = random_unit_vector3();
 	  d = mydrand();
 	  for (j = 0; j < num_sphere_quad[2]; ++j) {
@@ -225,13 +224,13 @@ int main(void)
 	       err_std += i*(i+1) * dev*dev;
 	  }
      }
-     err_std = sqrt(err_std / (NUM_PLANES - 1));	  
+     err_std = sqrt(err_std / (NUM_PLANES - 1));
      printf("planes: mean error angle for %d-pt formula = "
-	    "%g +/- %g degrees, max error = %g degrees\n", 
+	    "%g +/- %g degrees, max error = %g degrees\n",
 	    num_sphere_quad[2], err_mean, err_std, err_max);
-     printf("(Fraction missed = %g)\n", 
+     printf("(Fraction missed = %g)\n",
 	    missed * 1.0 / (NUM_PLANES + missed));
-     
+
      /* Normals to spheres: */
      err_mean = err_std = 0.0;
      missed=0;
@@ -239,7 +238,7 @@ int main(void)
 	  vector3 n, nsum = {0,0,0}, c;
 	  double r, d;
 	  int j;
-	  
+
 	  n = random_unit_vector3();
 	  d = mydrand() * 0.8 + 0.1;
 	  r = 1.0 + mydrand() * 10; /* radius of the sphere */
@@ -268,18 +267,18 @@ int main(void)
 	       err_std += i*(i+1) * dev*dev;
 	  }
      }
-     err_std = sqrt(err_std / (NUM_PLANES - 1));	  
+     err_std = sqrt(err_std / (NUM_PLANES - 1));
      printf("spheres: mean error angle for %d-pt formula = "
-	    "%g +/- %g degrees, max error = %g degrees\n", 
+	    "%g +/- %g degrees, max error = %g degrees\n",
 	    num_sphere_quad[2], err_mean, err_std, err_max);
 
      printf("\n");
-     
+
      for (i = 0; i < NUM_OBJECTS; ++i) {
 	  geometric_object o = random_object();
 	  normals_to_object(o, 0.01, NUM_PLANES/100);
 	  geometric_object_destroy(o);
      }
-     
+
      return EXIT_SUCCESS;
 }
