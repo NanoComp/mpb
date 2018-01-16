@@ -1,4 +1,21 @@
-MPB 1.5 (4/2/2014)
+# MPB Release Notes
+
+## MPB 1.6-dev
+
+To be released January 2018.
+
+  * Support for Guile 2.2.
+
+  * Support for magnetic materials (mu) via `mu`/`mu-diag`/`mu-offdiag`
+    material properties (thanks to Ling Lu).
+
+  * `sqmatrix-diagm` and `sqmatrix-eigvals` functions (thanks to Ling Lu).
+
+  * Migrated documentation to github/markdown/readthedocs (#22).
+
+## MPB 1.5
+
+4/2/2014.
 
   * MPB now also installs a library, for use from within Meep 1.2 or later.
 
@@ -57,12 +74,14 @@ MPB 1.5 (4/2/2014)
 
   * Miscellaneous bug fixes.
 
-MPB 1.4.2 (3/3/2003)
+## MPB 1.4.2
 
-  * Interactive prompt is now "mpb>" not "guile>".
+3/3/2003.
 
-  * Output "freqs:" line lists headings as "k1, k2, k3" instead of
-    "kx, ky, kz" since they are in reciprocal-lattice, not cartesian,
+  * Interactive prompt is now `mpb>` not `guile>`.
+
+  * Output `freqs:` line lists headings as `k1, k2, k3` instead of
+    `kx, ky, kz` since they are in reciprocal-lattice, not cartesian,
     coordinates.  Thanks to Theis Peter Hanson for the suggestion.
 
   * Bug fix in find-k for non-orthogonal lattices; thanks to Suxia
@@ -77,7 +96,9 @@ MPB 1.4.2 (3/3/2003)
   * Fixed find-k to work for thunk band functions (which take no arguments
     and are called only once instead of per-band).
 
-MPB 1.4.1 (9/16/2002)
+## MPB 1.4.1
+
+9/16/2002.
 
   * Fixed NaN in field normalization when basis determinant was negative.
     Thanks to Rumen Iliew for the bug report.
@@ -88,7 +109,9 @@ MPB 1.4.1 (9/16/2002)
   * Don't resize lattice basis for grid-size == 1 unless no-size was
     explicitly specified; thanks to Tairan Wang for the suggestion.
 
-MPB 1.4 (9/12/2002)
+## MPB 1.4
+
+9/12/2002.
 
   * New find-k routine to find k as a function of frequency, instead of
     vice-versa.
@@ -121,7 +144,9 @@ MPB 1.4 (9/12/2002)
 
   * Minor installation fixes.
 
-MPB 1.3 (3/10/2002)
+## MPB 1.3
+
+3/10/2002.
 
   * You can now specify the grid size via the resolution input variable,
     instead of via grid-size.  In this case, you make e.g. a 2d simulation
@@ -160,7 +185,9 @@ MPB 1.3 (3/10/2002)
 
   * Use new API from libctl 2.0.
 
-MPB 1.2.2 (12/7/2001)
+## MPB 1.2.2
+
+12/7/2001.
 
   * Fixed bug that caused erroneous/failed convergence when EVEN-Y/ODD-Y
     constraints were used in three dimensions.  Thanks to Rumen Iliew
@@ -168,11 +195,15 @@ MPB 1.2.2 (12/7/2001)
 
   * Added convenience functions run-yeven, run-yodd, run-yeven-zeven, ...
 
-MPB 1.2.1 (11/20/2001)
+## MPB 1.2.1
+
+11/20/2001.
 
   * Fixed serious crashing bug in 1.2; thanks to Karl Koch for the bug report.
 
-MPB 1.2 (11/15/2001)
+## MPB 1.2
+
+11/15/2001.
 
   * Added new y-parity computation and constraints.  See the new
     run-parity function, which allows you to simultaneously specify
@@ -218,7 +249,9 @@ MPB 1.2 (11/15/2001)
     a 2d triangular lattice of dielectric rods, formed by a missing
     row of rods.
 
-MPB 1.1.1 (7/4/2001)
+## MPB 1.1.1
+
+7/4/2001.
 
   * Fixed bug in H-field output that caused subtly incorrect H-field
     files (only) for 3d problems when NOT using mpbi.
@@ -239,7 +272,9 @@ MPB 1.1.1 (7/4/2001)
     can set the CFLAGS environment variable.)  Thanks to
     Giridhar Malalahalli for the bug report.
 
-MPB 1.1 (5/6/2001)
+## MPB 1.1
+
+5/6/2001.
 
   * Added compute-energy-integral function to make it easier to compute
     arbitrary field-energy integrals for perturbation theory; thanks to
@@ -250,7 +285,9 @@ MPB 1.1 (5/6/2001)
     phase with a k in the wrong direction.  Thanks to Jesper Riishede
     for the bug report.
 
-MPB 1.0 (2/23/2001)
+## MPB 1.0
+
+2/23/2001.
 
   * At long last, support for distributed-memory parallel machines
     with MPI.  The computation time (and memory usage) can often improve
@@ -278,7 +315,7 @@ MPB 1.0 (2/23/2001)
   * Eliminated output-copies input variable; if you want to visualize
     multiple unit cells, you should use mpb-data.
 
-  * Added new "nothing" material that punches a hole through other
+  * Added new `nothing` material that punches a hole through other
     objects to the background.  (This is distinct from default-material
     when epsilon-input-file is used, or for compute-energy-in-objects.)
 
@@ -304,12 +341,14 @@ MPB 1.0 (2/23/2001)
     a crash on the Alpha; thanks to Dominique Caron for the bug report
     and debugging information.
 
-MPB 0.13 (1/7/2001)
+## MPB 0.13
+
+1/7/2001.
 
   * Can now take advantage of inversion symmetry in the geometry, gaining
     at least a factor of two in speed and a factor of two in memory.
     To use this, you configure MPB with --with-inv-symmetry; the resulting
-    executable is installed as "mpbi" and only supports inversion symmetry,
+    executable is installed as `mpbi` and only supports inversion symmetry,
     so you will usually want to install the ordinary MPB as well.
 
   * Added new eigensolver-block-size input variable, so that MPB can
@@ -348,7 +387,9 @@ MPB 0.13 (1/7/2001)
     somewhat at lower grid resolutions.  Thanks to Doug Allan for
     helpful discussions.
 
-MPB 0.12 (7/9/2000)
+## MPB 0.12
+
+7/9/2000.
 
   * Added fix-*field-phase functions to allow a deterministic phase
     in the output fields, thanks to a suggestion by Doug Allan.
@@ -388,7 +429,9 @@ MPB 0.12 (7/9/2000)
   * Bug fix in dielectric function construction for 2d systems: we
     now use the xy plane at z=0 as documented, instead of z=-0.5.
 
-MPB 0.11 (2/12/2000)
+## MPB 0.11
+
+2/12/2000.
 
   * configure script can now detect and link ATLAS 3.0 accelerated BLAS.
 
@@ -405,7 +448,9 @@ MPB 0.11 (2/12/2000)
   * Fixed compilation --without-hdf5, or when HDF5 is not found.  Thanks
     to Rajesh Rengarajan for the bug report.
 
-MPB 0.10 (1/28/2000)
+## MPB 0.10
+
+1/28/2000.
 
   * Added mpb-data utility for post-processing data (e.g. for unskewing
     non-orthogonal lattices).  See the data analysis tutorial or
@@ -444,7 +489,9 @@ MPB 0.10 (1/28/2000)
     some systems.  Also added rule to insure ctl-io.h is created before
     main.c is compiled.  Thanks to Christoph Becher for the bug reports.
 
-MPB 0.9.1 (1/7/2000)
+## MPB 0.9.1
+
+1/7/2000.
 
   * Fixed eigensolver bug where special handling of Gamma (k=0) point could
     screw up convergence for subsequent k-points, causing incorrect results.
@@ -452,7 +499,9 @@ MPB 0.9.1 (1/7/2000)
   * Fixed behavior of filename-prefix input variable; thanks to Karl Koch
     for the bug report.
 
-MPB 0.9 (1/2/2000)
+## MPB 0.9
+
+1/2/2000.
 
   * Added run-even and run-odd functions, so you can now compute only
     even/odd states (with respect to a z=0 mirror plane) in systems with
@@ -461,7 +510,7 @@ MPB 0.9 (1/2/2000)
   * Added epsilon-input-file variable, so that you can now read an
     arbitrary dielectric function from a file.
 
-  * Field file names now include the polarization (e.g. ".tm").
+  * Field file names now include the polarization (e.g. `.tm`).
 
   * Some optimizations in the eigensolver.
 
@@ -474,10 +523,12 @@ MPB 0.9 (1/2/2000)
   * Fixed problems detecting BLAS and LAPACK shared libraries in configure.
     Thanks to Karri Varris for the bug report.
 
-  * Fixed trailing spaces in sed command, which were breaking 'make install'
+  * Fixed trailing spaces in sed command, which were breaking `make install`
     on some systems.  Thanks to Ron Chase for the bug report.
 
-MPB 0.8.1 (11/22/1999)
+## MPB 0.8.1
+
+11/22/1999.
 
   * Added output-hfield-x, output-dfield-y, etcetera, functions for
     outputting only specific field components (see manual reference section).
@@ -487,6 +538,8 @@ MPB 0.8.1 (11/22/1999)
   * Added output-copies variable to set the number of periods output by
     the band output functions (see manual reference section).
 
-MPB 0.8 (11/19/1999)
+## MPB 0.8
+
+11/19/1999.
 
   * Initial public release.
