@@ -241,7 +241,7 @@ Attempt to compile a shared-memory parallel version of MPB using OpenMP. The res
 
 **`--with-libctl=dir`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-If libctl was installed in a nonstandard location (i.e. neither `/usr` nor `/usr/local`), you need to specify the location of the libctl directory, `dir`. This is either `prefix/share/libctl`, where `prefix` is the installation prefix of libctl, or the original libctl source code directory.
+If libctl was installed in a nonstandard location (i.e. neither `/usr` nor `/usr/local`), you need to specify the location of the libctl directory, `dir`. This is either `prefix/share/libctl`, where `prefix` is the installation prefix of libctl, or the original libctl source code directory.   If you instead pass `--without-libctl`, then *only* the `libmpb` library (for use e.g. by Meep) is built, not the `mpb` executable; this is useful for people building Meep without Guile.
 
 **`--with-blas=lib`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
