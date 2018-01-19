@@ -4,13 +4,13 @@
 
 The latest development sources are available on [GitHub](https://github.com/stevengj/mpb).
 
-The latest release of MPB is **version 1.5** which can be downloaded from:
+The latest release of MPB is **version 1.6.1** which can be downloaded from:
 
-- <http://ab-initio.mit.edu/mpb/mpb-1.5.tar.gz>
+- <https://github.com/stevengj/mpb/releases/download/v1.6.1/mpb-1.6.1.tar.gz>
 
-Older releases may be found at <http://ab-initio.mit.edu/mpb/old>
+Older releases may be found at [the releases page](https://github.com/stevengj/mpb/releases)
 
-MPB is free software under the [GNU GPL](License_and_Copyright.md).
+MPB is free software under the [GNU GPL](License_and_Copyright.md) version 2 or later.
 
 Refer to the [NEWS file](https://github.com/stevengj/mpb/blob/master/NEWS.md) to see what's new in this version, and be sure to read the [Installation manual](Installation.md) for how to compile and install it.
 
