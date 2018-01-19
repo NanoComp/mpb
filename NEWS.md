@@ -1,5 +1,11 @@
 # MPB Release Notes
 
+## MPB 1.6.1
+
+1/18/2018
+
+  * Corrected some minor release glitches.
+
 ## MPB 1.6
 
 1/18/2018

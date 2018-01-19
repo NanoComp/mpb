@@ -11,5 +11,6 @@ endif
 
 EXTRA_DIST = COPYRIGHT TODO m4 README.md NEWS.md
 
-dist-hook:
-	git log > $(distdir)/ChangeLog
+# make dist complains about missing NEWS file
+NEWS: NEWS.md
+	cp NEWS.md $@
