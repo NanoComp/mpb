@@ -1,8 +1,8 @@
 # MPB Release Notes
 
-## MPB 1.6-dev
+## MPB 1.6
 
-To be released January 2018.
+1/18/2018
 
   * Support for Guile 2.2.
 

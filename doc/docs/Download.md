@@ -12,7 +12,7 @@ Older releases may be found at <http://ab-initio.mit.edu/mpb/old>
 
 MPB is free software under the [GNU GPL](License_and_Copyright.md).
 
-Refer to the [Release Notes](Release_Notes.md) to see what's new in this version, and be sure to read the [Installation manual](Installation.md) for how to compile and install it.
+Refer to the [NEWS file](https://github.com/stevengj/mpb/blob/master/NEWS.md) to see what's new in this version, and be sure to read the [Installation manual](Installation.md) for how to compile and install it.
 
 Please subscribe to the **mpb-announce** mailing list to receive notifications when new versions are released:
 

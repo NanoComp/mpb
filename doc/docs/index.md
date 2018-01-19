@@ -24,7 +24,7 @@ To give you some feel for how long these calculations take, let us consider one 
 Download
 ------------
 
-The latest development sources are available on [GitHub](https://github.com/stevengj/mpb). The source tarballs are available on the [Download](Download.md) page. The release history is described in the [Release Notes](Release_Notes.md). The installation instructions can be found in the [Installation](Installation.md) page.
+The latest development sources are available on [GitHub](https://github.com/stevengj/mpb). The source tarballs are available on the [Download](Download.md) page. The release history is described in the [NEWS file](https://github.com/stevengj/mpb/blob/master/NEWS.md). The installation instructions can be found in the [Installation](Installation.md) page.
 
 Documentation
 -------------
