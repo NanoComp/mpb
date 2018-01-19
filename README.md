@@ -8,7 +8,9 @@ a complete description of the package and its user interface, as
 well as installation instructions, the license and copyright, and
 other information.
 
-To build MPB from git (on a Unix-like system), do:
+Official MPB releases can be found on the [releases page](https://github.com/stevengj/mpb/releases).  See the [Installation section of the manual](http://mpb.readthedocs.io/en/latest/Installation/) for information.
+
+For developers wishing to hack on the latest version, to build MPB from git (on a Unix-like system), do:
 ```
 git clone git://github.com/stevengj/mpb
 cd mpb
