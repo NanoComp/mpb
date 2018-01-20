@@ -18,7 +18,7 @@ AC_DEFINE_UNQUOTED(MPB_VERSION_MAJOR, [$VERSION_MAJOR], [major version])
 AC_DEFINE_UNQUOTED(MPB_VERSION_MINOR, [$VERSION_MINOR], [minor version])
 AC_DEFINE_UNQUOTED(MPB_VERSION_PATCH, [$VERSION_PATCH], [patch version])
 
-AM_INIT_AUTOMAKE([foreign check-news color-tests parallel-tests silent-rules 1.11])
+AM_INIT_AUTOMAKE([foreign color-tests parallel-tests silent-rules 1.11])
 AM_SILENT_RULES(yes)
 AC_SUBST(SHARED_VERSION_INFO)
 AM_ENABLE_SHARED(no) dnl shared libs cause too many headaches to be default
