@@ -297,22 +297,22 @@ SCM dot_eigenvectors(SCM mo, integer b_start)
          sqmatrix S1 = create_sqmatrix(m->p);
          sqmatrix S2 = create_sqmatrix(m->p);
 
-         for (ib = b_start-1; ib < final_band; ib += Hblock.alloc_p) {
-             if (ib + Hblock.alloc_p > final_band) {
+         for (ib = b_start-1; ib < final_band; ib += W[0].alloc_p) {
+             if (ib + W[0].alloc_p > final_band) {
                  maxwell_set_num_bands(mdata, final_band - ib);
-                 evectmatrix_resize(&Hblock, final_band - ib, 0);
+                 evectmatrix_resize(&W[0], final_band - ib, 0);
              }
-             maxwell_compute_H_from_B(mdata, H, Hblock,
+             maxwell_compute_H_from_B(mdata, H, W[0],
                                       (scalar_complex *) mdata->fft_data,
-                                      ib, 0, Hblock.p);
+                                      ib, 0, W[0].p);
 
-             evectmatrix_XtY_slice2(U, *m, Hblock, 0, 0, m->p, Hblock.p,
+             evectmatrix_XtY_slice2(U, *m, W[0], 0, 0, m->p, W[0].p,
                                     ib-(b_start-1), S1, S2);
          }
 
          /* Reset scratch matrix sizes: */
-         evectmatrix_resize(&Hblock, Hblock.alloc_p, 0);
-         maxwell_set_num_bands(mdata, Hblock.alloc_p);
+         evectmatrix_resize(&W[0], W[0].alloc_p, 0);
+         maxwell_set_num_bands(mdata, W[0].alloc_p);
 
          destroy_sqmatrix(S2);
          destroy_sqmatrix(S1);
