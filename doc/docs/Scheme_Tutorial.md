@@ -2,16 +2,14 @@
 Scheme Tutorial
 ---
 
-In this section, we'll walk through the process of computing the band structure and outputting some fields for a two-dimensional photonic crystal using MPB. This should give you the basic idea of how it works and some of the things that are possible. Here, we tell you the truth, but not the whole truth. The [User Interface](Scheme_User_Interface.md) section gives a more complete, but less colloquial, description of the features supported by Photonic-Bands. See also the [data analysis tutorial](Data_Analysis_Tutorial.md) for more examples, focused on analyzing and visualizing the results of MPB calculations.
+In this section, we'll walk through the process of computing the band structure and outputting some fields for a two-dimensional photonic crystal using the Scheme interface. This should give you the basic idea of how it works and some of the things that are possible. The [User Interface](Scheme_User_Interface.md) section gives a more complete description of the features. See also the [data analysis tutorial](Data_Analysis_Tutorial.md) for more examples, focused on analyzing and visualizing the results of MPB calculations.
 
 [TOC]
 
 The ctl File
 ------------
 
-The use of the MPB revolves around the control file, abbreviated "ctl" and typically called something like `foo.ctl` (although you can use any filename extension you wish). The ctl file specifies the geometry you wish to study, the number of eigenvectors to compute, what to output, and everything else specific to your calculation. Rather than a flat, inflexible file format, however, the ctl file is actually written in a scripting language. This means that it can be everything from a simple sequence of commands setting the geometry, etcetera, to a full-fledged program with user input, loops, and anything else that you might need.
-
-Don't worry, though—simple things are simple and even there you will appreciate the flexibility that a scripting language gives you. (e.g. you can input things in any order, without regard for whitespace, insert comments where you please, omit things when reasonable defaults are available...)
+The use of the MPB revolves around the control file, abbreviated "ctl" and typically called something like `foo.ctl`. The ctl file specifies the geometry you wish to study, the number of eigenvectors to compute, what to output, and everything else specific to your calculation.
 
 The ctl file is actually implemented on top of the libctl library, a set of utilities that are in turn built on top of the Scheme language. Thus, there are three sources of possible commands and syntax for a ctl file:
 
@@ -19,9 +17,9 @@ The ctl file is actually implemented on top of the libctl library, a set of util
 -   libctl, a library that we built on top of Guile to simplify communication between Scheme and scientific computation software. libctl sets the basic tone of the user interface and defines a number of useful functions. See the [libctl](https://libctl.readthedocs.io) pages.
 -   MPB which defines all the interface features that are specific to photonic band structure calculations. This manual is primarily focused on documenting these features.
 
-It would be an excellent idea at this point for you to go read the [libctl manual](https://libctl.readthedocs.io), particularly the [Basic User Experience](https://libctl.readthedocs.io/en/latest/Libctl_Basic_User_Experience/), which will give you an overview of what the user interface is like, provide a crash course in the Scheme features that are most useful here, and describe some useful general features. We're not going to repeat this material much, so learn it now!
+The [libctl manual](https://libctl.readthedocs.io), particularly the [Basic User Experience](https://libctl.readthedocs.io/en/latest/Libctl_Basic_User_Experience/), provides an overview of what the user interface is like, provides a crash course in the Scheme features that are most useful here, and describes some useful general features.
 
-Okay, let's continue with our tutorial. MPB is normally invoked by running something like:
+MPB is normally invoked by running something like:
 
 ```
 unix% mpb foo.ctl >& foo.out
@@ -32,9 +30,9 @@ which reads the ctl file `foo.ctl` and executes it, saving the output to the fil
 Our First Band Structure
 ------------------------
 
-As our beginning example, we'll compute the band structure of a two-dimensional square lattice of dielectric rods in air. See [our online textbook](http://ab-initio.mit.edu/book), ch. 5. In our control file, we'll first specify the parameters and geometry of the simulation, and then tell it to run and give us the output.
+As our beginning example, we'll compute the band structure of a two-dimensional square lattice of dielectric rods in air. See Chapter 5 of [Photonic Crystals: Molding the Flow of Light (second edition)](http://ab-initio.mit.edu/book). In our control file, we'll first specify the parameters and geometry of the simulation, and then tell it to run and give us the output.
 
-All of the parameters, each of which corresponds to a Scheme variable, have default setting, so we only need to specify the ones we need to change. For a complete listing of the parameter variables and their current values, along with some other info, type `(help)` at the `guile>` prompt. One of the parameters, `num-bands`, controls how many bands (eigenstates) are computed at each k point. If you type `num-bands` at the prompt, it will return the current value, `1`--this is too small; let's set it to a larger value:
+All of the parameters, each of which corresponds to a Scheme variable, have default setting, so we only need to specify the ones we need to change. For a complete listing of the parameter variables and their current values, along with some other info, type `(help)` at the `guile>` prompt. One of the parameters, `num-bands`, controls how many bands (eigenstates) are computed at each k point. If you type `num-bands` at the prompt, it will return the current value, 1 &mdash; this is too small; let's set it to a larger value:
 
 ```
 (set! num-bands 8)
@@ -73,7 +71,7 @@ Now, we want to set the geometry of the system--we need to specify which objects
                        (material (make dielectric (epsilon 12))))))
 ```
 
-Here, we've set several properties of the cylinder: the `center` is the origin, its `radius` is 0.2, and its `height` (the length along its axis) is `infinity`. Another property, the `material`, it itself an object--we made it a dielectric with the property that its `epsilon` is 12. There is another property of the cylinder that we can set, the direction of its axis, but we're happy with the default value of pointing in the z direction.
+Here, we've set several properties of the cylinder: the `center` is the origin, its `radius` is 0.2, and its `height` (the length along its axis) is `infinity`. Another property, the `material`, is itself an object &mdash; we made it a dielectric with the property that its `epsilon` is 12. There is another property of the cylinder that we can set, the direction of its axis, but we're happy with the default value of pointing in the z direction.
 
 All of the geometric objects are ostensibly three-dimensional, but since we're doing a two-dimensional simulation the only thing that matters is their intersection with the xy plane (z=0). Speaking of which, let us set the dimensionality of the system. Normally, we do this when we define the size of the computational cell, controlled by the `geometry-lattice` variable, an object of the `lattice` class: we can set some of the dimensions to have a size `no-size`, which reduces the dimensionality of the system.
 
@@ -81,13 +79,13 @@ All of the geometric objects are ostensibly three-dimensional, but since we're d
 (set! geometry-lattice (make lattice (size 1 1 no-size)))
 ```
 
-Here, we define a 1x1 two-dimensional cell (defaulting to square). This cell is *discretized* according to the `resolution` variable, which defaults to `10` (pixels/lattice-unit). That's on the small side, and this is only a 2d calculation, so let's increase the resolution:
+Here, we define a 1x1 two-dimensional cell (defaulting to square). This cell is discretized according to the `resolution` variable, which defaults to 10 (pixels/lattice-unit). That's on the small side, and this is only a 2d calculation, so let's increase the resolution:
 
 ```
 (set! resolution 32)
 ```
 
-This results in a 32x32 computational grid. For efficient calculation, it is best to make the grid sizes a power of two, or factorizable into powers of small primes (such as 2, 3, 5 and 7). As a rule of thumb, you should use a resolution of at least `8` in order to obtain reasonable accuracy.
+This results in a 32x32 computational grid. For efficient calculation, it is best to make the grid sizes a power of two, or factorizable into powers of small primes (such as 2, 3, 5 and 7). As a rule of thumb, you should use a resolution of at least 8 in order to obtain reasonable accuracy.
 
 Now, we're done setting the parameters--there are other parameters, but we're happy with their default values for now. At this point, we're ready to go ahead and compute the band structure. The simplest way to do this is to type `(run)`. Since this is a two-dimensional calculation, however, we would like to split the bands up into TE- and TM-polarized modes, and we do this by invoking `(run-te)` and `(run-tm)`.
 
@@ -97,7 +95,7 @@ These produce a lot of output, showing you exactly what the code is doing as it 
 tefreqs:, 13, 0.3, 0.3, 0, 0.424264, 0.372604, 0.540287, 0.644083, 0.81406, 0.828135, 0.890673, 1.01328, 1.1124
 ```
 
-These lines are designed to allow you to easily extract the band-structure information and import it into a spreadsheet for graphing. They comprise the k point index, the k components and magnitude, and the frequencies of the bands, in comma-delimited format. Each line is prefixed by "tefreqs" for TE bands, "tmfreqs" for TM bands, and "freqs" for ordinary bands produced by `(run)`. Using this prefix, you can extract the data you want from the output by passing it through a program like `grep`. For example, if you had redirected the output to a file `foo.out` as described earlier, you could extract the TM bands by running `grep tmfreqs foo.out` at the terminal prompt. Note that the output includes a header line, like:
+These lines are designed to allow you to easily extract the band-structure information for plotting. They comprise the k point index, the k components and magnitude, and the frequencies of the bands, in comma-delimited format. Each line is prefixed by "tefreqs" for TE bands, "tmfreqs" for TM bands, and "freqs" for ordinary bands produced by `(run)`. Using this prefix, you can extract the data you want from the output by passing it through a program like `grep`. For example, if you had redirected the output to a file `foo.out` as described earlier, you could extract the TM bands by running `grep tmfreqs foo.out` at the terminal prompt. Note that the output includes a header line, like:
 
 ```
 tefreqs:, k index, kx, ky, kz, kmag/2pi, band 1, band 2, band 3, band 4, band 5, band 6, band 7, band 8
@@ -133,11 +131,11 @@ Instead of calling one of the `run` functions, it is also possible to call lower
 A Few Words on Units
 --------------------
 
-In principle, you can use any units you want with MPB. Maxwell's equations possess an important property--they are *scale-invariant*. See [our online textbook](http://ab-initio.mit.edu/book), ch. 2. If you multiply all of your sizes by 10, the solution scales are simply multiplied by 10 likewise while the frequencies are divided by 10. So, you can solve a problem once and apply that solution to all length-scales. For this reason, we usually pick some fundamental lengthscale *a* of a structure, such as its lattice constant (unit of periodicity), and write all distances in terms of that. That is, we choose units so that *a* is unity. Then, to apply to any physical system, one simply scales all distances by *a*. This is what we have done in the preceding and following examples. This is the default behavior of MPB: the lattice constant is one, and all coordinates are scaled accordingly.
+In principle, you can use any units you want with MPB. Maxwell's equations possess an important property--they are *scale-invariant*. See Chapter 2 of [Photonic Crystals: Molding the Flow of Light (second edition)] (http://ab-initio.mit.edu/book). If you multiply all of your sizes by 10, the solution scales are simply multiplied by 10 likewise while the frequencies are divided by 10. So, you can solve a problem once and apply that solution to all length-scales. For this reason, we usually pick some fundamental lengthscale *a* of a structure, such as its lattice constant (unit of periodicity), and write all distances in terms of that. That is, we choose units so that *a* is unity. Then, to apply to any physical system, one simply scales all distances by *a*. This is what we have done in the preceding and following examples. This is the default behavior: the lattice constant is one, and all coordinates are scaled accordingly.
 
-As has been mentioned already, nearly all 3-vectors in the program are specified in the *basis* of the lattice vectors *normalized* to lengths given by `basis-size`, defaulting to the unit-normalized lattice vectors. That is, each component is multiplied by the corresponding basis vector and summed to compute the corresponding Cartesian vector. It is worth noting that a basis is not meaningful for scalar distances such as the cylinder radius. These are just the ordinary cartesian distances in your chosen units of *a*.
+As has been mentioned already, nearly all 3-vectors in the program are specified in the basis of the lattice vectors normalized to lengths given by `basis_size`, defaulting to the unit-normalized lattice vectors. That is, each component is multiplied by the corresponding basis vector and summed to compute the corresponding Cartesian vector. It is worth noting that a basis is not meaningful for scalar distances such as the cylinder radius. These are just the ordinary Cartesian distances in your chosen units of *a*.
 
-Note also that the [k-points](Scheme_User_Interface.md#input-variables), as mentioned above, are an exception: they are in the basis of the reciprocal lattice vectors. See [our online textbook](http://ab-initio.mit.edu/book), appendix B. If a given dimension has size `no-size`, its reciprocal lattice vector is taken to be 2&#960;/*a*.
+Note also that the [k-points](Scheme_User_Interface.md#input-variables), as mentioned above, are an exception: they are in the basis of the reciprocal lattice vectors. See Appendix B of [Photonic Crystals: Molding the Flow of Light (second edition)](http://ab-initio.mit.edu/book). If a given dimension has size `no-size`, its reciprocal lattice vector is taken to be 2&#960;/*a*.
 
 We provide [conversion functions](Scheme_User_Interface.md#coordinate-conversion-functions) to transform vectors between the various bases.
 
@@ -146,7 +144,7 @@ The frequency eigenvalues returned by the program are in units of *c/a*, where *
 Bands of a Triangular Lattice
 -----------------------------
 
-As a second example, we'll compute the TM band structure of a *triangular* lattice of dielectric rods in air. To do this, we only need to change the lattice, controlled by the variable `geometry-lattice`. We'll set it so that the first two basis vectors (the properties `basis1` and `basis2`) point 30 degrees above and below the x axis, instead of their default value of the x and y axes:
+As a second example, we'll compute the TM band structure of a triangular lattice of dielectric rods in air. To do this, we only need to change the lattice, controlled by the variable `geometry-lattice`. We'll set it so that the first two basis vectors (the properties `basis1` and `basis2`) point 30 degrees above and below the x axis, instead of their default value of the x and y axes:
 
 ```
 (set! geometry-lattice (make lattice (size 1 1 no-size)
@@ -154,7 +152,7 @@ As a second example, we'll compute the TM band structure of a *triangular* latti
                         (basis2 (/ (sqrt 3) 2) -0.5)))
 ```
 
-We don't specify `basis3`, keeping its default value of the z axis. Notice that Scheme supplies us with all the ordinary arithmetic operators and functions, but they use prefix (Polish) notation, in Scheme fashion. The `basis` properties only specify the directions of the lattice basis vectors, and not their lengths--the lengths default to unity, which is fine here.
+We don't specify `basis3`, keeping its default value of the z axis. The `basis` properties only specify the directions of the lattice basis vectors, and not their lengths &mdash; the lengths default to unity, which is fine here.
 
 The irreducible Brillouin zone of a triangular lattice is different from that of a square lattice, so we'll need to modify the `k-points` list accordingly:
 
@@ -166,7 +164,7 @@ The irreducible Brillouin zone of a triangular lattice is different from that of
 (set! k-points (interpolate 4 k-points))
 ```
 
-Note that these vectors are in the basis of the new reciprocal lattice vectors, which are different from before. Notice also the Scheme shorthand `(/` `3)`, which is the same as `(/` `1` `3)` or 1/3.
+Note that these vectors are in the basis of the new reciprocal lattice vectors, which are different from before. Notice also the Scheme shorthand `(/ 3)`, which is the same as `(/ 1 3)` or 1/3.
 
 All of the other parameters (`geometry`, `num-bands`, and `grid-size`) can remain the same as in the previous subsection, so we can now call `(run-tm)` to compute the bands. As it turns out, this structure has an even larger TM gap than the square lattice:
 
@@ -177,7 +175,7 @@ Gap from band 1 (0.275065617068082) to band 2 (0.446289918847647), 47.4
 Maximizing the First TM Gap
 ---------------------------
 
-We will now show you a more sophisticated example utilizing the programming capabilities of Scheme. We will write a script to choose the cylinder radius that maximizes the first TM gap of the triangular lattice of rods from above. All of the Scheme syntax here won't be explained, but this should give you a flavor of what is possible.
+We will show you a different example. We will write a script to choose the cylinder radius that maximizes the first TM gap of the triangular lattice of rods from above. All of the Scheme syntax here won't be explained, but this should give you a flavor of what is possible.
 
 First, we will write the function that want to maximize, a function that takes a dielectric constant and returns the size of the first TM gap. This function will change the geometry to reflect the new radius, run the calculation, and return the size of the first gap:
 
@@ -228,7 +226,7 @@ Before we continue, let's reset `mesh-size` to its default value:
 A Complete 2D Gap with an Anisotropic Dielectric
 ------------------------------------------------
 
-As another example, one which does not require so much Scheme knowledge, let's construct a structure with a complete 2D gap (i.e., in both TE and TM polarizations), in a somewhat unusual way: using an [dielectric](Scheme_User_Interface.md#material-type) structure. An anisotropic dielectric presents a different dielectric constant depending upon the direction of the electric field, and can be used in this case to make the TE and TM polarizations "see" different structures.
+As another example, one which does not require so much Scheme knowledge, let's construct a structure with a complete 2d gap (i.e., in both TE and TM polarizations), in a somewhat unusual way: using an [dielectric](Scheme_User_Interface.md#material-type) structure. An anisotropic dielectric presents a different dielectric constant depending upon the direction of the electric field, and can be used in this case to make the TE and TM polarizations "see" different structures.
 
 We already know that the triangular lattice of rods has a gap for TM light, but not for TE light. The dual structure, a triangular lattice of holes, has a gap for TE light but not for TM light at least for the small radii we will consider. Using an anisotropic dielectric, we can make both of these structures simultaneously, with each polarization seeing the structure that gives it a gap.
 
@@ -393,7 +391,7 @@ The sequence of dielectric constants that it tries, along with the corresponding
 
 </center>
 
-The final answer that it returns is an epsilon of 5.41986120170136. Interestingly enough, the algorithm doesn't actually evaluate the function at the final point. You have to do so yourself if you want to find out how close it is to the root. Ridder's method successively reduces the interval bracketing the root by alternating bisection and interpolation steps. At the end, it does one last interpolation to give you its best guess for the root location within the current interval. If we go ahead and evaluate the band frequency at this dielectric constant, calling `(rootfun rooteps)`, we find that it is 0.314159008193209, matching our desired frequency to nearly eight decimal places after seven function evaluations! Of course, the computation isn't really this accurate anyway, due to the finite discretization.
+The final answer that it returns is an epsilon of 5.41986120170136. Interestingly enough, the algorithm doesn't actually evaluate the function at the final point. You have to do so yourself if you want to find out how close it is to the root. Ridder's method successively reduces the interval bracketing the root by alternating bisection and interpolation steps. At the end, it does one last interpolation to give you its best guess for the root location within the current interval. If we go ahead and evaluate the band frequency at this dielectric constant, calling `(rootfun rooteps)`, we find that it is 0.314159008193209, matching our desired frequency to nearly eight decimal places after seven function evaluations. Of course, the computation isn't really this accurate anyway, due to the finite discretization.
 
 A slight improvement can be made to the calculation above. Ordinarily, each time you call the `(run-tm)` function, the fields are initialized to random values. It would speed convergence somewhat to use the fields of the previous calculation as the starting point for the next calculation. We can do this by instead calling a lower-level function, `(run-parity TM false)`. The first parameter is the polarization to solve for, and the second tells it not to reset the fields if possible.
 
