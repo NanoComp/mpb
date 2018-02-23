@@ -27,17 +27,17 @@ extra_javascript:
  - 'js/extra.js'
 
 pages:
- - Manual:              'index.md'
- - Introduction:        'Introduction.md'
- - Download:            'Download.md'
- - Installation:        'Installation.md'
- - Developer Information: 'Developer_Information.md'
- - Acknowledgements: 'Acknowledgements.md'
- - License and Copyright: 'License_and_Copyright.md'
- - Scheme Interface:
-     - User Interface: 'Scheme_User_Interface.md'
-     - Tutorial: 'Scheme_Tutorial.md'
-     - Data Analysis: 'Data_Analysis_Tutorial.md'
-     - Guile and Scheme Information: 'Guile_and_Scheme_Information.md'
-
-
+- Manual: 'index.md'
+- Introduction: 'Introduction.md'
+- Download: 'Download.md'
+- Installation: 'Installation.md'
+- Developer Information: 'Developer_Information.md'
+- Acknowledgements: 'Acknowledgements.md'
+- License and Copyright: 'License_and_Copyright.md'
+- Python Interface:
+   - Tutorial: 'Python_Tutorial.md'
+- Scheme Interface:
+   - User Interface: 'Scheme_User_Interface.md'
+   - Tutorial: 'Scheme_Tutorial.md'
+   - Data Analysis: 'Data_Analysis_Tutorial.md'
+   - Guile and Scheme Information: 'Guile_and_Scheme_Information.md'
