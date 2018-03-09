@@ -811,6 +811,12 @@ Set the current eigenvectors, starting at `first-band`, to those in the `ev` eig
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Read/write the current eigenvectors (raw planewave amplitudes) to/from an HDF5 file named `filename`. Instead of using `load-eigenvectors` directly, you can pass the `filename` as the *`reset-fields`* parameter of `run-parity`, as [shown above](Scheme_User_Interface.md#run-functions). Loaded eigenvectors must be of the same size (same grid size and \#bands) as the current settings.
 
+**`(output-eigenvectors evects filename)`**  
+**`(input-eigenvectors filename num-bands)`**  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+`output-eigenvectors` is like `save-eigenvectors`, except that it saves an `evects` object returned by `get-eigenvectors`.
+Conversely `input-eigenvectors`, reads back in the eigenvectors into an `evects` object from a file that has `num-bands` bands.
+
 Currently, there's only one other interesting thing you can do with the raw eigenvectors, and that is to compute the dot-product matrix between a set of saved eigenvectors and the current eigenvectors. This can be used, e.g., to detect band crossings or to set phases consistently at different k points. The dot product is returned as a "sqmatrix" object, whose elements can be read with the `sqmatrix-size` and `sqmatrix-ref` routines.
 
 **`(dot-eigenvectors ev first-band)`**  
