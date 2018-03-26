@@ -6,10 +6,10 @@ In this section, we'll walk through the process of computing the band structure 
 
 [TOC]
 
-The MPB Python Library
+PyMPB - The MPB Python Library
 ----------------------
 
-MPB simulations are Python scripts which involve specifying the geometry, the number of eigenvectors to compute, what to output, and everything else necessary to set up a calculation. A Python script provides the flexibility to customize the simulation for practically any application particularly those involving parameter sweeps and optimization. Python libraries such as [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/), and [matplotlib](https://matplotlib.org/) can be used to augment the simulation functionality. Much of the low-level functionality of the Python interface has been abstracted which means that you don't need to be an experienced programmer to set up simulations. Reasonable defaults are available.
+MPB simulations are Python scripts which involve specifying the geometry, the number of eigenvectors to compute, what to output, and everything else necessary to set up a calculation. A Python script provides the flexibility to customize the simulation for practically any application, particularly those involving parameter sweeps and optimization. Python libraries such as [NumPy](http://www.numpy.org/), [SciPy](https://www.scipy.org/), and [matplotlib](https://matplotlib.org/) can be used to augment the simulation functionality. Much of the low-level functionality of the Python interface has been abstracted which means that you don't need to be an experienced programmer to set up simulations. Reasonable defaults are available.
 
 Executing MPB programs is normally done at the Unix command line as follows:
 
@@ -32,13 +32,13 @@ Our First Band Structure
 
 As our beginning example, we'll compute the band structure of a two-dimensional square lattice of dielectric rods in air. See Chapter 5 of [Photonic Crystals: Molding the Flow of Light (second edition)](http://ab-initio.mit.edu/book). We'll first specify the parameters and geometry of the simulation, and then tell it to run and give us the output.
 
-All of the parameters, each of which corresponds to a Python variable, have default setting, so we only need to specify the ones we need to change. One of the parameters, `num_bands`, controls how many bands (eigenstates) are computed at each k point. The default is 1 which is too small; let's set it to a larger value:
+All of the parameters, each of which corresponds to a keyword argument to the `ModeSolver` constructor, have default settings, so we only need to specify the ones we need to change. One of the parameters, `num_bands`, controls how many bands (eigenstates) are computed at each k point. The default is 1 which is too small; let's set it to a larger value:
 
 ```py
 num_bands = 8
 ```
 
-The next thing we want to set is the set of k points (Bloch wavevectors) we want to compute the bands at. This is controlled by the variable `k_points`, a list of 3-vectors which is initially empty. We'll set it to the corners of the irreducible Brillouin zone of a square lattice, Gamma, X, M, and Gamma again:
+The next thing we want to set is the set of k points (Bloch wavevectors) we want to compute the bands at. This is controlled by the argument `k_points`, a list of 3-vectors which is initially empty. We'll set it to the corners of the irreducible Brillouin zone of a square lattice, Gamma, X, M, and Gamma again:
 
 ```py
 k_points = [mp.Vector3(),          # Gamma
@@ -47,7 +47,9 @@ k_points = [mp.Vector3(),          # Gamma
             mp.Vector3()]          # Gamma
 ```
 
-Typically, we'll want to also compute the bands at a lot of intermediate k points, so that we see the continuous band structure. Instead of manually specifying all of these intermediate points, however, we can just call one of the functions provided by libctl to interpolate them for us:
+`Vector3` is a class in the `pymeep` module. You can read about it [here](http://meep.readthedocs.io/en/latest/Python_User_Interface/#vector3).
+
+Typically, we'll want to also compute the bands at a lot of intermediate k points, so that we see the continuous band structure. Instead of manually specifying all of these intermediate points, however, we can just call one of the functions provided by pymeep to interpolate them for us:
 
 ```py
 k_points = mp.interpolate(4, k_points)
@@ -56,12 +58,12 @@ k_points = mp.interpolate(4, k_points)
 This takes the `k_points` and linearly interpolates four new points between each pair of consecutive points. If we type `k_points` now at the prompt, it will show us all 16 points in the new list:
 
 ```
-(#(0 0 0) #(0.1 0.0 0.0) #(0.2 0.0 0.0) #(0.3 0.0 0.0) #(0.4 0.0 0.0) #(0.5 0 0) #(0.5 0.1 0.0) #(0.5 0.2 0.0) #(0.5 0.3 0.0) #(0.5 0.4 0.0) #(0.5 0.5 0) #(0.4 0.4 0.0) #(0.3 0.3 0.0) #(0.2 0.2 0.0) #(0.1 0.1 0.0) #(0 0 0))
+[mp.Vector3(0, 0, 0), mp.Vector3(0.1, 0.0, 0.0), mp.Vector3(0.2, 0.0, 0.0), mp.Vector3(0.3, 0.0, 0.0), mp.Vector3(0.4, 0.0, 0.0), mp.Vector3(0.5, 0, 0), mp.Vector3(0.5, 0.1, 0.0), mp.Vector3(0.5, 0.2, 0.0), mp.Vector3(0.5, 0.3, 0.0), mp.Vector3(0.5, 0.4, 0.0), mp.Vector3(0.5, 0.5, 0), mp.Vector3(0.4, 0.4, 0.0), mp.Vector3(0.3, 0.3, 0.0), mp.Vector3(0.2, 0.2, 0.0), mp.Vector3(0.1, 0.1, 0.0), mp.Vector3(0, 0, 0)]
 ```
 
 As [described below](Python_Tutorial#a-few-words-on-units), all spatial vectors in the program are specified in the basis of the lattice directions normalized to `basis_size` lengths. The default is unit-normalized. The k points are specified in the basis of the (unnormalized) reciprocal lattice vectors. In this case, we don't have to specify the lattice directions, because we are happy with the defaults &mdash; the lattice vectors default to the Cartesian unit axes (i.e. the most common case, a square/cubic lattice). The reciprocal lattice vectors in this case are also the unit axes. We'll see how to change the lattice vectors in later subsections.
 
-Now, we want to set the geometry of the system &mdash; we need to specify which objects are in the primitive cell of the lattice, centered on the origin. This is controlled by the variable `geometry`, which is a list of geometric objects. There are various kinds (sub-classes) of geometric object: cylinders, spheres, blocks, ellipsoids, and cones. Right now, we want a square lattice of rods, so we put a single dielectric cylinder at the origin:
+Now, we want to set the geometry of the system &mdash; we need to specify which objects are in the primitive cell of the lattice, centered on the origin. This is controlled by the `geometry` keyword argument, which is a list of geometric objects. There are various kinds (sub-classes) of geometric object: cylinders, spheres, blocks, ellipsoids, and cones. Right now, we want a square lattice of rods, so we put a single dielectric cylinder at the origin:
 
 ```py
 geometry = [mp.Cylinder(0.2, material=mp.Medium(epsilon=12))]
@@ -69,13 +71,13 @@ geometry = [mp.Cylinder(0.2, material=mp.Medium(epsilon=12))]
 
 Here, we've set several properties of the cylinder: the `radius` is 0.2 and `height` (the length along its axis) is infinity by default. The `center` is the origin by default. Another property, the `material`, is itself an object &mdash; we made it a dielectric with the property that its `epsilon` is 12. There is another property of the cylinder that we can set, the direction of its axis, but we're happy with the default value of pointing in the z direction.
 
-All of the geometric objects are three-dimensional, but since we're doing a two-dimensional simulation the only thing that matters is their intersection with the xy plane (z=0). Speaking of which, let us set the dimensionality of the system. Normally, we do this when we define the size of the computational cell, controlled by the `geometry_lattice` variable, an object of the `lattice` class: we can set some of the dimensions to have a size 0, which reduces the dimensionality of the system.
+All of the geometric objects are three-dimensional, but since we're doing a two-dimensional simulation the only thing that matters is their intersection with the xy plane (z=0). Speaking of which, let us set the dimensionality of the system. Normally, we do this when we define the size of the computational cell, controlled by the `geometry_lattice` argument, an object of the `meep.Lattice` class: we can set some of the dimensions to have a size 0, which reduces the dimensionality of the system.
 
 ```py
 geometry_lattice = mp.Lattice(size=mp.Vector3(1, 1))
 ```
 
-Here, we define a 1x1 two-dimensional cell (defaulting to square). This cell is discretized according to the `resolution` variable, which defaults to 10 (pixels/lattice-unit). That's on the small side, and this is only a 2d calculation, so let's increase the resolution:
+Here, we define a 1x1 two-dimensional cell (defaulting to square). This cell is discretized according to the `resolution` argument, which defaults to 10 (pixels/lattice-unit). That's on the small side, and this is only a 2d calculation, so let's increase the resolution:
 
 ```py
 resolution = 32
@@ -83,7 +85,7 @@ resolution = 32
 
 This results in a 32x32 computational grid. For efficient calculation, it is best to make the grid sizes a power of two, or factorizable into powers of small primes (such as 2, 3, 5 and 7). As a rule of thumb, you should use a resolution of at least 8 in order to obtain reasonable accuracy.
 
-Now, we're done setting the parameters &mdash; there are other parameters, but we're happy with their default values for now. At this point, we're ready to go ahead and compute the band structure. The simplest way to do this is to type `ms.run()`. Since this is a two-dimensional calculation, however, we would like to split the bands up into TE- and TM-polarized modes, and we do this by invoking `ms.run_te()` and `ms.run_tm()`.
+Now, we're done setting the parameters &mdash; there are other parameters, but we're happy with their default values for now. Next, we need to create a `ModeSolver` object, passing all the parameters we have set to the constructor.
 
 ```py
 ms = mpb.ModeSolver(num_bands=num_bands,
@@ -91,7 +93,11 @@ ms = mpb.ModeSolver(num_bands=num_bands,
                     geometry=geometry,
                     geometry_lattice=geometry_lattice,
                     resolution=resolution)
+```
 
+At this point, we're ready to go ahead and compute the band structure. The simplest way to do this is to type `ms.run()`. Since this is a two-dimensional calculation, however, we would like to split the bands up into TE- and TM-polarized modes, and we do this by invoking `ms.run_te()` and `ms.run_tm()`.
+
+```py
 print_heading("Square lattice of rods: TE bands")
 ms.run_te()
 ```
@@ -108,19 +114,19 @@ These lines are designed to allow you to easily extract the band-structure infor
 tefreqs:, k index, kx, ky, kz, kmag/2pi, band 1, band 2, band 3, band 4, band 5, band 6, band 7, band 8
 ```
 
-explaining each column of data. Another output of the `run` is the list of band gaps detected in the computed bands. For example the `run_tm` output includes the following gap output:
+explaining each column of data. This data is also available as a 2d numpy array in the `all_freqs` attribute where column `i` represents the frequencies for band `i + 1`. Another output of the `run` is the list of band gaps detected in the computed bands. For example the `run_tm` output includes the following gap output:
 
 ```
 Gap from band 1 (0.282623311147724) to band 2 (0.419334798706834), 38.9514660888911%
 Gap from band 4 (0.715673834754345) to band 5 (0.743682920649084), 3.8385522650349%
 ```
 
-This data is also stored in the variable `gap_list`, which is a list of `gap_percent, gap_min, gap_max` lists. It is important to realize, however, that this band-gap data may include "false positives," from two possible sources:
+This data is also stored in the variable `gap_list`, which is a list of `gap_percent, gap_min, gap_max` tuples. It is important to realize, however, that this band-gap data may include "false positives," from two possible sources:
 
 -   If two bands cross, a false gap may result because the code computes the gap by assuming that bands never cross. Such false gaps are typically quite small (&lt; 1%). To be sure of what's going on, you should either look at the symmetry of the modes involved or compute k points very close to the crossing. Although even if the crossing occurs precisely at one of your k-points, there usually won't be an exact degeneracy for numerical reasons.
 -   One typically computes band diagrams by considering k-points around the boundary of the irreducible Brillouin zone. It is possible, though rare, that the band edges may occur at points in the interior of the Brillouin zone. To be absolutely sure you have a band gap and of its size, you should compute the frequencies for points inside the Brillouin zone, too.
 
-You've computed the band structure, and extracted the eigenfrequencies for each k point. But what if you want to see what the fields look like, or check that the dielectric function is what you expect? To do this, you need to output [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) files for these functions. HDF5 is a binary format for multi-dimensional scientific data, and can be read by many visualization programs. The output files have filenames with suffixes ".h5".
+You've computed the band structure, and extracted the eigenfrequencies for each k point. But what if you want to see what the fields look like, or check that the dielectric function is what you expect? One way to do this is to output [HDF5](https://en.wikipedia.org/wiki/Hierarchical_Data_Format) files for these functions. HDF5 is a binary format for multi-dimensional scientific data, and can be read by many visualization programs. The output files have filenames with suffixes ".h5".
 
 When you invoke one of the `run` functions, the dielectric function in the unit cell is automatically written to the file `epsilon.h5`. To output the fields or other information, you need to pass one or more arguments to the `run` function. For example:
 
@@ -149,12 +155,12 @@ The frequency eigenvalues returned by the program are in units of *c/a*, where *
 Bands of a Triangular Lattice
 -----------------------------
 
-As a second example, we'll compute the TM band structure of a triangular lattice of dielectric rods in air. To do this, we only need to change the lattice, controlled by the variable `geometry_lattice`. We'll set it so that the first two basis vectors (the properties `basis1` and `basis2`) point 30 degrees above and below the x axis, instead of their default value of the x and y axes:
+As a second example, we'll compute the TM band structure of a triangular lattice of dielectric rods in air. To do this, we only need to change the lattice. Since we already have a `ModeSolver` object, we can simply udpate its `geometry_lattice` attribute. We'll set it so that the first two basis vectors (the properties `basis1` and `basis2`) point 30 degrees above and below the x axis, instead of their default value of the x and y axes:
 
 ```py
-geometry_lattice = mp.Lattice(size=mp.Vector3(1, 1),
-                              basis1=mp.Vector3(math.sqrt(3) / 2, 0.5),
-                              basis2=mp.Vector3(math.sqrt(3) / 2, -0.5))
+ms.geometry_lattice = mp.Lattice(size=mp.Vector3(1, 1),
+                                 basis1=mp.Vector3(math.sqrt(3) / 2, 0.5),
+                                 basis2=mp.Vector3(math.sqrt(3) / 2, -0.5))
 ```
 
 We don't specify `basis3`, keeping its default value of the z axis. The `basis` properties only specify the directions of the lattice basis vectors, and not their lengths &mdash; the lengths default to unity, which is fine here.
@@ -162,10 +168,12 @@ We don't specify `basis3`, keeping its default value of the z axis. The `basis` 
 The irreducible Brillouin zone of a triangular lattice is different from that of a square lattice, so we'll need to modify the `k_points` list accordingly:
 
 ```py
-k_points = [mp.Vector3(),               # Gamma
-            mp.Vector3(y=0.5),          # M
-            mp.Vector3(-1 / 3, 1 / 3),  # K
-            mp.Vector3()]               # Gamma
+ms.k_points = [mp.Vector3(),               # Gamma
+              mp.Vector3(y=0.5),          # M
+              mp.Vector3(-1 / 3, 1 / 3),  # K
+              mp.Vector3()]               # Gamma
+
+ms.k_points = mp.interpolate(4, ms.k_points)
 ```
 
 Note that these vectors are in the basis of the new reciprocal lattice vectors, which are different from before.
@@ -181,7 +189,7 @@ Maximizing the First TM Gap
 
 We will show you a different example. We will write a script to choose the cylinder radius that maximizes the first TM gap of the triangular lattice of rods from above. All of the Python syntax here won't be explained, but this should give you a flavor of what is possible.
 
-First, we will write the function that want to maximize, a function that takes a dielectric constant and returns the size of the first TM gap. This function will change the geometry to reflect the new radius, run the calculation, and return the size of the first gap:
+First, we will write the function we want to maximize, a function that takes a dielectric constant and returns the size of the first TM gap. This function will change the geometry to reflect the new radius, run the calculation, and return the size of the first gap:
 
 ```py
 def first_tm_gap(r):
@@ -242,7 +250,7 @@ ms.geometry = [mp.Cylinder(radius=0.3, material=mp.Medium(epsilon_diag=mp.Vector
 
 Here, `epsilon_diag` specifies the diagonal elements of the dielectric tensor. The off-diagonal elements specified by `epsilon_offdiag` default to zero and are only needed when the principal axes of the dielectric tensor are different from the Cartesian xyz axes.
 
-The background defaults to air, but we need to make it a dielectric (epsilon of 12) for the TE light, so that the cylinder forms a hole. This is controlled via the `default-material` variable:
+The background defaults to air, but we need to make it a dielectric (epsilon of 12) for the TE light, so that the cylinder forms a hole. This is controlled via the `default-material` attribute of the `ModeSolver`:
 
 ```py
 ms.default_material = mp.Medium(epsilon_diag=mp.Vector3(12, 12, 1))
@@ -384,4 +392,4 @@ The sequence of dielectric constants that it tries, along with the corresponding
 
 The final answer that it returns is an epsilon of 5.41986120170136. Interestingly enough, the algorithm doesn't actually evaluate the function at the final point. You have to do so yourself if you want to find out how close it is to the root. Ridder's method successively reduces the interval bracketing the root by alternating bisection and interpolation steps. At the end, it does one last interpolation to give you its best guess for the root location within the current interval. If we go ahead and evaluate the band frequency at this dielectric constant, calling `rootfun(rooteps)`, we find that it is 0.314159008193209, matching our desired frequency to nearly eight decimal places after seven function evaluations. Of course, the computation isn't really this accurate anyway, due to the finite discretization.
 
-A slight improvement can be made to the calculation above. Ordinarily, each time you call the `ms.run_tm()` function, the fields are initialized to random values. It would speed convergence somewhat to use the fields of the previous calculation as the starting point for the next calculation. We can do this by instead calling a lower-level function, `ms.run_parity(TM, false)`. The first parameter is the polarization to solve for, and the second tells it not to reset the fields if possible.
+A slight improvement can be made to the calculation above. Ordinarily, each time you call the `ms.run_tm()` function, the fields are initialized to random values. It would speed convergence somewhat to use the fields of the previous calculation as the starting point for the next calculation. We can do this by instead calling a lower-level function, `ms.run_parity(mp.TM, False)`. The first parameter is the polarization to solve for, and the second tells it not to reset the fields if possible.
