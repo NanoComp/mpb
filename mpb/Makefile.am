@@ -20,7 +20,7 @@ EXTRA_DIST = mpb.scm.in epsilon.c mu.c
 
 nodist_pkgdata_DATA = $(SPECIFICATION_FILE)
 
-MY_SOURCES = medium.c epsilon_file.c field-smob.c fields.c	\
+MY_SOURCES = bott.c medium.c epsilon_file.c field-smob.c fields.c	\
 material_grid.c material_grid_opt.c matrix-smob.c mpb.c field-smob.h matrix-smob.h mpb.h my-smob.h
 
 MY_LIBS = $(top_builddir)/src/matrixio/libmatrixio.a $(top_builddir)/src/libmpb@MPB_SUFFIX@.la $(NLOPT_LIB) -lctl $(GUILE_LIBS)

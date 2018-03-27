@@ -125,14 +125,7 @@ void get_hfield(integer which_band)
      curfield = (scalar_complex *) mdata->fft_data;
      curfield_band = which_band;
      curfield_type = 'h';
-     if (mdata->mu_inv == NULL)
-         maxwell_compute_h_from_H(mdata, H, curfield, which_band - 1, 1);
-     else {
-         evectmatrix_resize(&W[0], 1, 0);
-         maxwell_compute_H_from_B(mdata, H, W[0], curfield, which_band-1,0, 1);
-         maxwell_compute_h_from_H(mdata, W[0], curfield, 0, 1);
-         evectmatrix_resize(&W[0], W[0].alloc_p, 0);
-     }
+     maxwell_compute_h_from_B(mdata, H, curfield, which_band - 1, 1);
 
      /* Divide by the cell volume so that the integral of H*B
         or of D*E is unity.  (From the eigensolver + FFT, they are
