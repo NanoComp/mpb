@@ -24,7 +24,6 @@ matrix:
         - make && make check && make install
     - os: osx
       install:
-        - brew tap homebrew/science
         - brew update
         - brew cask uninstall oclint # travis issue #8826
         - brew install guile fftw lapack
