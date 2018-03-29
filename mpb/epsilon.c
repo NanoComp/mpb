@@ -318,7 +318,6 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 
      {
 	  symmetric_matrix eps2, epsinv2;
-#ifdef KOTTKE /* new anisotropic smoothing, based on Kottke algorithm */
 	  symmetric_matrix eps1, delta;
 	  double Rot[3][3], norm, n0, n1, n2;
 	  material_epsilon(mat2, &eps2, &epsinv2);
@@ -421,60 +420,6 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 		|| maxwell_sym_matrix_positive_definite(meps),
 		"negative mean epsilon from Kottke algorithm");
 #  endif
-
-#else /* !KOTTKE, just compute mean epsilon and mean inverse epsilon */
-	  material_epsilon(mat2, &eps2, &epsinv2);
-
-	  meps->m00 = fill * (meps->m00 - eps2.m00) + eps2.m00;
-	  meps->m11 = fill * (meps->m11 - eps2.m11) + eps2.m11;
-	  meps->m22 = fill * (meps->m22 - eps2.m22) + eps2.m22;
-#ifdef WITH_HERMITIAN_EPSILON
-	  CASSIGN_SCALAR(meps->m01, 
-			 fill * (CSCALAR_RE(meps->m01) -
-				 CSCALAR_RE(eps2.m01)) + CSCALAR_RE(eps2.m01),
-			 fill * (CSCALAR_IM(meps->m01) -
-				 CSCALAR_IM(eps2.m01)) + CSCALAR_IM(eps2.m01));
-	  CASSIGN_SCALAR(meps->m02, 
-			 fill * (CSCALAR_RE(meps->m02) -
-				 CSCALAR_RE(eps2.m02)) + CSCALAR_RE(eps2.m02),
-			 fill * (CSCALAR_IM(meps->m02) -
-				 CSCALAR_IM(eps2.m02)) + CSCALAR_IM(eps2.m02));
-	  CASSIGN_SCALAR(meps->m12, 
-			 fill * (CSCALAR_RE(meps->m12) -
-				 CSCALAR_RE(eps2.m12)) + CSCALAR_RE(eps2.m12),
-			 fill * (CSCALAR_IM(meps->m12) -
-				 CSCALAR_IM(eps2.m12)) + CSCALAR_IM(eps2.m12));
-#else
-	  meps->m01 = fill * (meps->m01 - eps2.m01) + eps2.m01;
-	  meps->m02 = fill * (meps->m02 - eps2.m02) + eps2.m02;
-	  meps->m12 = fill * (meps->m12 - eps2.m12) + eps2.m12;
-#endif
-
-	  meps_inv->m00 = fill * (meps_inv->m00 - epsinv2.m00) + epsinv2.m00;
-	  meps_inv->m11 = fill * (meps_inv->m11 - epsinv2.m11) + epsinv2.m11;
-	  meps_inv->m22 = fill * (meps_inv->m22 - epsinv2.m22) + epsinv2.m22;
-#ifdef WITH_HERMITIAN_EPSILON
-	  CASSIGN_SCALAR(meps_inv->m01, 
-			 fill * (CSCALAR_RE(meps_inv->m01) -
-			   CSCALAR_RE(epsinv2.m01)) + CSCALAR_RE(epsinv2.m01),
-			 fill * (CSCALAR_IM(meps_inv->m01) -
-			   CSCALAR_IM(epsinv2.m01)) + CSCALAR_IM(epsinv2.m01));
-	  CASSIGN_SCALAR(meps_inv->m02, 
-			 fill * (CSCALAR_RE(meps_inv->m02) -
-			   CSCALAR_RE(epsinv2.m02)) + CSCALAR_RE(epsinv2.m02),
-			 fill * (CSCALAR_IM(meps_inv->m02) -
-			   CSCALAR_IM(epsinv2.m02)) + CSCALAR_IM(epsinv2.m02));
-	  CASSIGN_SCALAR(meps_inv->m12, 
-			 fill * (CSCALAR_RE(meps_inv->m12) -
-			   CSCALAR_RE(epsinv2.m12)) + CSCALAR_RE(epsinv2.m12),
-			 fill * (CSCALAR_IM(meps_inv->m12) -
-			   CSCALAR_IM(epsinv2.m12)) + CSCALAR_IM(epsinv2.m12));
-#else
-	  meps_inv->m01 = fill * (meps_inv->m01 - epsinv2.m01) + epsinv2.m01;
-	  meps_inv->m02 = fill * (meps_inv->m02 - epsinv2.m02) + epsinv2.m02;
-	  meps_inv->m12 = fill * (meps_inv->m12 - epsinv2.m12) + epsinv2.m12;
-#endif
-#endif
      }
 
      return 1;

@@ -438,11 +438,9 @@ void set_maxwell_dielectric(maxwell_data *md,
 					s1, s2, s3, mesh_prod_inv,
 					r, epsilon_data)) {
 
-#ifdef KOTTKE /* mepsilon did new anisotropic smoothing w/Kottke algorithm */
 		    maxwell_sym_matrix_invert(md->eps_inv + xyz_index,
 					      &eps_mean);
 		    goto got_eps_inv;
-#endif
 
 		    norm0 = R[0][0] * normal[0] + R[1][0] * normal[1]
 			 + R[2][0] * normal[2];
