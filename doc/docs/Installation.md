@@ -292,3 +292,8 @@ If you make a mistake (e.g. you forget to specify a needed `-L`*` dir`* flag) or
 ```
 make distclean
 ```
+
+Python
+-------
+
+The Python inteface to MPB depends on [MEEP](http://github.com/stevengj/meep) and can currently only be built as part of MEEP. Complete build instructions for MEEP, including the Python MPB interface, can be found [here](http://meep.readthedocs.io/en/latest/Installation/#building-from-source). Eventually, the dependency on MEEP will be removed, and the Python interface will be available from the MPB repository.
