@@ -242,6 +242,16 @@ ms.geometry = [mp.Block(center=mp.Vector3(1, 2, 3), material=m, size=mp.Vector3(
                mp.Sphere(center=mp.Vector3(1, 2, 3), material=mp.air, radius=0.2)]
 ```
 
+### MPBArray
+
+Most functions in MPB that return numpy arrays actually return `MPBArray`s, which is just a wrapper around a numpy array that stores some additional data:
+
++ `lattice`: This attribute stores the `ModeSolver`'s geometry_lattice as a convenient way to pass it to `MPBData`. See the [Python Data Analysis Tutorial](Python_Data_Analysis_Tutorial.md) for more information.
+
++ `kpoint`: The current kpoint at the time this array was created. This is also a convenient way to pass this information to `MPBData`.
+
++ `bloch_phase`: `True` if the array has been multiplied by the Bloch phase, `False` otherwise.
+
 Functions
 ---------
 
@@ -539,31 +549,27 @@ Note that we have dropped the pesky factors of 1/2, π, etcetera from the energy
 
 In order to load a field into memory, call one of the `get` methods of the `ModeSolver` class. They should only be called after the eigensolver has run or after `init_params`, in the case of `get_epsilon`. One normally calls them after `run`, or in one of the band functions passed to `run`.
 
-**`ModeSolver.get_hfield(which_band)`**  
+**`ModeSolver.get_hfield(which_band, bloch_phase=True)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Loads the magnetic (\(\mathbf{H}\)) field for the band `which_band` and returns a numpy array.
+Loads the magnetic (\(\mathbf{H}\)) field for the band `which_band` and returns an `MPBArray`. To prevent MPB from multiplying by the Bloch phase, pass `bloch_phase=False`.
 
-**`Modesolver.get_dfield(which_band)`**  
+**`Modesolver.get_dfield(which_band, bloch_phase=True)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Loads the electric displacement (\(\mathbf{D}\)) field for the band `which_band` and returns a numpy array.
+Loads the electric displacement (\(\mathbf{D}\)) field for the band `which_band` and returns an `MPBArray`. To prevent MPB from multiplying by the Bloch phase, pass `bloch_phase=False`.
 
-**`ModeSolver.get_efield(which_band)`**  
+**`ModeSolver.get_efield(which_band, bloch_phase=True)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Loads the electric (\(\mathbf{E}\)) field for the band `which_band`. This function actually calls `get_dfield` followed by `get_efield_from_dfield`, below.
+Loads the electric (\(\mathbf{E}\)) field for the band `which_band` and returns an `MPBArray`. To prevent MPB from multiplying by the Bloch phase, pass `bloch_phase=False`.
 
-**`ModeSolver.get_charge_density(which_band)`**  
+**`ModeSolver.get_charge_density(which_band, bloch_phase=True)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Loads the bound charge density \(\nabla \cdot \mathbf{E}\) for the band `which_band`.
+Loads the bound charge density \(\nabla \cdot \mathbf{E}\) for the band `which_band`. To prevent MPB from multiplying by the Bloch phase, pass `bloch_phase=False`.
 
 **`ModeSolver.get_epsilon()`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Loads the dielectric function and returns a numpy array.
 
 Once loaded, the field can be transformed into another field or a scalar field:
-
-**`ModeSolver.get_efield_from_dfield()`**  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Multiplies by the inverse dielectric tensor to compute the electric field from the displacement field. Only works if a \(\mathbf{D}\) field has been loaded.
 
 **`ModeSolver.fix_field_phase()`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -679,7 +685,7 @@ Output the bound charge density (above) for `which_band`.
 
 Complex vector fields like **E** and **H** as computed by MPB are physically of the Bloch form: exp(ikx) times a periodic function. What MPB actually stores, however, is just the periodic function, the Bloch envelope, and only multiplies by exp(ikx) when the fields are output or passed to the user (e.g. in integration functions). This is mostly transparent, with a few exceptions noted above for functions that do not include the exp(ikx) Bloch phase. It is somewhat faster to operate without including the phase.
 
-On some occasions, however, when you create a field with `field-map!`, the resulting field should *not* have any Bloch phase. For example, for the Poynting vector **E**<sup><small>\*</small></sup>x**H**, the exp(ikx) cancels because of the complex conjugation. After creating this sort of field, we must use the special function `cvector-field-nonbloch!` to tell MPB that the field is purely periodic:
+On some occasions, however, when you get a field and perform some calculation, the resulting field should *not* have any Bloch phase. For example, for the Poynting vector **E**<sup><small>\*</small></sup>x**H**, the exp(ikx) cancels because of the complex conjugation. When creating this sort of field, we must inform MPB not to include the Bloch phase by passing `bloch_phase=False` to the `get_*field` functions. This tells MPB that the field is purely periodic:
 
 Currently, all fields must be either Bloch or non-Bloch (i.e. periodic), which covers most physically meaningful possibilities.
 
