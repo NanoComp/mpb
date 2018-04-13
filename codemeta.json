@@ -1,0 +1,26 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "MPB",
+  "description": "MPB is a free software package for computing photonic band structures and modes.",
+  "url": "https://github.com/stevengj/mpb",
+  "codeRepository": "https://github.com/stevengj/mpb",
+  "issueTracker": "https://github.com/stevengj/mpb/issues",
+  "license": "https://spdx.org/licenses/GPL-2.0-or-later.html",
+  "citation": "http://dx.doi.org/10.1364/OE.8.000173",
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Steven G.",
+      "familyName": "Johnson",
+      "email": "stevenj@alum.mit.edu",
+      "@id": "http://orcid.org/0000-0001-7327-4967"
+    }
+  ],
+  "developmentStatus": "active",
+  "downloadUrl": "https://github.com/stevengj/mpb/releases",
+  "version":"1.6.1",
+  "dateCreated":"1998-05-20",
+  "datePublished":"1999-11-19",
+  "programmingLanguage": ["C", "Scheme"]
+}
