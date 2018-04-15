@@ -35,6 +35,7 @@ pages:
 - Acknowledgements: 'Acknowledgements.md'
 - License and Copyright: 'License_and_Copyright.md'
 - Python Interface:
+   - User Interface: 'Python_User_Interface.md'
    - Tutorial: 'Python_Tutorial.md'
    - Data Analysis: 'Python_Data_Analysis_Tutorial.md'
 - Scheme Interface:
