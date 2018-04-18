@@ -22,8 +22,10 @@
 ; this case, we assume that the procedure returns 1 argument,
 ; as this is the most useful default for our purposes.  Sigh.
 
-(define (procedure-num-args p) 
-  (let ((arity (procedure-property p 'arity)))
+(define (procedure-num-args p)
+  (let ((arity (if (defined? 'procedure-minimum-arity)
+                   (procedure-minimum-arity p)
+                   (procedure-property p 'arity))))
     (if arity (car arity) 1)))
 
 ; ****************************************************************
