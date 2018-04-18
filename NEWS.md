@@ -1,5 +1,14 @@
 # MPB Release Notes
 
+## MPB 1.6.2
+
+4/18/2018
+
+  * Fixed handling of 0-argument band functions (like `randomize-fields`)
+    in Guile 2.2.
+
+  * Bugfix in `dot-eigenvectors` for μ ≠ 1 (#37).
+
 ## MPB 1.6.1
 
 1/18/2018
