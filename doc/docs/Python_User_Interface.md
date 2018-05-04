@@ -405,7 +405,7 @@ _   `band_func`: zero or more [band functions](Python_User_Interface.md#bandoutp
 The `find_k` routine also prints a line suitable for grepping:
 
 ```
-kvals: omega, band-min, band-max, kdir1, kdir2, kdir3, k magnitudes...
+kvals: omega, band-min, band-max, korig1, korig2, korig3, kdir1, kdir2, kdir3, k magnitudes...
 ```
 
 ### Band/Output Functions
