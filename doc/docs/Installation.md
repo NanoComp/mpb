@@ -87,6 +87,8 @@ One thing to watch out for is that libraries like LAPACK, Guile, HDF5, etcetera,
 
 To build the latest version of MPB from source on Ubuntu 16.04, follow these [instructions](http://www.mail-archive.com/mpb-discuss@ab-initio.mit.edu/msg01039.html).
 
+There are few changes in the above-mentioned instruction set. Please see the updated set of instructions [here](https://goo.gl/dgSsqZ) to build the latest version of MPB from the source on Ubuntu 16.04.4 LTS. I have added just two instructions (44 and 45). It is worth noting that you do not need to become root in Ubuntu. It is advised to use the GNOME terminal, the default terminal for hassle-free installation of MPB. 
+
 
 BLAS and LAPACK
 ---------------
