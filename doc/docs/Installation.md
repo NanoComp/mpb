@@ -85,8 +85,86 @@ If you are installing on your personal Linux or BSD machine, then precompiled bi
 
 One thing to watch out for is that libraries like LAPACK, Guile, HDF5, etcetera, will often come split up into two or more packages: e.g. a `guile` package and a `guile-devel` package. You need to install **both** of these to compile software using the library.
 
+### Installation on Ubuntu 16.04.4 LTS 
+
 To build the latest version of MPB from source on Ubuntu 16.04, follow these [instructions](http://www.mail-archive.com/mpb-discuss@ab-initio.mit.edu/msg01039.html).
 
+There are few changes in the above-mentioned instruction set. Please see the updated set of instructions below to build the latest version of MPB from the source on Ubuntu 16.04.4 LTS. I have added just two instructions (44 and 45). It is worth noting that you do not need to become root in Ubuntu. It is advised to use the GNOME terminal, the default terminal for hassle-free installation of MPB. You just need to copy and paste the instructions provided below. You can start terminal by pressing `Ctrl+Alt+T`. 
+
+```
+01 - sudo apt-get update
+02 - sudo apt-get -y dist-upgrade
+03 - sudo apt-get -y install libblas-dev liblapack-dev libgmp-dev libunistring-dev libmatheval-dev swig libgsl-dev libatomic-ops-dev libgc-dev libffi-dev libltdl-dev autoconf pkg-config libpng16-dev git
+
+04 - export LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib/openmpi"
+05 - export LDFLAGS="-L/usr/local/lib -L/usr/local/lib/openmpi"
+06 - export CPPFLAGS="-I/usr/local/include -I/usr/local/include/openmpi"
+07 - export GUILE_WARN_DEPRECATED="no"
+
+08 - mkdir install
+
+09 - cd ~/install
+10 - git clone https://github.com/stevengj/harminv.git
+11 - cd harminv/
+12 - sh autogen.sh --with-pic
+13 - make && sudo make install
+
+14 - cd ~/install
+15 - wget ftp://ftp.gnu.org/gnu/guile/guile-2.0.11.tar.gz
+16 - tar xvzf guile-2.0.11.tar.gz
+17 - cd guile-2.0.11/
+18 - ./configure --with-pic
+19 - make && make check && sudo make install
+
+20 - cd ~/install
+21 - git clone https://github.com/stevengj/libctl.git
+22 - cd libctl/
+23 - sh autogen.sh --with-pic
+24 - make && sudo make install
+
+25 - cd ~/install
+26 - wget https://www.open-mpi.org/software/ompi/v1.8/downloads/openmpi-1.8.8.tar.gz
+27 - tar xvzf openmpi-1.8.8.tar.gz
+28 - cd openmpi-1.8.8/
+29 - ./configure --with-pic
+30 - make && make check && sudo make install
+
+31 - cd ~/install
+32 - wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.14/src/hdf5-1.8.14.tar.gz
+33 - tar xvzf hdf5-1.8.14.tar.gz
+34 - cd hdf5-1.8.14/
+35 - ./configure --with-pic --prefix=/usr/local CC=mpicc --enable-parallel
+36 - make && make check && sudo make install
+
+37 - cd ~/install
+38 - git clone https://github.com/stevengj/h5utils.git
+39 - cd h5utils/
+40 - sh autogen.sh CC=mpicc LIBS=-ldl
+41 - make && sudo make install
+
+42 - cd ~/install
+43 - wget http://www.fftw.org/fftw-3.3.4.tar.gz
+44 - tar xvzf  fftw-3.3.4.tar.gz
+45 - cd fftw-3.3.4/
+46 - ./configure --with-pic --enable-mpi
+47 - make && make check && sudo make install
+
+48 - cd ~/install
+49 - git clone https://github.com/stevengj/mpb.git
+50 - cd mpb/
+51 - sh autogen.sh --with-pic CC=mpicc LIBS=-ldl
+52 - make && make check && sudo make install
+53 - make distclean
+54 - sh autogen.sh --with-pic CC=mpicc LIBS=-ldl --with-mpi
+55 - make && make check && sudo make install
+56 - make distclean
+57 - sh autogen.sh --with-pic CC=mpicc LIBS=-ldl --with-inv-symmetry
+58 - make && make check && sudo make install
+59 - make distclean
+60 - sh autogen.sh --with-pic CC=mpicc LIBS=-ldl --with-inv-symmetry --with-mpi
+61 - make && make check && sudo make install
+
+```
 
 BLAS and LAPACK
 ---------------
