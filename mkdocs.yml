@@ -5,9 +5,10 @@ repo_url: https://github.com/stevengj/mpb/
 docs_dir: 'doc/docs'
 site_dir: 'doc/site'
 
-theme_dir: 'doc/mpb-mkdocs-theme'
-theme: readthedocs
-
+theme:
+  name: readthedocs
+  custom_dir: mpb-mkdocs-theme
+  
 python:
    version: 2 # for unicode
    setup_py_install: True
