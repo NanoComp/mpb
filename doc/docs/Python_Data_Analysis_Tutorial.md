@@ -120,7 +120,7 @@ Alternatively, we can use the Python interface and pass the results (`tm_gaps`, 
 ```py
 import matplotlib.pyplot as plt
 
-fig, ax = plt.subplots(figsize=(10,8))
+fig, ax = plt.subplots()
 x = [i for i in range(len(tm_freqs))]
 # Plot bands
 # Scatter plot for multiple y values, see https://stackoverflow.com/a/34280815/2261298
