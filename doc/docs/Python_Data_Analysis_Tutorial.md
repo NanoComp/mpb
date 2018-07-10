@@ -124,6 +124,8 @@ Now, let's actually examine the electric-field distributions for some of the ban
 As before, we'll run `MPBData.convert` on the field output arrays, and view the results in `matplotlib`. We'll need to define a band function to get the efield at each band, then we call `convert` on the z component of each array:
 
 ```py
+efields = []
+
 def get_efields(ms, band):
     efields.append(ms.get_efield(band, bloch_phase=True))
 
@@ -136,7 +138,7 @@ md = mpb.MPBData(rectify=True, resolution=32, periods=3)
 converted = []
 for f in efields:
     # Get just the z component of the efields
-    f = f[:, :, 2]
+    f = f[..., 0, 2]
     converted.append(md.convert(f))
 
 for i, f in enumerate(converted):
