@@ -121,7 +121,7 @@ Alternatively, we can use the Python interface and pass the results (`tm_gaps`, 
 import matplotlib.pyplot as plt
 
 fig, ax = plt.subplots()
-x = [i for i in range(len(tm_freqs))]
+x = range(len(tm_freqs))
 # Plot bands
 # Scatter plot for multiple y values, see https://stackoverflow.com/a/34280815/2261298
 for xz, tmz, tez in zip(x, tm_freqs, te_freqs):
