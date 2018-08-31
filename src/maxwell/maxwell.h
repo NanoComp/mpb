@@ -103,7 +103,7 @@ typedef struct {
      int nplans, plans_howmany[MAX_NPLANS], plans_stride[MAX_NPLANS], plans_dist[MAX_NPLANS];
 
      scalar *fft_data, *fft_data2;
-     
+
      int zero_k;  /* non-zero if k is zero (handled specially) */
      k_data *k_plus_G;
      real *k_plus_G_normsqr;
@@ -122,6 +122,8 @@ extern maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 extern void destroy_maxwell_data(maxwell_data *d);
 
 extern void maxwell_set_num_bands(maxwell_data *d, int num_bands);
+
+extern void maxwell_dominant_planewave(maxwell_data *d, evectmatrix H, int band, double kdom[3]);
 
 extern void update_maxwell_data_k(maxwell_data *d, real k[3],
 				  real G1[3], real G2[3], real G3[3]);
@@ -153,7 +155,7 @@ extern void set_maxwell_mu(maxwell_data *md,
                            maxwell_dielectric_function mu,
                            maxwell_dielectric_mean_function mmu,
                            void *mu_data);
-    
+
 extern void maxwell_sym_matrix_eigs(real eigs[3], const symmetric_matrix *V);
 extern void maxwell_sym_matrix_invert(symmetric_matrix *Vinv,
                                       const symmetric_matrix *V);
@@ -162,7 +164,7 @@ extern void maxwell_sym_matrix_rotate(symmetric_matrix *RAR,
 				      double R[3][3]);
 extern int maxwell_sym_matrix_positive_definite(symmetric_matrix *V);
 
-extern void maxwell_compute_fft(int dir, maxwell_data *d, 
+extern void maxwell_compute_fft(int dir, maxwell_data *d,
 				scalar *array_in, scalar *array_out,
 				int howmany, int stride, int dist);
 extern void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Xin,
@@ -171,7 +173,7 @@ extern void maxwell_compute_d_from_H(maxwell_data *d, evectmatrix Xin,
 extern void maxwell_compute_h_from_H(maxwell_data *d, evectmatrix Hin,
 				     scalar_complex *hfield,
 				     int cur_band_start, int cur_num_bands);
-extern void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin, 
+extern void maxwell_compute_H_from_B(maxwell_data *d, evectmatrix Bin,
                                      evectmatrix Hout, scalar_complex *hfield,
                                      int Bin_band_start, int Hout_band_start,
                                      int cur_num_bands);
@@ -182,9 +184,9 @@ extern void maxwell_compute_e_from_d(maxwell_data *d,
 extern void maxwell_vectorfield_otherhalf(maxwell_data *d,
 					  scalar_complex *field,
 					  real phasex,real phasey,real phasez);
-extern void maxwell_cscalarfield_otherhalf(maxwell_data *d, 
+extern void maxwell_cscalarfield_otherhalf(maxwell_data *d,
 					   scalar_complex *field,
-					   real phasex, real phasey, 
+					   real phasex, real phasey,
 					   real phasez);
 extern void maxwell_scalarfield_otherhalf(maxwell_data *d, real *field);
 

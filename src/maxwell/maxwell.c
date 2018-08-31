@@ -308,6 +308,49 @@ static void compute_cross(real *a0, real *a1, real *a2,
      *a2 = b0 * c1 - b1 * c0;
 }
 
+typedef struct {
+    double amp;
+    int rank;
+} amp_and_rank;
+
+void maxwell_dominant_planewave(maxwell_data *d, evectmatrix H, int band, double kdom[3])
+{
+    double max_amp = 0;
+    int max_i = 0, i = 0;
+
+    CHECK(d != NULL, "maxwell_data is NULL");
+    CHECK(1 <= band && band <= H.p, "band out of range");
+
+    /* find biggest planewave component in band 'band' of H on current process: */
+    for (i = 0; i < H.localN; ++i) {
+        double amp = SCALAR_NORMSQR(H.data[(i*2+0)*H.p + band-1]) + SCALAR_NORMSQR(H.data[(i*2+1)*H.p + band-1]);
+        if (amp > max_amp) {
+            max_amp = amp;
+            max_i = i;
+        }
+    }
+
+    k_data cur_k = d->k_plus_G[max_i];
+
+    /* set kdom to cur_k.kmag * (cross product of cur_k.m and cur_k.n) */
+    compute_cross(&kdom[0], &kdom[1], &kdom[2],
+                  cur_k.mx, cur_k.my, cur_k.mz,
+                  cur_k.nx, cur_k.ny, cur_k.nz);
+
+    kdom[0] *= cur_k.kmag;
+    kdom[1] *= cur_k.kmag;
+    kdom[2] *= cur_k.kmag;
+
+#ifdef HAVE_MPI
+    /* find kdom of biggest max_amp across all processes */
+    amp_and_rank local_res = {max_amp, my_global_rank()};
+    amp_and_rank global_res = {0, 0};
+
+    MPI_Allreduce(&local_res, &global_res, 1, MPI_DOUBLE_INT, MPI_MAXLOC, mpb_comm);
+    MPI_Bcast(kdom, 3, MPI_DOUBLE, global_res.rank, mpb_comm);
+#endif
+}
+
 /* Set the current k point for the Maxwell solver.  k is given in the
    basis of the reciprocal lattice vectors, G1, G2, and G3. */
 void update_maxwell_data_k(maxwell_data *d, real k[3],
