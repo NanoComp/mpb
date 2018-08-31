@@ -1,36 +1,70 @@
 language: c
 sudo: false
+dist: trusty
+
+addons:
+  apt:
+    packages: &common_pkgs
+      - autoconf
+      - automake
+      - libtool
+      - guile-2.0-dev
+      - liblapack-dev
+      - libblas-dev
+      - gfortran
+      - git
+      - libfftw3-dev
+
+before_script:
+  - git clone https://github.com/stevengj/libctl
+  - (cd libctl && git checkout master && sh autogen.sh --prefix=$HOME/local && make && make install)
+
+script:
+  - |
+    sh autogen.sh \
+    --enable-maintainer-mode \
+    --prefix=$HOME/local \
+    --with-libctl=$HOME/local/share/libctl \
+    ${MPI_FLAG} \
+    ${HERM_EPS} \
+    ${INV_SYM} \
+    GEN_CTL_IO=$HOME/local/bin/gen-ctl-io \
+    CPPFLAGS="-I$HOME/local/include ${CPPFLAGS}" \
+    LDFLAGS="-L$HOME/local/lib ${LDFLAGS}"
+  - make && make check && make install
 
 matrix:
   include:
     - os: linux
+      env:
+        - MPI_FLAG=
+        - HERM_EPS=
+        - INV_SYM=
       addons:
         apt:
           packages:
-          - autoconf
-          - automake
-          - libtool
-          - guile-2.0-dev
-          - liblapack-dev
-          - libblas-dev
-          - gfortran
-          - libfftw3-dev
-          - libhdf5-serial-dev
-          - git
-      script:
-        - git clone https://github.com/stevengj/libctl
-        - (cd libctl && git checkout master && sh autogen.sh --prefix=$HOME/local && make && make install)
-        - sh autogen.sh --enable-maintainer-mode --prefix=$HOME/local --with-libctl=$HOME/local/share/libctl GEN_CTL_IO=$HOME/local/bin/gen-ctl-io CPPFLAGS=-I$HOME/local/include LDFLAGS=-L$HOME/local/lib
-        - make && make check && make install
+            - *common_pkgs
+            - libhdf5-serial-dev
+    - os: linux
+      env:
+        - MPI_FLAG="--with-mpi CC=mpicc"
+        - HERM_EPS=--with-hermitian-eps
+        - INV_SYM=
+      addons:
+        apt:
+          packages:
+            - *common_pkgs
+            - libopenmpi-dev
+            - mpi-default-bin
+            - openmpi-bin
+            - libfftw3-mpi-dev
+            - libhdf5-openmpi-dev
     - os: osx
+      env:
+        - MPI_FLAG=
+        - HERM_EPS=
+        - INV_SYM=--with-inv-symmetry
       install:
         - brew update
         - brew cask uninstall oclint # travis issue #8826
         - brew install guile fftw lapack
-      script:
-        - git clone https://github.com/stevengj/libctl
-        - (cd libctl && git checkout master && sh autogen.sh --prefix=$HOME/local && make && make install)
-        - sh autogen.sh --prefix=$HOME/local --with-hermitian-eps --with-libctl=$HOME/local/share/libctl GEN_CTL_IO=$HOME/local/bin/gen-ctl-io CPPFLAGS=-I$HOME/local/include LDFLAGS=-L$HOME/local/lib
-        - make && make check && make install
-        - ./configure --prefix=$HOME/local --with-inv-symmetry --with-libctl=$HOME/local/share/libctl GEN_CTL_IO=$HOME/local/bin/gen-ctl-io CPPFLAGS=-I$HOME/local/include LDFLAGS=-L$HOME/local/lib
-        - make && make check && make install
