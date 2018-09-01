@@ -110,7 +110,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 					    3 * d->num_fft_bands);
      d->iplans[0] = rfftwnd_create_plan_specific(rank, n, FFTW_REAL_TO_COMPLEX,
 					     FFTW_ESTIMATE | FFTW_IN_PLACE,
-					     (fftw_real*) d->fft_data,
+					     (fftw_real*) d->fft_data
 					     3 * d->num_fft_bands,
 					     (fftw_real*) d->fft_data,
 					     3 * d->num_fft_bands);
@@ -336,7 +336,6 @@ void maxwell_dominant_planewave(maxwell_data *d, evectmatrix H, int band, double
     compute_cross(&kdom[0], &kdom[1], &kdom[2],
                   cur_k.mx, cur_k.my, cur_k.mz,
                   cur_k.nx, cur_k.ny, cur_k.nz);
-
     kdom[0] *= cur_k.kmag;
     kdom[1] *= cur_k.kmag;
     kdom[2] *= cur_k.kmag;
