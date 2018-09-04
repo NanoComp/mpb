@@ -457,6 +457,17 @@ int main(int argc, char **argv)
      }
      printf("\n");
 
+     for (i = 0; i < num_bands; ++i) {
+         real kdom[3];
+         real k;
+         maxwell_dominant_planewave(mdata, H, i + 1, kdom);
+         if ((i + 1) % 2 == 0)
+             k = kvector[0] + (i + 1) / 2;
+         else
+             k = kvector[0] - (i + 1) / 2;
+         printf("Expected kdom: %15f%15f%15f\n", k, kvector[1], kvector[2]);
+         printf("Got kdom:      %15f%15f%15f\n", kdom[0], kdom[1], kdom[2]);
+     }
      }
 
      if (!stop1) {
