@@ -461,12 +461,14 @@ int main(int argc, char **argv)
          real kdom[3];
          real k;
          maxwell_dominant_planewave(mdata, H, i + 1, kdom);
-         if ((i + 1) % 2 == 0)
+         if ((i + 1) % 2 == 1)
              k = kvector[0] + (i + 1) / 2;
          else
              k = kvector[0] - (i + 1) / 2;
-         printf("Expected kdom: %15f%15f%15f\n", k, kvector[1], kvector[2]);
-         printf("Got kdom:      %15f%15f%15f\n", kdom[0], kdom[1], kdom[2]);
+         if (kvector[0] > 0 && kvector[0] < 0.5) {
+             printf("Expected kdom: %15f%15f%15f\n", k, kvector[1], kvector[2]);
+             printf("Got kdom:      %15f%15f%15f\n", kdom[0], kdom[1], kdom[2]);
+         }
      }
      }
 

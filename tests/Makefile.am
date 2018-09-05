@@ -28,7 +28,7 @@ blastest.out: blastest
 	diff $(srcdir)/blastest.@SCALAR_TYPE@.out $@
 
 maxwell_test.out: maxwell_test
-	./maxwell_test -1 -c 1e-9 -x 256 -E 1e-3 > $@
+	./maxwell_test -1 -c 1e-9 -x 256 -E 1e-3 -e -k 0.4 > $@
 
 if !MPI
 MAXWELL_TEST_OUT=maxwell_test.out
