@@ -313,6 +313,7 @@ typedef struct {
     int rank;
 } amp_and_rank;
 
+// kdom is returned in Cartesian coordinates
 void maxwell_dominant_planewave(maxwell_data *d, evectmatrix H, int band, double kdom[3])
 {
     double max_amp = 0;
