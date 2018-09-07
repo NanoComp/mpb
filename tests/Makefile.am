@@ -28,10 +28,13 @@ blastest.out: blastest
 	diff $(srcdir)/blastest.@SCALAR_TYPE@.out $@
 
 maxwell_test.out: maxwell_test
-	./maxwell_test -1 -c 1e-9 -x 256 -E 1e-3 -e -k 0.4 > $@
+	./maxwell_test -1 -c 1e-9 -x 256 -E 1e-3 > $@
+
+maxwell_test_2.out: maxwell_test
+	./maxwell_test -1 -c 1e-9 -x 256 -E 1e-3 -e -k 0.4 -n 1 > $@
 
 if !MPI
-MAXWELL_TEST_OUT=maxwell_test.out
+MAXWELL_TEST_OUT=maxwell_test.out maxwell_test_2.out
 endif
 
 check-local: blastest.out $(MAXWELL_TEST_OUT)
@@ -40,4 +43,4 @@ check-local: blastest.out $(MAXWELL_TEST_OUT)
 	@echo "**********************************************************"
 
 clean-local:
-	rm -f blastest.out maxwell_test.out
+	rm -f blastest.out $(MAXWELL_TEST_OUT)

@@ -72,6 +72,7 @@ check-epsilon.h5
 check-mu.h5
 tests/blastest.out
 tests/maxwell_test.out
+tests/maxwell_test_2.out
 
 examples/*.h5
 examples/*.png
