@@ -1000,4 +1000,12 @@ vector3 compute_1_group_velocity_reciprocal(integer b)
 				   compute_1_group_velocity(b));
 }
 
+vector3 get_dominant_planewave(integer band)
+{
+    double kdom[3];
+    maxwell_dominant_planewave(mdata, H, band, kdom);
+    vector3 result = {kdom[0], kdom[1], kdom[2]};
+    return result;
+}
+
 /**************************************************************************/
