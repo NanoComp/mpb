@@ -217,6 +217,7 @@ extern void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
 extern void maxwell_parity_constraint(evectmatrix X, void *data);
 extern void maxwell_zparity_constraint(evectmatrix X, void *data);
 extern void maxwell_yparity_constraint(evectmatrix X, void *data);
+extern void maxwell_xparity_constraint(evectmatrix X, void *data);
 
 extern int maxwell_zero_k_num_const_bands(evectmatrix X, maxwell_data *d);
 extern void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d);
