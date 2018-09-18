@@ -308,11 +308,6 @@ static void compute_cross(real *a0, real *a1, real *a2,
      *a2 = b0 * c1 - b1 * c0;
 }
 
-typedef struct {
-    double amp;
-    int rank;
-} amp_and_rank;
-
 // kdom is returned in Cartesian coordinates
 void maxwell_dominant_planewave(maxwell_data *d, evectmatrix H, int band, double kdom[3])
 {
@@ -342,9 +337,17 @@ void maxwell_dominant_planewave(maxwell_data *d, evectmatrix H, int band, double
     kdom[2] *= cur_k.kmag;
 
 #ifdef HAVE_MPI
+    struct {
+        double amp;
+        int rank;
+    } local_res, global_res;
+
     /* find kdom of biggest max_amp across all processes */
-    amp_and_rank local_res = {max_amp, my_global_rank()};
-    amp_and_rank global_res = {0, 0};
+    local_res.amp = max_amp;
+    local_res.rank = my_global_rank();
+
+    global_res.amp = 0;
+    global_res.rank = 0;
 
     MPI_Allreduce(&local_res, &global_res, 1, MPI_DOUBLE_INT, MPI_MAXLOC, mpb_comm);
     MPI_Bcast(kdom, 3, MPI_DOUBLE, global_res.rank, mpb_comm);
