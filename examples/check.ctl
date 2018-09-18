@@ -123,7 +123,8 @@
 
 (set! tolerance (* tolerance 10000))
 
-)) ; if (not (using-mpi?))
+)
+) ; if (not (using-mpi?))
 
 ; Test get-dominant-planwave
 
@@ -143,6 +144,10 @@
                           (vector-ref (get-dominant-planewave 2) 0)
                           (vector-ref (get-dominant-planewave 3) 0))
                     (list 0.4 -0.6 1.4))
+
+;; Restore initial values
+(set! resolution 32)
+(set! geometry-lattice (make lattice (size 1 1 no-size)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
