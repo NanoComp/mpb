@@ -246,6 +246,14 @@ fi
 
 AM_CONDITIONAL(MPI, test "x$with_mpi" = "xyes")
 
+RUNCODE=""
+if test "x$with_mpi" = "xyes"; then
+    AC_CHECK_PROG(MPIRUN, mpirun, mpirun)
+    # always use 2 processes for 'make check'
+    RUNCODE="$MPIRUN -np 2"
+fi
+AC_SUBST(RUNCODE)
+
 ##############################################################################
 # Check for HDF5 library
 AC_ARG_WITH(hdf5, [AC_HELP_STRING([--without-hdf5],[do not use HDF5 output])], ok=$withval, ok=yes)

@@ -31,8 +31,8 @@ MY_DEFS = -DHAVE_CTL_HOOKS=1 -DHAVE_CTL_EXPORT_HOOK=1
 VERSION_STRING = "mpb@MPB_SUFFIX@ @VERSION@, Copyright (C) 1999-2012, MIT"
 
 check-local: mpb@MPB_SUFFIX@
-	./mpb@MPB_SUFFIX@ $(top_srcdir)/examples/check.ctl
-	./mpb@MPB_SUFFIX@ force-mu?=true $(top_srcdir)/examples/check.ctl
+	$(RUNCODE) ./mpb@MPB_SUFFIX@ $(top_srcdir)/examples/check.ctl
+	$(RUNCODE) ./mpb@MPB_SUFFIX@ force-mu?=true $(top_srcdir)/examples/check.ctl
 
 dist_man_MANS = mpb-split.1 mpb.1
 

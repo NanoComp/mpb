@@ -28,7 +28,7 @@
 	(set! num-err (+ num-err 1))
 	(set! sum-err (+ sum-err err))
 	(set! sum-abs-err (+ sum-abs-err abserr))))
-  (or 
+  (or
    (< (abs (- x y)) (* 0.5 check-tolerance (+ (abs x) (abs y))))
    (and (< (abs x) 1e-3) (< (abs (- x y)) 1e-3))))
 
@@ -90,7 +90,7 @@
 
   (run-tm)
   (check-freqs correct-freqs)
-  
+
   (run-te)
   (check-freqs correct-freqs))
 
@@ -123,7 +123,31 @@
 
 (set! tolerance (* tolerance 10000))
 
-)) ; if (not (using-mpi?))
+)
+) ; if (not (using-mpi?))
+
+; Test get-dominant-planwave
+
+(print
+ "**************************************************************************\n"
+ " Test case: get-dominant-planewave.\n"
+ "**************************************************************************\n"
+)
+
+(set! geometry '())
+(set! k-points (list (vector3 0.4 0 0)))
+(set! geometry-lattice (make lattice (size 1 0.1 no-size)))
+(set! num-bands 8)
+(set! resolution 100)
+(run-te)
+(check-almost-equal (list (vector-ref (get-dominant-planewave 1) 0)
+                          (vector-ref (get-dominant-planewave 2) 0)
+                          (vector-ref (get-dominant-planewave 3) 0))
+                    (list 0.4 -0.6 1.4))
+
+;; Restore initial values
+(set! resolution 32)
+(set! geometry-lattice (make lattice (size 1 1 no-size)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -136,7 +160,7 @@
 )
 
 (set! geometry (list
-		(make cylinder (material (make dielectric (epsilon 11.56))) 
+		(make cylinder (material (make dielectric (epsilon 11.56)))
 		      (center 0 0) (radius 0.2) (height infinity))))
 (set! k-points (interpolate 4 (list (vector3 0) (vector3 0.5)
 				    (vector3 0.5 0.5 0) (vector3 0))))
@@ -161,11 +185,11 @@
 (set! num-bands 10)
 (set! geometry-lattice (make lattice (size 1 1 no-size)))
 (set! resolution 32)
-(set! k-points 
+(set! k-points
       (interpolate 2 (list (vector3 0 0) (vector3 0.5 0) (vector3 0.5 0.5) (vector3 0 0))))
 (set! default-material air)
 (set! geometry
-      (list (make cylinder (center 0 0 0) (radius 0.11) (height infinity) 
+      (list (make cylinder (center 0 0 0) (radius 0.11) (height infinity)
                   (material (make medium-anisotropic
                               (epsilon-diag 15 15 15) (epsilon-offdiag 0 0 0)
                               (mu-diag 14 14 1) (mu-offdiag (if (has-hermitian-eps?)
@@ -191,23 +215,23 @@
                                    (basis2 (/ (sqrt 3) 2) -0.5)))
       (set! k-points (list (vector3 0 0.5 0))) ; K
       (set! geometry (list
-                      (make cylinder (material (make dielectric (epsilon 12))) 
+                      (make cylinder (material (make dielectric (epsilon 12)))
                             (center 0 0) (radius 0.2) (height infinity))))
       (set! geometry (geometric-objects-lattice-duplicates geometry))
-      (set! geometry (append geometry 
-                             (list (make cylinder (center 0 0 0) 
+      (set! geometry (append geometry
+                             (list (make cylinder (center 0 0 0)
                                          (radius 0.33) (height infinity)
                                          (material (make dielectric (epsilon 12)))))))
       (set! grid-size (vector3 (* 16 5) (* 16 5) 1))
       (set! num-bands 2)
       (set! target-freq 0.35)
       (run-tm)
-      
+
       (let ((ct-save check-tolerance))
         (set! check-tolerance (* ct-save 10))
         (check-freqs '((0.33627039929402 0.338821383601027)))
         (set! check-tolerance ct-save))
-      
+
       (set! target-freq 0)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -260,7 +284,7 @@
 	(list (make block (center 0) (size 0.313 0.313 1) (material hi-z))
 	      (make block (center 0) (size 0.313 1 0.313) (material hi-y))
 	      (make block (center 0) (size 1 0.313 0.313) (material hi-x))
-	      (make block (center 0) (size 0.313 0.313 0.313) 
+	      (make block (center 0) (size 0.313 0.313 0.313)
 		    (material hi-all))))
 (set! num-bands 3)
 (run)

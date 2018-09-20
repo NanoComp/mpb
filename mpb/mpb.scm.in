@@ -251,6 +251,7 @@
   'string)
 (define-external-function load-eigenvectors false false no-return-value
   'string)
+(define-external-function get-dominant-planewave false false 'vector3 'integer)
 
 (define cur-field 'cur-field)
 (define-external-function cur-field? false false 'boolean 'SCM)
