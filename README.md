@@ -15,7 +15,7 @@ MPB is a free and open-source software package for computing electromagnetic ban
 -   Support for arbitrary, **anisotropic** dielectrics including **gyrotropic/magneto-optic** materials and **non-orthogonal** unit cells.
 -   Field output in the [HDF5](https://support.hdfgroup.org/HDF5/) data format.
 
-## Citing Meep
+## Citing MPB
 
 We kindly request that you use the following reference in any publication for which you use MPB:
 
