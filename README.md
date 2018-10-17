@@ -17,7 +17,7 @@ MPB is a free and open-source software package for computing electromagnetic ban
 
 ## Citing MPB
 
-We kindly request that you use the following reference in any publication for which you use MPB:
+We kindly request that you cite the following reference in any publication for which you use MPB:
 
 * Steven G. Johnson and J. D. Joannopoulos, [Block-iterative frequency-domain methods for Maxwell's equations in a planewave basis](http://www.opticsinfobase.org/abstract.cfm?URI=oe-8-3-173), *Optics Express* vol. **8**, no. 3, pp. 173–190 (2001).
 
