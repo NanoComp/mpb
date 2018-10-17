@@ -3,7 +3,7 @@
 
 MPB is a free and open-source software package for computing electromagnetic band structures and modes.
 
-**Features**
+## Features
 
 -   **Free and open-source software** under the [GNU GPL](https://en.wikipedia.org/wiki/GNU_General_Public_License).
 -   Complete **scriptability** via [Python](Python_Tutorial) or [Scheme](Scheme_User_Interface) APIs.
@@ -15,6 +15,12 @@ MPB is a free and open-source software package for computing electromagnetic ban
 -   Support for arbitrary, **anisotropic** dielectrics including **gyrotropic/magneto-optic** materials and **non-orthogonal** unit cells.
 -   Field output in the [HDF5](https://support.hdfgroup.org/HDF5/) data format.
 
-# Documentation
+## Citing Meep
+
+We kindly request that you use the following reference in any publication for which you use MPB:
+
+* Steven G. Johnson and J. D. Joannopoulos, [Block-iterative frequency-domain methods for Maxwell's equations in a planewave basis](http://www.opticsinfobase.org/abstract.cfm?URI=oe-8-3-173), *Optics Express* vol. **8**, no. 3, pp. 173–190 (2001).
+
+## Documentation
 
 See the [manual on readthedocs](https://mpb.readthedocs.io/en/latest) for the latest documentation.
