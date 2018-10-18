@@ -441,9 +441,9 @@ Output the electric displacement (\(\mathbf{D}\)) field for `which_band`; either
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Output the electric (\(\mathbf{E}\)) field for `which_band`; either all or one of the Cartesian components, respectively.
 
-**`output_hpwr(ms, which_band)`**  
+**`output_bpwr(ms, which_band)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Output the time-averaged magnetic-field energy density (hpwr = \(|\mathbf{H}|^2\)) for `which_band`.
+Output the time-averaged magnetic-field energy density (bpwr = \(\mu|\mathbf{H}|^2\)) for `which_band`.
 
 **`output_dpwr(ms, which_band)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
