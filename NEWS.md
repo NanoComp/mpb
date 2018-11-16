@@ -1,5 +1,11 @@
 # MPB Release Notes
 
+## MPB 1.7
+
+11/16/18
+
+ * Add `maxwell_dominant_planewave` function (#71) and Scheme interface (#73)
+
 ## MPB 1.6.2
 
 4/18/2018
