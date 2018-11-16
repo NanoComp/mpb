@@ -4,8 +4,6 @@
 
 11/16/18
 
- * Fix `output_bpwr` for stevengj/meep#563
-
  * Add `maxwell_dominant_planewave` function (#71) and Scheme interface (#73)
 
 ## MPB 1.6.2
