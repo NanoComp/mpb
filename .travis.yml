@@ -66,5 +66,4 @@ matrix:
         - INV_SYM=--with-inv-symmetry
       install:
         - brew update
-        - brew cask uninstall oclint # travis issue #8826
         - brew install guile fftw lapack
