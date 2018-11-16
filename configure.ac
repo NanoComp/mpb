@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(mpb, 1.6.2, stevenj@alum.mit.edu)
+AC_INIT(mpb, 1.7, stevenj@alum.mit.edu)
 AC_CONFIG_SRCDIR([src/matrices/matrices.c])
 AC_CONFIG_HEADER([config.h src/mpbconf.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -12,7 +12,7 @@ SHARED_VERSION_INFO="1:0:0"
 
 # note: must be consistent with API version above
 VERSION_MAJOR=1
-VERSION_MINOR=6
+VERSION_MINOR=7
 VERSION_PATCH=0
 AC_DEFINE_UNQUOTED(MPB_VERSION_MAJOR, [$VERSION_MAJOR], [major version])
 AC_DEFINE_UNQUOTED(MPB_VERSION_MINOR, [$VERSION_MINOR], [minor version])
