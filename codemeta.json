@@ -19,7 +19,7 @@
   ],
   "developmentStatus": "active",
   "downloadUrl": "https://github.com/stevengj/mpb/releases",
-  "version":"1.6.2",
+  "version":"1.7.0",
   "dateCreated":"1998-05-20",
   "datePublished":"1999-11-19",
   "programmingLanguage": ["C", "Scheme"]
