@@ -43,7 +43,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 #if !defined(HAVE_FFTW) && !defined(HAVE_FFTW3)
 #  error Non-FFTW FFTs are not currently supported.
 #endif
-     
+
 
 #if defined(HAVE_FFTW)
      CHECK(sizeof(fftw_real) == sizeof(real),
@@ -55,7 +55,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->nx = nx;
      d->ny = ny;
      d->nz = nz;
-     
+
      d->max_fft_bands = MIN2(num_bands, max_fft_bands);
      maxwell_set_num_bands(d, num_bands);
 
@@ -66,7 +66,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 
      /* ----------------------------------------------------- */
      d->nplans = 1;
-#ifndef HAVE_MPI 
+#ifndef HAVE_MPI
      d->local_nx = nx; d->local_ny = ny;
      d->local_x_start = d->local_y_start = 0;
      *local_N = *alloc_N = nx * ny * nz;
@@ -130,12 +130,12 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->nplans = 0; /* plans will be created as needed */
 
      for (i = 0; i < rank; ++i) np[i] = n[i];
-     
+
 #    ifndef SCALAR_COMPLEX
      d->last_dim_size = 2 * (np[rank-1] = d->last_dim / 2 + 1);
 #    endif
 
-     fft_data_size = *alloc_N 
+     fft_data_size = *alloc_N
 	  = FFTW(mpi_local_size_transposed)(rank, np, mpb_comm,
 					    &local_nx, &local_x_start,
 					    &local_ny, &local_y_start);
@@ -163,7 +163,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 				       FFTW_ESTIMATE | FFTW_IN_PLACE);
      {
 	  int nt[3]; /* transposed dimensions for reverse FFT */
-	  nt[0] = n[1]; nt[1] = n[0]; nt[2] = n[2]; 
+	  nt[0] = n[1]; nt[1] = n[0]; nt[2] = n[2];
 	  d->plans[0] = fftwnd_mpi_create_plan(mpb_comm, rank, nt,
 					   FFTW_BACKWARD,
 					   FFTW_ESTIMATE | FFTW_IN_PLACE);
@@ -172,7 +172,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      fftwnd_mpi_local_sizes(d->iplans[0], &d->local_nx, &d->local_x_start,
 			    &d->local_ny, &d->local_y_start,
 			    &fft_data_size);
-     
+
      d->fft_output_size = nx * d->local_ny * nz;
 
 #    else /* not SCALAR_COMPLEX */
@@ -202,7 +202,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
 	  d->fft_output_size = nx * d->local_ny * (d->last_dim_size / 2);
 
 #    endif /* not SCALAR_COMPLEX */
-     
+
      *local_N = d->local_nx * ny * nz;
      *N_start = d->local_x_start * ny * nz;
      *alloc_N = *local_N;
@@ -227,7 +227,7 @@ maxwell_data *create_maxwell_data(int nx, int ny, int nz,
      d->fft_data = (scalar *) FFTW(malloc)(sizeof(scalar) * 3 * fft_data_size);
      CHECK(d->fft_data, "out of memory!");
      d->fft_data2 = d->fft_data; /* works in-place */
-#else     
+#else
      CHK_MALLOC(d->fft_data, scalar, 3 * fft_data_size);
      d->fft_data2 = d->fft_data; /* works in-place */
 #endif
@@ -354,6 +354,60 @@ void maxwell_dominant_planewave(maxwell_data *d, evectmatrix H, int band, double
 #endif
 }
 
+/* Sets the given band of H to a pure planewave k + G,
+   with g giving the index of the reciprocal vector G to use,
+   and s and p are the amplitudes of the "s and p" polarizations
+   relative to the plane normal to (k+G) x axis.   (It is an
+   error if k+G is parallel to the axis.) */
+void maxwell_set_planewave(maxwell_data *d, evectmatrix H, int band,
+                           int g[3], double s, double p,
+                           real axis[3])
+{
+#ifdef SCALAR_COMPLEX
+    int x, y, z, i;
+
+    /* coordinate of the G vector — minus sign is
+       due to sign convention in FFTW transform */
+    x = g[0] > 0 ? d->nx - g[0] : -g[0];
+    y = g[1] > 0 ? d->ny - g[1] : -g[1];
+    z = g[2] > 0 ? d->nz - g[2] : -g[2];
+    CHECK(x >= 0 && y >= 0 && z >= 0 &&
+          x < d->nx && y < d->ny && z < d->nz,
+          "invalid planewave order");
+
+    for (i = 0; i < H.localN; ++i) {
+        ASSIGN_ZERO(H.data[(i*2+0)*H.p + band-1]);
+        ASSIGN_ZERO(H.data[(i*2+1)*H.p + band-1]);
+    }
+
+    if (x >= d->local_x_start && x < d->local_x_start + d->local_nx) {
+        real sx, sy, sz, px, py, pz, kx, ky, kz, len, Hx, Hy, Hz;
+        k_data k;
+
+        i = ((x - d->local_x_start) * d->ny + y) * d->nz + z;
+        k = d->k_plus_G[i];
+
+        compute_cross(&kx, &ky, &kz, /* unit vector in direction of k+G */
+                      k.mx, k.my, k.mz,
+                      k.nx, k.ny, k.nz);
+        compute_cross(&px, &py, &pz, /* direction of p axis for H field */
+                      kx, ky, kz, axis[0], axis[1], axis[2]);
+        len = sqrt(px*px + py*py + pz*pz);
+        CHECK(len > 0, "invalid planewave axis parallel to k+G");
+        px /= len; py /= len; pz /= len;
+        compute_cross(&sx, &sy, &sz, /* direction of s axis for H field */
+                    kx, ky, kz, px, py, pz);
+
+        Hx = s*sx+p*px; Hy = s*sy+p*py; Hz = s*sz+p*pz;
+        ASSIGN_REAL(H.data[(i*2+0)*H.p + band-1], Hx*k.mx+Hy*k.my+Hz*k.mz);
+        ASSIGN_REAL(H.data[(i*2+1)*H.p + band-1], Hx*k.nx+Hy*k.ny+Hz*k.nz);
+    }
+#else /* !SCALAR_COMPLEX */
+    (void) d; (void) H; (void) band; (void) g; (void) s; (void) p; (void) axis;
+    CHECK(0, "mpbi does not support maxwell_set_planewave");
+#endif
+}
+
 /* Set the current k point for the Maxwell solver.  k is given in the
    basis of the reciprocal lattice vectors, G1, G2, and G3. */
 void update_maxwell_data_k(maxwell_data *d, real k[3],
@@ -396,7 +450,7 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 		    a = kpGx*kpGx + kpGy*kpGy + kpGz*kpGz;
 		    kpG->kmag = sqrt(a);
 		    *kpGn2 = a;
-		    
+
 		    /* Now, compute the two normal vectors: */
 		    /* (Note that we choose them so that m has odd/even
 		       parity in z/y, and n is even/odd in z/y.) */
@@ -422,7 +476,7 @@ void update_maxwell_data_k(maxwell_data *d, real k[3],
 			      kpG->ny = b * leninv;
 			      kpG->nz = c * leninv;
 			 }
-			 
+
 			 /* m = n x (k+G), normalized */
 			 compute_cross(&a, &b, &c,
 				       kpG->nx, kpG->ny, kpG->nz,
@@ -473,7 +527,7 @@ void set_maxwell_data_parity(maxwell_data *d, int parity)
      d->parity = parity;
 }
 
-maxwell_target_data *create_maxwell_target_data(maxwell_data *md, 
+maxwell_target_data *create_maxwell_target_data(maxwell_data *md,
 						real target_frequency)
 {
      maxwell_target_data *d;
