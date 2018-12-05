@@ -125,7 +125,7 @@ extern void maxwell_set_num_bands(maxwell_data *d, int num_bands);
 
 extern void maxwell_dominant_planewave(maxwell_data *d, evectmatrix H, int band, double kdom[3]);
 extern void maxwell_set_planewave(maxwell_data *d, evectmatrix H, int band,
-                                  int g[3], double s, double p,
+                                  int g[3], scalar s, scalar p,
                                   real axis[3]);
 
 extern void update_maxwell_data_k(maxwell_data *d, real k[3],

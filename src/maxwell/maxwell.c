@@ -360,7 +360,7 @@ void maxwell_dominant_planewave(maxwell_data *d, evectmatrix H, int band, double
    relative to the plane normal to (k+G) x axis.   (It is an
    error if k+G is parallel to the axis.) */
 void maxwell_set_planewave(maxwell_data *d, evectmatrix H, int band,
-                           int g[3], double s, double p,
+                           int g[3], scalar s, scalar p,
                            real axis[3])
 {
 #ifdef SCALAR_COMPLEX
@@ -381,7 +381,8 @@ void maxwell_set_planewave(maxwell_data *d, evectmatrix H, int band,
     }
 
     if (x >= d->local_x_start && x < d->local_x_start + d->local_nx) {
-        real sx, sy, sz, px, py, pz, kx, ky, kz, len, Hx, Hy, Hz;
+        real sx, sy, sz, px, py, pz, kx, ky, kz, len;
+        scalar Hx, Hy, Hz;
         k_data k;
 
         i = ((x - d->local_x_start) * d->ny + y) * d->nz + z;
@@ -398,9 +399,15 @@ void maxwell_set_planewave(maxwell_data *d, evectmatrix H, int band,
         compute_cross(&sx, &sy, &sz, /* direction of s axis for H field */
                     kx, ky, kz, px, py, pz);
 
-        Hx = s*sx+p*px; Hy = s*sy+p*py; Hz = s*sz+p*pz;
-        ASSIGN_REAL(H.data[(i*2+0)*H.p + band-1], Hx*k.mx+Hy*k.my+Hz*k.mz);
-        ASSIGN_REAL(H.data[(i*2+1)*H.p + band-1], Hx*k.nx+Hy*k.ny+Hz*k.nz);
+        ASSIGN_SCALAR(Hx, s.re*sx+p.re*px, s.im*sx+p.im*px);
+        ASSIGN_SCALAR(Hy, s.re*sy+p.re*py, s.im*sy+p.im*py);
+        ASSIGN_SCALAR(Hz, s.re*sz+p.re*pz, s.im*sz+p.im*pz);
+        ASSIGN_SCALAR(H.data[(i*2+0)*H.p + band-1],
+                      Hx.re*k.mx+Hy.re*k.my+Hz.re*k.mz,
+                      Hx.im*k.mx+Hy.im*k.my+Hz.im*k.mz);
+        ASSIGN_SCALAR(H.data[(i*2+1)*H.p + band-1],
+                      Hx.re*k.nx+Hy.re*k.ny+Hz.re*k.nz,
+                      Hx.im*k.nx+Hy.im*k.ny+Hz.im*k.nz);
     }
 #else /* !SCALAR_COMPLEX */
     (void) d; (void) H; (void) band; (void) g; (void) s; (void) p; (void) axis;
