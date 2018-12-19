@@ -441,14 +441,14 @@ Solve for the requested eigenstates at the Bloch wavevector `k`.
 
 MPB's `(run)` function(s) and its underlying algorithms compute the frequency `w` as a function of wavevector `k`. Sometimes, however, it is desirable to solve the inverse problem, for `k` at a given frequency `w`. This is useful, for example, when studying coupling in a waveguide between different bands at the same frequency since frequency is conserved even when wavevector is not. One also uses `k(w)` to construct wavevector diagrams, which aid in understanding diffraction (e.g. negative-diffraction materials and super-prisms). To solve such problems, therefore, we provide the `find-k` function described below, which inverts `w(k)` via a few iterations of Newton's method using the group velocity `dw/dk`. Because it employs a root-finding method, you need to specify bounds on `k` and a *crude* initial guess where order of magnitude is usually good enough.
 
-**`(find-k p omega band-min band-max kdir tol kmag-guess kmag-min kmag-max [band-func...])`**  
+**`(find-k p omega band-min band-max korig-and-kdir tol kmag-guess kmag-min kmag-max [band-func...])`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Find the wavevectors in the current geometry/structure for the bands from `band-min` to `band-max` at the frequency `omega` along the `kdir` direction in k-space. Returns a list of the wavevector magnitudes for each band; the actual wavevectors are `(vector3-scale magnitude (unit-vector3 kdir))`. The arguments of `find-k` are:
 
 -   `p`: parity (same as first argument to `run-parity`, [above](Scheme_User_Interface.md#run-functions)).
 -   `omega`: the frequency at which to find the bands
 -   `band-min`, *`band-max`*: the range of bands to solve for the wavevectors of (inclusive).
--   `kdir`: the direction in k-space in which to find the wavevectors. (The magnitude of *`kdir`* is ignored.)
+-   `korig-and-kdir`: If this is a `list` of `vector3`, the first element should be the original `k` and the second element is the direction in k-space in which to find the wavevectors. (The magnitude of *`kdir`* is ignored.) If this is a single `vector3` it represents `kdir`, and `korig` defaults to `(0, 0, 0)`.
 -   `tol`: the fractional tolerance with which to solve for the wavevector; `1e-4` is usually sufficient. (Like the `tolerance` input variable, this is only the tolerance of the numerical iteration...it does not have anything to do with e.g. the error from finite grid `resolution`.)
 -   `kmag-guess`: an initial guess for the k magnitude (along *`kdir`*) of the wavevector at *`omega`*. Can either be a list (one guess for each band from *`band-min`* to *`band-max`*) or a single number (same guess for all bands, which is usually sufficient).
 -   `kmag-min`, *`kmag-max`*: a range of k magnitudes to search; should be large enough to include the correct k values for all bands.
