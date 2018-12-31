@@ -1,6 +1,6 @@
 site_name: MPB Documentation
 site_author: S. G. Johnson et al.
-repo_url: https://github.com/stevengj/mpb/
+repo_url: https://github.com/NanoComp/mpb/
 
 docs_dir: 'doc/docs'
 site_dir: 'doc/site'
