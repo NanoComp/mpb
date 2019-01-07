@@ -1297,8 +1297,7 @@ number compute_energy_in_object_list(geometric_object_list objects)
           return 0.0;
      }
 
-     for (i = 0; i < objects.num_items; ++i)
-	  geom_fix_object(objects.items[i]);
+     geom_fix_objects0(objects);
 
      n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
      n_other = mdata->other_dims;
