@@ -1,17 +1,14 @@
 site_name: MPB Documentation
-site_author: S. G. Johnson et al.
+site_author: MPB Developers
 repo_url: https://github.com/NanoComp/mpb/
+
+use_directory_urls: True
 
 docs_dir: 'doc/docs'
 site_dir: 'doc/site'
 
 theme:
   name: readthedocs
-  custom_dir: mpb-mkdocs-theme
-  
-python:
-   version: 2 # for unicode
-   setup_py_install: True
 
 markdown_extensions:
     - wikilinks

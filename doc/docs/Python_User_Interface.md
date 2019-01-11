@@ -2,7 +2,7 @@
 # Python User Interface
 ---
 
-The Python user interface is documented in this page. It currently depends on and lives in the [Meep repository](https://github.com/stevengj/meep), but will eventually be migrated to the MPB repo. Installing Meep with Python enabled will automatically build PyMPB if MPB is installed. Detailed instructions can be found [here](http://meep.readthedocs.io/en/latest/Installation/#building-from-source). We do not document the Python language or the functions provided by [meep](https://meep.readthedocs.io). See also the [PyMEEP User Interface](https://meep.readthedocs.io/en/latest/Python_User_Interface/) section of the [meep manual](https://meep.readthedocs.io).
+The Python user interface is documented in this page. It currently depends on and lives in the [Meep repository](https://github.com/NanoComp/meep), but will eventually be migrated to the MPB repo. Installing Meep with Python enabled will automatically build PyMPB if MPB is installed. Detailed instructions can be found [here](http://meep.readthedocs.io/en/latest/Installation/#building-from-source). We do not document the Python language or the functions provided by [meep](https://meep.readthedocs.io). See also the [PyMeep User Interface](https://meep.readthedocs.io/en/latest/Python_User_Interface/) section of the [Meep manual](https://meep.readthedocs.io).
 
 [TOC]
 
@@ -189,7 +189,7 @@ If any dimension has a size of `0`, then the dimensionality of the problem is re
 
 ### Medium
 
-This class is used to specify the materials that geometric objects are made of. See the [meep documentation](http://meep.readthedocs.io/en/latest/Python_User_Interface/#medium) for more information.
+This class is used to specify the materials that geometric objects are made of. See the [Meep manual](http://meep.readthedocs.io/en/latest/Python_User_Interface/#medium) for more information.
 
 **`epsilon` [`float`]**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -207,7 +207,7 @@ For example, a material with a dielectric constant of 3.0 for P-polarization and
 
 **material functions**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-This material type allows you to specify the material as an arbitrary function of position. For an example of this, see the `mpb_bragg_sine.py` file in the `python/examples/` directory of the [Meep source](http://github.com/stevengj/meep). See the documentation in the [Meep manual](http://meep.readthedocs.io/en/latest/Python_User_Interface/#medium).
+This material type allows you to specify the material as an arbitrary function of position. For an example of this, see the `mpb_bragg_sine.py` file in the `python/examples/` directory of the [Meep source](http://github.com/NanoComp/meep). See the documentation in the [Meep manual](http://meep.readthedocs.io/en/latest/Python_User_Interface/#medium).
 
 Normally, the dielectric constant is required to be positive or positive-definite, for a tensor. However, MPB does have a somewhat experimental feature allowing negative dielectrics (e.g. in a plasma). To use it, call the function `ModeSolver.allow_negative_epsilon()` before `ModeSolver.run()`. In this case, it will output the (real) frequency *squared* in place of the (possibly imaginary) frequencies. Convergence will be somewhat slower because the eigenoperator is not positive definite.
 

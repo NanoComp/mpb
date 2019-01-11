@@ -46,7 +46,7 @@ It should finish in a few seconds.
 
 In most cases, the first thing we'll want to do is to look at the dielectric function, to make sure that we specified the correct geometry. We can do this by looking at the `epsilon.h5` output file.
 
-The first thing that might come to mind would be to examine `epsilon.h5` directly, say by converting it to a PNG image with `h5topng` from [h5utils](https://github.com/stevengj/h5utils), magnifying it by 3:
+The first thing that might come to mind would be to examine `epsilon.h5` directly, say by converting it to a PNG image with `h5topng` from [h5utils](https://github.com/NanoComp/h5utils), magnifying it by 3:
 
 ```
 unix% h5topng -S 3 epsilon.h5
@@ -108,7 +108,7 @@ unix% grep tefreqs tri-rods.out > tri-rods.te.dat
 
 The TM and TE bands are both plotted below against the "k index" column of the data, with the special k-points labelled. TM bands are shown in blue (filled circles) with the gaps shaded light blue, while TE bands are shown in red (hollow circles) with the gaps shaded light red.
 
-<center>![](images/tri-rods-bands.gif)</center>
+<center>![](images/tri-rods-bands.png)</center>
 
 Note that we truncated the upper frequencies at a cutoff of 1.0 c/a. Although some of our bands go above that frequency, we didn't compute enough bands to fill in all of the states in that range. Besides, we only really care about the states around the gap(s), in most cases.
 

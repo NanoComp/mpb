@@ -62,7 +62,7 @@ It should finish in a few seconds.
 
 In most cases, the first thing we'll want to do is to look at the dielectric function, to make sure that we specified the correct geometry. We can do this by looking at the `epsilon.h5` output file.
 
-The first thing that might come to mind would be to examine `epsilon.h5` directly, say by converting it to a PNG image with `h5topng` from [h5utils](https://github.com/stevengj/h5utils), magnifying it by 3:
+The first thing that might come to mind would be to examine `epsilon.h5` directly, say by converting it to a PNG image with `h5topng` from [h5utils](https://github.com/NanoComp/h5utils), magnifying it by 3:
 
 ```
 unix% h5topng -S 3 epsilon.h5
