@@ -1,6 +1,6 @@
 This is the documentation tree for MPB.
 
-Markdown (.md) files for MPB documentation live in $(top_src_dir)/doc/docs.
+Markdown (.md) files for MPB documentation are in the doc/docs.
 
 To build and visualize the HTML documentation locally using the
 mkdocs package (useful for verifying on your local machine before
@@ -11,7 +11,7 @@ following command from the top-level mpb repository tree:
 
 and then open the following URL in a browser window:
 
-http://127.0.0.1:8000/MPB
+http://127.0.0.1:8000
 
 This launches a little web server on your local machine
 plus a filesystem hook for rebuilding the documentation

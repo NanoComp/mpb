@@ -2,7 +2,7 @@
 Acknowledgements
 ---
 
-MPB originated as part of graduate research at MIT with initial contributions by [Steven G. Johnson](http://math.mit.edu/~stevenj/). Currently, the MPB project is maintained by [Simpetus](http://www.simpetus.com) and the open-source developer community on [GitHub](https://github.com/stevengj/mpb).
+MPB originated as part of graduate research at MIT with initial contributions by [Steven G. Johnson](http://math.mit.edu/~stevenj/). Currently, the MPB project is maintained by [Simpetus](http://www.simpetus.com) and the developer community on [GitHub](https://github.com/NanoComp/mpb).
 
 Referencing
 -----------

@@ -24,7 +24,7 @@ To give you some feel for how long these calculations take, let us consider one 
 Download
 ------------
 
-The development repository is on on [GitHub](https://github.com/stevengj/mpb). Gzipped tarballs of stable versions are available in [Download](Download.md). The release history is described in [NEWS](https://github.com/stevengj/mpb/blob/master/NEWS.md). Installation instructions are in [Installation](Installation.md).
+The development repository is on on [GitHub](https://github.com/NanoComp/mpb). Gzipped tarballs of stable versions are available in [Download](Download.md). The release history is described in [NEWS](https://github.com/NanoComp/mpb/blob/master/NEWS.md). Installation instructions are in [Installation](Installation.md).
 
 Documentation
 -------------
@@ -39,12 +39,12 @@ Subscribe to the read-only [mpb-announce mailing list](http://ab-initio.mit.edu/
 
 ### Bug Reports and Feature Requests
 
-For bug reports and feature requests, please file a [GitHub issue](https://github.com/stevengj/mpb/issues).
+For bug reports and feature requests, please file a [GitHub issue](https://github.com/NanoComp/mpb/issues).
 
 Acknowledgements
 ----------------
 
-The MPB project is maintained by [Simpetus](http://www.simpetus.com) and the open-source developer community on [GitHub](https://github.com/stevengj/mpb). [Acknowledgements](Acknowledgements.md) provides a complete listing of the project contributors.
+The MPB project is maintained by [Simpetus](http://www.simpetus.com) and the developer community on [GitHub](https://github.com/NanoComp/mpb). [Acknowledgements](Acknowledgements.md) provides a complete listing of the project contributors.
 
 Contacts and Feedback
 ---------------------

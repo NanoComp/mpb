@@ -141,7 +141,7 @@ We require a portable, standard binary format for outputting the electromagnetic
 
 HDF is a widely-used, free, portable library and file format for multi-dimensional scientific data, developed in the National Center for Supercomputing Applications (NCSA) at the University of Illinois. You can get HDF and learn about it on the [HDF Home Page](http://www.hdfgroup.org).
 
-We require HDF5 which is supported by a number scientific of visualization tools including our own [h5utils](https://github.com/stevengj/h5utils) utilities.
+We require HDF5 which is supported by a number scientific of visualization tools including our own [h5utils](https://github.com/NanoComp/h5utils) utilities.
 
 HDF5 includes parallel I/O support under MPI, which can be enabled by configuring it with `--enable-parallel`. You may also have to set the `CC` environment variable to `mpicc`. Unfortunately, the parallel HDF5 library then does not work with serial code, so you have may have to choose one or the other.
 
@@ -296,7 +296,7 @@ make distclean
 Python
 -------
 
-The Python inteface to MPB depends on [MEEP](http://github.com/stevengj/meep) and can currently only be built as part of MEEP. Eventually, the dependency on MEEP will be removed, and the Python interface will be available from the MPB repository.
+The Python inteface to MPB depends on [MEEP](http://github.com/NanoComp/meep) and can currently only be built as part of MEEP. Eventually, the dependency on MEEP will be removed, and the Python interface will be available from the MPB repository.
 
 The following instructions are for building parallel PyMeep with serial PyMPB from source on Ubuntu 16.04. The parallel version can still be run serially by running a script with just `python` instead of `mpirun -np 4 python`. If you really don't want to install MPI and parallel HDF5, just replace `libhdf5-openmpi-dev` with `libhdf5-dev`, and remove the `--with-mpi`, `CC=mpicc`, and `CPP=mpicxx` flags. The paths to HDF5 will also need to be adjusted to `/usr/lib/x86_64-linux-gnu/hdf5/serial` and `/usr/include/hdf5/serial`. Note that this script builds with Python 3 by default. If you want to use Python 2, just point the `PYTHON` variable to the appropriate interpreter when calling `autogen.sh` for building Meep, and use `pip` instead of `pip3`.
 
@@ -333,25 +333,25 @@ sudo apt-get -y install     \
 mkdir -p ~/install
 
 cd ~/install
-git clone https://github.com/stevengj/harminv.git
+git clone https://github.com/NanoComp/harminv.git
 cd harminv/
 sh autogen.sh --enable-shared
 make && sudo make install
 
 cd ~/install
-git clone https://github.com/stevengj/libctl.git
+git clone https://github.com/NanoComp/libctl.git
 cd libctl/
 sh autogen.sh --enable-shared
 make && sudo make install
 
 cd ~/install
-git clone https://github.com/stevengj/h5utils.git
+git clone https://github.com/NanoComp/h5utils.git
 cd h5utils/
 sh autogen.sh CC=mpicc LDFLAGS="${MY_LDFLAGS}" CPPFLAGS="${MY_CPPFLAGS}"
 make && sudo make install
 
 cd ~/install
-git clone https://github.com/stevengj/mpb.git
+git clone https://github.com/NanoComp/mpb.git
 cd mpb/
 sh autogen.sh --enable-shared CC=mpicc LDFLAGS="${MY_LDFLAGS}" CPPFLAGS="${MY_CPPFLAGS}" --with-hermitian-eps
 make && sudo make install
@@ -362,7 +362,7 @@ export HDF5_MPI="ON"
 pip3 install --user --no-binary=h5py h5py
 
 cd ~/install
-git clone https://github.com/stevengj/meep.git
+git clone https://github.com/NanoComp/meep.git
 cd meep/
 sh autogen.sh --enable-shared --with-mpi PYTHON=python3 \
     CC=mpicc CXX=mpic++ LDFLAGS="${MY_LDFLAGS}" CPPFLAGS="${MY_CPPFLAGS}"
