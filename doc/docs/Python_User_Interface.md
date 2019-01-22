@@ -321,7 +321,7 @@ These are functions to help you run and control the simulation. They are all met
 
 **`ModeSolver.run(*band_func)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-This runs the simulation described by the input parameters (see above), with no constraints on the polarization of the solution. That is, it reads the input parameters, initializes the simulation, and solves for the requested eigenstates of each k-point. The dielectric function is outputted to `epsilon.h5` before any eigenstates are computed. `run` takes as arguments zero or more "band functions" `band_func`. A band function should be a function of one integer argument, the band index, so that `band_func(which_band)` performs some operation on the band `which_band` (e.g. outputting fields). After every k-point, each band function is called for the indices of all the bands that were computed. Alternatively, a band function may be a "thunk" (function of zero arguments), in which case `band_func()` is called exactly once per k-point.
+This runs the simulation described by the input parameters (see above), with no constraints on the polarization of the solution. That is, it reads the input parameters, initializes the simulation, and solves for the requested eigenstates of each k-point. `run` takes as arguments zero or more "band functions" `band_func`. A band function should be a function of one integer argument, the band index, so that `band_func(which_band)` performs some operation on the band `which_band` (e.g. outputting fields). After every k-point, each band function is called for the indices of all the bands that were computed. Alternatively, a band function may be a "thunk" (function of zero arguments), in which case `band_func()` is called exactly once per k-point.
 
 **`ModeSolver.run_zeven(*band_func)`, ``Modesolver.run_zodd(*band_func)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -567,7 +567,7 @@ Loads the bound charge density \(\nabla \cdot \mathbf{E}\) for the band `which_b
 
 **`ModeSolver.get_epsilon()`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Loads the dielectric function and returns a numpy array.
+Loads the dielectric function and returns a numpy array. Must call `ModeSolver.init_params` or any `run` function before calling `get_epsilon`.
 
 Once loaded, the field can be transformed into another field or a scalar field:
 
