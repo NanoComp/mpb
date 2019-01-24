@@ -215,7 +215,7 @@ Now, we're ready to maximize our function `first_tm_gap`. We could write a loop 
 ```py
 from scipy.optimize import minimize_scalar
 
-result = minimize_scalar(first_tm_gap, method='bounded', bounds=[0.1, 0.5], tol=0.1)
+result = minimize_scalar(first_tm_gap, method='bounded', bounds=[0.1, 0.5], options={'xatol': 0.1})
 print("radius at maximum: {}".format(result.x))
 print("gap size at maximum: {}".format(result.fun * -1))
 ```
