@@ -286,7 +286,7 @@ We have used the default orthogonal basis but have changed the size of the cell.
 
 ```py
 ms.geometry = [mp.Cylinder(0.2, material=mp.Medium(epsilon=12))]
-ms.geometry = mp.geometric_object_lattice_duplicates(ms.geometry_lattice, ms.geometry)
+ms.geometry = mp.geometric_objects_lattice_duplicates(ms.geometry_lattice, ms.geometry)
 ```
 
 Now the `geometry` list contains 25 rods &mdash; the original `geometry` list, which contained one rod, duplicated over the 5x5 lattice.
