@@ -1,5 +1,13 @@
 # MPB Release Notes
 
+## MPB 1.8
+
+2/13/19
+
+* Experimental `maxwell_set_planewave` function
+
+* Updated for latest libctl (#83).
+
 ## MPB 1.7
 
 11/16/18
@@ -201,7 +209,7 @@
   * Improved BLAS/LAPACK detection; new --with-blas and --with-lapack
     options to specify these libraries manually.
 
-  * Shortened --with-hermitian-epsilon configure option to 
+  * Shortened --with-hermitian-epsilon configure option to
     --with-hermitian-eps.
 
   * The data-analysis tutorial is now consistent with h5topng 1.7.
@@ -403,7 +411,7 @@
 
   * In mpb-data, the center of the output cell is now always identical
     to the origin of the coordinate system.  Thanks to Michelle
-    Povinelli for pointing out this deficiency.	
+    Povinelli for pointing out this deficiency.
 
   * Used improved spherical-quadrature formula in computing the
     effective dielectric tensor in 3d; this should increase accuracy
@@ -437,7 +445,7 @@
     calculations.
 
   * Eigensolver improvements.  Periodic reorthogonalization and
-    renormalization to combat some numerical problems. New 
+    renormalization to combat some numerical problems. New
     line-minimization code, included with permission from MINPACK-2
     by Jorge More.
 
