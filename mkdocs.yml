@@ -1,6 +1,7 @@
 site_name: MPB Documentation
 site_author: MPB Developers
 repo_url: https://github.com/NanoComp/mpb/
+edit_uri: blob/master/doc/docs
 
 use_directory_urls: True
 
