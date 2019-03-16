@@ -51,7 +51,7 @@ te_gaps = ms.gap_list
 
 The `geometry_lattice` input defines the *primitive lattice vectors* `basis1` and `basis2` of the [periodic lattice](https://en.wikipedia.org/wiki/Bravais_lattice), here for a [triangular ("hexagonal") lattice](https://en.wikipedia.org/wiki/Hexagonal_lattice), which determines the periodicity of the structure ε(**x**).  This choice of basis vectors, in turn, determines a [reciprocal lattice](https://en.wikipedia.org/wiki/Reciprocal_lattice) in which the Bloch wavevector **k** is periodic.  The `k_points` variable specifies the **k** vectors for which we compute the band structure ω(**k**) in the *basis of the reciprocal-lattice vectors*.  In this tutorial, we choose the `k_points` along the edges of the [irreducible Brillouin zone](https://en.wikipedia.org/wiki/Brillouin_zone), whose corners are conventionally called Γ, M, and K for this lattice.  The diagram below shows the lattice and reciprocal lattice, our choice of basis vectors, the corresponding reciprocal-lattice basis vectors, and this irreducible Brillouin zone.
 
-<center>![](images/tri-lattice.gif)</center>
+<center>![](images/tri-lattice.png)</center>
 
 Our [online textbook](http://ab-initio.mit.edu/book) has more information on lattices and Brillouin zones in Appendix B.  Note, however, that for a given lattice there are multiple choices of basis vectors and irreducible Brillouin zones that are equivalent according to the symmetry of the lattice, and the book uses a slightly different choice for the triangular lattice.
 
