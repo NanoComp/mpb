@@ -27,7 +27,7 @@ geometry = [mp.Cylinder(0.2, material=mp.Medium(epsilon=12))]
 k_points = [
     mp.Vector3(),               # Gamma
     mp.Vector3(y=0.5),          # M
-    mp.Vector3(-1./3, 1./3),  # K
+    mp.Vector3(-1./3, 1./3),    # K
     mp.Vector3(),               # Gamma
 ]
 k_points = mp.interpolate(4, k_points)
