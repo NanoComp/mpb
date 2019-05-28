@@ -13,4 +13,5 @@
 #include "mpb/eigensolver.h"
 #include "mpb/maxwell.h"
 
+extern void (*mpb_printf_callback)(const char *s);
 #endif /* MPB_H */

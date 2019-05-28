@@ -15,6 +15,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#if !defined(_GNU_SOURCE)
+  #define _GNU_SOURCE
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -122,14 +126,24 @@ void mpi_die(const char *template, ...)
      MPI_Abort(mpb_comm, EXIT_FAILURE);
 }
 
+void (*mpb_printf_callback)(const char *s) = NULL;
+
 /* Like printf, except only does anything on master process. */
 void mpi_one_printf(const char *template, ...)
 {
      if (mpi_is_master()) {
-	  va_list ap;
-	  va_start(ap, template);
-	  vprintf(template, ap);
-	  va_end(ap);
+       va_list ap;
+       va_start(ap, template);
+       if (mpb_printf_callback) {
+         char *s;
+         vasprintf(&s, template, ap);
+         mpb_printf_callback(s);
+         free(s);
+       }
+       else {
+         vprintf(template, ap);
+       }
+       va_end(ap);
      }
 }
 
