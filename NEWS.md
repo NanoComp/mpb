@@ -1,5 +1,12 @@
 # MPB Release Notes
 
+## MPB 1.9
+
+6/5/19
+
+* Add optional `printf` callback so that Meep and other `libmpb` users
+  can capture standard output (#102).
+
 ## MPB 1.8
 
 2/13/19
