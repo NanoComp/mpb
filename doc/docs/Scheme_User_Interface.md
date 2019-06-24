@@ -817,7 +817,7 @@ Read/write the current eigenvectors (raw planewave amplitudes) to/from an HDF5 f
 `output-eigenvectors` is like `save-eigenvectors`, except that it saves an `evects` object returned by `get-eigenvectors`.
 Conversely `input-eigenvectors`, reads back in the eigenvectors into an `evects` object from a file that has `num-bands` bands.
 
-Currently, there's only one other interesting thing you can do with the raw eigenvectors, and that is to compute the dot-product matrix between a set of saved eigenvectors and the current eigenvectors. This can be used, e.g., to detect band crossings or to set phases consistently at different k points. The dot product is returned as a "sqmatrix" object, whose elements can be read with the `sqmatrix-size` and `sqmatrix-ref` routines.
+Currently, there's only one other interesting thing you can do with the raw eigenvectors, and that is to compute the dot-product matrix between a set of saved eigenvectors and the current eigenvectors. This can be used, e.g., to detect band crossings or to set phases consistently at different k points. The dot product is returned as a "sqmatrix" object, whose elements can be read or altered with the `sqmatrix-size`, `sqmatrix-ref`, and `sqmatrix-set` routines.
 
 **`(dot-eigenvectors ev first-band)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -830,6 +830,10 @@ Return the size *n* of an *n*x*n* sqmatrix `sm`.
 **`(sqmatrix-ref sm i j)`**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Return the (`i`,`j`)th element of the *n*x*n* sqmatrix *`sm`*, where {`i`,`j`} range from 0..*n*-1.
+
+**`(sqmatrix-set sm i j c)`**  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Set the (`i`,`j`)th element of the *n*x*n* sqmatrix *`sm`* to the `cnumber` *`c`*, where {`i`,`j`} range from 0..*n*-1.
 
 Inversion Symmetry
 ------------------
