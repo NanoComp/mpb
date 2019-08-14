@@ -56,6 +56,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
     int n1, n2, n3;
     real s1, s2, s3, c1, c2, c3;
     cnumber integral = {0,0};
+    vector3 kvector = cur_kvector;
     matrix3x3 invW;
     number detW;
 
@@ -66,9 +67,9 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
     #ifdef HAVE_MPI
         CHECK(0, "transformed_overlap(..) not yet implemented for MPI!");
     #endif
-
     /* should also check and error if SCALAR_COMPLEX not defined, or if mu_inv != NULL */
-
+    
+    /* prepare before looping ... */
     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
 
     s1 = geometry_lattice.size.x / n1;
@@ -79,59 +80,78 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
     c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
 
     invW = matrix3x3_inverse(W);
-    detW = matrix3x3_determinant(W);
+    detW = matrix3x3_determinant(W); /* ought to check that |detW| = 1; otherwise, not a valid symmetry operation */
 
-    LOOP_XYZ(mdata) {
+    kvector.x *= TWOPI/geometry_lattice.size.x; /* hoist these rescalings outside the  */
+    kvector.y *= TWOPI/geometry_lattice.size.y; /* loop; might be that licm takes care */
+    kvector.z *= TWOPI/geometry_lattice.size.z; /* of it - but better to be sure       */
+
+
+    /* loop over coordinates */
+    LOOP_XYZ(mdata) { /* implies two opening braces '{{' */
         vector3 p, pt;
         cvector3 F, Ft;
         cnumber integrand;
+        double deltaphi;
+        scalar_complex phase;
 
-        p.x = i1 * s1 - c1; 
-        p.y = i2 * s2 - c2; 
+        /* Current lattice position in loop */
+        p.x = i1 * s1 - c1;
+        p.y = i2 * s2 - c2;
         p.z = i3 * s3 - c3;
 
-        /* Field value at current point p */
+        /* Bloch field value at current point p (exludes exp(ikr) factor) */
         F.x = cscalar2cnumber(curfield[3*xyz_index+0]); /* since F.x is a cnumber and curfield is a */
         F.y = cscalar2cnumber(curfield[3*xyz_index+1]); /* scalar_complex; we have to convert here  */
         F.z = cscalar2cnumber(curfield[3*xyz_index+2]); 
 
-        /* First, obtain new transformed coordinate pt = invW*p - w */
+        /* Transformed coordinate pt = invW*p - w */
         pt = vector3_minus(matrix3x3_vector3_mult(invW, p), w);
 
-        /* Next, obtain field value at transformed coordinate pt; interpolation is 
-           needed to ensure generality in the case of fractional translations. 
-           Unfortunately, that is _NOT_ compatible with MPI, since get_val is not
-           implemented for MPI */
-        Ft = get_bloch_field_point(pt); 
+        /* Field value at transformed coordinate pt; interpolation is needed to ensure
+           generality in the case of fractional translations. Unfortunately, this
+           precludes compatible with MPI, since get_val is not implemented for MPI */
+        Ft = get_bloch_field_point(pt); /* excludes exp(ikr) factor */
 
-        /* Transform the components of Ft by W; this is a bit tedious to do, since 
-           there are no matrix3x3*cvector3 routines, nor any CASSIGN_CVECTOR_RE.
+        /* Transform the vector components of Ft by W; a bit tedious to do, since 
+           there are no matrix3x3*cvector3 routines, nor any CASSIGN_CVECTOR_RE/IM.
            Instead, we do manually what is done in matrix3x3_vector3_mult, twice  */
-        Ft.x.re = W.c0.x * Ft.x.re + W.c1.x * Ft.y.re + W.c2.x * Ft.z.re;
-        Ft.y.re = W.c0.y * Ft.x.re + W.c1.y * Ft.y.re + W.c2.y * Ft.z.re;
-        Ft.z.re = W.c0.z * Ft.x.re + W.c1.z * Ft.y.re + W.c2.z * Ft.z.re;
-        Ft.x.im = W.c0.x * Ft.x.im + W.c1.x * Ft.y.im + W.c2.x * Ft.z.im;
-        Ft.y.im = W.c0.y * Ft.x.im + W.c1.y * Ft.y.im + W.c2.y * Ft.z.im;
-        Ft.z.im = W.c0.z * Ft.x.im + W.c1.z * Ft.y.im + W.c2.z * Ft.z.im;
+        Ft.x.re = W.c0.x*Ft.x.re + W.c1.x*Ft.y.re + W.c2.x*Ft.z.re;
+        Ft.y.re = W.c0.y*Ft.x.re + W.c1.y*Ft.y.re + W.c2.y*Ft.z.re;
+        Ft.z.re = W.c0.z*Ft.x.re + W.c1.z*Ft.y.re + W.c2.z*Ft.z.re;
+        Ft.x.im = W.c0.x*Ft.x.im + W.c1.x*Ft.y.im + W.c2.x*Ft.z.im;
+        Ft.y.im = W.c0.y*Ft.x.im + W.c1.y*Ft.y.im + W.c2.y*Ft.z.im;
+        Ft.z.im = W.c0.z*Ft.x.im + W.c1.z*Ft.y.im + W.c2.z*Ft.z.im;
 
+        /* Inner product of H and OH (for O = {W|w}), in Bloch form */
         integrand = cvector3_cdot(F, Ft);
-        integral.re += integrand.re;
-        integral.im += integrand.im;
+
+        /* So far, we have excluded the Bloch phases; they must be included, however.
+           It saves two trigonometric operations if we do them just jointly for p and pt.
+           Note that rescaling by TWOPI/geometry_lattice.xyz is hoised outside loop      */
+        deltaphi = (kvector.x*(-p.x+pt.x) + kvector.y*(-p.y+pt.y) + kvector.z*(-p.z+pt.z));
+        CASSIGN_SCALAR(phase, cos(deltaphi), sin(deltaphi));
+
+        /* Add integrand-contribution to integral, keeping Bloch phases in mind */
+        integral.re += integrand.re*phase.re - integrand.im*phase.im;
+        integral.im += integrand.re*phase.im + integrand.im*phase.re;
     }}}
 
     integral.re *= Vol / H.N;
     integral.im *= Vol / H.N;
 
-    { /* C89 requires new declarations to exist only in blocks; hence the {...} here */
-    /* this isn't really needed, since we don't support MPI anyway; still works
-       in serial though, so might as well keep it around */
+    /* C89 requires new type declarations to occur only at the start of a blocks; 
+       hence {...} here */
+    { 
+    /* Also, we don't really need to do this, since we don't support MPI anyway; 
+       still works in serial though, so might as well keep it around */
     cnumber integral_sum;
     mpi_allreduce(&integral, &integral_sum, 2, number,
                   MPI_DOUBLE, MPI_SUM, mpb_comm);
-    integral_sum.re *= detW;
+
+    integral_sum.re *= detW; /* H & B are pseudovectors => transform includes det(W) */
     integral_sum.im *= detW;
 
     return integral_sum;
     }
 }
-
