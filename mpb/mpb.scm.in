@@ -210,7 +210,8 @@
   'number 'function)
 (define-external-function compute-energy-in-object-list false false
   'number (make-list-type 'geometric-object))
-
+(define-external-function transformed-overlap false false 
+  'cnumber 'matrix3x3 'vector3)
 (define-external-function output-field-to-file false false
   no-return-value 'integer 'string)  
 
