@@ -569,13 +569,27 @@ static real get_val(int ix, int iy, int iz,
 #endif
 
 #ifdef HAVE_MPI
-     CHECK(0, "get-*-point not yet implemented for MPI!");
-#else
-     if (conjugate)
-	  return -data[(((ix * ny) + iy) * nz + iz) * stride];
-     else
-	  return data[(((ix * ny) + iy) * nz + iz) * stride];
+	 /* due to real-space xy=>yx transposition in MPI configuration, we need to
+	    do a little extra dancing here; see details e.g. in XYZ_LOOP macro */
+     int local_ny = mdata->local_ny; /* dim of local process over y-indices */
+     int local_y_start = mdata->local_y_start;
+     int local_iy = iy - local_y_start;
+	 real val = 0; /* reduce local processes over this variable later */
+
+	 /* check if local_iy is in the current process' data block */
+     if (local_iy >= 0 && local_iy < local_ny) { 
+         val = data[(((local_iy * nx) + ix) * nz + iz) * stride]; /* note transposition in x and y indices */
+	 }
+	 mpi_allreduce_1(&val, real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm); 
+
+#else /* no MPI */
+	real val = data[(((ix * ny) + iy) * nz + iz) * stride];
 #endif
+
+if (conjugate)
+	return -val;
+else
+	return val;
 }
 
 static real interp_val(vector3 p, int nx, int ny, int nz, int last_dim_size,
