@@ -32,7 +32,7 @@
 
 
 
-/* compute and return adjoint(cv1)*cv2*/
+/* compute and return adjoint(cv1)*cv2 */
 static cnumber cvector3_cdot(cvector3 cv1, cvector3 cv2)
 {
     cnumber dest;
@@ -67,27 +67,31 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
     #ifdef HAVE_MPI
         CHECK(0, "transformed_overlap(..) not yet implemented for MPI!");
     #endif
-    /* should also check and error if SCALAR_COMPLEX not defined, or if mu_inv != NULL */
+    /* TODO: should also check and error if SCALAR_COMPLEX not defined, or if mu_inv != NULL */
     
     /* prepare before looping ... */
     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
 
-    s1 = geometry_lattice.size.x / n1;
+    s1 = geometry_lattice.size.x / n1; /* pixel spacings */
     s2 = geometry_lattice.size.y / n2;
     s3 = geometry_lattice.size.z / n3;
-    c1 = n1 <= 1 ? 0 : geometry_lattice.size.x * 0.5;
+    c1 = n1 <= 1 ? 0 : geometry_lattice.size.x * 0.5; /* offsets (negative) */
     c2 = n2 <= 1 ? 0 : geometry_lattice.size.y * 0.5;
     c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
 
     invW = matrix3x3_inverse(W);
-    detW = matrix3x3_determinant(W); /* ought to check that |detW| = 1; otherwise, not a valid symmetry operation */
+    detW = matrix3x3_determinant(W);
+    if (fabs(fabs(detW) - 1.0) > 1e-12) {
+        mpi_one_fprintf(stderr, "Valid symmetry operations {W|w} must have |det(W)| = 1.0\n");
+        return integral;
+    }
 
     kvector.x *= TWOPI/geometry_lattice.size.x; /* hoist these rescalings outside the  */
     kvector.y *= TWOPI/geometry_lattice.size.y; /* loop; might be that licm takes care */
     kvector.z *= TWOPI/geometry_lattice.size.z; /* of it - but better to be sure       */
 
 
-    /* loop over coordinates */
+    /* Loop over coordinates (introduces int vars i1, i2, i3, & xyz_index) */
     LOOP_XYZ(mdata) { /* implies two opening braces '{{' */
         vector3 p, pt;
         cvector3 F, Ft;
@@ -110,7 +114,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
 
         /* Field value at transformed coordinate pt; interpolation is needed to ensure
            generality in the case of fractional translations. Unfortunately, this
-           precludes compatible with MPI, since get_val is not implemented for MPI */
+           precludes compatibility with MPI, since get_val is not implemented for MPI */
         Ft = get_bloch_field_point(pt); /* excludes exp(ikr) factor */
 
         /* Transform the vector components of Ft by W; a bit tedious to do, since 
@@ -128,7 +132,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
 
         /* So far, we have excluded the Bloch phases; they must be included, however.
            It saves two trigonometric operations if we do them just jointly for p and pt.
-           Note that rescaling by TWOPI/geometry_lattice.xyz is hoised outside loop      */
+           Note that rescaling by TWOPI/geometry_lattice.xyz is hoisted outside loop      */
         deltaphi = (kvector.x*(-p.x+pt.x) + kvector.y*(-p.y+pt.y) + kvector.z*(-p.z+pt.z));
         CASSIGN_SCALAR(phase, cos(deltaphi), sin(deltaphi));
 
