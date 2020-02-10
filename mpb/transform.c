@@ -32,34 +32,20 @@
 
 
 
-/* compute and return adjoint(cv1)*cv2 */
-static cnumber cvector3_cdot(cvector3 cv1, cvector3 cv2)
-{
-    cnumber dest;
-    dest.re = (cv1.x.re*cv2.x.re + cv1.y.re*cv2.y.re + cv1.z.re*cv2.z.re +
-               cv1.x.im*cv2.x.im + cv1.y.im*cv2.y.im + cv1.z.im*cv2.z.im);
-    dest.im = (cv1.x.re*cv2.x.im + cv1.y.re*cv2.y.im + cv1.z.re*cv2.z.im -
-               cv1.x.im*cv2.x.re - cv1.y.im*cv2.y.re - cv1.z.im*cv2.z.re);
-    return dest;
-}
-
-/* Right now, this assumes that the user loads the hfield via (get-hfield band) beforehand. 
-   Probably, this ought to be implemented instead by just computing this internally, here,
-   using maxwell_compute_h_from_H; this would also be more natural for eventually supporting
-   magnetic materials. Similarly, it would generalize to D and E fields. */
+/* Right now, this assumes that the user loads the bfield or dfield via (get-hfield band) or
+   (get-field band) beforehand. 
+   Instead, this could be implemented by just computing this here, e.g. by having us calling
+   get_hfield or get_bfield; that seems to achieve the same (i.e. setting curfield(_type)) */
 cnumber transformed_overlap(matrix3x3 W, vector3 w)
 {
     /* TODO: Could we just call get_dfield or get_hfield here instead of having the user do it? 
              then the input would have a choice between e or d type input */
-    #ifdef HAVE_MPI
-        int local_n2, local_y_start;
-    #endif
     int n1, n2, n3;
     real s1, s2, s3, c1, c2, c3;
     cnumber integral = {0,0};
+    number detW;
     vector3 kvector = cur_kvector;
     matrix3x3 invW;
-    number detW;
 
     if (!curfield || !strchr("db", curfield_type)) {
         mpi_one_fprintf(stderr, "a real-space H or D-field must be loaded beforehand.\n");
@@ -93,73 +79,65 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
 
     /* Loop over coordinates (introduces int vars i1, i2, i3, xyz_index) */
     LOOP_XYZ(mdata) { /* implies two opening braces '{{' */
-
         vector3 p, pt;
-        cvector3 F, Ft;
-        cnumber integrand;
+        scalar_complex F[3], Ft[3], integrand, phase;
         double deltaphi;
-        scalar_complex phase;
 
         /* Current lattice position in loop */
         p.x = i1 * s1 - c1;
         p.y = i2 * s2 - c2;
         p.z = i3 * s3 - c3;
 
-        /* Bloch field value at current point p (exludes exp(ikr) factor) */
-        F = cscalar32cvector3(curfield+3*xyz_index); /* each "point" in curfield is a scalar_complex 
-                                                        triad while F is a cvector3 (w/ cnumber entries);
-                                                        convert via cscalar32cvector3 */
-
         /* Transformed coordinate pt = invW*p - w */
         pt = vector3_minus(matrix3x3_vector3_mult(invW, p), w);
 
-        /* Field value at transformed coordinate pt; interpolation is needed to ensure
-           generality in the case of fractional translations. Unfortunately, this
+        /* Bloch field value at transformed coordinate pt: interpolation is needed to ensure
+           generality in the case of fractional translations. Unfortunately, this currently
            precludes compatibility with MPI, since get_val is not implemented for MPI */
         /* TODO: Remove disclaimer above if PR#112 is merged */
-        Ft = get_bloch_field_point(pt); /* excludes exp(ikr) factor */
+        get_bloch_field_point_(Ft, pt); /* sets Ft to F at p [excludes exp(ikr) factor] */
 
         /* Transform the vector components of Ft by W; a bit tedious to do, since 
            there are no matrix3x3*cvector3 routines, nor any CASSIGN_CVECTOR_RE/IM.
            Instead, we do manually what is done in matrix3x3_vector3_mult, twice  */
-        Ft.x.re = W.c0.x*Ft.x.re + W.c1.x*Ft.y.re + W.c2.x*Ft.z.re;
-        Ft.y.re = W.c0.y*Ft.x.re + W.c1.y*Ft.y.re + W.c2.y*Ft.z.re;
-        Ft.z.re = W.c0.z*Ft.x.re + W.c1.z*Ft.y.re + W.c2.z*Ft.z.re;
-        Ft.x.im = W.c0.x*Ft.x.im + W.c1.x*Ft.y.im + W.c2.x*Ft.z.im;
-        Ft.y.im = W.c0.y*Ft.x.im + W.c1.y*Ft.y.im + W.c2.y*Ft.z.im;
-        Ft.z.im = W.c0.z*Ft.x.im + W.c1.z*Ft.y.im + W.c2.z*Ft.z.im;
-
-        /* Multiplying F (either B or D-field) with μ⁻¹ or ε⁻¹ to get H- or E-fields,
-           since the overlap we need to calculate is ⟨F|Ft⟩ = (H|Bt) or (E|Dt),
-           with t-postscript denoting a field transformed by {W|w}. Here, we essentially
-           adapt some boiler-plate code from compute_field_energy_internal in fields.c     */
-        scalar_complex field[3];
+        Ft[0].re = W.c0.x*Ft[0].re + W.c1.x*Ft[1].re + W.c2.x*Ft[2].re;
+        Ft[0].im = W.c0.x*Ft[0].im + W.c1.x*Ft[1].im + W.c2.x*Ft[2].im;
+        Ft[1].re = W.c0.y*Ft[0].re + W.c1.y*Ft[1].re + W.c2.y*Ft[2].re;
+        Ft[1].im = W.c0.y*Ft[0].im + W.c1.y*Ft[1].im + W.c2.y*Ft[2].im;
+        Ft[2].re = W.c0.z*Ft[0].re + W.c1.z*Ft[1].re + W.c2.z*Ft[2].re;
+        Ft[2].im = W.c0.z*Ft[0].im + W.c1.z*Ft[1].im + W.c2.z*Ft[2].im;
+        
+        /* Get the Bloch field value at current point p [exludes exp(ikr) factor].
+           We multiply the input field F (either B or D-field) with μ⁻¹ or ε⁻¹ to get
+           H- or E-fields, as the relevant overlap is ⟨F|Ft⟩ = (H|Bt) or (E|Dt), with
+           t-postscript denoting a field transformed by {W|w}. Here, we essentially
+           adapt some boiler-plate code from compute_field_energy_internal in fields.c   */
         if (curfield_type == 'd') {
-            assign_symmatrix_vector(field, mdata->eps_inv[xyz_index], curfield+3*xyz_index);
-            F = cscalar32cvector3(field);
+            assign_symmatrix_vector(F, mdata->eps_inv[xyz_index], curfield+3*xyz_index);
         }
         else if (curfield_type == 'b' && mdata->mu_inv != NULL) {
-            assign_symmatrix_vector(field, mdata->mu_inv[xyz_index], curfield+3*xyz_index);
-            F = cscalar32cvector3(field);
+            assign_symmatrix_vector(F, mdata->mu_inv[xyz_index],  curfield+3*xyz_index);
         }
-        /* else {
-            field[0] =   curfield[3*i];
-            field[1] = curfield[3*i+1];
-            field[2] = curfield[3*i+2];
-        } */
+        else {
+            F[0] = curfield[3*xyz_index];
+            F[1] = curfield[3*xyz_index+1];
+            F[2] = curfield[3*xyz_index+2];
+        }
         
         /* Inner product of F and Ft={W|w}F in Bloch form */
-        integrand = cvector3_cdot(F, Ft);
+        CASSIGN_CONJ_MULT(integrand, F[0], Ft[0]);          /* add adjoint(F)*Ft to integrand */
+        CACCUMULATE_SUM_CONJ_MULT(integrand, F[1], Ft[1]);
+        CACCUMULATE_SUM_CONJ_MULT(integrand, F[2], Ft[2]);
 
         /* So far, we have excluded the Bloch phases; they must be included, however.
            It saves two trigonometric operations if we do them just jointly for p and pt.
            Note that rescaling by TWOPI/geometry_lattice.xyz is hoisted outside loop      */
-        deltaphi = (kvector.x*(-p.x+pt.x) + kvector.y*(-p.y+pt.y) + kvector.z*(-p.z+pt.z));
+        deltaphi = (kvector.x*(pt.x-p.x) + kvector.y*(pt.y-p.y) + kvector.z*(pt.z-p.z));
         CASSIGN_SCALAR(phase, cos(deltaphi), sin(deltaphi));
 
         /* Add integrand-contribution to integral, keeping Bloch phases in mind */
-        integral.re += integrand.re*phase.re - integrand.im*phase.im;
-        integral.im += integrand.re*phase.im + integrand.im*phase.re;
+        integral.re += CSCALAR_MULT_RE(integrand, phase);
+        integral.im += CSCALAR_MULT_IM(integrand, phase); 
     }}}
 
     integral.re *= Vol / H.N;

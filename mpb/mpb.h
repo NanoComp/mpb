@@ -74,6 +74,7 @@ extern int kpoint_index;
 extern void compute_field_squared(void);
 void get_efield(integer which_band);
 real mean_medium_from_matrix(const symmetric_matrix *eps_inv);
+void get_bloch_field_point_(scalar_complex *field, vector3 p);
 
 /**************************************************************************/
 
