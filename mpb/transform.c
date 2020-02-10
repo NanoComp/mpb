@@ -43,13 +43,14 @@ static cnumber cvector3_cdot(cvector3 cv1, cvector3 cv2)
     return dest;
 }
 
-
 /* Right now, this assumes that the user loads the hfield via (get-hfield band) beforehand. 
    Probably, this ought to be implemented instead by just computing this internally, here,
    using maxwell_compute_h_from_H; this would also be more natural for eventually supporting
    magnetic materials. Similarly, it would generalize to D and E fields. */
 cnumber transformed_overlap(matrix3x3 W, vector3 w)
 {
+    /* TODO: Could we just call get_dfield or get_hfield here instead of having the user do it? 
+             then the input would have a choice between e or d type input */
     #ifdef HAVE_MPI
         int local_n2, local_y_start;
     #endif
@@ -60,14 +61,13 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
     matrix3x3 invW;
     number detW;
 
-    if (!curfield || !strchr("hb", curfield_type)) {
-        mpi_one_fprintf(stderr, "The real-space H (or B) field must be loaded first.\n");
+    if (!curfield || !strchr("db", curfield_type)) {
+        mpi_one_fprintf(stderr, "a real-space H or D-field must be loaded beforehand.\n");
         return integral;
     }
     #ifdef HAVE_MPI
-        CHECK(0, "transformed_overlap(..) not yet implemented for MPI!");
+        CHECK(0, "transformed_overlap(..) not yet implemented for MPI!"); /* TODO: Remove if PR#112 is merged */
     #endif
-    /* TODO: should also check and error if SCALAR_COMPLEX not defined, or if mu_inv != NULL */
     
     /* prepare before looping ... */
     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
@@ -82,7 +82,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
     invW = matrix3x3_inverse(W);
     detW = matrix3x3_determinant(W);
     if (fabs(fabs(detW) - 1.0) > 1e-12) {
-        mpi_one_fprintf(stderr, "Valid symmetry operations {W|w} must have |det(W)| = 1.0\n");
+        mpi_one_fprintf(stderr, "valid symmetry operations {W|w} must have |det(W)| = 1.0\n");
         return integral;
     }
 
@@ -91,8 +91,9 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
     kvector.z *= TWOPI/geometry_lattice.size.z; /* of it - but better to be sure       */
 
 
-    /* Loop over coordinates (introduces int vars i1, i2, i3, & xyz_index) */
+    /* Loop over coordinates (introduces int vars i1, i2, i3, xyz_index) */
     LOOP_XYZ(mdata) { /* implies two opening braces '{{' */
+
         vector3 p, pt;
         cvector3 F, Ft;
         cnumber integrand;
@@ -105,9 +106,9 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         p.z = i3 * s3 - c3;
 
         /* Bloch field value at current point p (exludes exp(ikr) factor) */
-        F.x = cscalar2cnumber(curfield[3*xyz_index+0]); /* since F.x is a cnumber and curfield is a */
-        F.y = cscalar2cnumber(curfield[3*xyz_index+1]); /* scalar_complex; we have to convert here  */
-        F.z = cscalar2cnumber(curfield[3*xyz_index+2]); 
+        F = cscalar32cvector3(curfield+3*xyz_index); /* each "point" in curfield is a scalar_complex 
+                                                        triad while F is a cvector3 (w/ cnumber entries);
+                                                        convert via cscalar32cvector3 */
 
         /* Transformed coordinate pt = invW*p - w */
         pt = vector3_minus(matrix3x3_vector3_mult(invW, p), w);
@@ -115,6 +116,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         /* Field value at transformed coordinate pt; interpolation is needed to ensure
            generality in the case of fractional translations. Unfortunately, this
            precludes compatibility with MPI, since get_val is not implemented for MPI */
+        /* TODO: Remove disclaimer above if PR#112 is merged */
         Ft = get_bloch_field_point(pt); /* excludes exp(ikr) factor */
 
         /* Transform the vector components of Ft by W; a bit tedious to do, since 
@@ -127,7 +129,26 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         Ft.y.im = W.c0.y*Ft.x.im + W.c1.y*Ft.y.im + W.c2.y*Ft.z.im;
         Ft.z.im = W.c0.z*Ft.x.im + W.c1.z*Ft.y.im + W.c2.z*Ft.z.im;
 
-        /* Inner product of H and OH (for O = {W|w}), in Bloch form */
+        /* Multiplying F (either B or D-field) with μ⁻¹ or ε⁻¹ to get H- or E-fields,
+           since the overlap we need to calculate is ⟨F|Ft⟩ = (H|Bt) or (E|Dt),
+           with t-postscript denoting a field transformed by {W|w}. Here, we essentially
+           adapt some boiler-plate code from compute_field_energy_internal in fields.c     */
+        scalar_complex field[3];
+        if (curfield_type == 'd') {
+            assign_symmatrix_vector(field, mdata->eps_inv[xyz_index], curfield+3*xyz_index);
+            F = cscalar32cvector3(field);
+        }
+        else if (curfield_type == 'b' && mdata->mu_inv != NULL) {
+            assign_symmatrix_vector(field, mdata->mu_inv[xyz_index], curfield+3*xyz_index);
+            F = cscalar32cvector3(field);
+        }
+        /* else {
+            field[0] =   curfield[3*i];
+            field[1] = curfield[3*i+1];
+            field[2] = curfield[3*i+2];
+        } */
+        
+        /* Inner product of F and Ft={W|w}F in Bloch form */
         integrand = cvector3_cdot(F, Ft);
 
         /* So far, we have excluded the Bloch phases; they must be included, however.
@@ -149,12 +170,15 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
     { 
     /* Also, we don't really need to do this, since we don't support MPI anyway; 
        still works in serial though, so might as well keep it around */
+    /* TODO: Remove disclaimer above if PR#112 is merged */
     cnumber integral_sum;
     mpi_allreduce(&integral, &integral_sum, 2, number,
                   MPI_DOUBLE, MPI_SUM, mpb_comm);
 
-    integral_sum.re *= detW; /* H & B are pseudovectors => transform includes det(W) */
-    integral_sum.im *= detW;
+    if (curfield_type == 'b') {  /* H & B are pseudovectors => transform includes det(W) */
+        integral_sum.re *= detW; 
+        integral_sum.im *= detW;
+    }
 
     return integral_sum;
     }
