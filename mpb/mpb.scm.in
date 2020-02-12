@@ -212,6 +212,10 @@
   'number (make-list-type 'geometric-object))
 (define-external-function transformed-overlap false false 
   'cnumber 'matrix3x3 'vector3)
+(define-external-function compute-symmetries false false
+  (make-list-type 'cnumber) 'matrix3x3 'vector3)
+(define-external-function compute-symmetry false false
+  'cnumber 'integer 'matrix3x3 'vector3)
 (define-external-function output-field-to-file false false
   no-return-value 'integer 'string)  
 

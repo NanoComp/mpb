@@ -32,28 +32,36 @@
 
 
 
-/* Right now, this assumes that the user loads the bfield or dfield via (get-hfield band) or
-   (get-field band) beforehand. 
-   Instead, this could be implemented by just computing this here, e.g. by having us calling
-   get_hfield or get_bfield; that seems to achieve the same (i.e. setting curfield(_type)) */
+/* If curfield is set to the real-space D-field (of band-index i), computes the overlap 
+         ∫ Eᵢ(r){W|w}Dᵢ(r) dr  =  ∫ Eᵢ(r)(WDᵢ)({W|w}⁻¹r) dr,
+   for a symmetry operation {W|w} with point-group part W and translation part w; each 
+   specified in the lattice basis. The vector fields Eᵢ and Dᵢ include Bloch phases.
+   If instead curfield is set to the real-space B-field, the overlap
+         ∫ Hᵢ(r){W|v}Bᵢ(r) dr  =  det(W) ∫ Eᵢ(r)(WDᵢ)({W|w}⁻¹r) dr,
+   is computed instead. Note that a factor det(W) is then included since B & H are
+   pseudovectors. As a result, the computed symmetry expectation values are independent
+   of whether the D- or B-field is used.
+   No other choices for curfield are allowed: to set curfield to the real-space B- or D-
+   field call get-bfield/dfield in Scheme, or get_bfield/dfield in C.                   
+   Usually, it will be more convenient to use the accessor compute_symmetry(i, W, w) 
+   which defaults to the B-field (since μ = 1 usually) and instead takes a band-index i .*/
 cnumber transformed_overlap(matrix3x3 W, vector3 w)
 {
-    /* TODO: Could we just call get_dfield or get_hfield here instead of having the user do it? 
-             then the input would have a choice between e or d type input */
     int n1, n2, n3;
     real s1, s2, s3, c1, c2, c3;
-    cnumber integral = {0,0};
+    cnumber integral = {0,0}, integral_sum;
     number detW;
     vector3 kvector = cur_kvector;
     matrix3x3 invW, Wc;
 
     if (!curfield || !strchr("db", curfield_type)) {
-        mpi_one_fprintf(stderr, "a real-space H or D-field must be loaded beforehand.\n");
+        mpi_one_fprintf(stderr, "a real-space H- or D-field must be loaded beforehand\n");
         return integral;
     }
     #ifdef HAVE_MPI
         CHECK(0, "transformed_overlap(..) not yet implemented for MPI!"); /* TODO: Remove if PR#112 is merged */
     #endif
+    /* TODO: Is special-casing for #ifndef SCALAR_COMPLEX needed? */
     
     /* prepare before looping ... */
     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
@@ -88,17 +96,17 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         scalar_complex F[3], Ft[3], Ftemp[3], integrand, phase;
         double deltaphi;
 
-        /* Current lattice position in loop */
+        /* Current lattice coordinate */
         p.x = i1 * s1 - c1;
         p.y = i2 * s2 - c2;
         p.z = i3 * s3 - c3;
 
-        /* Transformed coordinate pt = invW*p - w */
+        /* Transformed coordinate pt = {W|w}⁻¹p = W⁻¹p - w */
         pt = vector3_minus(matrix3x3_vector3_mult(invW, p), w);
 
         /* Bloch field value at transformed coordinate pt: interpolation is needed to ensure
            generality in the case of fractional translations. Unfortunately, this currently
-           precludes compatibility with MPI, since get_val is not implemented for MPI */
+           precludes compatibility with MPI, since get_val is not implemented for MPI        */
         /* TODO: Remove disclaimer above if PR#112 is merged */
         get_bloch_field_point_(Ftemp, pt); /* assigns Ftemp to field at p [excludes exp(ikr) factor] */
 
@@ -111,12 +119,12 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         Ft[1].im = Wc.c0.y*Ftemp[0].im + Wc.c1.y*Ftemp[1].im + Wc.c2.y*Ftemp[2].im;
         Ft[2].re = Wc.c0.z*Ftemp[0].re + Wc.c1.z*Ftemp[1].re + Wc.c2.z*Ftemp[2].re;
         Ft[2].im = Wc.c0.z*Ftemp[0].im + Wc.c1.z*Ftemp[1].im + Wc.c2.z*Ftemp[2].im;
-        
+
         /* Get the Bloch field value at current point p [exludes exp(ikr) factor].
            We multiply the input field F (either B or D-field) with μ⁻¹ or ε⁻¹ to get
            H- or E-fields, as the relevant overlap is ⟨F|Ft⟩ = (H|Bt) or (E|Dt), with
            t-postscript denoting a field transformed by {W|w}. Here, we essentially
-           adapt some boiler-plate code from compute_field_energy_internal in fields.c   */
+           adapt some boiler-plate code from compute_field_energy_internal in fields.c       */
         if (curfield_type == 'd') {
             assign_symmatrix_vector(F, mdata->eps_inv[xyz_index], curfield+3*xyz_index);
         }
@@ -130,7 +138,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         }
         
         /* Inner product of F and Ft={W|w}F in Bloch form */
-        CASSIGN_CONJ_MULT(integrand, F[0], Ft[0]);          /* add adjoint(F)*Ft to integrand */
+        CASSIGN_CONJ_MULT(integrand, F[0], Ft[0]);  /* add adjoint(F)*Ft to integrand */
         CACCUMULATE_SUM_CONJ_MULT(integrand, F[1], Ft[1]);
         CACCUMULATE_SUM_CONJ_MULT(integrand, F[2], Ft[2]);
 
@@ -142,27 +150,41 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
 
         /* Add integrand-contribution to integral, keeping Bloch phases in mind */
         integral.re += CSCALAR_MULT_RE(integrand, phase);
-        integral.im += CSCALAR_MULT_IM(integrand, phase); 
+        integral.im += CSCALAR_MULT_IM(integrand, phase);
     }}}
 
     integral.re *= Vol / H.N;
     integral.im *= Vol / H.N;
 
-    /* C89 requires new type declarations to occur only at the start of a blocks; 
-       hence {...} here */
-    { 
-    /* Also, we don't really need to do this, since we don't support MPI anyway; 
-       still works in serial though, so might as well keep it around */
-    /* TODO: Remove disclaimer above if PR#112 is merged */
-    cnumber integral_sum;
     mpi_allreduce(&integral, &integral_sum, 2, number,
                   MPI_DOUBLE, MPI_SUM, mpb_comm);
 
     if (curfield_type == 'b') {  /* H & B are pseudovectors => transform includes det(W) */
-        integral_sum.re *= detW; 
+        integral_sum.re *= detW;
         integral_sum.im *= detW;
     }
 
     return integral_sum;
+}
+
+cnumber compute_symmetry(int which_band, matrix3x3 W, vector3 w)
+{
+    cnumber symval;
+    get_bfield(which_band);
+    symval = transformed_overlap(W, w);
+
+    return symval;
+}
+
+cnumber_list compute_symmetries(matrix3x3 W, vector3 w)
+{
+    cnumber_list symvals;
+    int ib;
+    symvals.num_items = num_bands;
+    CHK_MALLOC(symvals.items, cnumber, num_bands);
+
+    for (ib = 0; ib < num_bands; ++ib){
+        symvals.items[ib] = compute_symmetry(ib+1, W, w);
     }
+    return symvals;
 }
