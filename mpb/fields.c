@@ -547,6 +547,10 @@ void fix_field_phase(void)
 /* Functions to return epsilon, fields, energies, etcetera, at a specified
    point, linearly interpolating if necessary. */
 
+/* get_val returns process-specific output for HAVE_MPI: if the "point" (ix, iy, iz; stride)
+   is on the local process, the value of data at that point is returned returned; otherwise
+   (i.e. point is not on local process) 0.0 is returned: calls to get_val should therefore 
+   be followed by sum-reduction via mpi_allreduce_1(..) in the caller (as in interp_val) */
 static real get_val(int ix, int iy, int iz,
 		    int nx, int ny, int nz, int last_dim_size,
 		    real *data, int stride, int conjugate)
@@ -570,7 +574,7 @@ static real get_val(int ix, int iy, int iz,
 
 #ifdef HAVE_MPI
 	 /* due to real-space xy=>yx transposition in MPI configuration, we need to
-	    do a little extra dancing here; see details e.g. in XYZ_LOOP macro */
+	    do a little extra work here; see details e.g. in XYZ_LOOP macro */
      int local_ny = mdata->local_ny; /* dim of local process over y-indices */
      int local_y_start = mdata->local_y_start;
      int local_iy = iy - local_y_start;
@@ -580,7 +584,6 @@ static real get_val(int ix, int iy, int iz,
      if (local_iy >= 0 && local_iy < local_ny) { 
          val = data[(((local_iy * nx) + ix) * nz + iz) * stride]; /* note transposition in x and y indices */
 	 }
-	 mpi_allreduce_1(&val, real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm); 
 
 #else /* no MPI */
 	real val = data[(((ix * ny) + iy) * nz + iz) * stride];
@@ -596,7 +599,7 @@ static real interp_val(vector3 p, int nx, int ny, int nz, int last_dim_size,
 		       real *data, int stride, int conjugate)
 {
      double ipart;
-     real rx, ry, rz, dx, dy, dz;
+     real rx, ry, rz, dx, dy, dz, v;
      int x, y, z, x2, y2, z2;
 
      rx = modf(p.x/geometry_lattice.size.x + 0.5, &ipart); if (rx < 0) rx += 1;
@@ -625,10 +628,13 @@ static real interp_val(vector3 p, int nx, int ny, int nz, int last_dim_size,
 
 #define D(x,y,z) (get_val(x,y,z,nx,ny,nz,last_dim_size, data,stride,conjugate))
 
-     return(((D(x,y,z)*(1.0-dx) + D(x2,y,z)*dx) * (1.0-dy) +
-             (D(x,y2,z)*(1.0-dx) + D(x2,y2,z)*dx) * dy) * (1.0-dz) +
-            ((D(x,y,z2)*(1.0-dx) + D(x2,y,z2)*dx) * (1.0-dy) +
-             (D(x,y2,z2)*(1.0-dx) + D(x2,y2,z2)*dx) * dy) * dz);
+     v = (((D(x,y,z)   * (1.0-dx) + D(x2,y,z)   * dx) * (1.0-dy) +
+           (D(x,y2,z)  * (1.0-dx) + D(x2,y2,z)  * dx) * dy         ) * (1.0-dz) +
+          ((D(x,y,z2)  * (1.0-dx) + D(x2,y,z2)  * dx) * (1.0-dy) +
+           (D(x,y2,z2) * (1.0-dx) + D(x2,y2,z2) * dx) * dy         ) * dz);
+
+     mpi_allreduce_1(&v, real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
+     return v;
 
 #undef D
 }
