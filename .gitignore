@@ -67,6 +67,9 @@ mpb/mpbi_mpi
 src/mpbi_mpi.h
 mpb/mu.c
 
+# local editor settings
+.vscode
+
 # test output:
 check-epsilon.h5
 check-mu.h5
