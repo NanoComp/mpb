@@ -1,5 +1,13 @@
 # MPB Release Notes
 
+## MPB 1.10
+
+2/19/20
+
+* `(get-*-point r)` functions now support MPI (#112).
+
+* `--with-libctl=dir` now looks in `dir/share/libctl` in addition to `dir` (#106).
+
 ## MPB 1.9
 
 6/5/19
