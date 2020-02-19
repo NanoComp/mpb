@@ -101,8 +101,8 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         p.y = i2 * s2 - c2;
         p.z = i3 * s3 - c3;
 
-        /* Transformed coordinate pt = {W|w}⁻¹p = W⁻¹p - w */
-        pt = vector3_minus(matrix3x3_vector3_mult(invW, p), w);
+        /* Transformed coordinate pt = {W|w}⁻¹p = W⁻¹(p-w) since {W|w}⁻¹={W⁻¹|-W⁻¹w} */
+        pt = matrix3x3_vector3_mult(invW, vector3_minus(p, w));
 
         /* Bloch field value at transformed coordinate pt: interpolation is needed to ensure
            generality in the case of fractional translations. Unfortunately, this currently
