@@ -144,6 +144,7 @@ void mpi_one_printf(const char *template, ...)
          vprintf(template, ap);
        }
        va_end(ap);
+       fflush(stdout);
      }
 }
 
@@ -151,10 +152,11 @@ void mpi_one_printf(const char *template, ...)
 void mpi_one_fprintf(FILE *f, const char *template, ...)
 {
      if (mpi_is_master()) {
-	  va_list ap;
-	  va_start(ap, template);
-	  vfprintf(f, template, ap);
-	  va_end(ap);
+       va_list ap;
+       va_start(ap, template);
+       vfprintf(f, template, ap);
+       va_end(ap);
+       fflush(f);
      }
 }
 
