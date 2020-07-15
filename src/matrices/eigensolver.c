@@ -29,6 +29,7 @@
 
 #include "eigensolver.h"
 #include "linmin.h"
+#include "verbosity.h"
 
 extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
                                           evectoperator A, void *Adata,
@@ -139,11 +140,11 @@ static linmin_real trace_func(linmin_real theta, linmin_real *trace_deriv, void 
 		    CHECK(0, "inexplicable singularity in linmin trace_func");
 	       }
 	  }
-	  
+
 	  sqmatrix_copy(d->S2, d->YtAY);
 	  sqmatrix_aApbB(c*c, d->S2, s*s, d->DtAD);
 	  sqmatrix_ApaB(d->S2, 2*s*c, d->symYtAD);
-	  
+
 	  trace = SCALAR_RE(sqmatrix_traceAtB(d->S2, d->S1))
 	       + (c*c * d->trace_YtLY + s*s * d->trace_DtLD
 		  + 2*s*c * d->trace_YtLD) * (c * d->lag + s * d->d_lag);
@@ -151,20 +152,20 @@ static linmin_real trace_func(linmin_real theta, linmin_real *trace_deriv, void 
 
      if (trace_deriv) {
 	  linmin_real c2 = cos(2*theta), s2 = sin(2*theta);
-	  
+
 	  sqmatrix_copy(d->S3, d->YtAY);
 	  sqmatrix_ApaB(d->S3, -1.0, d->DtAD);
 	  sqmatrix_aApbB(-0.5 * s2, d->S3, c2, d->symYtAD);
-	  
+
 	  *trace_deriv = SCALAR_RE(sqmatrix_traceAtB(d->S1, d->S3));
-	  
+
 	  sqmatrix_AeBC(d->S3, d->S1, 0, d->S2, 1);
 	  sqmatrix_AeBC(d->S2, d->S3, 0, d->S1, 1);
-	  
+
 	  sqmatrix_copy(d->S3, d->YtBY);
 	  sqmatrix_ApaB(d->S3, -1.0, d->DtBD);
 	  sqmatrix_aApbB(-0.5 * s2, d->S3, c2, d->symYtBD);
-	  
+
 	  *trace_deriv -= SCALAR_RE(sqmatrix_traceAtB(d->S2, d->S3));
 	  *trace_deriv *= 2;
 
@@ -221,7 +222,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
      trace_func_data tfd;
 
      prev_feedback_time = MPIGLUE_CLOCK;
-     
+
 #ifdef DEBUG
      flags |= EIGS_VERBOSE;
 #endif
@@ -330,10 +331,12 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	  if (!sqmatrix_invert(U, 1, S2)) { /* non-independent Y columns */
 	       /* emergency restart with random Y */
 	       CHECK(iteration + 10 * ++num_emergency_restarts
-		     < EIGENSOLVER_MAX_ITERATIONS, 
+		     < EIGENSOLVER_MAX_ITERATIONS,
 		     "too many emergency restarts");
-	       mpi_one_printf("    emergency randomization of Y on iter. %d\n",
-			      iteration);
+	       if (mpb_verbosity >= 2)	{
+	       		mpi_one_printf("    emergency randomization of Y on iter. %d\n",
+			               iteration);
+	       }
 	       for (i = 0; i < Y.p * Y.n; ++i)
 		    ASSIGN_SCALAR(Y.data[i],
 				  rand() * 1.0 / RAND_MAX - 0.5,
@@ -352,7 +355,9 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       real traceU = SCALAR_RE(sqmatrix_trace(U));
 	       mpi_assert_equal(traceU);
 	       if (traceU > EIGS_TRACE_U_THRESHOLD * U.p) {
-		    mpi_one_printf("    re-orthonormalizing Y\n");
+	       	    if (mpb_verbosity >= 2) {
+		        mpi_one_printf("    re-orthonormalizing Y\n");
+		    }
 		    sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
 		    evectmatrix_XeYS(G, Y, S1, 1); /* G = orthonormalize Y */
 		    evectmatrix_copy(Y, G);
@@ -397,14 +402,16 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 
 	  convergence_history[iteration % EIG_HISTORY_SIZE] =
 	       200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E));
-	  
+
 	  if (iteration > 0 && mpi_is_master() &&
 	      ((flags & EIGS_VERBOSE) ||
 	       MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
 	       > FEEDBACK_TIME)) {
-               mpi_one_printf("    iteration %4d: "
-                      "trace = %0.16g (%g%% change)\n", iteration, (double)E,
-	           (double)convergence_history[iteration % EIG_HISTORY_SIZE]);
+		if (mpb_verbosity >= 2) {
+			mpi_one_printf("    iteration %4d: "
+				"trace = %0.16g (%g%% change)\n", iteration, (double)E,
+				(double)convergence_history[iteration % EIG_HISTORY_SIZE]);
+	       }
 	       if (flags & EIGS_VERBOSE)
 		    debug_output_malloc_count();
 	       fflush(stdout); /* make sure output appears */
@@ -414,7 +421,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	  if (iteration > 0 &&
               fabs(E - prev_E) < tolerance * 0.5 * (E + prev_E + 1e-7))
                break; /* convergence!  hooray! */
-	  
+
 	  /* Compute gradient of functional: G = (1 - BY U Yt) A Y U */
 	  sqmatrix_AeBC(S1, U, 0, YtAYU, 0);
 	  evectmatrix_XpaYS(G, -1.0, BY, S1, 1);
@@ -431,7 +438,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	  }
 	  else
                evectmatrix_copy(X, G);  /* preconditioner is identity */
-	  
+
 	  /* We have to apply the constraint here, in case it doesn't
              commute with the preconditioner. */
 	  if (constraint)
@@ -450,7 +457,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	     any computations that we need with G.  (Yes, we're
 	     playing tricksy games here, but isn't it fun?) */
 
-	  mpi_assert_equal(traceGtX = 
+	  mpi_assert_equal(traceGtX =
 			   SCALAR_RE(evectmatrix_traceXtY(G, X))
 			   + g_lag * g_lag);
 	  if (usingConjugateGradient) {
@@ -530,7 +537,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		   2.0 * convergence_history[iteration % EIG_HISTORY_SIZE] >=
 		   convergence_history[(iteration+1) % EIG_HISTORY_SIZE]) {
 		    gamma = 0.0;
-                    if (flags & EIGS_VERBOSE)
+                    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
                          mpi_one_printf("    dynamically resetting CG direction...\n");
 		    for (i = 1; i < EIG_HISTORY_SIZE; ++i)
 			 convergence_history[(iteration+i) % EIG_HISTORY_SIZE]
@@ -542,7 +549,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		    /* periodically forget previous search directions,
 		       and just juse D = X */
                     gamma = 0.0;
-                    if (flags & EIGS_VERBOSE)
+                    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
                          mpi_one_printf("    resetting CG direction...\n");
                }
 
@@ -567,7 +574,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	          matrix multiplications compared to the exact linmin. */
 
                if (B) B(D, BD, Bdata, 0, BD); /* B*Y; no scratch */
-               
+
 	       d_norm = sqrt(SCALAR_RE(evectmatrix_traceXtY(BD,D)) / Y.p);
 	       mpi_assert_equal(d_norm);
 
@@ -597,7 +604,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		    L(Y, X, Ldata, 1, X);
 		    E2 += *lag * SCALAR_RE(evectmatrix_traceXtY(Y, X));
 	       }
-	       
+
 	       mpi_assert_equal(E2);
 
 	       /* Get finite-difference approximation for the 2nd derivative
@@ -615,11 +622,11 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		  abort like this very often, as it wastes operations. */
 	       if (d2E < 0 || -0.5*dE*theta > 20.0 * fabs(E-prev_E)) {
 		    if (flags & EIGS_FORCE_APPROX_LINMIN) {
-			 if (flags & EIGS_VERBOSE)
+			 if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
 			      mpi_one_printf("    using previous stepsize\n");
 		    }
 		    else {
-			 if (flags & EIGS_VERBOSE)
+			 if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
 			      mpi_one_printf("    switching back to exact "
 					     "line minimization\n");
 			 use_linmin = 1;
@@ -640,7 +647,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       real dE, d2E;
 
                if (B) B(D, BD, Bdata, 0, G); /* B*Y; G is scratch */
-               
+
 	       d_scale = sqrt(SCALAR_RE(evectmatrix_traceXtY(BD, D)) / Y.p);
 	       mpi_assert_equal(d_scale);
 	       blasglue_rscal(Y.p * Y.n, 1/d_scale, D.data, 1);
@@ -654,7 +661,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       evectmatrix_XtY(DtAD, D, G, S2);
 	       sqmatrix_assert_hermitian(DtBD);
 	       sqmatrix_assert_hermitian(DtAD);
-	       
+
 	       evectmatrix_XtY(S1, Y, BD, S2);
 	       sqmatrix_symmetrize(symYtBD, S1);
 
@@ -672,7 +679,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       d2E = 2.0 * (SCALAR_RE(sqmatrix_traceAtB(U, DtAD)) -
 			    SCALAR_RE(sqmatrix_traceAtB(YtAYU, S1)) -
 			    4.0 * SCALAR_RE(sqmatrix_traceAtB(U, S3)));
-	       
+
 	       if (L) {
 		    d_lag *= 1/d_scale;
 		    tfd.d_lag = d_lag;
@@ -687,7 +694,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 			 + tfd.d_lag * 4.0 * tfd.trace_YtLD;
 	       }
 	       else {
-		    tfd.d_lag = tfd.lag = tfd.trace_YtLY = 
+		    tfd.d_lag = tfd.lag = tfd.trace_YtLY =
 			 tfd.trace_DtLD = tfd.trace_YtLD = 0;
 	       }
 
@@ -696,17 +703,17 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       theta = -dE/d2E;
 
 	       if (d2E < 0) {
-		    if (flags & EIGS_VERBOSE)
+		    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
 			 mpi_one_printf("    near maximum in trace\n");
 		    theta = dE > 0 ? -fabs(prev_theta) : fabs(prev_theta);
 	       }
 	       else if (-0.5*dE*theta > 2.0 * fabs(E-prev_E)) {
-		    if (flags & EIGS_VERBOSE)
+		    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
 			 mpi_one_printf("    large trace change predicted "
 					"(%g%%)\n", (double) (-0.5*dE*theta/E * 100.0));
 	       }
 	       if (fabs(theta) >= K_PI) {
-		    if (flags & EIGS_VERBOSE)
+		    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
 			 mpi_one_printf("    large theta (%g)\n", (double)theta);
 		    theta = dE > 0 ? -fabs(prev_theta) : fabs(prev_theta);
 	       }
@@ -763,21 +770,21 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		  processors compare the same, average times. */
 	       mpi_allreduce_1(&t_exact,
 			       real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
-	       mpi_allreduce_1(&t_approx, 
+	       mpi_allreduce_1(&t_approx,
 			       real, SCALAR_MPI_TYPE, MPI_SUM, mpb_comm);
 
 	       if (!(flags & EIGS_FORCE_EXACT_LINMIN) &&
 		   linmin_improvement > 0 &&
 		   linmin_improvement <= APPROX_LINMIN_IMPROVEMENT_THRESHOLD &&
 		   t_exact > t_approx * APPROX_LINMIN_SLOWDOWN_GUESS) {
-		    if ((flags & EIGS_VERBOSE) && use_linmin)
+		    if ((flags & EIGS_VERBOSE) && use_linmin && mpb_verbosity >= 2)
 			 mpi_one_printf("    switching to approximate "
 				"line minimization (decrease time by %g%%)\n",
 			    (double) ((t_exact - t_approx) * 100.0 / t_exact));
 		    use_linmin = 0;
 	       }
 	       else if (!(flags & EIGS_FORCE_APPROX_LINMIN)) {
-		    if ((flags & EIGS_VERBOSE) && !use_linmin)
+		    if ((flags & EIGS_VERBOSE) && !use_linmin && mpb_verbosity >= 2)
 			 mpi_one_printf("    switching back to exact "
 					"line minimization\n");
 		    use_linmin = 1;
@@ -802,7 +809,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 				   X, G, U, S1, S2);
 
      *num_iterations = iteration;
-     
+
      destroy_sqmatrix(S3);
      destroy_sqmatrix(S2);
      destroy_sqmatrix(S1);

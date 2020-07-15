@@ -34,6 +34,7 @@
 #include <blasglue.h>
 
 #include "eigensolver.h"
+#include "verbosity.h"
 
 extern void eigensolver_get_eigenvals_aux(evectmatrix Y, real *eigenvals,
                                           evectoperator A, void *Adata,
@@ -68,7 +69,7 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
      real *eigenvals2, prev_E = 0;
 
      prev_feedback_time = MPIGLUE_CLOCK;
-     
+
 #ifdef DEBUG
      flags |= EIGS_VERBOSE;
 #endif
@@ -146,23 +147,25 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 				      1.0, V[i],
 				      S, itarget * q + Y.p * i, 1);
 	  }
-	  
+
 	  if (iteration > 0 && mpi_is_master() &&
 	      ((flags & EIGS_VERBOSE) ||
 	       MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
 	       > FEEDBACK_TIME)) {
-               printf("    iteration %4d: "
-                      "trace = %0.16g (%g%% change)\n", iteration, E,
-		      200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
-               fflush(stdout); /* make sure output appears */
+		if (mpb_verbosity >= 2) {
+			printf("    iteration %4d: "
+				"trace = %0.16g (%g%% change)\n", iteration, E,
+				200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));
+			fflush(stdout); /* make sure output appears */
+	       }
                prev_feedback_time = MPIGLUE_CLOCK; /* reset feedback clock */
           }
 
 	  if (iteration > 0 &&
-              fabs(E - prev_E) < tolerance * 0.5 * (fabs(E) + 
+              fabs(E - prev_E) < tolerance * 0.5 * (fabs(E) +
 						    fabs(prev_E) + 1e-7))
                break; /* convergence!  hooray! */
-	  
+
 	  /* compute new directions from residual & update basis: */
 	  {
 	       int ibasis2 = (ibasis + 1) % nbasis;
@@ -177,7 +180,7 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 #else
 	       A(Y, V[ibasis2], Adata, 1, Y);
 #endif
-	  
+
 	       /* handle restart case: */
 	       if (ibasis2 == 0) {
 		    evectmatrix_copy(AV[0], V[0]);
@@ -189,7 +192,7 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 	       }
 
 	       /* V[ibasis2] = residual = AY - Y * eigenvals */
-	       matrix_XpaY_diag_real(V[ibasis2].data, 
+	       matrix_XpaY_diag_real(V[ibasis2].data,
 				     -1.0, Y.data,
 				     eigenvals, Y.n, Y.p);
 
@@ -241,5 +244,5 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
      destroy_sqmatrix(S3);
      destroy_sqmatrix(I);
 
-     *num_iterations = iteration;     
+     *num_iterations = iteration;
 }
