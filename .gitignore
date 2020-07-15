@@ -66,6 +66,7 @@ src/mpb_mpi.h
 mpb/mpbi_mpi
 src/mpbi_mpi.h
 mpb/mu.c
+doc/site
 
 # local editor settings
 .vscode
