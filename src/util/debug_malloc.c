@@ -82,7 +82,7 @@ void *debug_malloc(size_t n)
      char *p;
      int i;
 
-     WHEN_VERBOSE(mpi_one_fprintf(stdout,"DEBUG_MALLOC %d\n", n));
+     WHEN_VERBOSE(mpi_one_fprintf(stderr,"DEBUG_MALLOC %d\n", n));
 
      if (n == 0)
 	  mpi_one_fprintf(stderr, "(Allocating a block of zero size.)\n");
@@ -116,7 +116,7 @@ void debug_free(void *p)
 	  int magic = ((int *) q)[1];
 	  int i;
 
-	  WHEN_VERBOSE(mpi_one_fprintf(stdout,"DEBUG_FREE %d\n", n));
+	  WHEN_VERBOSE(mpi_one_fprintf(stderr,"DEBUG_FREE %d\n", n));
 	  CHECK(n != MMAGIC, "Tried to free a freed pointer!\n");
 	  *((int *) q) = MMAGIC; /* to detect duplicate free's */
 
