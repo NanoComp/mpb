@@ -12,6 +12,7 @@
 #define MPB_REAL 1 /* avoid C++ conflict with MPB's "real" type */
 #include "mpb/eigensolver.h"
 #include "mpb/maxwell.h"
+#include "mpb/verbosity.h"
 
 extern void (*mpb_printf_callback)(const char *s);
 #endif /* MPB_H */

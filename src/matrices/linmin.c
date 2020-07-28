@@ -25,6 +25,7 @@
 #include <check.h>
 
 #include "linmin.h"
+#include "verbosity.h"
 
 #define double linmin_real
 
@@ -61,7 +62,7 @@ double linmin(double *converged_f, double *converged_df,
 	  double x;
 	  d.f = f;
 	  d.f_data = f_data;
-	  x = linmin(converged_f, converged_df, 
+	  x = linmin(converged_f, converged_df,
 		     -x_guess, f_0, -df_0, f_tol, df_tol, x_tol,
 		     -x_min, -x_max, reverse_func, &d, verbose);
 	  *converged_df = -*converged_df;
@@ -82,7 +83,7 @@ double linmin(double *converged_f, double *converged_df,
 	  f_x = f_0; df_x = df_0; /* initially, pass in f and df at x=0 */
 	  dcsrch(&x, &f_x, &df_x, &f_tol, &df_tol, &x_tol,
 		 task, &x_min, &x_max, isave, dsave);
-	  
+
 	  while (*task == 'F') {
 	       f_x = f(x, &df_x, f_data);
 	       mpi_assert_equal(x);
@@ -93,12 +94,12 @@ double linmin(double *converged_f, double *converged_df,
 	  }
 
 	  if (*task != 'C') {  /* not converged; warning or error */
-	       if (verbose || *task == 'E')
+	       if ((verbose || mpb_verbosity >= 2 || *task == 'E')  && mpb_verbosity >= 2)
 		    mpi_one_fprintf(stderr, "linmin: %s\n", task);
 	       CHECK(*task != 'E', "linmin failure");
 	  }
 
-	  if (verbose)
+	  if (verbose || mpb_verbosity >= 2)
 	       mpi_one_printf("    linmin: converged after %d iterations.\n",
 			      iters);
 
