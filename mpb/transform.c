@@ -37,7 +37,7 @@
    for a symmetry operation {W|w} with point-group part W and translation part w; each 
    specified in the lattice basis. The vector fields Eᵢ and Dᵢ include Bloch phases.
    If instead curfield is set to the real-space B-field, the overlap
-         ∫ Hᵢ(r){W|v}Bᵢ(r) dr  =  det(W) ∫ Eᵢ(r)(WDᵢ)({W|w}⁻¹r) dr,
+         ∫ Hᵢ(r){W|v}Bᵢ(r) dr  =  det(W) ∫ Hᵢ(r)(WBᵢ)({W|w}⁻¹r) dr,
    is computed instead. Note that a factor det(W) is then included since B & H are
    pseudovectors. As a result, the computed symmetry expectation values are independent
    of whether the D- or B-field is used.
@@ -58,10 +58,8 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         mpi_one_fprintf(stderr, "a real-space H- or D-field must be loaded beforehand\n");
         return integral;
     }
-    #ifdef HAVE_MPI
-        CHECK(0, "transformed_overlap(..) not yet implemented for MPI!"); /* TODO: Remove if PR#112 is merged */
-    #endif
     /* TODO: Is special-casing for #ifndef SCALAR_COMPLEX needed? */
+    /* TODO: Doesn't seem to work with mpbi */
     
     /* prepare before looping ... */
     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
@@ -105,9 +103,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         pt = matrix3x3_vector3_mult(invW, vector3_minus(p, w));
 
         /* Bloch field value at transformed coordinate pt: interpolation is needed to ensure
-           generality in the case of fractional translations. Unfortunately, this currently
-           precludes compatibility with MPI, since get_val is not implemented for MPI        */
-        /* TODO: Remove disclaimer above if PR#112 is merged */
+           generality in the case of fractional translations.                                */
         get_bloch_field_point_(Ftemp, pt); /* assigns Ftemp to field at p [excludes exp(ikr) factor] */
 
         /* Transform the vector components of Ftemp by W to obtain Ft; a bit repetitious but 
