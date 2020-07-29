@@ -215,6 +215,15 @@ cnumber sqmatrix_ref(SCM mo, integer i, integer j)
      return c;
 }
 
+void sqmatrix_set(SCM mo, integer i, integer j, cnumber c)
+{
+     sqmatrix *m = assert_sqmatrix_smob(mo);
+     CHECK(m && i >= 0 && j >= 0 && i < m->p && j < m->p,
+       "invalid arguments to sqmatrix-set");
+     ASSIGN_SCALAR(m->data[i * m->p + j], c.re, c.im);
+     scm_remember_upto_here_1(mo);
+}
+
 SCM sqmatrix_mult(SCM Ao, SCM Bo)
 {
     sqmatrix *A = assert_sqmatrix_smob(Ao);
