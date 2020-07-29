@@ -24,12 +24,11 @@ typedef long double linmin_real;
 typedef double linmin_real;
 #endif
 
-typedef linmin_real (*linmin_func) (linmin_real x, linmin_real *deriv, void *data);
+typedef linmin_real (*linmin_func)(linmin_real x, linmin_real *deriv, void *data);
 
-extern linmin_real linmin(linmin_real *converged_f, linmin_real *converged_df,
-		     linmin_real x_guess, linmin_real f_0, linmin_real df_0,
-		     linmin_real f_tol, linmin_real df_tol, linmin_real x_tol,
-		     linmin_real x_min, linmin_real x_max,
-		     linmin_func f, void *f_data, int verbose);
+extern linmin_real linmin(linmin_real *converged_f, linmin_real *converged_df, linmin_real x_guess,
+                          linmin_real f_0, linmin_real df_0, linmin_real f_tol, linmin_real df_tol,
+                          linmin_real x_tol, linmin_real x_min, linmin_real x_max, linmin_func f,
+                          void *f_data, int verbose);
 
 #endif /* LINMIN_H */

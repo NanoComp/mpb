@@ -26,20 +26,19 @@
    set when the user runs the program with --verbose */
 extern int verbose;
 
-#define MAX2(a,b) ((a) > (b) ? (a) : (b))
-#define MIN2(a,b) ((a) < (b) ? (a) : (b))
+#define MAX2(a, b) ((a) > (b) ? (a) : (b))
+#define MIN2(a, b) ((a) < (b) ? (a) : (b))
 
 #define TWOPI 6.2831853071795864769252867665590057683943388
 
 /**************************************************************************/
 
-extern void get_epsilon_file_func(const char *fname,
-				  maxwell_dielectric_function *func,
-				  void **func_data);
+extern void get_epsilon_file_func(const char *fname, maxwell_dielectric_function *func,
+                                  void **func_data);
 extern void destroy_epsilon_file_func_data(void *func_data);
 
-extern real linear_interpolate(real rx, real ry, real rz,
-			       real *data, int nx, int ny, int nz, int stride);
+extern real linear_interpolate(real rx, real ry, real rz, real *data, int nx, int ny, int nz,
+                               int stride);
 
 /**************************************************************************/
 
@@ -65,7 +64,7 @@ extern void curfield_reset(void);
 /* R[i]/G[i] are lattice/reciprocal-lattice vectors */
 extern real R[3][3], G[3][3];
 extern matrix3x3 Rm, Gm; /* same thing, but matrix3x3 */
-extern real Vol; /* computational cell volume = |det Rm| */
+extern real Vol;         /* computational cell volume = |det Rm| */
 
 /* index of current kpoint, for labeling output */
 extern int kpoint_index;
@@ -97,15 +96,13 @@ extern void init_epsilon(void);
 
 typedef enum { U_MIN = 0, U_PROD = 1, U_SUM = 2 } material_grid_kinds;
 extern real material_grid_val(vector3 p, const material_grid *g);
-extern double matgrid_val(vector3 p, geom_box_tree tp, int oi,
-			  const material_grid *mg);
+extern double matgrid_val(vector3 p, geom_box_tree tp, int oi, const material_grid *mg);
 material_grid *get_material_grids(geometric_object_list g, int *ngrids);
 int material_grids_ntot(const material_grid *grids, int ngrids);
 void material_grids_set(const double *u, material_grid *grids, int ngrids);
 void material_grids_get(double *u, const material_grid *grids, int ngrids);
-void material_grids_addgradient(double *v,
-				double scalegrad, int band,
-				const material_grid *grids, int ngrids);
+void material_grids_addgradient(double *v, double scalegrad, int band, const material_grid *grids,
+                                int ngrids);
 
 /**************************************************************************/
 

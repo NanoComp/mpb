@@ -26,44 +26,42 @@
 
 #include "matrixio.h"
 
-void evectmatrixio_writeall_raw(const char *filename, evectmatrix a)
-{
-     int dims[4], start[4] = {0, 0, 0, 0};
-     const int rank = 4;
-     matrixio_id file_id, data_id;
-     
-     dims[0] = a.N;
-     dims[1] = a.c;
-     dims[2] = a.p;
-     dims[3] = SCALAR_NUMVALS;
+void evectmatrixio_writeall_raw(const char *filename, evectmatrix a) {
+  int dims[4], start[4] = {0, 0, 0, 0};
+  const int rank = 4;
+  matrixio_id file_id, data_id;
 
-     start[0] = a.Nstart;
+  dims[0] = a.N;
+  dims[1] = a.c;
+  dims[2] = a.p;
+  dims[3] = SCALAR_NUMVALS;
 
-     file_id = matrixio_create(filename);     
-     data_id = matrixio_create_dataset(file_id, "rawdata", NULL, rank, dims);
-     
-     dims[0] = a.localN;
-     matrixio_write_real_data(data_id, dims, start, 1, (real *) a.data);
+  start[0] = a.Nstart;
 
-     matrixio_close_dataset(data_id);
-     matrixio_close(file_id);
+  file_id = matrixio_create(filename);
+  data_id = matrixio_create_dataset(file_id, "rawdata", NULL, rank, dims);
+
+  dims[0] = a.localN;
+  matrixio_write_real_data(data_id, dims, start, 1, (real *)a.data);
+
+  matrixio_close_dataset(data_id);
+  matrixio_close(file_id);
 }
 
-void evectmatrixio_readall_raw(const char *filename, evectmatrix a)
-{
-     int rank = 4, dims[4];
-     matrixio_id file_id;
+void evectmatrixio_readall_raw(const char *filename, evectmatrix a) {
+  int rank = 4, dims[4];
+  matrixio_id file_id;
 
-     dims[0] = a.N;
-     dims[1] = a.c;
-     dims[2] = a.p;
-     dims[3] = SCALAR_NUMVALS;
+  dims[0] = a.N;
+  dims[1] = a.c;
+  dims[2] = a.p;
+  dims[3] = SCALAR_NUMVALS;
 
-     file_id = matrixio_open(filename, 1);
-     
-     CHECK(matrixio_read_real_data(file_id, "rawdata", &rank, dims, 
-				   a.localN, a.Nstart, 1, (real *) a.data),
-	   "error reading data set in file");
+  file_id = matrixio_open(filename, 1);
 
-     matrixio_close(file_id);
+  CHECK(matrixio_read_real_data(file_id, "rawdata", &rank, dims, a.localN, a.Nstart, 1,
+                                (real *)a.data),
+        "error reading data set in file");
+
+  matrixio_close(file_id);
 }

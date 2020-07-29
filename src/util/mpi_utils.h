@@ -21,7 +21,7 @@
 #include <stdio.h>
 
 #ifdef HAVE_MPI
-#  include <mpi.h>
+#include <mpi.h>
 extern MPI_Comm mpb_comm;
 #else
 extern int mpb_comm;
@@ -35,21 +35,21 @@ extern int my_global_rank();
 
 extern void mpi_die(const char *template, ...)
 #ifdef __GNUC__
-     __attribute__ ((format (printf, 1, 2)))
+    __attribute__((format(printf, 1, 2)))
 #endif
-;
+    ;
 
 extern void mpi_one_fprintf(FILE *f, const char *template, ...)
 #ifdef __GNUC__
-     __attribute__ ((format (printf, 2, 3)))
+    __attribute__((format(printf, 2, 3)))
 #endif
-;
+    ;
 
 extern void mpi_one_printf(const char *template, ...)
 #ifdef __GNUC__
-     __attribute__ ((format (printf, 1, 2)))
+    __attribute__((format(printf, 1, 2)))
 #endif
-;
+    ;
 
 extern int mpi_is_master(void);
 
@@ -59,9 +59,10 @@ extern void mpi_begin_critical_section(int tag);
 extern void mpi_end_critical_section(int tag);
 
 /* "in-place" Allreduce wrapper for reducing a single value */
-#define mpi_allreduce_1(b, ctype, t, op, comm) { \
-     ctype bbbb = *(b); \
-     mpi_allreduce(&bbbb, (b), 1, ctype, t, op, comm); \
-}
+#define mpi_allreduce_1(b, ctype, t, op, comm)                                                     \
+  {                                                                                                \
+    ctype bbbb = *(b);                                                                             \
+    mpi_allreduce(&bbbb, (b), 1, ctype, t, op, comm);                                              \
+  }
 
 #endif /* MPI_UTILS_H */

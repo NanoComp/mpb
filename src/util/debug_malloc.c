@@ -32,7 +32,7 @@
 #include "mpi_utils.h"
 #include "check.h"
 
-void* (*my_malloc_hook) (size_t) = 0;
+void *(*my_malloc_hook)(size_t) = 0;
 
 /**********************************************************
  *   DEBUGGING CODE
@@ -40,18 +40,17 @@ void* (*my_malloc_hook) (size_t) = 0;
 
 #ifdef DEBUG
 
-void check_breakpoint(void)
-{
-     /* this function is only here so that we can drop into a breakpoint
-	in a debugger when a CHECK macro fails... */
+void check_breakpoint(void) {
+  /* this function is only here so that we can drop into a breakpoint
+     in a debugger when a CHECK macro fails... */
 }
 
 #endif
 
 #ifdef DEBUG_MALLOC
 
-#  undef malloc
-#  undef free
+#undef malloc
+#undef free
 
 /*
  * debugging malloc/free.  Initialize every malloced and freed area to
@@ -65,7 +64,7 @@ static int debug_malloc_cnt = 0;
 static int debug_malloc_total = 0;
 
 #define MAGIC 0xABadCafe
-#define MMAGIC (((int) MAGIC) < 0 ? ((int) MAGIC) : -((int) MAGIC))
+#define MMAGIC (((int)MAGIC) < 0 ? ((int)MAGIC) : -((int)MAGIC))
 #define PAD_FACTOR 2
 #define TWOINTS (2 * sizeof(int))
 
@@ -77,93 +76,86 @@ static int debug_malloc_total = 0;
 #define WHEN_VERBOSE(a)
 #endif
 
-void *debug_malloc(size_t n)
-{
-     char *p;
-     int i;
+void *debug_malloc(size_t n) {
+  char *p;
+  int i;
 
-     WHEN_VERBOSE(mpi_one_fprintf(stderr,"DEBUG_MALLOC %d\n", n));
+  WHEN_VERBOSE(mpi_one_fprintf(stderr, "DEBUG_MALLOC %d\n", n));
 
-     if (n == 0)
-	  mpi_one_fprintf(stderr, "(Allocating a block of zero size.)\n");
+  if (n == 0) mpi_one_fprintf(stderr, "(Allocating a block of zero size.)\n");
 
-     debug_malloc_total += n;
+  debug_malloc_total += n;
 
-     p = (char *) malloc(PAD_FACTOR * n + TWOINTS);
-     CHECK(p, "debug_malloc: out of memory\n");
+  p = (char *)malloc(PAD_FACTOR * n + TWOINTS);
+  CHECK(p, "debug_malloc: out of memory\n");
 
-     /* store the size in a known position */
-     ((int *) p)[0] = n;
-     ((int *) p)[1] = MAGIC;
-     for (i = 0; i < PAD_FACTOR * n; ++i)
-	  p[i + TWOINTS] = (char) (i ^ 0xDEADBEEF);
+  /* store the size in a known position */
+  ((int *)p)[0] = n;
+  ((int *)p)[1] = MAGIC;
+  for (i = 0; i < PAD_FACTOR * n; ++i)
+    p[i + TWOINTS] = (char)(i ^ 0xDEADBEEF);
 
-     ++debug_malloc_cnt;
+  ++debug_malloc_cnt;
 
-     /* skip the size we stored previously */
-     return (void *) (p + TWOINTS);
+  /* skip the size we stored previously */
+  return (void *)(p + TWOINTS);
 }
 
-void debug_free(void *p)
-{
-     char *q = ((char *) p) - TWOINTS;
+void debug_free(void *p) {
+  char *q = ((char *)p) - TWOINTS;
 
-     CHECK(p, "debug_free: tried to free NULL pointer!\n");
-     CHECK(q, "debug_free: tried to free NULL+TWOINTS pointer!\n");
+  CHECK(p, "debug_free: tried to free NULL pointer!\n");
+  CHECK(q, "debug_free: tried to free NULL+TWOINTS pointer!\n");
 
-     {
-	  int n = ((int *) q)[0];
-	  int magic = ((int *) q)[1];
-	  int i;
+  {
+    int n = ((int *)q)[0];
+    int magic = ((int *)q)[1];
+    int i;
 
-	  WHEN_VERBOSE(mpi_one_fprintf(stderr,"DEBUG_FREE %d\n", n));
-	  CHECK(n != MMAGIC, "Tried to free a freed pointer!\n");
-	  *((int *) q) = MMAGIC; /* to detect duplicate free's */
+    WHEN_VERBOSE(mpi_one_fprintf(stderr, "DEBUG_FREE %d\n", n));
+    CHECK(n != MMAGIC, "Tried to free a freed pointer!\n");
+    *((int *)q) = MMAGIC; /* to detect duplicate free's */
 
-	  CHECK(magic == MAGIC, "Wrong magic in debug_free()!\n");
-	  ((int *) q)[1] = ~MAGIC;
+    CHECK(magic == MAGIC, "Wrong magic in debug_free()!\n");
+    ((int *)q)[1] = ~MAGIC;
 
-	  CHECK(n >= 0, "Tried to free block with corrupt size descriptor!\n");
+    CHECK(n >= 0, "Tried to free block with corrupt size descriptor!\n");
 
-	  debug_malloc_total -= n;
+    debug_malloc_total -= n;
 
-	  CHECK(debug_malloc_total >= 0, 
-		"debug_malloc_total went negative!\n");
+    CHECK(debug_malloc_total >= 0, "debug_malloc_total went negative!\n");
 
-	  /* check for writing past end of array: */
-	  for (i = n; i < PAD_FACTOR * n; ++i)
-	       if (q[i + TWOINTS] != (char) (i ^ 0xDEADBEEF))
-		    mpi_die("Byte %d past end of array has changed!\n"
-			    "Array bounds overwritten!\n",
-			    i - n + 1);
-	  for (i = 0; i < PAD_FACTOR * n; ++i)
-	       q[i + TWOINTS] = (char) (i ^ 0xBEEFDEAD);
+    /* check for writing past end of array: */
+    for (i = n; i < PAD_FACTOR * n; ++i)
+      if (q[i + TWOINTS] != (char)(i ^ 0xDEADBEEF))
+        mpi_die("Byte %d past end of array has changed!\n"
+                "Array bounds overwritten!\n",
+                i - n + 1);
+    for (i = 0; i < PAD_FACTOR * n; ++i)
+      q[i + TWOINTS] = (char)(i ^ 0xBEEFDEAD);
 
-	  --debug_malloc_cnt;
-	  free(q);
-     }
+    --debug_malloc_cnt;
+    free(q);
+  }
 }
 
 #endif /* DEBUG */
 
 /* output current memory usage: */
-void debug_output_malloc_count(void)
-{
+void debug_output_malloc_count(void) {
 #ifdef DEBUG_MALLOC
-     mpi_one_fprintf(stderr, "malloc: %d blocks, %g kB\n", 
-		     debug_malloc_cnt, debug_malloc_total / 1024.0);
+  mpi_one_fprintf(stderr, "malloc: %d blocks, %g kB\n", debug_malloc_cnt,
+                  debug_malloc_total / 1024.0);
 #endif
 }
 
 /* check for memory leaks when debugging */
-void debug_check_memory_leaks(void)
-{
+void debug_check_memory_leaks(void) {
 #ifdef DEBUG_MALLOC
-     if (debug_malloc_cnt || debug_malloc_total)
-	  mpi_die("MEMORY LEAK!!!\n"
-		  "number of unbalanced malloc calls = %d\n"
-		  "total leaked bytes = %d\n",
-		  debug_malloc_cnt,
-		  debug_malloc_total);
+  if (debug_malloc_cnt || debug_malloc_total)
+    mpi_die("MEMORY LEAK!!!\n"
+            "number of unbalanced malloc calls = %d\n"
+            "total leaked bytes = %d\n",
+            debug_malloc_cnt, debug_malloc_total);
 #endif
 }

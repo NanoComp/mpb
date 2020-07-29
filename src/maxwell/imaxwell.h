@@ -25,70 +25,71 @@
 #include "maxwell.h"
 
 #if defined(HAVE_LIBFFTW3) || defined(HAVE_LIBFFTW3F) || defined(HAVE_LIBFFTW3L)
-#  include <fftw3.h>
-#  ifdef HAVE_MPI
-#    include <fftw3-mpi.h>
-#  endif
-#  define HAVE_FFTW3 1
+#include <fftw3.h>
+#ifdef HAVE_MPI
+#include <fftw3-mpi.h>
+#endif
+#define HAVE_FFTW3 1
 #elif defined(HAVE_LIBFFTW)
-#  include <fftw.h>
-#  include <rfftw.h>
-#  ifdef HAVE_MPI
-#    include <fftw_mpi.h>
-#    include <rfftw_mpi.h>
-#  endif
+#include <fftw.h>
+#include <rfftw.h>
+#ifdef HAVE_MPI
+#include <fftw_mpi.h>
+#include <rfftw_mpi.h>
+#endif
 #elif defined(HAVE_LIBDFFTW)
-#  include <dfftw.h>
-#  include <drfftw.h>
-#  ifdef HAVE_MPI
-#    include <dfftw_mpi.h>
-#    include <drfftw_mpi.h>
-#  endif
+#include <dfftw.h>
+#include <drfftw.h>
+#ifdef HAVE_MPI
+#include <dfftw_mpi.h>
+#include <drfftw_mpi.h>
+#endif
 #elif defined(HAVE_LIBSFFTW)
-#  include <sfftw.h>
-#  include <srfftw.h>
-#  ifdef HAVE_MPI
-#    include <sfftw_mpi.h>
-#    include <srfftw_mpi.h>
-#  endif
+#include <sfftw.h>
+#include <srfftw.h>
+#ifdef HAVE_MPI
+#include <sfftw_mpi.h>
+#include <srfftw_mpi.h>
+#endif
 #elif defined(HAVE_LIBXFFTW)
-#  include <xfftw.h>
-#  include <xrfftw.h>
-#  ifdef HAVE_MPI
-#    include <xfftw_mpi.h>
-#    include <xrfftw_mpi.h>
-#  endif
+#include <xfftw.h>
+#include <xrfftw.h>
+#ifdef HAVE_MPI
+#include <xfftw_mpi.h>
+#include <xrfftw_mpi.h>
+#endif
 #endif
 
-#if defined(HAVE_LIBFFTW) || defined(HAVE_LIBDFFTW) || defined(HAVE_LIBSFFTW) || defined(HAVE_LIBXFFTW)
-#  define HAVE_FFTW 1
+#if defined(HAVE_LIBFFTW) || defined(HAVE_LIBDFFTW) || defined(HAVE_LIBSFFTW) ||                   \
+    defined(HAVE_LIBXFFTW)
+#define HAVE_FFTW 1
 #endif
 
 #include "scalar.h"
 
 #if defined(HAVE_FFTW3)
-#  if defined(SCALAR_SINGLE_PREC)
-#    define FFTW(x) fftwf_ ## x
-#  elif defined(SCALAR_LONG_DOUBLE_PREC)
-#    define FFTW(x) fftwl_ ## x
-#  else
-#    define FFTW(x) fftw_ ## x
-#  endif
-  typedef FFTW(plan) fftplan;
+#if defined(SCALAR_SINGLE_PREC)
+#define FFTW(x) fftwf_##x
+#elif defined(SCALAR_LONG_DOUBLE_PREC)
+#define FFTW(x) fftwl_##x
+#else
+#define FFTW(x) fftw_##x
+#endif
+typedef FFTW(plan) fftplan;
 #elif defined(HAVE_FFTW)
-#  ifdef HAVE_MPI
-#    ifdef SCALAR_COMPLEX
-     typedef fftwnd_mpi_plan fftplan;
-#    else
-     typedef rfftwnd_mpi_plan fftplan;
-#    endif
-#  else
-#    ifdef SCALAR_COMPLEX
-     typedef fftwnd_plan fftplan;
-#    else
-     typedef rfftwnd_plan fftplan;
-#    endif
-#  endif
+#ifdef HAVE_MPI
+#ifdef SCALAR_COMPLEX
+typedef fftwnd_mpi_plan fftplan;
+#else
+typedef rfftwnd_mpi_plan fftplan;
+#endif
+#else
+#ifdef SCALAR_COMPLEX
+typedef fftwnd_plan fftplan;
+#else
+typedef rfftwnd_plan fftplan;
+#endif
+#endif
 #endif
 
 #endif /* IMAXWELL_H */
