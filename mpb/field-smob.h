@@ -25,21 +25,19 @@
 
 extern long scm_tc16_smob_field_smob;
 
-typedef enum { 
-     RSCALAR_FIELD_SMOB, CVECTOR_FIELD_SMOB, CSCALAR_FIELD_SMOB
-} field_smob_type;
+typedef enum { RSCALAR_FIELD_SMOB, CVECTOR_FIELD_SMOB, CSCALAR_FIELD_SMOB } field_smob_type;
 
 typedef struct {
-     field_smob_type type;
-     char type_char;
-     union {
-	  real *rs;
-	  scalar_complex *cv;
-	  scalar_complex *cs;
-     } f;
-     int nx, ny, nz, N;
-     int local_ny, local_y_start;
-     int last_dim, last_dim_size, other_dims;
+  field_smob_type type;
+  char type_char;
+  union {
+    real *rs;
+    scalar_complex *cv;
+    scalar_complex *cs;
+  } f;
+  int nx, ny, nz, N;
+  int local_ny, local_y_start;
+  int last_dim, last_dim_size, other_dims;
 } field_smob;
 
 #define FIELD_P(X) T_SMOB_P(field_smob, X)

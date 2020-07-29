@@ -50,26 +50,26 @@
    to the routine name depending upon the type defined in scalar.h */
 
 #ifdef SCALAR_COMPLEX
-#  ifdef SCALAR_SINGLE_PREC
-#    define F(x,X) F77_FUNC(c##x, C##X)
-#  else
-#    define F(x,X) F77_FUNC(z##x, Z##X)
-#  endif
+#ifdef SCALAR_SINGLE_PREC
+#define F(x, X) F77_FUNC(c##x, C##X)
 #else
-#  ifdef SCALAR_SINGLE_PREC
-#    define F(x,X) F77_FUNC(s##x, S##X)
-#  else
-#    define F(x,X) F77_FUNC(d##x, D##X)
-#  endif
+#define F(x, X) F77_FUNC(z##x, Z##X)
+#endif
+#else
+#ifdef SCALAR_SINGLE_PREC
+#define F(x, X) F77_FUNC(s##x, S##X)
+#else
+#define F(x, X) F77_FUNC(d##x, D##X)
+#endif
 #endif
 
 /* FR(x,X) is for functions where we always pass real arguments,
    even when SCALAR_COMPLEX is defined. */
 
 #ifdef SCALAR_SINGLE_PREC
-#  define FR(x,X) F77_FUNC(s##x, S##X)
+#define FR(x, X) F77_FUNC(s##x, S##X)
 #else
-#  define FR(x,X) F77_FUNC(d##x, D##X)
+#define FR(x, X) F77_FUNC(d##x, D##X)
 #endif
 
 /*************************************************************************/
@@ -81,163 +81,139 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif                          /* __cplusplus */
+#endif /* __cplusplus */
 
-extern void F(axpy,AXPY) (int *, scalar *, scalar *, int *, scalar *, int *);
-extern void F(scal,SCAL) (int *, scalar *, scalar *, int *);
-extern void F(copy,COPY) (int *, scalar *, int *, scalar *, int *);
-extern scalar F(dotc,DOTC) (int *, scalar *, int *, scalar *, int *);
-extern scalar F(dot,DOT) (int *, scalar *, int *, scalar *, int *);
-extern void F(gemm,GEMM) (char *, char *, int *, int *, int *,
-			  scalar *, scalar *, int *, scalar *, int *,
-			  scalar *, scalar *, int *);
-extern void F(herk,HERK) (char *, char *, int *, int *,
-			  real *, scalar *, int *,
-			  real *, scalar *, int *);
-extern void F(syrk,SYRK) (char *, char *, int *, int *,
-			  real *, scalar *, int *,
-			  real *, scalar *, int *);
-extern void F(potrf,POTRF) (char *, int *, scalar *, int *, int *);
-extern void F(potri,POTRI) (char *, int *, scalar *, int *, int *);
-extern void F(hetrf,HETRF) (char *, int *, scalar *, int *,
-			    int *, scalar *, int *, int *);
-extern void F(hetri,HETRI) (char *, int *, scalar *, int *,
-			    int *, scalar *, int *);
-extern void F(sytrf,SYTRF) (char *, int *, scalar *, int *,
-			    int *, scalar *, int *, int *);
-extern void F(sytri,SYTRI) (char *, int *, scalar *, int *,
-			    int *, scalar *, int *);
-extern void F(heev,HEEV) (char *, char *, int *, scalar *, int *, real *,
-			  scalar *, int *, real *, int *);
-extern void FR(syev,SYEV) (char *, char *, int *, real *, int *, real *,
-			   real *, int *, int *);
-extern void F(hegv,HEGV) (int *, char *, char *, int *, scalar *, int *, scalar *, int *, real *, scalar *, int *, real *, int *);
-extern void FR(sygv,SYGV) (int *, char *, char *, int *, real *, int *, real *, int *, real *, real *, int *, int *);
+extern void F(axpy, AXPY)(int *, scalar *, scalar *, int *, scalar *, int *);
+extern void F(scal, SCAL)(int *, scalar *, scalar *, int *);
+extern void F(copy, COPY)(int *, scalar *, int *, scalar *, int *);
+extern scalar F(dotc, DOTC)(int *, scalar *, int *, scalar *, int *);
+extern scalar F(dot, DOT)(int *, scalar *, int *, scalar *, int *);
+extern void F(gemm, GEMM)(char *, char *, int *, int *, int *, scalar *, scalar *, int *, scalar *,
+                          int *, scalar *, scalar *, int *);
+extern void F(herk, HERK)(char *, char *, int *, int *, real *, scalar *, int *, real *, scalar *,
+                          int *);
+extern void F(syrk, SYRK)(char *, char *, int *, int *, real *, scalar *, int *, real *, scalar *,
+                          int *);
+extern void F(potrf, POTRF)(char *, int *, scalar *, int *, int *);
+extern void F(potri, POTRI)(char *, int *, scalar *, int *, int *);
+extern void F(hetrf, HETRF)(char *, int *, scalar *, int *, int *, scalar *, int *, int *);
+extern void F(hetri, HETRI)(char *, int *, scalar *, int *, int *, scalar *, int *);
+extern void F(sytrf, SYTRF)(char *, int *, scalar *, int *, int *, scalar *, int *, int *);
+extern void F(sytri, SYTRI)(char *, int *, scalar *, int *, int *, scalar *, int *);
+extern void F(heev, HEEV)(char *, char *, int *, scalar *, int *, real *, scalar *, int *, real *,
+                          int *);
+extern void FR(syev, SYEV)(char *, char *, int *, real *, int *, real *, real *, int *, int *);
+extern void F(hegv, HEGV)(int *, char *, char *, int *, scalar *, int *, scalar *, int *, real *,
+                          scalar *, int *, real *, int *);
+extern void FR(sygv, SYGV)(int *, char *, char *, int *, real *, int *, real *, int *, real *,
+                           real *, int *, int *);
 
 #ifdef SCALAR_COMPLEX
-extern void F(geev,GEEV) (char *jobvl, char *jobvr, int *n,
-                          scalar *A, int *lda, scalar *w,
-                          scalar *VL, int *ldvl, scalar *VR, int *ldvr,
-                          scalar *work, int *lwork, real *rwork, int *info);
+extern void F(geev, GEEV)(char *jobvl, char *jobvr, int *n, scalar *A, int *lda, scalar *w,
+                          scalar *VL, int *ldvl, scalar *VR, int *ldvr, scalar *work, int *lwork,
+                          real *rwork, int *info);
 #else
-extern void FR(geev,GEEV) (char *jobvl, char *jobvr, int *n,
-                           scalar *A, int *lda, real *wr, real *wi,
-                           scalar *VL, int *ldvl, scalar *VR, int *ldvr,
-                           scalar *work, int *lwork, int *info);
+extern void FR(geev, GEEV)(char *jobvl, char *jobvr, int *n, scalar *A, int *lda, real *wr,
+                           real *wi, scalar *VL, int *ldvl, scalar *VR, int *ldvr, scalar *work,
+                           int *lwork, int *info);
 #endif
 
 #ifdef __cplusplus0
-}                               /* extern "C" */
-#endif                          /* __cplusplus */
+} /* extern "C" */
+#endif /* __cplusplus */
 
 /*************************************************************************/
 
-void blasglue_axpy(int n, real a, scalar *x, int incx, scalar *y, int incy)
-{
-     scalar alpha;
+void blasglue_axpy(int n, real a, scalar *x, int incx, scalar *y, int incy) {
+  scalar alpha;
 
-     ASSIGN_REAL(alpha, a);
+  ASSIGN_REAL(alpha, a);
 
-     F(axpy,AXPY) (&n, &alpha, x, &incx, y, &incy);
+  F(axpy, AXPY)(&n, &alpha, x, &incx, y, &incy);
 }
 
-void blasglue_scal(int n, scalar a, scalar *x, int incx)
-{
-     F(scal,SCAL) (&n, &a, x, &incx);
+void blasglue_scal(int n, scalar a, scalar *x, int incx) { F(scal, SCAL)(&n, &a, x, &incx); }
+
+void blasglue_rscal(int n, real a, scalar *x, int incx) {
+  scalar alpha;
+
+  ASSIGN_REAL(alpha, a);
+
+  F(scal, SCAL)(&n, &alpha, x, &incx);
 }
 
-void blasglue_rscal(int n, real a, scalar *x, int incx)
-{
-     scalar alpha;
-
-     ASSIGN_REAL(alpha, a);
-
-     F(scal,SCAL) (&n, &alpha, x, &incx);
+void blasglue_copy(int n, scalar *x, int incx, scalar *y, int incy) {
+  F(copy, COPY)(&n, x, &incx, y, &incy);
 }
 
-void blasglue_copy(int n, scalar *x, int incx, scalar *y, int incy)
-{
-    F(copy,COPY) (&n, x, &incx, y, &incy);
-}
-
-scalar blasglue_dotc(int n, scalar *x, int incx, scalar *y, int incy)
-{
+scalar blasglue_dotc(int n, scalar *x, int incx, scalar *y, int incy) {
 #ifndef NO_FORTRAN_FUNCTIONS
-#  ifdef SCALAR_COMPLEX
-     return (F(dotc,DOTC) (&n, x, &incx, y, &incy));
-#  else
-     return (F(dot,DOT) (&n, x, &incx, y, &incy));
-#  endif
+#ifdef SCALAR_COMPLEX
+  return (F(dotc, DOTC)(&n, x, &incx, y, &incy));
+#else
+  return (F(dot, DOT)(&n, x, &incx, y, &incy));
+#endif
 #else /* on some machines, return values from Fortran functions don't work */
-     int i;
-     scalar sum = SCALAR_INIT_ZERO;
-     for (i = 0; i < n; ++i) {
-#  ifdef SCALAR_COMPLEX
-	  real x_re = x[i*incx].re, x_im = x[i*incx].im;
-	  real y_re = y[i*incy].re, y_im = y[i*incy].im;
-	  /* the dot product is conj(x) * y: */
-          sum.re += x_re * y_re + x_im * y_im;
-          sum.im += x_re * y_im - x_im * y_re;
-#  else
-	  sum += x[i*incx] * y[i*incy];
-#  endif
-     }
-     return sum;
+  int i;
+  scalar sum = SCALAR_INIT_ZERO;
+  for (i = 0; i < n; ++i) {
+#ifdef SCALAR_COMPLEX
+    real x_re = x[i * incx].re, x_im = x[i * incx].im;
+    real y_re = y[i * incy].re, y_im = y[i * incy].im;
+    /* the dot product is conj(x) * y: */
+    sum.re += x_re * y_re + x_im * y_im;
+    sum.im += x_re * y_im - x_im * y_re;
+#else
+    sum += x[i * incx] * y[i * incy];
+#endif
+  }
+  return sum;
 #endif
 }
 
-void blasglue_gemm(char transa, char transb, int m, int n, int k,
-		   real a, scalar *A, int fdA, scalar *B, int fdB,
-		   real b, scalar *C, int fdC)
-{
-     scalar alpha, beta;
+void blasglue_gemm(char transa, char transb, int m, int n, int k, real a, scalar *A, int fdA,
+                   scalar *B, int fdB, real b, scalar *C, int fdC) {
+  scalar alpha, beta;
 
-     if (m*n == 0)
-	  return;
+  if (m * n == 0) return;
 
-     if (k == 0) {
-	  int i, j;
-	  for (i = 0; i < m; ++i)
-	       for (j = 0; j < n; ++j)
-		    ASSIGN_ZERO(C[i*fdC + j]);
-	  return;
-     }
+  if (k == 0) {
+    int i, j;
+    for (i = 0; i < m; ++i)
+      for (j = 0; j < n; ++j)
+        ASSIGN_ZERO(C[i * fdC + j]);
+    return;
+  }
 
-     CHECK(A != C && B != C, "gemm output array must be distinct");
+  CHECK(A != C && B != C, "gemm output array must be distinct");
 
-     ASSIGN_REAL(alpha,a);
-     ASSIGN_REAL(beta,b);
+  ASSIGN_REAL(alpha, a);
+  ASSIGN_REAL(beta, b);
 
-     F(gemm,GEMM) (&transb, &transa, &n, &m, &k,
-		   &alpha, B, &fdB, A, &fdA, &beta, C, &fdC);
+  F(gemm, GEMM)(&transb, &transa, &n, &m, &k, &alpha, B, &fdB, A, &fdA, &beta, C, &fdC);
 }
 
-void blasglue_herk(char uplo, char trans, int n, int k,
-		   real a, scalar *A, int fdA,
-		   real b, scalar *C, int fdC)
-{
-     if (n == 0)
-	  return;
+void blasglue_herk(char uplo, char trans, int n, int k, real a, scalar *A, int fdA, real b,
+                   scalar *C, int fdC) {
+  if (n == 0) return;
 
-     if (k == 0) {
-	  int i, j;
-	  for (i = 0; i < n; ++i)
-	       for (j = 0; j < n; ++j)
-		    ASSIGN_ZERO(C[i*fdC + j]);
-	  return;
-     }
+  if (k == 0) {
+    int i, j;
+    for (i = 0; i < n; ++i)
+      for (j = 0; j < n; ++j)
+        ASSIGN_ZERO(C[i * fdC + j]);
+    return;
+  }
 
-     CHECK(A != C, "herk output array must be distinct");
+  CHECK(A != C, "herk output array must be distinct");
 
-     uplo = uplo == 'U' ? 'L' : 'U';
-     trans = (trans == 'C' || trans == 'T') ? 'N' : 'C';
+  uplo = uplo == 'U' ? 'L' : 'U';
+  trans = (trans == 'C' || trans == 'T') ? 'N' : 'C';
 
 #ifdef SCALAR_COMPLEX
-     F(herk,HERK) (&uplo, &trans, &n, &k,
-		   &a, A, &fdA, &b, C, &fdC);
+  F(herk, HERK)(&uplo, &trans, &n, &k, &a, A, &fdA, &b, C, &fdC);
 #else
-     F(syrk,SYRK) (&uplo, &trans, &n, &k,
-		   &a, A, &fdA, &b, C, &fdC);
+  F(syrk, SYRK)(&uplo, &trans, &n, &k, &a, A, &fdA, &b, C, &fdC);
 #endif
 }
 
@@ -245,138 +221,124 @@ void blasglue_herk(char uplo, char trans, int n, int k,
 
 #ifndef NO_LAPACK
 
-int lapackglue_potrf(char uplo, int n, scalar *A, int fdA)
-{
-     int info;
+int lapackglue_potrf(char uplo, int n, scalar *A, int fdA) {
+  int info;
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+  uplo = uplo == 'U' ? 'L' : 'U';
 
-     F(potrf,POTRF) (&uplo, &n, A, &fdA, &info);
+  F(potrf, POTRF)(&uplo, &n, A, &fdA, &info);
 
-     CHECK(info >= 0, "invalid argument in potrf");
-     return (info == 0);
+  CHECK(info >= 0, "invalid argument in potrf");
+  return (info == 0);
 }
 
-int lapackglue_potri(char uplo, int n, scalar *A, int fdA)
-{
-     int info;
+int lapackglue_potri(char uplo, int n, scalar *A, int fdA) {
+  int info;
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+  uplo = uplo == 'U' ? 'L' : 'U';
 
-     F(potri,POTRI) (&uplo, &n, A, &fdA, &info);
+  F(potri, POTRI)(&uplo, &n, A, &fdA, &info);
 
-     CHECK(info >= 0, "invalid argument in potri");
-     return (info == 0);
+  CHECK(info >= 0, "invalid argument in potri");
+  return (info == 0);
 }
 
-int lapackglue_hetrf(char uplo, int n, scalar *A, int fdA,
-		      int *ipiv, scalar *work, int lwork)
-{
-     int info;
+int lapackglue_hetrf(char uplo, int n, scalar *A, int fdA, int *ipiv, scalar *work, int lwork) {
+  int info;
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+  uplo = uplo == 'U' ? 'L' : 'U';
 
 #ifdef SCALAR_COMPLEX
-     F(hetrf,HETRF) (&uplo, &n, A, &fdA, ipiv, work, &lwork, &info);
+  F(hetrf, HETRF)(&uplo, &n, A, &fdA, ipiv, work, &lwork, &info);
 #else
-     F(sytrf,SYTRF) (&uplo, &n, A, &fdA, ipiv, work, &lwork, &info);
+  F(sytrf, SYTRF)(&uplo, &n, A, &fdA, ipiv, work, &lwork, &info);
 #endif
 
-     CHECK(info >= 0, "invalid argument in hetrf");
-     return (info == 0);
+  CHECK(info >= 0, "invalid argument in hetrf");
+  return (info == 0);
 }
 
-int lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
-		      int *ipiv, scalar *work)
-{
-     int info;
+int lapackglue_hetri(char uplo, int n, scalar *A, int fdA, int *ipiv, scalar *work) {
+  int info;
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+  uplo = uplo == 'U' ? 'L' : 'U';
 
 #ifdef SCALAR_COMPLEX
-     F(hetri,HETRI) (&uplo, &n, A, &fdA, ipiv, work, &info);
+  F(hetri, HETRI)(&uplo, &n, A, &fdA, ipiv, work, &info);
 #else
-     F(sytri,SYTRI) (&uplo, &n, A, &fdA, ipiv, work, &info);
+  F(sytri, SYTRI)(&uplo, &n, A, &fdA, ipiv, work, &info);
 #endif
 
-     CHECK(info >= 0, "invalid argument in hetri");
-     return (info == 0);
+  CHECK(info >= 0, "invalid argument in hetri");
+  return (info == 0);
 }
 
-void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
-		     real *w, scalar *work, int lwork, real *rwork)
-{
-     int info;
+void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA, real *w, scalar *work,
+                     int lwork, real *rwork) {
+  int info;
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+  uplo = uplo == 'U' ? 'L' : 'U';
 
 #ifdef SCALAR_COMPLEX
-     F(heev,HEEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, rwork, &info);
+  F(heev, HEEV)(&jobz, &uplo, &n, A, &fdA, w, work, &lwork, rwork, &info);
 #else
-     (void) rwork; /* unused */
-     F(syev,SYEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
+  (void)rwork; /* unused */
+  F(syev, SYEV)(&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
 #endif
 
-     CHECK(info >= 0, "invalid argument in heev");
-     CHECK(info <= 0, "failure to converge in heev");
+  CHECK(info >= 0, "invalid argument in heev");
+  CHECK(info <= 0, "failure to converge in heev");
 }
 
-void lapackglue_geev(char jobvl, char jobvr, int n,
-                     scalar *A, int fdA, scalar_complex *w,
-                     scalar *VL, int fdVL, scalar *VR, int fdVR,
-		     scalar *work, int lwork, real *rwork)
-{
-     int info;
+void lapackglue_geev(char jobvl, char jobvr, int n, scalar *A, int fdA, scalar_complex *w,
+                     scalar *VL, int fdVL, scalar *VR, int fdVR, scalar *work, int lwork,
+                     real *rwork) {
+  int info;
 
 #ifdef SCALAR_COMPLEX
-     F(geev,GEEV) (&jobvl, &jobvr, &n, A, &fdA, w, VL, &fdVL, VR, &fdVR,
-                   work, &lwork, rwork, &info);
+  F(geev, GEEV)(&jobvl, &jobvr, &n, A, &fdA, w, VL, &fdVL, VR, &fdVR, work, &lwork, rwork, &info);
 #else
-     int i;
-     real *wr, *wi;
-     CHK_MALLOC(wr, real, 2*n);
-     wi = wr + n;
-     (void) rwork; /* unused */
-     FR(geev,GEEV) (&jobvl, &jobvr, &n, A, &fdA, wr, wi, VL, &fdVL, VR, &fdVR,
-                   work, &lwork, &info);
-     for (i = 0; i < n; ++i)
-         CASSIGN_SCALAR(w[i], wr[i], wi[i]);
-     free(wr);
+  int i;
+  real *wr, *wi;
+  CHK_MALLOC(wr, real, 2 * n);
+  wi = wr + n;
+  (void)rwork; /* unused */
+  FR(geev, GEEV)(&jobvl, &jobvr, &n, A, &fdA, wr, wi, VL, &fdVL, VR, &fdVR, work, &lwork, &info);
+  for (i = 0; i < n; ++i)
+    CASSIGN_SCALAR(w[i], wr[i], wi[i]);
+  free(wr);
 #endif
-     CHECK(info >= 0, "invalid argument in geev");
-     CHECK(info <= 0, "failure to converge in geev");
+  CHECK(info >= 0, "invalid argument in geev");
+  CHECK(info <= 0, "failure to converge in geev");
 }
 
-void lapackglue_hegv(int itype, char jobz, char uplo, int n,
-                     scalar *A, int fdA, scalar *B, int fdB,
-		     real *w, scalar *work, int lwork, real *rwork)
-{
-     int info;
+void lapackglue_hegv(int itype, char jobz, char uplo, int n, scalar *A, int fdA, scalar *B, int fdB,
+                     real *w, scalar *work, int lwork, real *rwork) {
+  int info;
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+  uplo = uplo == 'U' ? 'L' : 'U';
 
 #ifdef SCALAR_COMPLEX
-     F(hegv,HEGV) (&itype, &jobz, &uplo, &n, A, &fdA, B, &fdB, w, work, &lwork, rwork, &info);
+  F(hegv, HEGV)(&itype, &jobz, &uplo, &n, A, &fdA, B, &fdB, w, work, &lwork, rwork, &info);
 #else
-     (void) rwork; /* unused */
-     F(sygv,SYGV) (&itype, &jobz, &uplo, &n, A, &fdA, B, &fdB, w, work, &lwork, &info);
+  (void)rwork; /* unused */
+  F(sygv, SYGV)(&itype, &jobz, &uplo, &n, A, &fdA, B, &fdB, w, work, &lwork, &info);
 #endif
 
-     CHECK(info >= 0, "invalid argument in hegv");
-     CHECK(info <= 0, "failure to converge in hegv");
+  CHECK(info >= 0, "invalid argument in hegv");
+  CHECK(info <= 0, "failure to converge in hegv");
 }
 
-void lapackglue_syev(char jobz, char uplo, int n, real *A, int fdA,
-		     real *w, real *work, int lwork)
-{
-     int info;
+void lapackglue_syev(char jobz, char uplo, int n, real *A, int fdA, real *w, real *work,
+                     int lwork) {
+  int info;
 
-     uplo = uplo == 'U' ? 'L' : 'U';
+  uplo = uplo == 'U' ? 'L' : 'U';
 
-     FR(syev,SYEV) (&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
+  FR(syev, SYEV)(&jobz, &uplo, &n, A, &fdA, w, work, &lwork, &info);
 
-     CHECK(info >= 0, "invalid argument in heev");
-     CHECK(info <= 0, "failure to converge in heev");
+  CHECK(info >= 0, "invalid argument in heev");
+  CHECK(info <= 0, "failure to converge in heev");
 }
 
 #endif

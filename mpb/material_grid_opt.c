@@ -29,128 +29,118 @@
 #include "mpb.h"
 
 #ifdef HAVE_NLOPT_H
-#  include <nlopt.h>
+#include <nlopt.h>
 #endif
 
 /**************************************************************************/
 /* minimizing the TE/TM difference in frequency */
 
 typedef struct {
-    vector3 k; /* which k point */
-    int b; /* which band */
-    int ngrids;
-    material_grid *grids;
-    int iter;
-    struct maxwell_data *mdata1, *mdata2;
-    double *work; /* work array of length ntot */
+  vector3 k; /* which k point */
+  int b;     /* which band */
+  int ngrids;
+  material_grid *grids;
+  int iter;
+  struct maxwell_data *mdata1, *mdata2;
+  double *work; /* work array of length ntot */
 } mindiff_func_data;
 
-static double mindiff_func(int n, const double *u, double *grad, void *data)
-{
-    mindiff_func_data *d = (mindiff_func_data *) data;
-    double *work = d->work;
-    double gap, f1, f2;
+static double mindiff_func(int n, const double *u, double *grad, void *data) {
+  mindiff_func_data *d = (mindiff_func_data *)data;
+  double *work = d->work;
+  double gap, f1, f2;
 
-    /* set the material grids, for use in the solver
-       and also for outputting in verbose mode */
-    d->iter++;
-    material_grids_set(u, d->grids, d->ngrids);
-    reset_epsilon();
-    if (grad) memset(work, 0, sizeof(double) * (n-2));
+  /* set the material grids, for use in the solver
+     and also for outputting in verbose mode */
+  d->iter++;
+  material_grids_set(u, d->grids, d->ngrids);
+  reset_epsilon();
+  if (grad) memset(work, 0, sizeof(double) * (n - 2));
 
-    set_maxwell_data_parity(mdata, EVEN_Z_PARITY);
-    randomize_fields();
-    solve_kpoint(d->k);
-    gap = (f2 = freqs.items[d->b-1]);
-    if (grad) {
-        material_grids_addgradient(work, 1.0, d->b, 
-                                   d->grids, d->ngrids);
-    }
+  set_maxwell_data_parity(mdata, EVEN_Z_PARITY);
+  randomize_fields();
+  solve_kpoint(d->k);
+  gap = (f2 = freqs.items[d->b - 1]);
+  if (grad) { material_grids_addgradient(work, 1.0, d->b, d->grids, d->ngrids); }
 
-    set_maxwell_data_parity(mdata, ODD_Z_PARITY);
-    randomize_fields();
-    solve_kpoint(d->k);
-    gap -= (f1 = freqs.items[d->b-1]);
-    if (grad) {
-        material_grids_addgradient(work, -1.0, d->b, 
-                                   d->grids, d->ngrids);
-    }
+  set_maxwell_data_parity(mdata, ODD_Z_PARITY);
+  randomize_fields();
+  solve_kpoint(d->k);
+  gap -= (f1 = freqs.items[d->b - 1]);
+  if (grad) { material_grids_addgradient(work, -1.0, d->b, d->grids, d->ngrids); }
 
-    if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
-        mpi_allreduce(work, grad, n, double, MPI_DOUBLE, 
-                      MPI_SUM, mpb_comm);
+  if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
+    mpi_allreduce(work, grad, n, double, MPI_DOUBLE, MPI_SUM, mpb_comm);
 
-     mpi_one_printf("material-grid-mindiff:, %d, %g, %g, %0.15g\n", 
-                    d->iter, f1, f2, gap);
+  mpi_one_printf("material-grid-mindiff:, %d, %g, %g, %0.15g\n", d->iter, f1, f2, gap);
 
-     return gap;
+  return gap;
 }
 
-number material_grids_min_tetm_gap(vector3 kpoint, integer band,
-                                   number func_tol, number eps_tol,
-                                   integer maxeval, number maxtime)
-{
-     mindiff_func_data d;
-     int i, n;
-     double *u, *lb, *ub, *u_tol, func_min;
-     int have_uprod;
+number material_grids_min_tetm_gap(vector3 kpoint, integer band, number func_tol, number eps_tol,
+                                   integer maxeval, number maxtime) {
+  mindiff_func_data d;
+  int i, n;
+  double *u, *lb, *ub, *u_tol, func_min;
+  int have_uprod;
 
-     CHECK(band <= num_bands, "invalid band number in material-grid-min-tetm-gap");
-     d.k = kpoint;
-     d.b = band;
-     d.grids = get_material_grids(geometry, &d.ngrids);
-     d.iter = 0;
-     n = material_grids_ntot(d.grids, d.ngrids);
-     u = (double *) malloc(sizeof(double) * n * 5);
-     lb = u + n; ub = lb + n; u_tol = ub + n; d.work = u_tol + n;
+  CHECK(band <= num_bands, "invalid band number in material-grid-min-tetm-gap");
+  d.k = kpoint;
+  d.b = band;
+  d.grids = get_material_grids(geometry, &d.ngrids);
+  d.iter = 0;
+  n = material_grids_ntot(d.grids, d.ngrids);
+  u = (double *)malloc(sizeof(double) * n * 5);
+  lb = u + n;
+  ub = lb + n;
+  u_tol = ub + n;
+  d.work = u_tol + n;
 
-     material_grids_get(u, d.grids, d.ngrids);
+  material_grids_get(u, d.grids, d.ngrids);
 
-     for (i = 0; i < d.ngrids && d.grids[i].material_grid_kind != U_PROD; ++i);
-     have_uprod = i < d.ngrids;
-     for (i = 0; i < n; ++i) {
-	  ub[i] = 1;
-	  u_tol[i] = eps_tol;
-	  /* bound u slightly about 0 for uprod grids, as when u=0
-	     the gradient is problematic (especially for multiple u's = 0 */
-	  lb[i] = have_uprod ? 1e-4 : 0;
-	  if (u[i] < lb[i]) u[i] = lb[i];
-     }
+  for (i = 0; i < d.ngrids && d.grids[i].material_grid_kind != U_PROD; ++i)
+    ;
+  have_uprod = i < d.ngrids;
+  for (i = 0; i < n; ++i) {
+    ub[i] = 1;
+    u_tol[i] = eps_tol;
+    /* bound u slightly about 0 for uprod grids, as when u=0
+       the gradient is problematic (especially for multiple u's = 0 */
+    lb[i] = have_uprod ? 1e-4 : 0;
+    if (u[i] < lb[i]) u[i] = lb[i];
+  }
 
 #if defined(HAVE_NLOPT_H) && defined(HAVE_NLOPT)
-     {
-         nlopt_result res;
-         res = nlopt_minimize_constrained(
-	     NLOPT_LD_MMA, n, mindiff_func, &d,
-             0, NULL, NULL, 0,
-             lb, ub, u, &func_min,
-             -HUGE_VAL, func_tol,0, 0,u_tol, maxeval,maxtime);
-         CHECK(res > 0, "failure of nlopt_minimize");
-     }
+  {
+    nlopt_result res;
+    res = nlopt_minimize_constrained(NLOPT_LD_MMA, n, mindiff_func, &d, 0, NULL, NULL, 0, lb, ub, u,
+                                     &func_min, -HUGE_VAL, func_tol, 0, 0, u_tol, maxeval, maxtime);
+    CHECK(res > 0, "failure of nlopt_minimize");
+  }
 #else
-     CHECK(0, "nlopt library is required for material-grid-maxgap");
+  CHECK(0, "nlopt library is required for material-grid-maxgap");
 #endif
 
-     func_min = mindiff_func(n, u, NULL, &d);
+  func_min = mindiff_func(n, u, NULL, &d);
 
-     free(u);
-     free(d.grids);
+  free(u);
+  free(d.grids);
 
-     return func_min;
+  return func_min;
 }
 
 /**************************************************************************/
 /* optimization of band gaps as a function of the material grid */
 
 typedef struct {
-     boolean do_min;
-     vector3_list ks;
-     int b1, b2;
-     int ngrids;
-     material_grid *grids;
-     int iter, unsolved;
-     double *f1s, *f2s; /* arrays of length ks.num_items for freqs */
-     double *work; /* work array of length ntot */
+  boolean do_min;
+  vector3_list ks;
+  int b1, b2;
+  int ngrids;
+  material_grid *grids;
+  int iter, unsolved;
+  double *f1s, *f2s; /* arrays of length ks.num_items for freqs */
+  double *work;      /* work array of length ntot */
 } maxgap_func_data;
 
 /* the constraint is either an upper bound for band b1
@@ -158,228 +148,213 @@ typedef struct {
 typedef enum { BAND1_CONSTRAINT = 0, BAND2_CONSTRAINT = 1 } band_constraint_kind;
 
 typedef struct {
-     maxgap_func_data *d;
-     int ik; /* index of k point for this constraint (in d->ks) */
-     band_constraint_kind kind;
+  maxgap_func_data *d;
+  int ik; /* index of k point for this constraint (in d->ks) */
+  band_constraint_kind kind;
 } band_constraint_data;
 
-static double band_constraint(int n, const double *u, double *grad, void *data)
-{
-     band_constraint_data *cdata = (band_constraint_data *) data;
-     maxgap_func_data *d = cdata->d;
-     int ik = cdata->ik;
-     int kind = cdata->kind;
-     double *work = d->work;
-     double val = 0;
+static double band_constraint(int n, const double *u, double *grad, void *data) {
+  band_constraint_data *cdata = (band_constraint_data *)data;
+  maxgap_func_data *d = cdata->d;
+  int ik = cdata->ik;
+  int kind = cdata->kind;
+  double *work = d->work;
+  double val = 0;
 
-     /* Strictly speaking, we should call material_grids_set here.  However
-	we rely on an implementation detail of our MMA code: it always
-	evaluates the objective function before evaluating the constraints,
-	and hence we can set the material_grids once in the objective. */
+  /* Strictly speaking, we should call material_grids_set here.  However
+     we rely on an implementation detail of our MMA code: it always
+     evaluates the objective function before evaluating the constraints,
+     and hence we can set the material_grids once in the objective. */
 
-     /* We will typically have more than one band per k-point
-	(typically 2 bands), and we don't need to call solve_kpoint
-	more than once per band.  Here we exploit the fact that our
-	MMA code always calls all the constraints at once (in
-	sequence); it never changes u in between one constraint & the next. */
-     if (!vector3_equal(cur_kvector, d->ks.items[ik]) || d->unsolved) {
-	  randomize_fields();
-	  solve_kpoint(d->ks.items[ik]);
-     }
-     d->unsolved = 0;
+  /* We will typically have more than one band per k-point
+     (typically 2 bands), and we don't need to call solve_kpoint
+     more than once per band.  Here we exploit the fact that our
+     MMA code always calls all the constraints at once (in
+     sequence); it never changes u in between one constraint & the next. */
+  if (!vector3_equal(cur_kvector, d->ks.items[ik]) || d->unsolved) {
+    randomize_fields();
+    solve_kpoint(d->ks.items[ik]);
+  }
+  d->unsolved = 0;
 
-     if (grad) memset(work, 0, sizeof(double) * (n-2));
-     if (kind == BAND1_CONSTRAINT) {
-	  if (grad) {
-	       material_grids_addgradient(work, 1.0, d->b1, 
-					  d->grids, d->ngrids);
-	       grad[n-1] = -1;
-	       grad[n-2] = 0;
-	  }
-	  val = (d->f1s[ik] = freqs.items[d->b1-1]) - u[n-1];
-     }
-     else {
-	  if (grad) {
-	       material_grids_addgradient(work, -1.0, d->b2, 
-					  d->grids, d->ngrids);
-	       grad[n-1] = 0;
-	       grad[n-2] = 1;
-	  }
-	  val = u[n-2] - (d->f2s[ik] = freqs.items[d->b2-1]);
-     }
-     if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
-	  mpi_allreduce(work, grad, n-2, double, MPI_DOUBLE, 
-			MPI_SUM, mpb_comm);
+  if (grad) memset(work, 0, sizeof(double) * (n - 2));
+  if (kind == BAND1_CONSTRAINT) {
+    if (grad) {
+      material_grids_addgradient(work, 1.0, d->b1, d->grids, d->ngrids);
+      grad[n - 1] = -1;
+      grad[n - 2] = 0;
+    }
+    val = (d->f1s[ik] = freqs.items[d->b1 - 1]) - u[n - 1];
+  }
+  else {
+    if (grad) {
+      material_grids_addgradient(work, -1.0, d->b2, d->grids, d->ngrids);
+      grad[n - 1] = 0;
+      grad[n - 2] = 1;
+    }
+    val = u[n - 2] - (d->f2s[ik] = freqs.items[d->b2 - 1]);
+  }
+  if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
+    mpi_allreduce(work, grad, n - 2, double, MPI_DOUBLE, MPI_SUM, mpb_comm);
 
-     return val;
+  return val;
 }
 
-static double maxgap_func(int n, const double *u, double *grad, void *data)
-{
-     maxgap_func_data *d = (maxgap_func_data *) data;
-     double gap, f1 = u[n-1], f2 = u[n-2];
+static double maxgap_func(int n, const double *u, double *grad, void *data) {
+  maxgap_func_data *d = (maxgap_func_data *)data;
+  double gap, f1 = u[n - 1], f2 = u[n - 2];
 
-     /* set the material grids, for use in the constraint functions
-	and also for outputting in verbose mode */
-     material_grids_set(u, d->grids, d->ngrids);
-     reset_epsilon();
-     d->iter++;
-     d->unsolved = 1;
+  /* set the material grids, for use in the constraint functions
+     and also for outputting in verbose mode */
+  material_grids_set(u, d->grids, d->ngrids);
+  reset_epsilon();
+  d->iter++;
+  d->unsolved = 1;
 
-     gap = (f2 - f1) * 2.0 / (f1 + f2);
-     
-     if (grad) {
-	  memset(grad, 0, sizeof(double) * (n-2));
-	  grad[n-1] = 2.0 * ((f1 + f2) - (f1 - f2)) / ((f1+f2)*(f1+f2));
-	  grad[n-2] = 2.0 * (-(f1 + f2) - (f1 - f2)) / ((f1+f2)*(f1+f2));
-	  if (d->do_min) {
-	       grad[n-1] = -grad[n-1];
-	       grad[n-2] = -grad[n-2];
-	  }
-     }
+  gap = (f2 - f1) * 2.0 / (f1 + f2);
 
-     mpi_one_printf("material-grid-%sgap:, %d, %g, %g, %0.15g\n", 
-		    d->do_min ? "min" : "max", d->iter, f1, f2, gap);
-     
-     if (verbose) {
-	  char prefix[256];
-	  get_epsilon();
-	  snprintf(prefix, 256, "%sgap-%04d-", 
-		   d->do_min ? "min" : "max", d->iter);
-	  output_field_to_file(-1, prefix);
-     }
+  if (grad) {
+    memset(grad, 0, sizeof(double) * (n - 2));
+    grad[n - 1] = 2.0 * ((f1 + f2) - (f1 - f2)) / ((f1 + f2) * (f1 + f2));
+    grad[n - 2] = 2.0 * (-(f1 + f2) - (f1 - f2)) / ((f1 + f2) * (f1 + f2));
+    if (d->do_min) {
+      grad[n - 1] = -grad[n - 1];
+      grad[n - 2] = -grad[n - 2];
+    }
+  }
 
-     return d->do_min ? gap : -gap;
+  mpi_one_printf("material-grid-%sgap:, %d, %g, %g, %0.15g\n", d->do_min ? "min" : "max", d->iter,
+                 f1, f2, gap);
+
+  if (verbose) {
+    char prefix[256];
+    get_epsilon();
+    snprintf(prefix, 256, "%sgap-%04d-", d->do_min ? "min" : "max", d->iter);
+    output_field_to_file(-1, prefix);
+  }
+
+  return d->do_min ? gap : -gap;
 }
 
-static number material_grids_maxmin_gap(boolean do_min,
-					vector3_list kpoints, 
-					integer band1, integer band2,
-					number func_tol, number eps_tol,
-					integer maxeval, number maxtime)
-{
-     maxgap_func_data d;
-     int i, n;
-     double *u, *lb, *ub, *u_tol, func_min;
-     band_constraint_data *cdata;
-     int have_uprod;
+static number material_grids_maxmin_gap(boolean do_min, vector3_list kpoints, integer band1,
+                                        integer band2, number func_tol, number eps_tol,
+                                        integer maxeval, number maxtime) {
+  maxgap_func_data d;
+  int i, n;
+  double *u, *lb, *ub, *u_tol, func_min;
+  band_constraint_data *cdata;
+  int have_uprod;
 
-     CHECK(band1>0 && band1 <= num_bands && band2>0 && band2 <= num_bands,
-	   "invalid band numbers in material-grid-maxgap");
-     d.ks = kpoints;
-     d.b1 = band1; d.b2 = band2;
-     d.grids = get_material_grids(geometry, &d.ngrids);
-     d.iter = 0;
-     d.unsolved = 1;
-     d.do_min = do_min;
-     d.f1s = (double *) malloc(sizeof(double) * kpoints.num_items*2);
-     d.f2s = d.f1s + kpoints.num_items;
+  CHECK(band1 > 0 && band1 <= num_bands && band2 > 0 && band2 <= num_bands,
+        "invalid band numbers in material-grid-maxgap");
+  d.ks = kpoints;
+  d.b1 = band1;
+  d.b2 = band2;
+  d.grids = get_material_grids(geometry, &d.ngrids);
+  d.iter = 0;
+  d.unsolved = 1;
+  d.do_min = do_min;
+  d.f1s = (double *)malloc(sizeof(double) * kpoints.num_items * 2);
+  d.f2s = d.f1s + kpoints.num_items;
 
-     n = material_grids_ntot(d.grids, d.ngrids) + 2;
-     u = (double *) malloc(sizeof(double) * n * 5);
-     lb = u + n; ub = lb + n; u_tol = ub + n; d.work = u_tol + n;
+  n = material_grids_ntot(d.grids, d.ngrids) + 2;
+  u = (double *)malloc(sizeof(double) * n * 5);
+  lb = u + n;
+  ub = lb + n;
+  u_tol = ub + n;
+  d.work = u_tol + n;
 
-     material_grids_get(u, d.grids, d.ngrids);
-     u[n-1] = 0; /* band1 max */
-     u[n-2] = HUGE_VAL; /* band2 min */
+  material_grids_get(u, d.grids, d.ngrids);
+  u[n - 1] = 0;        /* band1 max */
+  u[n - 2] = HUGE_VAL; /* band2 min */
 
-     cdata = (band_constraint_data*) malloc(sizeof(band_constraint_data)
-					    * kpoints.num_items*2);
-     for (i = 0; i < kpoints.num_items; ++i) {
-	  band_constraint_kind kind;
-	  for (kind = BAND1_CONSTRAINT; kind <= BAND2_CONSTRAINT; ++kind) {
-	       cdata[2*i + kind].d = &d;
-	       cdata[2*i + kind].ik = i;
-	       cdata[2*i + kind].kind = kind;
+  cdata = (band_constraint_data *)malloc(sizeof(band_constraint_data) * kpoints.num_items * 2);
+  for (i = 0; i < kpoints.num_items; ++i) {
+    band_constraint_kind kind;
+    for (kind = BAND1_CONSTRAINT; kind <= BAND2_CONSTRAINT; ++kind) {
+      cdata[2 * i + kind].d = &d;
+      cdata[2 * i + kind].ik = i;
+      cdata[2 * i + kind].kind = kind;
 
-	       /* compute initial band min/max */
-	       band_constraint(n, u, NULL, &cdata[2*i + kind]);
-	       if (kind == BAND1_CONSTRAINT && d.f1s[i] > u[n-1])
-		    u[n-1] = d.f1s[i];
-	       else if (kind == BAND2_CONSTRAINT && d.f2s[i] < u[n-2])
-		    u[n-2] = d.f2s[i];
-	  }
-     }
-     u[n-1] *= 1.001; u[n-2] /= 1.001; /* ensure feasibility of initial u */
+      /* compute initial band min/max */
+      band_constraint(n, u, NULL, &cdata[2 * i + kind]);
+      if (kind == BAND1_CONSTRAINT && d.f1s[i] > u[n - 1])
+        u[n - 1] = d.f1s[i];
+      else if (kind == BAND2_CONSTRAINT && d.f2s[i] < u[n - 2])
+        u[n - 2] = d.f2s[i];
+    }
+  }
+  u[n - 1] *= 1.001;
+  u[n - 2] /= 1.001; /* ensure feasibility of initial u */
 
-     for (i = 0; i < d.ngrids && d.grids[i].material_grid_kind != U_PROD; ++i);
-     have_uprod = i < d.ngrids;
-     for (i = 0; i < n-2; ++i) {
-	  ub[i] = 1;
-	  u_tol[i] = eps_tol;
-	  /* bound u slightly about 0 for uprod grids, as when u=0
-	     the gradient is problematic (especially for multiple u's = 0 */
-	  lb[i] = have_uprod ? 1e-4 : 0;
-	  if (u[i] < lb[i]) u[i] = lb[i];
-     }
-     u_tol[n-1] = u_tol[n-2] = 0;
-     lb[n-1] = lb[n-2] = 0;
-     ub[n-1] = ub[n-2] = HUGE_VAL;
+  for (i = 0; i < d.ngrids && d.grids[i].material_grid_kind != U_PROD; ++i)
+    ;
+  have_uprod = i < d.ngrids;
+  for (i = 0; i < n - 2; ++i) {
+    ub[i] = 1;
+    u_tol[i] = eps_tol;
+    /* bound u slightly about 0 for uprod grids, as when u=0
+       the gradient is problematic (especially for multiple u's = 0 */
+    lb[i] = have_uprod ? 1e-4 : 0;
+    if (u[i] < lb[i]) u[i] = lb[i];
+  }
+  u_tol[n - 1] = u_tol[n - 2] = 0;
+  lb[n - 1] = lb[n - 2] = 0;
+  ub[n - 1] = ub[n - 2] = HUGE_VAL;
 
 #if defined(HAVE_NLOPT_H) && defined(HAVE_NLOPT)
- {
-     nlopt_result res;
-     extern int mma_verbose;
-     mma_verbose = kpoints.num_items*2;
-     res = nlopt_minimize_constrained(
-	  NLOPT_LD_MMA, n, maxgap_func, &d,
-	  kpoints.num_items*2, band_constraint, 
-	  cdata, sizeof(band_constraint_data),
-	  lb, ub, u, &func_min,
-	  -HUGE_VAL, func_tol,0, 0,u_tol, maxeval,maxtime);
-     CHECK(res > 0, "failure of nlopt_minimize");
- }
+  {
+    nlopt_result res;
+    extern int mma_verbose;
+    mma_verbose = kpoints.num_items * 2;
+    res =
+        nlopt_minimize_constrained(NLOPT_LD_MMA, n, maxgap_func, &d, kpoints.num_items * 2,
+                                   band_constraint, cdata, sizeof(band_constraint_data), lb, ub, u,
+                                   &func_min, -HUGE_VAL, func_tol, 0, 0, u_tol, maxeval, maxtime);
+    CHECK(res > 0, "failure of nlopt_minimize");
+  }
 #else
-     CHECK(0, "nlopt library is required for material-grid-maxgap");
+  CHECK(0, "nlopt library is required for material-grid-maxgap");
 #endif
 
-     maxgap_func(n, u, NULL, &d);
+  maxgap_func(n, u, NULL, &d);
 
-     /* recompute bands and get actual gap size */
+  /* recompute bands and get actual gap size */
 
-     u[n-1] = 0; /* band1 max */
-     u[n-2] = HUGE_VAL; /* band2 min */
-     for (i = 0; i < kpoints.num_items; ++i) {
-	  band_constraint_kind kind;
-	  for (kind = BAND1_CONSTRAINT; kind <= BAND2_CONSTRAINT; ++kind) {
-	       band_constraint(n, u, NULL, &cdata[2*i + kind]);
-	       if (kind == BAND1_CONSTRAINT && d.f1s[i] > u[n-1])
-		    u[n-1] = d.f1s[i];
-	       else if (kind == BAND2_CONSTRAINT && d.f2s[i] < u[n-2])
-		    u[n-2] = d.f2s[i];
-	  }
-     }
+  u[n - 1] = 0;        /* band1 max */
+  u[n - 2] = HUGE_VAL; /* band2 min */
+  for (i = 0; i < kpoints.num_items; ++i) {
+    band_constraint_kind kind;
+    for (kind = BAND1_CONSTRAINT; kind <= BAND2_CONSTRAINT; ++kind) {
+      band_constraint(n, u, NULL, &cdata[2 * i + kind]);
+      if (kind == BAND1_CONSTRAINT && d.f1s[i] > u[n - 1])
+        u[n - 1] = d.f1s[i];
+      else if (kind == BAND2_CONSTRAINT && d.f2s[i] < u[n - 2])
+        u[n - 2] = d.f2s[i];
+    }
+  }
 
-     func_min = (u[n-2] - u[n-1]) * 2.0 / (u[n-1] + u[n-2]);
-     mpi_one_printf("material-grid-%sgap:, %d, %g, %g, %0.15g\n",
-                    d.do_min ? "min" : "max", d.iter+1, 
-		    u[n-1], u[n-2], func_min);
-     func_min = d.do_min ? func_min : -func_min;
+  func_min = (u[n - 2] - u[n - 1]) * 2.0 / (u[n - 1] + u[n - 2]);
+  mpi_one_printf("material-grid-%sgap:, %d, %g, %g, %0.15g\n", d.do_min ? "min" : "max", d.iter + 1,
+                 u[n - 1], u[n - 2], func_min);
+  func_min = d.do_min ? func_min : -func_min;
 
-     free(cdata);
-     free(u);
-     free(d.grids);
-     free(d.f1s);
+  free(cdata);
+  free(u);
+  free(d.grids);
+  free(d.f1s);
 
-     return(do_min ? func_min : -func_min);
+  return (do_min ? func_min : -func_min);
 }
 
-number material_grids_maxgap(vector3_list kpoints, 
-			     integer band1, integer band2,
-			     number func_tol, number eps_tol,
-			     integer maxeval, number maxtime)
-{
-     return material_grids_maxmin_gap(0, kpoints, band1, band2,
-				      func_tol, eps_tol, maxeval, maxtime);
+number material_grids_maxgap(vector3_list kpoints, integer band1, integer band2, number func_tol,
+                             number eps_tol, integer maxeval, number maxtime) {
+  return material_grids_maxmin_gap(0, kpoints, band1, band2, func_tol, eps_tol, maxeval, maxtime);
 }
 
-number material_grids_mingap(vector3_list kpoints, 
-			     integer band1, integer band2,
-			     number func_tol, number eps_tol,
-			     integer maxeval, number maxtime)
-{
-     return material_grids_maxmin_gap(1, kpoints, band1, band2,
-				      func_tol, eps_tol, maxeval, maxtime);
+number material_grids_mingap(vector3_list kpoints, integer band1, integer band2, number func_tol,
+                             number eps_tol, integer maxeval, number maxtime) {
+  return material_grids_maxmin_gap(1, kpoints, band1, band2, func_tol, eps_tol, maxeval, maxtime);
 }
 
 /**************************************************************************/

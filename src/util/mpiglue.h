@@ -19,7 +19,7 @@
 #define MPIGLUE_H
 
 /* This header file stands between our code and MPI.  If MPI is present,
-   we just #include <mpi.h>.  Otherwise, we use no-op stubs for 
+   we just #include <mpi.h>.  Otherwise, we use no-op stubs for
    MPI routines. */
 
 #ifdef HAVE_MPI
@@ -30,8 +30,7 @@ typedef double mpiglue_clock_t;
 #define MPIGLUE_CLOCK MPI_Wtime()
 #define MPIGLUE_CLOCK_DIFF(t2, t1) ((t2) - (t1))
 
-#define mpi_allreduce(sb, rb, n, ctype, t, op, comm) \
-     MPI_Allreduce(sb,rb,n,t,op,comm)
+#define mpi_allreduce(sb, rb, n, ctype, t, op, comm) MPI_Allreduce(sb, rb, n, t, op, comm)
 
 #else /* don't have MPI */
 
@@ -39,7 +38,7 @@ typedef double mpiglue_clock_t;
 #include <time.h>
 #include <check.h>
 
-#define MPI_Init(argc,argv) 0
+#define MPI_Init(argc, argv) 0
 #define MPI_Finalize() 0
 
 /* Stub for the MPI_Allreduce function, differing only by the addition
@@ -50,10 +49,11 @@ typedef double mpiglue_clock_t;
    but it seems that MPI implementations do not allow this.  The MPI 2.0
    specification supports an MPI_IN_PLACE constant that you can pass
    for sb in order to be in-place, but I don't want to require that. */
-#define mpi_allreduce(sb, rb, n, ctype, t, op, comm) { \
-     CHECK((sb) != (rb), "MPI_Allreduce doesn't work for sendbuf == recvbuf");\
-     memcpy((rb), (sb), (n) * sizeof(ctype)); \
-}
+#define mpi_allreduce(sb, rb, n, ctype, t, op, comm)                                               \
+  {                                                                                                \
+    CHECK((sb) != (rb), "MPI_Allreduce doesn't work for sendbuf == recvbuf");                      \
+    memcpy((rb), (sb), (n) * sizeof(ctype));                                                       \
+  }
 
 #define MPI_Bcast(b, n, t, root, comm) 0
 
@@ -64,11 +64,9 @@ typedef double mpiglue_clock_t;
 #define MPI_Comm_rank(comm, rankp) *(rankp) = 0
 #define MPI_Comm_size(comm, sizep) *(sizep) = 1
 
-#define MPI_Send(sb,n,t, r,tag, comm) \
-CHECK(0, "MPI_Send stub is non-functional");
+#define MPI_Send(sb, n, t, r, tag, comm) CHECK(0, "MPI_Send stub is non-functional");
 
-#define MPI_Recv(sb,n,t, r,tag, comm,statp) \
-CHECK(0, "MPI_Recv stub is non-functional");
+#define MPI_Recv(sb, n, t, r, tag, comm, statp) CHECK(0, "MPI_Recv stub is non-functional");
 
 typedef int mpiglue_status_t;
 #define MPI_Status mpiglue_status_t
