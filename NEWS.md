@@ -1,5 +1,9 @@
 # MPB Release Notes
 
+## MPB 1.11-alpha
+
+* More fine-grained control of output verbosity (#119).
+
 ## MPB 1.10
 
 2/19/20
