@@ -58,8 +58,17 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         mpi_one_fprintf(stderr, "a real-space H- or D-field must be loaded beforehand\n");
         return integral;
     }
-    /* TODO: Is special-casing for #ifndef SCALAR_COMPLEX needed? */
-    /* TODO: Doesn't seem to work with mpbi */
+    #ifndef SCALAR_COMPLEX
+        CHECK(0, "transformed_overlap(..) is not yet implemented for mpbi");
+        /* NOTE: Not completely sure why the current implementation does not work for mpbi
+           (i.e for assumed-inversion): one clue is that running this with mpbi and the
+           error-check off gives symmetry eigenvalues whose norm are ≈(ni÷2+1)/ni (where
+           ni=n1=n2=n3) instead of near-unity (as they should be). This suggests we are not
+           counting the number of grid points correctly somehow: I think the root issue is
+           that we use the LOOP_XYZ macro, which has special handling for mbpi (i.e. only
+           "visits" the "inversion-reduced" part of the unitcell): but here, we actually
+           really want to (or at least assume to) visit _all_ the points in the unitcell. */
+    #endif
     
     /* prepare before looping ... */
     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
