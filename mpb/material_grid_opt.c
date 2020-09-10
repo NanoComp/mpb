@@ -84,21 +84,28 @@ static double band_constraint(int n, const double *u, double *grad, void *data)
      if (grad) memset(work, 0, sizeof(double) * (n-2));
      if (kind == BAND1_CONSTRAINT) {
 	  if (grad) {
-	       material_grids_addgradient(work, 1.0, d->b1, 
-					  d->grids, d->ngrids);
+	       /* material_grids_addgradient(work, 1.0, d->b1,  */
+	       /* 				  d->grids, d->ngrids); */
+	    material_grids_addgradient_mod(work, 1.0, d->b1, 
+				       d->grids, d->ngrids);
 	       grad[n-1] = -1;
 	       grad[n-2] = 0;
 	  }
-	  val = (d->f1s[ik] = freqs.items[d->b1-1]) - u[n-1];
+	  /* val = (d->f1s[ik] = freqs.items[d->b1-1]) - u[n-1]; */
+	  val = (d->f1s[ik] = freqs.items[d->b1-1]*freqs.items[d->b1-1]) - u[n-1];
      }
      else {
 	  if (grad) {
-	       material_grids_addgradient(work, -1.0, d->b2, 
+	       /* material_grids_addgradient(work, -1.0, d->b2,  */
+	       /* 				  d->grids, d->ngrids); */
+
+	    material_grids_addgradient_mod(work, -1.0, d->b2, 
 					  d->grids, d->ngrids);
 	       grad[n-1] = 0;
 	       grad[n-2] = 1;
 	  }
-	  val = u[n-2] - (d->f2s[ik] = freqs.items[d->b2-1]);
+	  /* val = u[n-2] - (d->f2s[ik] = freqs.items[d->b2-1]*freqs.items[d->b2-1]); */
+	  val = u[n-2] - (d->f2s[ik] = freqs.items[d->b2-1]*freqs.items[d->b2-1]);
      }
      if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
 	  mpi_allreduce(work, grad, n-2, double, MPI_DOUBLE, 

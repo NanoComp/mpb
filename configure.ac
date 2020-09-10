@@ -450,6 +450,30 @@ AC_C_INLINE
 AC_CHECK_FUNCS(getopt strncmp)
 
 ##############################################################################
+# check for csdp library and header
+SDP_LIB=""
+AC_ARG_WITH(sdp, [AC_HELP_STRING([--with-sdp],[use CSDP library])], ok=$withval, ok=no)
+if test "$ok" = "yes"; then
+	AC_CHECK_LIB(sdp, easy_sdp,
+			  [AC_CHECK_HEADERS(sdp/declarations.h,
+			   	[AC_DEFINE([HAVE_SDP],[1],[Have CSDP lib]) SDP_LIB="-lsdp"],
+				[AC_MSG_ERROR([Couldn't find CSDP library!])])])
+fi
+AC_SUBST(SDP_LIB)
+
+##############################################################################
+# check for csdp library and header
+MOSEK_LIB=""
+AC_ARG_WITH(mosek, [AC_HELP_STRING([--with-mosek],[use MOSEK solver])], ok=$withval, ok=no)
+if test "$ok" = "yes"; then
+	AC_CHECK_LIB(mosek64, MSK_optimizetrm,
+			  [AC_CHECK_HEADERS(mosek.h,
+			   	[AC_DEFINE([HAVE_MOSEK],[1],[Have MOSEK solver]) MOSEK_LIB="-lmosek64"],
+				[AC_MSG_ERROR([Couldn't find MOSEK solver!])])])
+fi
+AC_SUBST(MOSEK_LIB)
+
+##############################################################################
 # Check to see if calling Fortran functions (in particular, the BLAS
 # complex dot product functions) works from C:
 

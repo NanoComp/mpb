@@ -62,6 +62,12 @@ extern char curfield_type;
 
 extern void curfield_reset(void);
 
+extern scalar_complex *curfield1;
+extern int curfield1_band;
+extern char curfield1_type;
+
+extern void curfield1_reset(void);
+
 /* R[i]/G[i] are lattice/reciprocal-lattice vectors */
 extern real R[3][3], G[3][3];
 extern matrix3x3 Rm, Gm; /* same thing, but matrix3x3 */
@@ -106,6 +112,12 @@ void material_grids_get(double *u, const material_grid *grids, int ngrids);
 void material_grids_addgradient(double *v,
 				double scalegrad, int band,
 				const material_grid *grids, int ngrids);
+
+void material_grids_addgradient_point(double *v, 
+				      vector3 p, double scalegrad,
+				      const material_grid *grids, 
+				      int ngrids);
+
 
 /**************************************************************************/
 

@@ -21,11 +21,15 @@ EXTRA_DIST = mpb.scm.in
 nodist_pkgdata_DATA = $(SPECIFICATION_FILE)
 
 MY_SOURCES = epsilon.c epsilon_file.c field-smob.c fields.c	\
-material_grid.c material_grid_opt.c matrix-smob.c mpb.c field-smob.h matrix-smob.h mpb.h my-smob.h
+material_grid.c material_grid_opt.c matrix-smob.c mpb.c field-smob.h matrix-smob.h mpb.h my-smob.h \
+material_grid_opt_sdp.c material_grid_opt_lp.c 
 
-MY_LIBS = $(top_builddir)/src/matrixio/libmatrixio.a $(top_builddir)/src/libmpb@MPB_SUFFIX@.la $(NLOPT_LIB)
+
+
+MY_LIBS = $(top_builddir)/src/matrixio/libmatrixio.a $(top_builddir)/src/libmpb@MPB_SUFFIX@.la $(NLOPT_LIB) $(SDP_LIB) $(MOSEK_LIB)
 MY_CPPFLAGS = -I$(top_srcdir)/src/util -I$(top_srcdir)/src/matrices -I$(top_srcdir)/src/matrixio -I$(top_srcdir)/src/maxwell
 MY_DEFS = -DHAVE_CTL_HOOKS=1 -DHAVE_CTL_EXPORT_HOOK=1
+#MY_LDFLAGS = -pthread -Xlinker -bind_at_load
 
 # what is printed out when invoking your program with --version:
 VERSION_STRING = "mpb@MPB_SUFFIX@ @VERSION@, Copyright (C) 1999-2012, MIT"

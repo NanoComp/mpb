@@ -118,6 +118,10 @@
 (define-output-var freqs (make-list-type 'number))
 (define-output-var iterations 'integer)
 
+;; abby men
+(define-output-var eigenvalues (make-list-type 'number))
+;; 
+
 (define-output-var parity 'string)
 
 (define-input-var negative-epsilon-ok? false 'boolean)
@@ -272,6 +276,99 @@
 (define-external-function material-grids-mingap false false
   'number (make-list-type 'vector3) 'integer 'integer
   'number 'number 'integer 'number)
+
+;; ; Sep 18 , 2012, Abby Men
+;; (define-external-function test-sdp false false
+;;   'number 'boolean)
+
+;; (define-external-function run-matgrid-optgap false false
+;;   'number (make-list-type 'vector3) 'integer 'integer 'number 'number 'integer 'number 'number 'number)
+
+;; (define-external-function run-matgrid-optgap false false
+;;   'number (make-list-type 'vector3) 'integer 'integer 
+;;   'integer 'number
+;;   'number 'number 'string)
+
+; Apr 30 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-mosek false false
+  'number (make-list-type 'vector3) 'integer 'integer 
+  'integer 'number 'number 'number 'string)
+
+;; ; June 11 , 2013, Abby Men
+;; (define-external-function test-mosek false false
+;;   'number 'boolean)
+
+; Sep 9 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-lp false false
+  'number (make-list-type 'vector3) 'integer 'integer 
+  'integer 'number 'number 'number 'integer 'string)
+
+; Sep 27 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-lp-DCG false false
+  'number (make-list-type 'vector3) 'integer 'integer 
+  'integer 'number 'number 'number 'integer 'integer 'string)
+
+; Oct 21 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-lp-fa false false
+  'number (make-list-type 'vector3) 'integer 'integer 
+  'integer 'number 'number 'integer 'number 'string)
+
+; Nov 4 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-lp-fa-mpi false false
+  'number (make-list-type 'vector3) 'integer 'integer 
+  'integer 'number 'number 'integer 'number 'integer 'string)
+
+(define-external-function randomize-epsilon false false no-return-value 'number)
+
+(define-external-function randomize-meshgrid false false no-return-value 'number)
+
+; Feb 6, 2014 Abby Men
+; modified from run-parity
+(define (run-random p reset-fields delta . band-functions)
+ (set! total-run-time (+ total-run-time
+  (begin-time "total elapsed time for run: "
+   (set! all-freqs '())
+   (set! band-range-data '())
+   (set! eigband-range-data '())
+   (set! interactive? false)  ; don't be interactive if we call (run)
+   (begin-time "elapsed time for initialization: "
+	       (init-params p (if reset-fields true false))
+	       (if (string? reset-fields) (load-eigenvectors reset-fields))
+	       (randomize-epsilon delta))
+   (let ((k-split (list-split k-points k-split-num k-split-index)))
+     (set-kpoint-index (car k-split))
+     ;; (if (zero? (car k-split))
+     ;; 	 (output-epsilon)) ; output epsilon immediately for 1st k block
+     (if (> num-bands 0)
+	 (begin
+	   (map (lambda (k)
+		  (set! current-k k)
+		  (begin-time "elapsed time for k point: " (solve-kpoint k))
+		  (set! all-freqs (cons freqs all-freqs))
+		  (set! band-range-data 
+			(update-band-range-data band-range-data freqs k))
+
+		  (set! eigband-range-data 
+			(update-eigband-range-data eigband-range-data eigenvalues k))
+
+		  (set! eigensolver-iters
+			(append eigensolver-iters
+				(list (/ iterations num-bands))))
+		  (map (lambda (f)
+			 (if (zero? (procedure-num-args f))
+			     (f) ; f is a thunk: evaluate once per k-point
+			     (do ((band 1 (+ band 1))) ((> band num-bands))
+			       (f band))))
+		       band-functions))
+		(cdr k-split))
+	   (if (> (length (cdr k-split)) 1)
+	       (begin
+		 (output-band-range-data band-range-data)
+		 (set! gap-list (output-gaps band-range-data)))
+	       (set! gap-list '()))))))))
+ (set! all-freqs (reverse all-freqs)) ; put them in the right order
+ (print "done.\n"))
+
 
 ; ****************************************************************
 
@@ -454,6 +551,24 @@
 		  (cons (cons newmin newmax) br-start))))))
   (ubrd band-range-data freqs '()))
 
+
+(define (update-eigband-range-data band-eigrange-data eigenvalues k-point)
+  (define (ubrd eigband-range-data eigenvalues br-start)
+    (if (null? eigenvalues)
+	(append (reverse br-start) eigband-range-data)
+	(let ((br (if (null? eigband-range-data)
+		      (cons (cons infinity -1) (cons (- infinity) -1))
+		      (car eigband-range-data)))
+	      (br-rest (if (null? eigband-range-data) '() (cdr eigband-range-data))))
+	  (let ((newmin (if (< (car eigenvalues) (caar br))
+			    (cons (car eigenvalues) k-point) (car br)))
+		(newmax (if (> (car eigenvalues) (cadr br))
+			    (cons (car eigenvalues) k-point) (cdr br))))
+	    (ubrd br-rest (cdr eigenvalues) 
+		  (cons (cons newmin newmax) br-start))))))
+  (ubrd eigband-range-data eigenvalues '()))
+
+
 ; Output the band range data in a nice format:
 (define (output-band-range-data br-data)
   (define (obr br i)
@@ -488,6 +603,8 @@
 (define band-range-data '())
 (define gap-list '())
 
+(define eigband-range-data '())
+
 ; Return the frequency gap from the band #lower-band to the band
 ; #(lower-band+1), as a percentage of mid-gap frequency.  The "gap"
 ; may be negative if the maximum of the lower band is higher than the
@@ -499,6 +616,14 @@
       (let ((f1 (cadr (list-ref band-range-data (- lower-band 1))))
 	    (f2 (caar (list-ref band-range-data lower-band))))
 	(/ (- f2 f1) (* 0.005 (+ f1 f2))))))
+
+(define (retrieve-eiggap lower-band)
+  (if (> (+ lower-band 1) (length eigband-range-data))
+      (error "retrieve-gap called for higher band than was calculated")
+      (let ((f1 (cadr (list-ref eigband-range-data (- lower-band 1))))
+	    (f2 (caar (list-ref eigband-range-data lower-band))))
+	(/ (- f2 f1) (* 0.005 (+ f1 f2))))))
+
 
 ; ****************************************************************
 
@@ -568,14 +693,15 @@
   (begin-time "total elapsed time for run: "
    (set! all-freqs '())
    (set! band-range-data '())
+   (set! eigband-range-data '())
    (set! interactive? false)  ; don't be interactive if we call (run)
    (begin-time "elapsed time for initialization: "
 	       (init-params p (if reset-fields true false))
 	       (if (string? reset-fields) (load-eigenvectors reset-fields)))
    (let ((k-split (list-split k-points k-split-num k-split-index)))
      (set-kpoint-index (car k-split))
-     (if (zero? (car k-split))
-	 (output-epsilon)) ; output epsilon immediately for 1st k block
+     ;; (if (zero? (car k-split))
+     ;; 	 (output-epsilon)) ; output epsilon immediately for 1st k block
      (if (> num-bands 0)
 	 (begin
 	   (map (lambda (k)
@@ -584,6 +710,10 @@
 		  (set! all-freqs (cons freqs all-freqs))
 		  (set! band-range-data 
 			(update-band-range-data band-range-data freqs k))
+
+		  (set! eigband-range-data 
+			(update-eigband-range-data eigband-range-data eigenvalues k))
+
 		  (set! eigensolver-iters
 			(append eigensolver-iters
 				(list (/ iterations num-bands))))
