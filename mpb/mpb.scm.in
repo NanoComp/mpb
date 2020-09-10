@@ -78,9 +78,9 @@
     (lambda (object)
       (let ((sz (object-property-value object 'size))
 	    (i (object-property-value object 'matgrid-init)))
-	(let ((g (apply make-uniform-array 
+	(let ((g (apply make-uniform-array
 			(cons 0.333 (map inexact->exact (vector->list sz))))))
-	  (array-index-map! g (lambda (x y z) 
+	  (array-index-map! g (lambda (x y z)
 				(i (- (/ x (vector3-x sz)) 0.5)
 				   (- (/ y (vector3-y sz)) 0.5)
 				   (- (/ z (vector3-z sz)) 0.5))))
@@ -132,6 +132,10 @@
 (define-output-var freqs (make-list-type 'number))
 (define-output-var iterations 'integer)
 
+;; abby men
+(define-output-var eigenvalues (make-list-type 'number))
+;;
+
 (define-output-var parity 'string)
 
 (define-input-var negative-epsilon-ok? false 'boolean)
@@ -167,7 +171,7 @@
 (define TE EVEN-Z)
 (define TM ODD-Z)
 (define PREV-PARITY -1)
-(define-external-function set-parity false false 
+(define-external-function set-parity false false
   no-return-value 'integer)
 (define set-polarization set-parity) ; backwards compatibility
 
@@ -188,12 +192,12 @@
 (define-external-function get-epsilon false false no-return-value)
 (define-external-function get-mu false false no-return-value)
 (define-external-function fix-field-phase false false no-return-value)
-(define-external-function compute-field-energy false false 
+(define-external-function compute-field-energy false false
 	(make-list-type 'number))
 (define-external-function compute-field-divergence false false no-return-value)
 
 (define-external-function get-epsilon-point false false 'number 'vector3)
-(define-external-function get-epsilon-inverse-tensor-point false false 
+(define-external-function get-epsilon-inverse-tensor-point false false
   'cmatrix3x3 'vector3)
 (define-external-function get-energy-point false false 'number 'vector3)
 (define get-scalar-field-point get-energy-point)
@@ -211,7 +215,7 @@
 (define-external-function compute-energy-in-object-list false false
   'number (make-list-type 'geometric-object))
 
-(define-external-function transformed-overlap false false 
+(define-external-function transformed-overlap false false
   'cnumber 'matrix3x3 'vector3)
 (define-external-function compute-symmetries false false
   (make-list-type 'cnumber) 'matrix3x3 'vector3)
@@ -219,7 +223,7 @@
   'cnumber 'integer 'matrix3x3 'vector3)
 
 (define-external-function output-field-to-file false false
-  no-return-value 'integer 'string)  
+  no-return-value 'integer 'string)
 
 (define-external-function mpi-is-master? false false 'boolean)
 (define-external-function using-mpi? false false 'boolean)
@@ -235,7 +239,7 @@
   no-return-value 'integer)
 
 (define-external-function sqmatrix-size false false 'integer 'SCM)
-(define-external-function sqmatrix-ref false false 'cnumber 
+(define-external-function sqmatrix-ref false false 'cnumber
   'SCM 'integer 'integer)
 (define-external-function sqmatrix-set false false no-return-value
   'SCM 'integer 'integer 'cnumber)
@@ -273,19 +277,19 @@
 (define-external-function field-set! false false no-return-value 'SCM 'SCM)
 (define (field-copy f) (let ((f' (field-make f))) (field-set! f' f) f'))
 (define-external-function field-load false false no-return-value 'SCM)
-(define-external-function field-mapL! false false no-return-value 'SCM 
+(define-external-function field-mapL! false false no-return-value 'SCM
   'function (make-list-type 'SCM))
 (define (field-map! dest f . src) (apply field-mapL! (list dest f src)))
 (define-external-function integrate-fieldL false false 'cnumber
   'function (make-list-type 'SCM))
 (define (integrate-fields f . src) (apply integrate-fieldL (list f src)))
-(define-external-function rscalar-field-get-point false false 'number 
+(define-external-function rscalar-field-get-point false false 'number
   'SCM 'vector3)
-(define-external-function cscalar-field-get-point false false 'cnumber 
+(define-external-function cscalar-field-get-point false false 'cnumber
   'SCM 'vector3)
-(define-external-function cvector-field-get-point false false 'cvector3 
+(define-external-function cvector-field-get-point false false 'cvector3
   'SCM 'vector3)
-(define-external-function cvector-field-get-point-bloch false false 'cvector3 
+(define-external-function cvector-field-get-point-bloch false false 'cvector3
   'SCM 'vector3)
 
 (define-external-function randomize-material-grid! false false
@@ -313,6 +317,99 @@
 (define-external-function material-grids-min-tetm-gap false false
   'number 'vector3 'integer
   'number 'number 'integer 'number)
+
+;; ; Sep 18 , 2012, Abby Men
+;; (define-external-function test-sdp false false
+;;   'number 'boolean)
+
+;; (define-external-function run-matgrid-optgap false false
+;;   'number (make-list-type 'vector3) 'integer 'integer 'number 'number 'integer 'number 'number 'number)
+
+;; (define-external-function run-matgrid-optgap false false
+;;   'number (make-list-type 'vector3) 'integer 'integer
+;;   'integer 'number
+;;   'number 'number 'string)
+
+; Apr 30 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-mosek false false
+  'number (make-list-type 'vector3) 'integer 'integer
+  'integer 'number 'number 'number 'string)
+
+;; ; June 11 , 2013, Abby Men
+;; (define-external-function test-mosek false false
+;;   'number 'boolean)
+
+; Sep 9 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-lp false false
+  'number (make-list-type 'vector3) 'integer 'integer
+  'integer 'number 'number 'number 'integer 'string)
+
+; Sep 27 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-lp-DCG false false
+  'number (make-list-type 'vector3) 'integer 'integer
+  'integer 'number 'number 'number 'integer 'integer 'string)
+
+; Oct 21 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-lp-fa false false
+  'number (make-list-type 'vector3) 'integer 'integer
+  'integer 'number 'number 'integer 'number 'string)
+
+; Nov 4 , 2013, Abby Men
+(define-external-function run-matgrid-optgap-lp-fa-mpi false false
+  'number (make-list-type 'vector3) 'integer 'integer
+  'integer 'number 'number 'integer 'number 'integer 'string)
+
+(define-external-function randomize-epsilon false false no-return-value 'number)
+
+(define-external-function randomize-meshgrid false false no-return-value 'number)
+
+; Feb 6, 2014 Abby Men
+; modified from run-parity
+(define (run-random p reset-fields delta . band-functions)
+ (set! total-run-time (+ total-run-time
+  (begin-time "total elapsed time for run: "
+   (set! all-freqs '())
+   (set! band-range-data '())
+   (set! eigband-range-data '())
+   (set! interactive? false)  ; don't be interactive if we call (run)
+   (begin-time "elapsed time for initialization: "
+	       (init-params p (if reset-fields true false))
+	       (if (string? reset-fields) (load-eigenvectors reset-fields))
+	       (randomize-epsilon delta))
+   (let ((k-split (list-split k-points k-split-num k-split-index)))
+     (set-kpoint-index (car k-split))
+     ;; (if (zero? (car k-split))
+     ;; 	 (output-epsilon)) ; output epsilon immediately for 1st k block
+     (if (> num-bands 0)
+	 (begin
+	   (map (lambda (k)
+		  (set! current-k k)
+		  (begin-time "elapsed time for k point: " (solve-kpoint k))
+		  (set! all-freqs (cons freqs all-freqs))
+		  (set! band-range-data
+			(update-band-range-data band-range-data freqs k))
+
+		  (set! eigband-range-data
+			(update-eigband-range-data eigband-range-data eigenvalues k))
+
+		  (set! eigensolver-iters
+			(append eigensolver-iters
+				(list (/ iterations num-bands))))
+		  (map (lambda (f)
+			 (if (zero? (procedure-num-args f))
+			     (f) ; f is a thunk: evaluate once per k-point
+			     (do ((band 1 (+ band 1))) ((> band num-bands))
+			       (f band))))
+		       band-functions))
+		(cdr k-split))
+	   (if (> (length (cdr k-split)) 1)
+	       (begin
+		 (output-band-range-data band-range-data)
+		 (set! gap-list (output-gaps band-range-data)))
+	       (set! gap-list '()))))))))
+ (set! all-freqs (reverse all-freqs)) ; put them in the right order
+ (print "done.\n"))
+
 
 ; ****************************************************************
 
@@ -410,7 +507,7 @@
   (define (try+ k v)
     (if (< (n (vector3+ k v)) (n k)) (try+ (vector3+ k v) v) k))
   (define (try k v) (try+ (try+ k v) (vector3- (vector3 0) v)))
-  (define trylist (list 
+  (define trylist (list
     #(1 0 0) #(0 1 0) #(0 0 1)
     #(0 1 1) #(1 0 1) #(1 1 0)
     #(0 1 -1) #(1 0 -1) #(1 -1 0)
@@ -495,9 +592,27 @@
 			    (cons (car freqs) k-point) (car br)))
 		(newmax (if (> (car freqs) (cadr br))
 			    (cons (car freqs) k-point) (cdr br))))
-	    (ubrd br-rest (cdr freqs) 
+	    (ubrd br-rest (cdr freqs)
 		  (cons (cons newmin newmax) br-start))))))
   (ubrd band-range-data freqs '()))
+
+
+(define (update-eigband-range-data band-eigrange-data eigenvalues k-point)
+  (define (ubrd eigband-range-data eigenvalues br-start)
+    (if (null? eigenvalues)
+	(append (reverse br-start) eigband-range-data)
+	(let ((br (if (null? eigband-range-data)
+		      (cons (cons infinity -1) (cons (- infinity) -1))
+		      (car eigband-range-data)))
+	      (br-rest (if (null? eigband-range-data) '() (cdr eigband-range-data))))
+	  (let ((newmin (if (< (car eigenvalues) (caar br))
+			    (cons (car eigenvalues) k-point) (car br)))
+		(newmax (if (> (car eigenvalues) (cadr br))
+			    (cons (car eigenvalues) k-point) (cdr br))))
+	    (ubrd br-rest (cdr eigenvalues)
+		  (cons (cons newmin newmax) br-start))))))
+  (ubrd eigband-range-data eigenvalues '()))
+
 
 ; Output the band range data in a nice format:
 (define (output-band-range-data br-data)
@@ -533,6 +648,8 @@
 (define band-range-data '())
 (define gap-list '())
 
+(define eigband-range-data '())
+
 ; Return the frequency gap from the band #lower-band to the band
 ; #(lower-band+1), as a percentage of mid-gap frequency.  The "gap"
 ; may be negative if the maximum of the lower band is higher than the
@@ -544,6 +661,14 @@
       (let ((f1 (cadr (list-ref band-range-data (- lower-band 1))))
 	    (f2 (caar (list-ref band-range-data lower-band))))
 	(/ (- f2 f1) (* 0.005 (+ f1 f2))))))
+
+(define (retrieve-eiggap lower-band)
+  (if (> (+ lower-band 1) (length eigband-range-data))
+      (error "retrieve-gap called for higher band than was calculated")
+      (let ((f1 (cadr (list-ref eigband-range-data (- lower-band 1))))
+	    (f2 (caar (list-ref eigband-range-data lower-band))))
+	(/ (- f2 f1) (* 0.005 (+ f1 f2))))))
+
 
 ; ****************************************************************
 
@@ -564,7 +689,7 @@
 		(let ((median-iters (* 0.5 (+ (list-ref sorted-iters
 							(quotient num-runs 2))
 					      (list-ref sorted-iters
-							(- (quotient 
+							(- (quotient
 							    (+ num-runs 1) 2)
 							   1))))))
 		  (print ", median = " median-iters))))
@@ -616,6 +741,7 @@
   (begin-time "total elapsed time for run: "
    (set! all-freqs '())
    (set! band-range-data '())
+   (set! eigband-range-data '())
    (set! interactive? false)  ; don't be interactive if we call (run)
    (begin-time "elapsed time for initialization: "
 	       (init-params p (if reset-fields true false))
@@ -623,7 +749,7 @@
    (let ((k-split (list-split k-points k-split-num k-split-index)))
      (set-kpoint-index (car k-split))
      (if (zero? (car k-split))
-	 (begin 
+	 (begin
            (output-epsilon) ; output epsilon immediately for 1st k block
            (if (using-mu?) (output-mu)))) ; and mu too, if we have it
      (if (> num-bands 0)
@@ -632,8 +758,12 @@
 		  (set! current-k k)
 		  (begin-time "elapsed time for k point: " (solve-kpoint k))
 		  (set! all-freqs (cons freqs all-freqs))
-		  (set! band-range-data 
+		  (set! band-range-data
 			(update-band-range-data band-range-data freqs k))
+
+		  (set! eigband-range-data
+			(update-eigband-range-data eigband-range-data eigenvalues k))
+
 		  (set! eigensolver-iters
 			(append eigensolver-iters
 				(list (/ iterations num-bands))))
@@ -853,7 +983,7 @@
   (define korig (if (pair? korig-and-kdir) (car korig-and-kdir) (vector3 0)))
   (define kdir (if (pair? korig-and-kdir) (cdr korig-and-kdir) korig-and-kdir))
   (let ((num-bands-save num-bands) (k-points-save k-points)
-	(nb (- band-max band-min -1)) 
+	(nb (- band-max band-min -1))
 	(kdir1 (cartesian->reciprocal (unit-vector3 (reciprocal->cartesian kdir))))
 	; k0s is an array caching the best k value found for each band:
 	(k0s (if (list? kmag-guess) (list->vector kmag-guess)
@@ -862,7 +992,7 @@
 	(bktab '()))
     (define (rootfun b) (lambda (k)
       (let ((tab-val (assoc (cons b k) bktab))) ; first, look in cached table
-	(if tab-val 
+	(if tab-val
 	    (begin ; use cached result if available
 	      (print "find-k " b " at " k ": " (cadr tab-val) " (cached)\n")
 	      (cdr tab-val))
@@ -873,7 +1003,7 @@
 	      (let ((v (compute-group-velocity-component kdir1)))
 		; cache computed values:
 		(map (lambda (b f v)
-		       (let ((tabval (assoc 
+		       (let ((tabval (assoc
 				      (cons b (vector-ref k0s (- b band-min)))
 				      bktab)))
 			 (if (or (not tabval)
@@ -881,7 +1011,7 @@
 			     (vector-set! k0s (- b band-min) k))) ; cache k0
 		       (set! bktab (cons (cons (cons b k) (cons (- f omega) v))
 					 bktab)))
-		     (arith-sequence band-min 1 (- b band-min -1)) 
+		     (arith-sequence band-min 1 (- b band-min -1))
 		     (ncdr (- band-min 1) freqs)
 		     (ncdr (- band-min 1) v))
 		; finally return (frequency - omega . derivative):
@@ -901,7 +1031,7 @@
 		 (run-parity p false
 			     (lambda (b')
 			       (if (= b' b)
-				   (map (lambda (f) 
+				   (map (lambda (f)
 					  (apply-band-func-thunk f b true))
 					band-funcs)))))
 	       (arith-sequence band-max -1 nb) (reverse ks)))
@@ -910,7 +1040,7 @@
       (print parity "kvals:, " omega ", " band-min ", " band-max)
       (vector-map (lambda (k) (print ", " k)) korig)
       (vector-map (lambda (k) (print ", " k)) kdir1)
-      (map (lambda (k) (print ", " k)) ks) 
+      (map (lambda (k) (print ", " k)) ks)
       (print "\n")
       ks)))
 
@@ -924,7 +1054,7 @@
   (let ((dots (dot-eigenvectors old-eigs first-band)))
     (let ((phases (map (lambda (d) (conj (make-polar 1 (angle d))))
 		       (sqmatrix-diag dots))))
-      (map (lambda (i phase) 
+      (map (lambda (i phase)
 	     (scale-eigenvector i phase)
 	     (conj phase))
 	   (arith-sequence first-band 1 (length phases)) phases))))

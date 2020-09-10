@@ -220,7 +220,7 @@ static int mean_epsilon_func(symmetric_matrix *meps,
      d2 *= no_size_y ? 0 : geometry_lattice.size.y * 0.5;
      d3 *= no_size_z ? 0 : geometry_lattice.size.z * 0.5;
 
-#if 0 /* no averaging */
+#if 1 /* no averaging */
      epsilon_func(meps, meps_inv, r, edata);
      n[0] = n[1] = n[2] = 0;
      return 1;

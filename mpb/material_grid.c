@@ -179,6 +179,30 @@ int material_grids_ntot(const material_grid *grids, int ngrids)
      return ntot;
 }
 
+void material_grids_save(material_grid *g, int ngrids, string filename)
+{
+    if (mpi_is_master()) {
+      CHECK(ngrids == 1, "ngrids should = 1");
+	  matrixio_id file_id, data_id;
+	  int dims[3], rank, start[3] = {0,0,0};
+	  double *grid;
+
+	  dims[0] = g[0].size.x;
+	  dims[1] = g[0].size.y;
+	  dims[2] = g[0].size.z;
+	  rank = dims[2] == 1 ? (dims[1] == 1 ? 1 : 2) : 3;
+
+	  file_id = matrixio_create_serial(filename);
+	  data_id = matrixio_create_dataset(file_id, "data", NULL, rank, dims);
+
+	  grid = material_grid_array(&g[0]);
+	  matrixio_write_real_data(data_id, dims, start, 1, grid);
+	  material_grid_array_release(&g[0]);
+
+	  matrixio_close_dataset(data_id);
+	  matrixio_close(file_id);
+     }
+}
 /* note that you also need to call reset_epsilon() if you actually
    want to change the dielectric function */
 void material_grids_set(const double *u, material_grid *grids, int ngrids)
@@ -310,7 +334,7 @@ static void add_interpolate_weights(real rx, real ry, real rz, real *data,
 #undef D
 }
 
-static void material_grids_addgradient_point(double *v,
+void material_grids_addgradient_point(double *v,
 					     vector3 p, double scalegrad,
 					     const material_grid *grids,
 					     int ngrids)
@@ -396,7 +420,161 @@ void material_grids_addgradient(double *v,
 
      CHECK(band <= num_bands, "addgradient called for uncomputed band");
      if (band) {
-	  scalegrad *= -freqs.items[band - 1]/2;
+       scalegrad *= -freqs.items[band - 1]/2;
+       /* scalegrad *= -freqs.items[band - 1]*freqs.items[band - 1]; */
+	  get_efield(band);
+     }
+     compute_field_squared();
+     Esqr = (real *) curfield;
+     scalegrad *= Vol / H.N;
+
+     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
+     n_other = mdata->other_dims;
+     n_last = mdata->last_dim_size / (sizeof(scalar_complex)/sizeof(scalar));
+     last_dim = mdata->last_dim;
+     rank = (n3 == 1) ? (n2 == 1 ? 1 : 2) : 3;
+
+     s1 = geometry_lattice.size.x / n1;
+     s2 = geometry_lattice.size.y / n2;
+     s3 = geometry_lattice.size.z / n3;
+     c1 = n1 <= 1 ? 0 : geometry_lattice.size.x * 0.5;
+     c2 = n2 <= 1 ? 0 : geometry_lattice.size.y * 0.5;
+     c3 = n3 <= 1 ? 0 : geometry_lattice.size.z * 0.5;
+
+     /* Here we have different loops over the coordinates, depending
+	upon whether we are using complex or real and serial or
+        parallel transforms.  Each loop must define, in its body,
+        variables (i2,j2,k2) describing the coordinate of the current
+        point, and "index" describing the corresponding index in
+	the curfield array.
+
+        This was all stolen from fields.c...it would be better
+        if we didn't have to cut and paste, sigh. */
+
+#ifdef SCALAR_COMPLEX
+
+#  ifndef HAVE_MPI
+
+     for (i = 0; i < n1; ++i)
+	  for (j = 0; j < n2; ++j)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int i2 = i, j2 = j, k2 = k;
+	  int index = ((i * n2 + j) * n3 + k);
+
+#  else /* HAVE_MPI */
+
+     local_n2 = mdata->local_ny;
+     local_y_start = mdata->local_y_start;
+
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < n3; ++k)
+     {
+	  int i2 = i, j2 = j + local_y_start, k2 = k;
+	  int index = ((j * n1 + i) * n3 + k);
+
+#  endif /* HAVE_MPI */
+
+#else /* not SCALAR_COMPLEX */
+
+#  ifndef HAVE_MPI
+
+     for (i = 0; i < n_other; ++i)
+	  for (j = 0; j < n_last; ++j)
+     {
+	  int index = i * n_last + j;
+	  int i2, j2, k2;
+	  switch (rank) {
+	      case 2: i2 = i; j2 = j; k2 = 0; break;
+	      case 3: i2 = i / n2; j2 = i % n2; k2 = j; break;
+	      default: i2 = j; j2 = k2 = 0;  break;
+	  }
+
+#  else /* HAVE_MPI */
+
+     local_n2 = mdata->local_ny;
+     local_y_start = mdata->local_y_start;
+
+     /* For a real->complex transform, the last dimension is cut in
+	half.  For a 2d transform, this is taken into account in local_ny
+	already, but for a 3d transform we must compute the new n3: */
+     if (n3 > 1)
+	  local_n3 = mdata->last_dim_size / 2;
+     else
+	  local_n3 = 1;
+
+     /* first two dimensions are transposed in MPI output: */
+     for (j = 0; j < local_n2; ++j)
+          for (i = 0; i < n1; ++i)
+	       for (k = 0; k < local_n3; ++k)
+     {
+#         define i2 i
+	  int j2 = j + local_y_start;
+#         define k2 k
+	  int index = ((j * n1 + i) * local_n3 + k);
+
+#  endif /* HAVE_MPI */
+
+#endif /* not SCALAR_COMPLEX */
+
+	  {
+	       vector3 p;
+
+	       p.x = i2 * s1 - c1; p.y = j2 * s2 - c2; p.z = k2 * s3 - c3;
+
+	       material_grids_addgradient_point(
+		    v, p, Esqr[index]*scalegrad, grids,ngrids);
+
+#ifndef SCALAR_COMPLEX
+	       {
+		    int last_index;
+#  ifdef HAVE_MPI
+		    if (n3 == 1)
+			 last_index = j + local_y_start;
+		    else
+			 last_index = k;
+#  else
+		    last_index = j;
+#  endif
+
+		    if (last_index != 0 && 2*last_index != last_dim) {
+			 int i2c, j2c, k2c;
+			 i2c = i2 ? (n1 - i2) : 0;
+			 j2c = j2 ? (n2 - j2) : 0;
+			 k2c = k2 ? (n3 - k2) : 0;
+			 p.x = i2c * s1 - c1;
+			 p.y = j2c * s2 - c2;
+			 p.z = k2c * s3 - c3;
+
+			 material_grids_addgradient_point(
+			      v, p, Esqr[index]*scalegrad, grids,ngrids);
+		    }
+	       }
+#endif /* !SCALAR_COMPLEX */
+
+	  }
+
+     }
+}
+
+     /* modified material_grids_addgradient to compute d(lambda)/du */
+void material_grids_addgradient_mod(double *v,
+				double scalegrad, int band,
+				const material_grid *grids, int ngrids)
+{
+     int i, j, k, n1, n2, n3, n_other, n_last, rank, last_dim;
+#ifdef HAVE_MPI
+     int local_n2, local_y_start, local_n3;
+#endif
+     real s1, s2, s3, c1, c2, c3;
+     real *Esqr;
+
+     CHECK(band <= num_bands, "addgradient called for uncomputed band");
+     if (band) {
+       //scalegrad *= -freqs.items[band - 1]/2;
+       scalegrad *= -freqs.items[band - 1]*freqs.items[band - 1];
 	  get_efield(band);
      }
      compute_field_squared();
@@ -685,7 +863,7 @@ void print_material_grids_deps_du_numeric(double du)
 
 /**************************************************************************/
 
-static void synchronize_material_grid(material_grid *g)
+void synchronize_material_grid(material_grid *g)
 {
      double *grid;
      int n = ((int) g->size.x) * ((int) g->size.y) * ((int) g->size.z);
@@ -1019,19 +1197,37 @@ void material_grids_match_epsilon_fileB(string filename, number eps_tol)
           if (u[i] < lb[i]) u[i] = lb[i];
      }
 
+     int process;
+     MPI_Comm_rank(MPI_COMM_WORLD, &process);
 #if defined(HAVE_NLOPT_H) && defined(HAVE_NLOPT)
      {
 	  nlopt_result res;
-	  res = nlopt_minimize(NLOPT_LD_MMA, n, match_eps_func, &d,
-			       lb, ub, u, &func_min,
-			       -HUGE_VAL, 0,0, 0,u_tol, 0,0);
+	  /* often maxeval  = 30 should be enough */
+	  int maxeval = 30;
+	  /* res = nlopt_minimize(NLOPT_LD_MMA, n, match_eps_func, &d, */
+	  /* 		       lb, ub, u, &func_min, */
+	  /* 		       -HUGE_VAL, 0,0, 0,u_tol, maxeval , 0);  */
+
+	  printf("process = %d to minimize\n", process);
+	    /* res = nlopt_minimize(NLOPT_LD_MMA, n, match_eps_func, &d, */
+	    /* 			 lb, ub, u, &func_min, -HUGE_VAL,  */
+	    /* 			 eps_tol, eps_tol, eps_tol, u_tol, maxeval , 120.0);  */
+
+	    res = nlopt_minimize(NLOPT_LD_LBFGS, n, match_eps_func, &d,
+				 lb, ub, u, &func_min, -HUGE_VAL,
+				 eps_tol, eps_tol, eps_tol, u_tol, maxeval , 120.0);
+
+	    printf("process %d nlopt: match-epsilon-file done\n", process);
+
 	  CHECK(res > 0, "failure of nlopt_minimize");
      }
 #else
      CHECK(0, "nlopt library is required for match-epsilon-file");
 #endif
 
+     printf("process about to set \n");
      material_grids_set(u, d.grids, d.ngrids);
+     synchronize_material_grid(d.grids);
      reset_epsilon();
 
      mpi_one_printf("match-epsilon-file converged to %g after %d iterations\n",

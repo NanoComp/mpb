@@ -187,6 +187,11 @@ extern void maxwell_compute_e_from_d(maxwell_data *d,
 				     scalar_complex *dfield,
 				     int cur_num_bands);
 
+void maxwell_compute_H_from_e(maxwell_data *d, evectmatrix Hout, 
+			      scalar_complex *efield,
+			      int cur_band_start, int cur_num_bands,
+			      real scale);
+
 extern void maxwell_vectorfield_otherhalf(maxwell_data *d,
 					  scalar_complex *field,
 					  real phasex,real phasey,real phasez);
