@@ -58,6 +58,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         mpi_one_fprintf(stderr, "a real-space H- or D-field must be loaded beforehand\n");
         return integral;
     }
+
     #ifndef SCALAR_COMPLEX
         CHECK(0, "transformed_overlap(..) is not yet implemented for mpbi");
         /* NOTE: Not completely sure why the current implementation does not work for mpbi
@@ -68,6 +69,16 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
            that we use the LOOP_XYZ macro, which has special handling for mbpi (i.e. only
            "visits" the "inversion-reduced" part of the unitcell): but here, we actually
            really want to (or at least assume to) visit _all_ the points in the unitcell. */
+    #endif
+    #ifdef HAVE_MPI
+        /* NOTE: It seems there's some racey stuff going on with the MPI implementation,
+           unfortunately, so it doesn't end giving consistent (or even meaningful) results.
+           The issue could be that both `LOOP_XYZ` is distributed over workers _and_ that
+           `get_bloch_field_point_` also is (via the interpolation). I'm imagining that such
+           a naive "nested parallelism" doesn't jive here.
+           Long story short: disable it for now.
+        */
+        CHECK(0, "transformed_overlap(..) is not yet implemented for MPI");
     #endif
     
     /* prepare before looping ... */
