@@ -54,6 +54,9 @@
 #include "matrix-smob.h"
 #include "field-smob.h"
 
+/* global verbosity configuration */
+#include "verbosity.h"
+
 #if defined(DEBUG) && defined(HAVE_FEENABLEEXCEPT)
 #  ifndef _GNU_SOURCE
 #    define _GNU_SOURCE 1
@@ -63,6 +66,9 @@
 int feenableexcept (int EXCEPTS);
 #  endif
 #endif
+
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX_KPOINTS_PRINT 100
 
 /**************************************************************************/
 
@@ -382,6 +388,9 @@ void init_params(integer p, boolean reset_fields)
      int nx, ny, nz;
      int have_old_fields = 0;
      int block_size;
+     int max_kpoints_print = (mpb_verbosity >= 3 ?
+                              k_points.num_items :
+                              MIN(k_points.num_items, MAX_KPOINTS_PRINT));
      
      /* Output a bunch of stuff so that the user can see what we're
 	doing and what we've read in. */
@@ -494,10 +503,15 @@ void init_params(integer p, boolean reset_fields)
      }
 
      mpi_one_printf("%d k-points:\n", k_points.num_items);
-     for (i = 0; i < k_points.num_items; ++i)
+     for (i = 0; i < max_kpoints_print; ++i)
 	  mpi_one_printf("     (%g,%g,%g)\n", k_points.items[i].x,
 			 k_points.items[i].y, k_points.items[i].z);
 
+     if (k_points.num_items > max_kpoints_print) {
+         mpi_one_printf("     ... and %d additional k-points (listing truncated)\n",
+             k_points.num_items - max_kpoints_print);
+     }
+     
      set_parity(p);
      if (!have_old_fields || reset_fields)
 	  randomize_fields();
