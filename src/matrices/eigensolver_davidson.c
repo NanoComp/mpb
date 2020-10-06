@@ -152,7 +152,7 @@ void eigensolver_davidson(evectmatrix Y, real *eigenvals,
 	      ((flags & EIGS_VERBOSE) ||
 	       MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
 	       > FEEDBACK_TIME)) {
-		if (mpb_verbosity >= 2) {
+		if (mpb_verbosity >= 1) {
 			printf("    iteration %4d: "
 				"trace = %0.16g (%g%% change)\n", iteration, E,
 				200.0 * fabs(E - prev_E) / (fabs(E) + fabs(prev_E)));

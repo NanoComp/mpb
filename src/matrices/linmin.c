@@ -94,14 +94,13 @@ double linmin(double *converged_f, double *converged_df,
 	  }
 
 	  if (*task != 'C') {  /* not converged; warning or error */
-	       if ((verbose || mpb_verbosity >= 3 || *task == 'E')  && mpb_verbosity >= 3)
+	       if (*task == 'E'  && mpb_verbosity >= 2)
 		    mpi_one_fprintf(stderr, "linmin: %s\n", task);
 	       CHECK(*task != 'E', "linmin failure");
 	  }
 
-	  if (verbose || mpb_verbosity >= 3)
-	       mpi_one_printf("    linmin: converged after %d iterations.\n",
-			      iters);
+	  if (mpb_verbosity >= 2)
+	       mpi_one_printf("    linmin: converged after %d iterations.\n", iters);
 
 	  *converged_f = f_x;
 	  *converged_df = df_x;
