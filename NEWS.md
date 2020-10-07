@@ -1,8 +1,13 @@
 # MPB Release Notes
 
-## MPB 1.11-alpha
+## MPB 1.11
 
-* More fine-grained control of output verbosity (#119).
+10/6/20
+
+* More fine-grained control of output verbosity (#119),
+  and reduction of default verbosity (#122 and #125).
+
+* Add `sqmatrix-set` routine in Scheme (#105).
 
 ## MPB 1.10
 
