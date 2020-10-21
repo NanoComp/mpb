@@ -231,6 +231,36 @@ void maxwell_sym_matrix_rotate(symmetric_matrix *RAR,
 #endif
 }
 
+/* compute a rotation matrix Rot that rotates to a coordinate system whose first
+   axis lies along the (unit-length) vector [n0, n1, n2]                          */
+void maxwell_rotation_matrix(double Rot[3][3], double n0, double n1, double n2)
+{
+   Rot[0][0] = n0;
+   Rot[1][0] = n1;
+   Rot[2][0] = n2;
+   if (fabs(n0) > 1e-2 || fabs(n1) > 1e-2) { /* (z x n) */
+        Rot[0][2] = n1;
+        Rot[1][2] = -n0;
+        Rot[2][2] = 0;
+   }
+   else { /* n is ~ parallel to z direction, use (x x n) instead */
+        Rot[0][2] = 0;
+        Rot[1][2] = -n2;
+        Rot[2][2] = n1;
+   }
+   { /* normalize second column */
+        double s = Rot[0][2]*Rot[0][2]+Rot[1][2]*Rot[1][2]+Rot[2][2]*Rot[2][2];
+        s = 1.0 / sqrt(s);
+        Rot[0][2] *= s;
+        Rot[1][2] *= s;
+        Rot[2][2] *= s;
+   }
+   /* 1st column is 2nd column x 0th column */
+   Rot[0][1] = Rot[1][2] * Rot[2][0] - Rot[2][2] * Rot[1][0];
+   Rot[1][1] = Rot[2][2] * Rot[0][0] - Rot[0][2] * Rot[2][0];
+   Rot[2][1] = Rot[0][2] * Rot[1][0] - Rot[1][2] * Rot[0][0];
+}
+
 /**************************************************************************/
 
 int check_maxwell_dielectric(maxwell_data *d,
@@ -392,7 +422,6 @@ void set_maxwell_dielectric(maxwell_data *md,
      real moment_mesh[MAX_MOMENT_MESH][3];
      real moment_mesh_weights[MAX_MOMENT_MESH];
      real eps_inv_total = 0.0;
-     int i, j, k;
      int mesh_prod;
      real mesh_prod_inv;
      int size_moment_mesh = 0;
@@ -620,97 +649,114 @@ void set_maxwell_dielectric(maxwell_data *md,
 	       norm_len = sqrt(norm0*norm0 + norm1*norm1 + norm2*norm2);
 	  }
 
-	  if (means_different_p && norm_len > SMALL) {
-	       real x0, x1, x2;
+      /* === Kottke averaging of interface voxels === */
+      if (means_different_p && norm_len > SMALL) {
+           double Rot[3][3];
+           symmetric_matrix tau;
 
-	       norm_len = 1.0/norm_len;
-	       norm0 *= norm_len;
-	       norm1 *= norm_len;
-	       norm2 *= norm_len;
+           /* --- compute mean[τ(ε)] --- */
+           /* τ(ε) is defined by [Kottke PRE, Eq. (4)]:
+                       ( -1/ε₁₁   ε₁₂/ε₁₁         ε₁₃/ε₁₁        )
+                τ(ε) = ( ε₂₁/ε₁₁  ε₂₂-ε₂₁ε₁₂/ε₁₁  ε₂₃-ε₂₁ε₁₃/ε₁₁ )
+                       ( ε₃₁/ε₁₁  ε₃₂-ε₃₁ε₁₂/ε₁₁  ε₃₃-ε₃₁ε₁₃/ε₁₁ )
+              where subscripts refer to an orthogonal coordinate system where 1-hat
+              is orthogonal to the interface, and 2-hat & 3-hat are parallel.
+              Thus, at each position in the averaging step, we need to rotate the
+              cartesian ε appropriately (would be good to do without allocations,
+              but don't bother to at the moment).                                    */
 
-	       /* Compute the effective inverse dielectric tensor.
-		  We define this as:
-                     1/2 ( {eps_inv_mean, P} + {eps_mean_inv, 1-P} )
-	          where P is the projection matrix onto the normal direction
-                  (P = norm ^ norm), and {a,b} is the anti-commutator ab+ba.
-		   = 1/2 {eps_inv_mean - eps_mean_inv, P} + eps_mean_inv
-		   = 1/2 (n_i conj(x_j) + x_i n_j) + (eps_mean_inv)_ij
-		  where n_k is the kth component of the normal vector and
-		     x_i = (eps_inv_mean - eps_mean_inv)_ik n_k
-		  Note the implied summations (Einstein notation).
+           /* compute rotation matrix to interface coordinate system */
+           norm_len = 1.0/norm_len;
+           norm0 *= norm_len;
+           norm1 *= norm_len;
+           norm2 *= norm_len;
+           maxwell_rotation_matrix(Rot, norm0, norm1, norm2);
 
-		  Note that the resulting matrix is symmetric, and we get just
-		  eps_inv_mean if eps_inv_mean == eps_mean_inv, as desired.
+           /* sum over voxel mesh points, accumulating mesh_prod*mean[τ(ε)] */
+           tau.m00 = tau.m11 = tau.m22 = 0.0;
+           ASSIGN_ESCALAR(tau.m01, 0.0, 0.0);
+           ASSIGN_ESCALAR(tau.m02, 0.0, 0.0);
+           ASSIGN_ESCALAR(tau.m12, 0.0, 0.0);
+           for (mi = 0; mi < mesh_size[0]; ++mi) {
+              for (mj = 0; mj < mesh_size[1]; ++mj) {
+                 for (mk = 0; mk < mesh_size[2]; ++mk) {
+                    real r[3];
+                    symmetric_matrix eps, eps_inv, teps;
+                    r[0] = i1 * s1 + (mi - mesh_center[0]) * m1;
+                    r[1] = i2 * s2 + (mj - mesh_center[1]) * m2;
+                    r[2] = i3 * s3 + (mk - mesh_center[2]) * m3;
+                    epsilon(&eps, &eps_inv, r, epsilon_data); /* cartesian space */
 
-	          Note that P is idempotent, so for scalar epsilon this
-	          is just eps_inv_mean * P + eps_mean_inv * (1-P)
-                        = (1/eps_inv_mean * P + eps_mean * (1-P)) ^ (-1),
-	          which corresponds to the expression in the Meade paper. */
+                    /* rotate epsilon tensor (TODO: pass a buffer, to avoid allocs?) */
+                    maxwell_sym_matrix_rotate(&teps, &eps, Rot);
 
-	       x0 = (eps_inv_mean.m00 - eps_mean_inv.m00) * norm0;
-	       x1 = (eps_inv_mean.m11 - eps_mean_inv.m11) * norm1;
-	       x2 = (eps_inv_mean.m22 - eps_mean_inv.m22) * norm2;
-	       if (diag_eps_p) {
+                    /* integrate τ(ε) */
+                    tau.m00 += -1.0/teps.m00;                                                /* -1/ε₁₁         */
+                    tau.m11 += teps.m11 - ESCALAR_NORMSQR(teps.m01)/teps.m00;                /* ε₂₂-ε₂₁ε₁₂/ε₁₁ */
+                    tau.m22 += teps.m22 - ESCALAR_NORMSQR(teps.m02)/teps.m00;                /* ε₃₃-ε₃₁ε₁₃/ε₁₁ */
+
 #ifdef WITH_HERMITIAN_EPSILON
-		    md->eps_inv[xyz_index].m01.re = 0.5*(x0*norm1 + x1*norm0);
-		    md->eps_inv[xyz_index].m01.im = 0.0;
-		    md->eps_inv[xyz_index].m02.re = 0.5*(x0*norm2 + x2*norm0);
-		    md->eps_inv[xyz_index].m02.im = 0.0;
-		    md->eps_inv[xyz_index].m12.re = 0.5*(x1*norm2 + x2*norm1);
-		    md->eps_inv[xyz_index].m12.im = 0.0;
+                    CACCUMULATE_SCALAR(tau.m01, teps.m01.re/teps.m00, teps.m01.im/teps.m00); /* ε₁₂/ε₁₁        */
+                    CACCUMULATE_SCALAR(tau.m02, teps.m02.re/teps.m00, teps.m02.im/teps.m00); /* ε₁₃/ε₁₁        */
+                    CACCUMULATE_SCALAR(tau.m12,                                              /* ε₂₃-ε₂₁ε₁₃/ε₁₁ */
+                        teps.m12.re - CSCALAR_MULT_CONJ_RE(teps.m02, teps.m01)/teps.m00,
+                        teps.m12.im - CSCALAR_MULT_CONJ_IM(teps.m02, teps.m01)/teps.m00 );
+                    
 #else
-		    md->eps_inv[xyz_index].m01 = 0.5*(x0*norm1 + x1*norm0);
-		    md->eps_inv[xyz_index].m02 = 0.5*(x0*norm2 + x2*norm0);
-		    md->eps_inv[xyz_index].m12 = 0.5*(x1*norm2 + x2*norm1);
+                    tau.m01 += teps.m01/teps.m00;                                            /* ε₁₂/ε₁₁        */
+                    tau.m02 += teps.m02/teps.m00;                                            /* ε₁₃/ε₁₁        */
+                    tau.m12 += teps.m12 - teps.m01*teps.m02/teps.m00;                        /* ε₂₃-ε₂₁ε₁₃/ε₁₁ */
 #endif
-	       }
-	       else {
+                 }
+              }
+           }
+           
+           /* normalize τ-summation to get mean */
+           tau.m00 *= mesh_prod_inv;
+           tau.m11 *= mesh_prod_inv;
+           tau.m22 *= mesh_prod_inv;
 #ifdef WITH_HERMITIAN_EPSILON
-		    real x0i, x1i, x2i;
-		    x0 += ((eps_inv_mean.m01.re - eps_mean_inv.m01.re)*norm1 +
-			   (eps_inv_mean.m02.re - eps_mean_inv.m02.re)*norm2);
-		    x1 += ((eps_inv_mean.m01.re - eps_mean_inv.m01.re)*norm0 +
-			   (eps_inv_mean.m12.re - eps_mean_inv.m12.re)*norm2);
-		    x2 += ((eps_inv_mean.m02.re - eps_mean_inv.m02.re)*norm0 +
-			   (eps_inv_mean.m12.re - eps_mean_inv.m12.re)*norm1);
-		    x0i = ((eps_inv_mean.m01.im - eps_mean_inv.m01.im)*norm1 +
-			   (eps_inv_mean.m02.im - eps_mean_inv.m02.im)*norm2);
-		    x1i = (-(eps_inv_mean.m01.im - eps_mean_inv.m01.im)*norm0+
-			   (eps_inv_mean.m12.im - eps_mean_inv.m12.im)*norm2);
-		    x2i = -((eps_inv_mean.m02.im - eps_mean_inv.m02.im)*norm0 +
-			    (eps_inv_mean.m12.im - eps_mean_inv.m12.im)*norm1);
-
-		    md->eps_inv[xyz_index].m01.re = (0.5*(x0*norm1 + x1*norm0)
-						     + eps_mean_inv.m01.re);
-		    md->eps_inv[xyz_index].m02.re = (0.5*(x0*norm2 + x2*norm0)
-						     + eps_mean_inv.m02.re);
-		    md->eps_inv[xyz_index].m12.re = (0.5*(x1*norm2 + x2*norm1)
-						     + eps_mean_inv.m12.re);
-		    md->eps_inv[xyz_index].m01.im = (0.5*(x0i*norm1-x1i*norm0)
-						     + eps_mean_inv.m01.im);
-		    md->eps_inv[xyz_index].m02.im = (0.5*(x0i*norm2-x2i*norm0)
-						     + eps_mean_inv.m02.im);
-		    md->eps_inv[xyz_index].m12.im = (0.5*(x1i*norm2-x2i*norm1)
-						     + eps_mean_inv.m12.im);
+           tau.m01.re *= mesh_prod_inv;
+           tau.m02.re *= mesh_prod_inv;
+           tau.m12.re *= mesh_prod_inv;
+           tau.m01.im *= mesh_prod_inv;
+           tau.m02.im *= mesh_prod_inv;
+           tau.m12.im *= mesh_prod_inv;
 #else
-		    x0 += ((eps_inv_mean.m01 - eps_mean_inv.m01) * norm1 +
-			   (eps_inv_mean.m02 - eps_mean_inv.m02) * norm2);
-		    x1 += ((eps_inv_mean.m01 - eps_mean_inv.m01) * norm0 +
-			   (eps_inv_mean.m12 - eps_mean_inv.m12) * norm2);
-		    x2 += ((eps_inv_mean.m02 - eps_mean_inv.m02) * norm0 +
-			   (eps_inv_mean.m12 - eps_mean_inv.m12) * norm1);
-
-		    md->eps_inv[xyz_index].m01 = (0.5*(x0*norm1 + x1*norm0)
-						  + eps_mean_inv.m01);
-		    md->eps_inv[xyz_index].m02 = (0.5*(x0*norm2 + x2*norm0)
-						  + eps_mean_inv.m02);
-		    md->eps_inv[xyz_index].m12 = (0.5*(x1*norm2 + x2*norm1)
-						  + eps_mean_inv.m12);
+           tau.m01 *= mesh_prod_inv;
+           tau.m02 *= mesh_prod_inv;
+           tau.m12 *= mesh_prod_inv;
 #endif
-	       }
-	       md->eps_inv[xyz_index].m00 = x0*norm0 + eps_mean_inv.m00;
-	       md->eps_inv[xyz_index].m11 = x1*norm1 + eps_mean_inv.m11;
-	       md->eps_inv[xyz_index].m22 = x2*norm2 + eps_mean_inv.m22;
+           
+           /* --- compute τ⁻¹[mean(τ(ε))] (i.e. the Kottke-averaged permittivity) --- */
+           /* τ⁻¹(τ) is defined by [Kottke PRE, Eq. (23)]:
+                         ( -1/τ₁₁    -τ₁₂/τ₁₁        -τ₁₃/τ₁₁       )
+                τ⁻¹(τ) = ( -τ₂₁/τ₁₁  τ₂₂-τ₂₁τ₁₂/τ₁₁  τ₂₃-τ₂₁τ₁₃/τ₁₁ ) = meanᴷ[ε]
+                         ( -τ₃₁/τ₁₁  τ₃₂-τ₃₁τ₁₂/τ₁₁  τ₃₃-τ₃₁τ₁₃/τ₁₁ )
+           */
+           eps_mean.m00 = -1/tau.m00;
+           eps_mean.m11 = tau.m11 - ESCALAR_NORMSQR(tau.m01)/tau.m00;
+           eps_mean.m22 = tau.m22 - ESCALAR_NORMSQR(tau.m02)/tau.m00;
+
+           ASSIGN_ESCALAR(eps_mean.m01,
+                    -ESCALAR_RE(tau.m01)/tau.m00, -ESCALAR_IM(tau.m01)/tau.m00);
+           ASSIGN_ESCALAR(eps_mean.m02,
+                    -ESCALAR_RE(tau.m02)/tau.m00, -ESCALAR_IM(tau.m02)/tau.m00);
+           ASSIGN_ESCALAR(eps_mean.m12,
+                    ESCALAR_RE(tau.m12) - ESCALAR_MULT_CONJ_RE(tau.m02, tau.m01)/tau.m00,
+                    ESCALAR_IM(tau.m12) - ESCALAR_MULT_CONJ_IM(tau.m02, tau.m01)/tau.m00 );
+
+           /* --- rotate eps_mean (i.e. τ⁻¹) back to the cartesian coordinate system --- */
+#define SWAP(a,b) { double xxx = a; a = b; b = xxx; }  /* invert via tranposition */  
+           SWAP(Rot[0][1], Rot[1][0]);
+           SWAP(Rot[0][2], Rot[2][0]);
+           SWAP(Rot[2][1], Rot[1][2]);
+           maxwell_sym_matrix_rotate(&eps_mean, &eps_mean, Rot);
+#undef SWAP
+
+           /* invert eps_mean to get the Kottke averaged inverse permittivity */
+            maxwell_sym_matrix_invert(md->eps_inv + xyz_index, &eps_mean);
+
 	  }
 	  else { /* undetermined normal vector and/or constant eps */
 	       md->eps_inv[xyz_index] = eps_mean_inv;
