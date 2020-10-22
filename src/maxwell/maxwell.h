@@ -52,6 +52,7 @@ typedef struct {
 #    define ASSIGN_ESCALAR(z, re, im) CASSIGN_SCALAR(z, re, im)
 #    define ESCALAR_MULT_CONJ_RE(a, b) CSCALAR_MULT_CONJ_RE(a, b)
 #    define ESCALAR_MULT_CONJ_IM(a, b) CSCALAR_MULT_CONJ_IM(a, b)
+#    define EACCUMULATE_SUM(sum, a) CACCUMULATE_SUM(sum, a)
 #else
      real m00, m01, m02,
                m11, m12,
@@ -62,6 +63,7 @@ typedef struct {
 #    define ASSIGN_ESCALAR(z, re, im) (z) = (re);
 #    define ESCALAR_MULT_CONJ_RE(a, b) ((a) * (b))
 #    define ESCALAR_MULT_CONJ_IM(a, b) (0.0)
+#    define EACCUMULATE_SUM(sum, a) sum += a;
 #endif
 } symmetric_matrix;
 
