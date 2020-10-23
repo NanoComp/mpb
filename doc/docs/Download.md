@@ -4,7 +4,7 @@
 
 The latest development source is on [GitHub](https://github.com/NanoComp/mpb).
 
-The current stable releasecan be downloaded from:
+The current stable release can be downloaded from:
 
 - <https://github.com/NanoComp/mpb/releases>
 
