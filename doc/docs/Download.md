@@ -4,9 +4,9 @@
 
 The latest development source is on [GitHub](https://github.com/NanoComp/mpb).
 
-The current stable release is **version 1.7.0** which can be downloaded from:
+The current stable releasecan be downloaded from:
 
-- <https://github.com/NanoComp/mpb/releases/download/v1.7.0/mpb-1.7.0.tar.gz>
+- <https://github.com/NanoComp/mpb/releases>
 
 Refer to [NEWS](https://github.com/NanoComp/mpb/blob/master/NEWS.md) to see what's new in this version, and be sure to read the [Installation](Installation.md) for how to compile and install it.
 

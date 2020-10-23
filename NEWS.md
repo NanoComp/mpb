@@ -1,5 +1,11 @@
 # MPB Release Notes
 
+## MPB 1.11.1
+
+10/23/20
+
+* Fix compilation error on MacOS for `mpb/fields.c`.
+
 ## MPB 1.11
 
 10/6/20
