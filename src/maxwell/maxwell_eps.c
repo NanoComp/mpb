@@ -298,7 +298,9 @@ int check_maxwell_dielectric(maxwell_data *d,
 #define MIN2(a,b) ((a) < (b) ? (a) : (b))
 
 #define MAX_MOMENT_MESH NQUAD /* max # of moment-mesh vectors */
-#define MOMENT_MESH_R 0.5
+#define MOMENT_MESH_R_1D 0.5                /* diagonal/2 of a D-dimensional voxel */
+#define MOMENT_MESH_R_2D 0.7071067811865475 /* sqrt(1/2) */
+#define MOMENT_MESH_R_3D 0.8660254037844386 /* sqrt(3/4) */
 
 /* Function to set up a voxel averaging mesh given the mesh size (any mesh 
    sizes < 1 are taken to be 1). The returned values are:
@@ -339,15 +341,17 @@ static void get_moment_mesh(int nx, int ny, int nz,
                   int *size_moment_mesh)
 {
      int i,j;
-     real min_diam = 1e20;
+     real max_diam = 0;
      real mesh_total[3] = { 0, 0, 0 };
      int rank = nz > 1 ? 3 : (ny > 1 ? 2 : 1);
      real weight_sum = 0.0;
+     real moment_mesh_r = rank == 1 ? MOMENT_MESH_R_1D :
+                         (rank == 2 ? MOMENT_MESH_R_2D : MOMENT_MESH_R_3D);
 
      *size_moment_mesh = num_sphere_quad[rank-1];
      for (i = 0; i < num_sphere_quad[rank-1]; ++i) {
 	  for (j = 0; j < 3; ++j)
-	       moment_mesh[i][j] = sphere_quad[rank-1][i][j] * MOMENT_MESH_R;
+	       moment_mesh[i][j] = sphere_quad[rank-1][i][j] * moment_mesh_r;
 	  moment_mesh_weights[i] = sphere_quad[rank-1][i][3];
      }
 
@@ -357,27 +361,27 @@ static void get_moment_mesh(int nx, int ny, int nz,
 	  weight_sum += moment_mesh_weights[i];
      CHECK(fabs(weight_sum - 1.0) < SMALL, "bug, incorrect moment weights");
 
-     /* scale the moment-mesh vectors so that the sphere has a
-	diameter of 2*MOMENT_MESH_R times the diameter of the
-	smallest grid direction: */
+     /* scale the moment-mesh vectors so that the sphere has a diameter of
+        2*moment_mesh_r times the diameter of the largest grid direction
+        (to ensure the spherical mesh encloses the entire voxel):          */
 
-     /* first, find the minimum distance between grid points along the
-	lattice directions (should we use the maximum instead?): */
+     /* first, find the maximum distance between grid points along the
+        lattice directions: */
      for (i = 0; i < rank; ++i) {
 	  real ri = R[i][0] * R[i][0] + R[i][1] * R[i][1] + R[i][2] * R[i][2];
 	  ri = sqrt(ri) / (i == 0 ? nx : (i == 1 ? ny : nz));
-	  min_diam = MIN2(min_diam, ri);
+	  max_diam = MAX2(max_diam, ri);
      }
 
      /* scale moment_mesh by this diameter: */
      for (i = 0; i < *size_moment_mesh; ++i) {
 	  real len = 0;
 	  for (j = 0; j < 3; ++j) {
-	       moment_mesh[i][j] *= min_diam;
+	       moment_mesh[i][j] *= max_diam;
 	       len += moment_mesh[i][j] * moment_mesh[i][j];
 	       mesh_total[j] += moment_mesh[i][j];
 	  }
-	  CHECK(fabs(len - min_diam*min_diam*(MOMENT_MESH_R*MOMENT_MESH_R))
+	  CHECK(fabs(len - max_diam*max_diam*(moment_mesh_r*moment_mesh_r))
 		< SMALL,
 		"bug in get_moment_mesh: moment_mesh vector is wrong length");
      }
@@ -622,17 +626,17 @@ void set_maxwell_dielectric(maxwell_data *md,
 	       real moment0 = 0, moment1 = 0, moment2 = 0;
 
 	       for (mi = 0; mi < size_moment_mesh; ++mi) {
-		    real r[3], eps_trace;
-		    symmetric_matrix eps, eps_inv;
-		    r[0] = i1 * s1 + moment_mesh[mi][0];
-		    r[1] = i2 * s2 + moment_mesh[mi][1];
-		    r[2] = i3 * s3 + moment_mesh[mi][2];
-		    epsilon(&eps, &eps_inv, r, epsilon_data);
-		    eps_trace = eps.m00 + eps.m11 + eps.m22;
-		    eps_trace *= moment_mesh_weights[mi];
-		    moment0 += eps_trace * moment_mesh[mi][0];
-		    moment1 += eps_trace * moment_mesh[mi][1];
-		    moment2 += eps_trace * moment_mesh[mi][2];
+		       real r_mesh[3], eps_trace;
+		       symmetric_matrix eps, eps_inv;
+		       r_mesh[0] = r[0] + moment_mesh[mi][0];
+		       r_mesh[1] = r[1] + moment_mesh[mi][1];
+		       r_mesh[2] = r[2] + moment_mesh[mi][2];
+		       epsilon(&eps, &eps_inv, r_mesh, epsilon_data);
+		       eps_trace = eps.m00 + eps.m11 + eps.m22;
+		       eps_trace *= moment_mesh_weights[mi];
+		       moment0 += eps_trace * moment_mesh[mi][0];
+		       moment1 += eps_trace * moment_mesh[mi][1];
+		       moment2 += eps_trace * moment_mesh[mi][2];
 	       }
 
 	       /* need to convert moment from lattice to cartesian coords: */
