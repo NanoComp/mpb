@@ -316,6 +316,18 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 	  fill = 1 - box_overlap_with_object(pixel, *o2, tol, 100/tol);
      }
 
+    /* a neighbor point may have zero measure in the voxel (e.g. material terminating
+       on a voxel corner); just treat such "boundary points" as homogeneous */
+     if (fabs(fill) < tol) {          /* mat1 fills voxel (meps & meps_inv already set) */
+        n[0] = n[1] = n[2] = 0;
+        return 1;
+     }
+     else if (fabs(1 - fill) < tol) { /* mat2 fills voxel */
+        material_epsilon(mat2, meps, meps_inv);
+        n[0] = n[1] = n[2] = 0;
+        return 1;
+     }
+
      {
 	  symmetric_matrix eps2, epsinv2;
 	  symmetric_matrix eps1, delta;
