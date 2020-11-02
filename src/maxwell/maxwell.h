@@ -52,6 +52,7 @@ typedef struct {
 #    define ASSIGN_ESCALAR(z, re, im) CASSIGN_SCALAR(z, re, im)
 #    define ESCALAR_MULT_CONJ_RE(a, b) CSCALAR_MULT_CONJ_RE(a, b)
 #    define ESCALAR_MULT_CONJ_IM(a, b) CSCALAR_MULT_CONJ_IM(a, b)
+#    define EACCUMULATE_SUM(sum, a) CACCUMULATE_SUM(sum, a)
 #else
      real m00, m01, m02,
                m11, m12,
@@ -62,6 +63,7 @@ typedef struct {
 #    define ASSIGN_ESCALAR(z, re, im) (z) = (re);
 #    define ESCALAR_MULT_CONJ_RE(a, b) ((a) * (b))
 #    define ESCALAR_MULT_CONJ_IM(a, b) (0.0)
+#    define EACCUMULATE_SUM(sum, a) sum += a;
 #endif
 } symmetric_matrix;
 
@@ -166,6 +168,7 @@ extern void maxwell_sym_matrix_rotate(symmetric_matrix *RAR,
 				      const symmetric_matrix *A_,
 				      double R[3][3]);
 extern int maxwell_sym_matrix_positive_definite(symmetric_matrix *V);
+extern void maxwell_rotation_matrix(double Rot[3][3], double n0, double n1, double n2);
 
 extern void maxwell_compute_fft(int dir, maxwell_data *d,
 				scalar *array_in, scalar *array_out,
