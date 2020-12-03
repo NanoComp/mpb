@@ -333,7 +333,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       CHECK(iteration + 10 * ++num_emergency_restarts
 		     < EIGENSOLVER_MAX_ITERATIONS,
 		     "too many emergency restarts");
-	       if (mpb_verbosity >= 2)	{
+	       if (mpb_verbosity >= 1)	{
 	       		mpi_one_printf("    emergency randomization of Y on iter. %d\n",
 			               iteration);
 	       }
@@ -355,7 +355,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       real traceU = SCALAR_RE(sqmatrix_trace(U));
 	       mpi_assert_equal(traceU);
 	       if (traceU > EIGS_TRACE_U_THRESHOLD * U.p) {
-	       	    if (mpb_verbosity >= 2) {
+	       	    if (mpb_verbosity >= 1) {
 		        mpi_one_printf("    re-orthonormalizing Y\n");
 		    }
 		    sqmatrix_sqrt(S1, U, S2); /* S1 = 1/sqrt(Yt*Y) */
@@ -407,7 +407,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	      ((flags & EIGS_VERBOSE) ||
 	       MPIGLUE_CLOCK_DIFF(MPIGLUE_CLOCK, prev_feedback_time)
 	       > FEEDBACK_TIME)) {
-		if (mpb_verbosity >= 2) {
+		if (mpb_verbosity >= 1) {
 			mpi_one_printf("    iteration %4d: "
 				"trace = %0.16g (%g%% change)\n", iteration, (double)E,
 				(double)convergence_history[iteration % EIG_HISTORY_SIZE]);
@@ -537,7 +537,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		   2.0 * convergence_history[iteration % EIG_HISTORY_SIZE] >=
 		   convergence_history[(iteration+1) % EIG_HISTORY_SIZE]) {
 		    gamma = 0.0;
-                    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
+                    if (flags & EIGS_VERBOSE && mpb_verbosity >= 1)
                          mpi_one_printf("    dynamically resetting CG direction...\n");
 		    for (i = 1; i < EIG_HISTORY_SIZE; ++i)
 			 convergence_history[(iteration+i) % EIG_HISTORY_SIZE]
@@ -549,7 +549,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		    /* periodically forget previous search directions,
 		       and just juse D = X */
                     gamma = 0.0;
-                    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
+                    if (flags & EIGS_VERBOSE && mpb_verbosity >= 1)
                          mpi_one_printf("    resetting CG direction...\n");
                }
 
@@ -622,11 +622,11 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		  abort like this very often, as it wastes operations. */
 	       if (d2E < 0 || -0.5*dE*theta > 20.0 * fabs(E-prev_E)) {
 		    if (flags & EIGS_FORCE_APPROX_LINMIN) {
-			 if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
+			 if (flags & EIGS_VERBOSE && mpb_verbosity >= 1)
 			      mpi_one_printf("    using previous stepsize\n");
 		    }
 		    else {
-			 if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
+			 if (flags & EIGS_VERBOSE && mpb_verbosity >= 1)
 			      mpi_one_printf("    switching back to exact "
 					     "line minimization\n");
 			 use_linmin = 1;
@@ -703,17 +703,17 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 	       theta = -dE/d2E;
 
 	       if (d2E < 0) {
-		    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
+		    if (flags & EIGS_VERBOSE && mpb_verbosity >= 1)
 			 mpi_one_printf("    near maximum in trace\n");
 		    theta = dE > 0 ? -fabs(prev_theta) : fabs(prev_theta);
 	       }
 	       else if (-0.5*dE*theta > 2.0 * fabs(E-prev_E)) {
-		    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
+		    if (flags & EIGS_VERBOSE && mpb_verbosity >= 1)
 			 mpi_one_printf("    large trace change predicted "
 					"(%g%%)\n", (double) (-0.5*dE*theta/E * 100.0));
 	       }
 	       if (fabs(theta) >= K_PI) {
-		    if (flags & EIGS_VERBOSE && mpb_verbosity >= 2)
+		    if (flags & EIGS_VERBOSE && mpb_verbosity >= 1)
 			 mpi_one_printf("    large theta (%g)\n", (double)theta);
 		    theta = dE > 0 ? -fabs(prev_theta) : fabs(prev_theta);
 	       }
@@ -777,14 +777,14 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 		   linmin_improvement > 0 &&
 		   linmin_improvement <= APPROX_LINMIN_IMPROVEMENT_THRESHOLD &&
 		   t_exact > t_approx * APPROX_LINMIN_SLOWDOWN_GUESS) {
-		    if ((flags & EIGS_VERBOSE) && use_linmin && mpb_verbosity >= 2)
+		    if ((flags & EIGS_VERBOSE) && use_linmin && mpb_verbosity >= 1)
 			 mpi_one_printf("    switching to approximate "
 				"line minimization (decrease time by %g%%)\n",
 			    (double) ((t_exact - t_approx) * 100.0 / t_exact));
 		    use_linmin = 0;
 	       }
 	       else if (!(flags & EIGS_FORCE_APPROX_LINMIN)) {
-		    if ((flags & EIGS_VERBOSE) && !use_linmin && mpb_verbosity >= 2)
+		    if ((flags & EIGS_VERBOSE) && !use_linmin && mpb_verbosity >= 1)
 			 mpi_one_printf("    switching back to exact "
 					"line minimization\n");
 		    use_linmin = 1;

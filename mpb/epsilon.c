@@ -331,30 +331,11 @@ static int mean_epsilon_func(symmetric_matrix *meps,
 	  if (norm == 0.0)
 	       return 0;
 	  norm = 1.0 / norm;
-	  Rot[0][0] = n0 = n0 * norm;
-	  Rot[1][0] = n1 = n1 * norm;
-	  Rot[2][0] = n2 = n2 * norm;
-	  if (fabs(n0) > 1e-2 || fabs(n1) > 1e-2) { /* (z x n) */
-	       Rot[0][2] = n1;
-	       Rot[1][2] = -n0;
-	       Rot[2][2] = 0;
-	  }
-	  else { /* n is ~ parallel to z direction, use (x x n) instead */
-	       Rot[0][2] = 0;
-	       Rot[1][2] = -n2;
-	       Rot[2][2] = n1;
-	  }
-	  { /* normalize second column */
-	       double s = Rot[0][2]*Rot[0][2]+Rot[1][2]*Rot[1][2]+Rot[2][2]*Rot[2][2];
-	       s = 1.0 / sqrt(s);
-	       Rot[0][2] *= s;
-	       Rot[1][2] *= s;
-	       Rot[2][2] *= s;
-	  }
-	  /* 1st column is 2nd column x 0th column */
-	  Rot[0][1] = Rot[1][2] * Rot[2][0] - Rot[2][2] * Rot[1][0];
-	  Rot[1][1] = Rot[2][2] * Rot[0][0] - Rot[0][2] * Rot[2][0];
-	  Rot[2][1] = Rot[0][2] * Rot[1][0] - Rot[1][2] * Rot[0][0];
+	  n0 = n0 * norm;
+	  n1 = n1 * norm;
+	  n2 = n2 * norm;
+
+	  maxwell_rotation_matrix(Rot, n0, n1, n2);
 
 	  /* rotate epsilon tensors to surface parallel/perpendicular axes */
 	  maxwell_sym_matrix_rotate(&eps1, &eps1, Rot);

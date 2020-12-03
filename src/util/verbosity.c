@@ -19,4 +19,4 @@
 #include "verbosity.h"
 
 /* The global verbosity flag. See verbosity.h */
-int mpb_verbosity = 2;
+int mpb_verbosity = 1;

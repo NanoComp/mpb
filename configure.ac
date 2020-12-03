@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(mpb, 1.11.0-alpha)
+AC_INIT(mpb, 1.11.1)
 AC_CONFIG_SRCDIR([src/matrices/matrices.c])
 AC_CONFIG_HEADER([config.h src/mpbconf.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -8,7 +8,7 @@ AM_MAINTAINER_MODE
 # Shared-library version number; indicates api compatibility, and is
 # not the same as the "public" version number.  (Don't worry about this
 # except for public releases.)
-SHARED_VERSION_INFO="5:0:4" # CURRENT:REVISION:AGE
+SHARED_VERSION_INFO="5:1:4" # CURRENT:REVISION:AGE
 
 VERSION_MAJOR=`echo $PACKAGE_VERSION | cut -d. -f1`
 VERSION_MINOR=`echo $PACKAGE_VERSION | cut -d. -f2`

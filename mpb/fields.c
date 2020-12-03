@@ -35,6 +35,8 @@
 #include "mpb.h"
 #include "field-smob.h"
 
+extern void get_epsilon_tensor(int c1, int c2, int imag, int inv); /* in epsilon.c */
+
 /**************************************************************************/
 
 /* The following routines take the eigenvectors computed by solve-kpoint
@@ -549,7 +551,7 @@ void fix_field_phase(void)
 
 /* get_val returns process-specific output for HAVE_MPI: if the "point" (ix, iy, iz; stride)
    is on the local process, the value of data at that point is returned returned; otherwise
-   (i.e. point is not on local process) 0.0 is returned: calls to get_val should therefore 
+   (i.e. point is not on local process) 0.0 is returned: calls to get_val should therefore
    be followed by sum-reduction via mpi_allreduce_1(..) in the caller (as in interp_val) */
 static real get_val(int ix, int iy, int iz,
 		    int nx, int ny, int nz, int last_dim_size,
@@ -581,7 +583,7 @@ static real get_val(int ix, int iy, int iz,
 	 real val = 0; /* reduce local processes over this variable later */
 
 	 /* check if local_iy is in the current process' data block */
-     if (local_iy >= 0 && local_iy < local_ny) { 
+     if (local_iy >= 0 && local_iy < local_ny) {
          val = data[(((local_iy * nx) + ix) * nz + iz) * stride]; /* note transposition in x and y indices */
 	 }
 

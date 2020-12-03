@@ -338,12 +338,12 @@ const char *parity_string(maxwell_data *d)
 }
 
 /* Set the current parity to solve for. (init-params should have
-   already been called.  (Guile-callable; see mpb.scm.) 
+   already been called.  (Guile-callable; see mpb.scm.)
 
    p >= 0 means a bitwise OR of the various parity constants from
    maxwell.h (NO_PARITY, EVEN_Z_PARITY, etcetera).
 
-   p = -1 means the parity of the previous call, 
+   p = -1 means the parity of the previous call,
        or NO_PARITY if this is the first call */
 
 void set_parity(integer p)
@@ -373,8 +373,8 @@ void set_parity(integer p)
 /* Guile-callable function: init-params, which initializes any data
    that we need for the eigenvalue calculation.  When this function
    is called, the input variables (the geometry, etcetera) have already
-   been read into the global variables defined in ctl-io.h.  
-   
+   been read into the global variables defined in ctl-io.h.
+
    p is the parity to use for the coming calculation, although
    this can be changed by calling set-parity.  p is interpreted
    in the same way as for set-parity.
@@ -388,23 +388,23 @@ void init_params(integer p, boolean reset_fields)
      int nx, ny, nz;
      int have_old_fields = 0;
      int block_size;
-     int max_kpoints_print = (mpb_verbosity >= 3 ?
+     int max_kpoints_print = (mpb_verbosity >= 2 ?
                               k_points.num_items :
                               MIN(k_points.num_items, MAX_KPOINTS_PRINT));
-     
+
      /* Output a bunch of stuff so that the user can see what we're
 	doing and what we've read in. */
-     
+
      mpi_one_printf("init-params: initializing eigensolver data\n");
 #ifndef SCALAR_COMPLEX
      mpi_one_printf("  -- assuming INVERSION SYMMETRY in the geometry.\n");
 #endif
-     
+
      mpi_one_printf("Computing %d bands with %e tolerance.\n",
 		    num_bands, tolerance);
      if (target_freq != 0.0)
 	  mpi_one_printf("Target frequency is %g\n", target_freq);
-     
+
      get_grid_size_n(&nx, &ny, &nz);
 
      {
@@ -412,7 +412,7 @@ void init_params(integer p, boolean reset_fields)
 	  if (true_rank < dimensions)
 	       dimensions = true_rank;
 	  else if (true_rank > dimensions) {
-	       mpi_one_fprintf(stderr, 
+	       mpi_one_fprintf(stderr,
 			       "WARNING: rank of grid is > dimensions.\n"
 			       "         setting extra grid dims. to 1.\n");
 	       /* force extra dims to be 1: */
@@ -451,7 +451,7 @@ void init_params(integer p, boolean reset_fields)
 	       if (Hblock.data != H.data)
 		    destroy_evectmatrix(Hblock);
                if (muinvH.data != H.data)
-                   destroy_evectmatrix(muinvH);                   
+                   destroy_evectmatrix(muinvH);
 	  }
 	  destroy_maxwell_target_data(mtdata); mtdata = NULL;
 	  destroy_maxwell_data(mdata); mdata = NULL;
@@ -459,7 +459,7 @@ void init_params(integer p, boolean reset_fields)
      }
      else
 	  srand(time(NULL)); /* init random seed for field initialization */
-   
+
      if (deterministicp) {  /* check input variable "deterministic?" */
 	  /* seed should be the same for each run, although
 	     it should be different for each process: */
@@ -511,7 +511,7 @@ void init_params(integer p, boolean reset_fields)
          mpi_one_printf("     ... and %d additional k-points (listing truncated)\n",
              k_points.num_items - max_kpoints_print);
      }
-     
+
      set_parity(p);
      if (!have_old_fields || reset_fields)
 	  randomize_fields();
@@ -522,7 +522,7 @@ void init_params(integer p, boolean reset_fields)
 	       mpi_one_fprintf(stderr,
 			   "ERROR: non positive-definite dielectric tensor\n");
 	  else if (ierr == 2)
-	       mpi_one_fprintf(stderr, 
+	       mpi_one_fprintf(stderr,
 		       "ERROR: dielectric tensor must not couple xy "
 		       "plane with z direction for 2D TE/TM calculations\n");
 	  CHECK(!ierr, "invalid dielectric function\n");
@@ -599,7 +599,7 @@ void solve_kpoint(vector3 kvector)
 
      mpi_one_printf("solve_kpoint (%g,%g,%g):\n",
 		    kvector.x, kvector.y, kvector.z);
-     
+
      curfield_reset();
 
      if (num_bands == 0) {
@@ -712,7 +712,7 @@ void solve_kpoint(vector3 kvector)
 		    eigensolver_davidson(
 			 Hblock, eigvals + ib,
 			 maxwell_target_operator, (void *) mtdata,
-			 simple_preconditionerp ? 
+			 simple_preconditionerp ?
 			 maxwell_target_preconditioner :
 			 maxwell_target_preconditioner2,
 			 (void *) mtdata,
@@ -723,7 +723,7 @@ void solve_kpoint(vector3 kvector)
 		    eigensolver(Hblock, eigvals + ib,
 				maxwell_target_operator, (void *) mtdata,
                                 NULL, NULL,
-				simple_preconditionerp ? 
+				simple_preconditionerp ?
 				maxwell_target_preconditioner :
 				maxwell_target_preconditioner2,
 				(void *) mtdata,
@@ -765,7 +765,7 @@ void solve_kpoint(vector3 kvector)
 				(void *) constraints,
 				W, nwork_alloc, tolerance, &num_iters, flags);
 	  }
-	  
+
 	  if (Hblock.data != H.data) {  /* save solutions of current block */
 	       int in, ip;
 	       for (in = 0; in < Hblock.n; ++in)
@@ -775,7 +775,7 @@ void solve_kpoint(vector3 kvector)
 	  }
 
 	  evect_destroy_constraints(constraints);
-	  
+
 	  mpi_one_printf("Finished solving for bands %d to %d after "
 			 "%d iterations.\n", ib + 1, ib + Hblock.p, num_iters);
 	  total_iters += num_iters * Hblock.p;
@@ -822,7 +822,7 @@ void solve_kpoint(vector3 kvector)
      /* create freqs array for storing frequencies in a Guile list */
      freqs.num_items = num_bands;
      CHK_MALLOC(freqs.items, number, freqs.num_items);
-     
+
      set_kpoint_index(kpoint_index + 1);
 
      mpi_one_printf("%sfreqs:, %d, %g, %g, %g, %g",
@@ -894,12 +894,12 @@ number_list compute_group_velocity_component(vector3 d)
      group_v.num_items = num_bands;
      CHK_MALLOC(group_v.items, number, group_v.num_items);
      CHK_MALLOC(gv_scratch, real, group_v.num_items * 2);
-     
+
      /* now, compute group_v.items = diag Re <H| curl 1/eps i u x |H>: */
 
      /* ...we have to do this in blocks of eigensolver_block_size since
 	the work matrix W[0] may not have enough space to do it all at once. */
-     
+
      for (ib = 0; ib < num_bands; ib += Hblock.alloc_p) {
 	  if (ib + mdata->num_bands > num_bands) {
 	       maxwell_set_num_bands(mdata, num_bands - ib);
@@ -931,18 +931,18 @@ number_list compute_group_velocity_component(vector3 d)
 	grad_k(omega)*d = grad_k(omega^2)*d / 2*omega
 	   = grad_k(<H|maxwell_op|H>)*d / 2*omega
 	   = Re <H| curl 1/eps i u x |H> / omega
-        
+
         Note that our k is in units of 2*Pi/a, and omega is in
         units of 2*Pi*c/a, so the result will be in units of c. */
      for (i = 0; i < num_bands; ++i) {
 	  if (freqs.items[i] == 0)  /* v is undefined in this case */
 	       group_v.items[i] = 0.0;  /* just set to zero */
 	  else
-	       group_v.items[i] /= 
+	       group_v.items[i] /=
 		    negative_epsilon_okp ? sqrt(fabs(freqs.items[i]))
 		    : freqs.items[i];
      }
-     
+
      return group_v;
 }
 
@@ -1010,7 +1010,7 @@ vector3 compute_1_group_velocity(integer b)
    for band optimization. */
 vector3 compute_1_group_velocity_reciprocal(integer b)
 {
-     return matrix3x3_vector3_mult(matrix3x3_transpose(Gm), 
+     return matrix3x3_vector3_mult(matrix3x3_transpose(Gm),
 				   compute_1_group_velocity(b));
 }
 
