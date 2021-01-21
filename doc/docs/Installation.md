@@ -55,7 +55,7 @@ export PATH="$HOME/install/bin:$PATH"
 Second, many of the packages installed below (e.g. Guile) are installed as shared libraries. You need to make sure that your runtime linker knows where to find these shared libraries. The bad news is that every operating system does this in a slightly different way.
 If you installed all of your libraries in a standard location on your operating system (e.g. `/usr/lib`), then the runtime linker will look there already and you don't need to do anything.  Otherwise, if you compile things like `libctl` and install them into a "nonstandard" location (e.g. in your home directory), you will need to tell the runtime linker where to find them.
 
-There are several ways to do this.  Suppose that you installed libraries into the directory `/foo/lib`.   The most robust option is probably to include this path in the linker flags (`LD_LIBRARY_FLAGS` above):
+There are several ways to do this.  Suppose that you installed libraries into the directory `/foo/lib`.   The most robust option is probably to include this path in the linker flags (`LDFLAGS` above):
 
 ```bash
 ./configure LDFLAGS="-L$HOME/install/lib -Wl,-rpath,$HOME/install/lib"   ...other flags...
