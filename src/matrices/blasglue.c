@@ -247,7 +247,7 @@ void blasglue_herk(char uplo, char trans, int n, int k,
 
 int lapackglue_potrf(char uplo, int n, scalar *A, int fdA)
 {
-     int info;
+     int info = 0;
 
      uplo = uplo == 'U' ? 'L' : 'U';
 
@@ -259,7 +259,7 @@ int lapackglue_potrf(char uplo, int n, scalar *A, int fdA)
 
 int lapackglue_potri(char uplo, int n, scalar *A, int fdA)
 {
-     int info;
+     int info = 0;
 
      uplo = uplo == 'U' ? 'L' : 'U';
 
@@ -272,7 +272,7 @@ int lapackglue_potri(char uplo, int n, scalar *A, int fdA)
 int lapackglue_hetrf(char uplo, int n, scalar *A, int fdA,
 		      int *ipiv, scalar *work, int lwork)
 {
-     int info;
+     int info = 0;
 
      uplo = uplo == 'U' ? 'L' : 'U';
 
@@ -289,7 +289,7 @@ int lapackglue_hetrf(char uplo, int n, scalar *A, int fdA,
 int lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
 		      int *ipiv, scalar *work)
 {
-     int info;
+     int info = 0;
 
      uplo = uplo == 'U' ? 'L' : 'U';
 
@@ -306,7 +306,7 @@ int lapackglue_hetri(char uplo, int n, scalar *A, int fdA,
 void lapackglue_heev(char jobz, char uplo, int n, scalar *A, int fdA,
 		     real *w, scalar *work, int lwork, real *rwork)
 {
-     int info;
+     int info = 0;
 
      uplo = uplo == 'U' ? 'L' : 'U';
 
@@ -326,7 +326,7 @@ void lapackglue_geev(char jobvl, char jobvr, int n,
                      scalar *VL, int fdVL, scalar *VR, int fdVR,
 		     scalar *work, int lwork, real *rwork)
 {
-     int info;
+     int info = 0;
 
 #ifdef SCALAR_COMPLEX
      F(geev,GEEV) (&jobvl, &jobvr, &n, A, &fdA, w, VL, &fdVL, VR, &fdVR,
@@ -351,7 +351,7 @@ void lapackglue_hegv(int itype, char jobz, char uplo, int n,
                      scalar *A, int fdA, scalar *B, int fdB,
 		     real *w, scalar *work, int lwork, real *rwork)
 {
-     int info;
+     int info = 0;
 
      uplo = uplo == 'U' ? 'L' : 'U';
 
@@ -369,7 +369,7 @@ void lapackglue_hegv(int itype, char jobz, char uplo, int n,
 void lapackglue_syev(char jobz, char uplo, int n, real *A, int fdA,
 		     real *w, real *work, int lwork)
 {
-     int info;
+     int info = 0;
 
      uplo = uplo == 'U' ? 'L' : 'U';
 
