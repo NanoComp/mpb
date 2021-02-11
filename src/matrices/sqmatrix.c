@@ -24,6 +24,7 @@
 
 #include "matrices.h"
 #include "blasglue.h"
+#include <string.h>
 
 /* Simple operations on sqmatrices.  Also, some not-so-simple operations,
    like inversion and eigenvalue decomposition. */
@@ -323,6 +324,7 @@ void sqmatrix_sqrt(sqmatrix Usqrt, sqmatrix U, sqmatrix W)
      CHECK(Usqrt.p == U.p && U.p == W.p, "matrices not conformant");
 
      CHK_MALLOC(eigenvals, real, U.p);
+     memset(eigenvals, 0, sizeof(real) * U.p);
 
      sqmatrix_eigensolve(U, eigenvals, W);
 

@@ -59,7 +59,7 @@ extern void debug_check_memory_leaks(void);
 
 #define CHK_MALLOC(p, t, n) {                                         \
      size_t CHK_MALLOC_n_tmp = (n);                                   \
-     (p) = (t *) calloc(CHK_MALLOC_n_tmp, sizeof(t));                 \
+     (p) = (t *) malloc(sizeof(t) * CHK_MALLOC_n_tmp);                \
      CHECK((p) || CHK_MALLOC_n_tmp == 0, "out of memory!");           \
 }
 
