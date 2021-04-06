@@ -32,19 +32,21 @@
 
 
 
-/* If curfield is set to the real-space D-field (of band-index i), computes the overlap 
-         ∫ Eᵢ(r){W|w}Dᵢ(r) dr  =  ∫ Eᵢ(r)(WDᵢ)({W|w}⁻¹r) dr,
-   for a symmetry operation {W|w} with point-group part W and translation part w; each 
-   specified in the lattice basis. The vector fields Eᵢ and Dᵢ include Bloch phases.
-   If instead curfield is set to the real-space B-field, the overlap
-         ∫ Hᵢ(r){W|v}Bᵢ(r) dr  =  det(W) ∫ Hᵢ(r)(WBᵢ)({W|w}⁻¹r) dr,
-   is computed instead. Note that a factor det(W) is then included since B & H are
-   pseudovectors. As a result, the computed symmetry expectation values are independent
-   of whether the D- or B-field is used.
-   No other choices for curfield are allowed: to set curfield to the real-space B- or D-
-   field call get-bfield/dfield in Scheme, or get_bfield/dfield in C.                   
-   Usually, it will be more convenient to use the accessor compute_symmetry(i, W, w) 
-   which defaults to the B-field (since μ = 1 usually) and instead takes a band-index i .*/
+/* If `curfield` is the real-space D-field (of band-index i), computes the overlap 
+ *       ∫ Eᵢ†(r){W|w}Dᵢ(r) dr  =  ∫ Eᵢ†(r)(WDᵢ)({W|w}⁻¹r) dr,
+ * for a symmetry operation {W|w} with rotation W and translation w; each specified 
+ * in the lattice basis. The vector fields Eᵢ and Dᵢ include Bloch phases.
+ * If `curfield` is the real-space B-field, the overlap
+ *       ∫ Hᵢ(r){W|v}Bᵢ(r) dr  =  det(W) ∫ Hᵢ(r)(WBᵢ)({W|w}⁻¹r) dr,
+ * is computed instead. Note that a factor det(W) is then included since B & H are
+ * pseudovectors. As a result, the computed symmetry expectation values are
+ * independent of whether the D- or B-field is used.
+ * No other choices for `curfield` are allowed: to set `curfield` to the real-space
+ * B- or D-field use the `get-bfield` and `get-dfield` Scheme functions or the
+ * `get_bfield` and `get_dfield` in C functions.                   
+ * Usually, it will be more convenient to use the wrapper `compute_symmetry(i, W, w)`
+ * which defaults to the B-field (since μ = 1 usually) and takes a band-index `i`.
+ */
 cnumber transformed_overlap(matrix3x3 W, vector3 w)
 {
     int n1, n2, n3;
@@ -55,30 +57,31 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
     matrix3x3 invW, Wc;
 
     if (!curfield || !strchr("db", curfield_type)) {
-        mpi_one_fprintf(stderr, "a real-space H- or D-field must be loaded beforehand\n");
+        mpi_one_fprintf(stderr, "curfield must refer to either a B- or D-field\n");
         return integral;
     }
 
     #ifndef SCALAR_COMPLEX
         CHECK(0, "transformed_overlap(..) is not yet implemented for mpbi");
         /* NOTE: Not completely sure why the current implementation does not work for mpbi
-           (i.e for assumed-inversion): one clue is that running this with mpbi and the
-           error-check off gives symmetry eigenvalues whose norm are ≈(ni÷2+1)/ni (where
-           ni=n1=n2=n3) instead of near-unity (as they should be). This suggests we are not
-           counting the number of grid points correctly somehow: I think the root issue is
-           that we use the LOOP_XYZ macro, which has special handling for mbpi (i.e. only
-           "visits" the "inversion-reduced" part of the unitcell): but here, we actually
-           really want to (or at least assume to) visit _all_ the points in the unitcell. */
+         * (i.e for assumed-inversion): one clue is that running this with mpbi and the
+         * error-check off gives symmetry eigenvalues whose norm are ≈(ni÷2+1)/ni (where
+         * ni=n1=n2=n3) instead of near-unity (as they should be). This suggests we are not
+         * counting the number of grid points correctly somehow: I think the root issue is
+         * that we use the LOOP_XYZ macro, which has special handling for mbpi (i.e. only
+         * "visits" the "inversion-reduced" part of the unitcell): but here, we actually
+         * really want to (or at least assume to) visit _all_ the points in the unitcell. 
+         */
     #endif
     #ifdef HAVE_MPI
-        /* NOTE: It seems there's some racey stuff going on with the MPI implementation,
-           unfortunately, so it doesn't end giving consistent (or even meaningful) results.
-           The issue could be that both `LOOP_XYZ` is distributed over workers _and_ that
-           `get_bloch_field_point_` also is (via the interpolation). I'm imagining that such
-           a naive "nested parallelism" doesn't jive here.
-           Long story short: disable it for now.
-        */
         CHECK(0, "transformed_overlap(..) is not yet implemented for MPI");
+        /* NOTE: It seems there's some racey stuff going on with the MPI implementation,
+         * unfortunately, so it doesn't end giving consistent (or even meaningful) results.
+         * The issue could be that both `LOOP_XYZ` is distributed over workers _and_ that
+         * `get_bloch_field_point_` also is (via the interpolation). I'm imagining that such
+         * a naive "nested parallelism" doesn't jive here.
+         * Long story short: disable it for now.
+         */
     #endif
     
     /* prepare before looping ... */
@@ -97,38 +100,40 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         return integral;
     }
     invW = matrix3x3_inverse(W);
-    /* W is specified in the lattice basis, but field *vectors* evaluated in real-space are
-       in a Cartesian basis: when we transform the vector components, we must account for this
-       difference. We transform W to a Cartesian basis Wc=RWR⁻¹ (R=geometry_lattice.basis, a
-       matrix w/ columns of Cartesian basis vectors) and then use Wc to transform vector fields */
+    /* W is specified in the lattice basis, but field *vectors* evaluated in real-space
+     * are in a Cartesian basis: when we transform the vector components, we must account
+     * for this difference. We transform W to a Cartesian basis Wc = RWR⁻¹ (with
+     * R = geometry_lattice.basis, a matrix w/ columns of Cartesian basis vectors) and
+     * then use Wc to transform vector fields.
+     */
     Wc = matrix3x3_mult(matrix3x3_mult(geometry_lattice.basis, W),
                         matrix3x3_inverse(geometry_lattice.basis));
 
-    kvector.x *= TWOPI/geometry_lattice.size.x; /* hoist these rescalings outside the  */
-    kvector.y *= TWOPI/geometry_lattice.size.y; /* loop; might be that licm takes care */
-    kvector.z *= TWOPI/geometry_lattice.size.z; /* of it - but better to be sure       */
+    /* hoist rescalings outside the loop (maybe licm takes care of it, but do it anyway) */
+    kvector.x *= TWOPI/geometry_lattice.size.x;
+    kvector.y *= TWOPI/geometry_lattice.size.y;
+    kvector.z *= TWOPI/geometry_lattice.size.z;
 
-    /* Loop over coordinates (introduces int vars i1, i2, i3, xyz_index) */
-    LOOP_XYZ(mdata) { /* implies two opening braces '{{' */
+    /* loop over coordinates (introduces int vars `i1`, `i2`, `i3`, `xyz_index`) */
+    LOOP_XYZ(mdata) { /* implies two opening braces `{{` */
         vector3 p, pt;
         scalar_complex F[3], Ft[3], Ftemp[3], integrand, phase;
         double deltaphi;
 
-        /* Current lattice coordinate */
+        /* current lattice coordinate */
         p.x = i1 * s1 - c1;
         p.y = i2 * s2 - c2;
         p.z = i3 * s3 - c3;
 
-        /* Transformed coordinate pt = {W|w}⁻¹p = W⁻¹(p-w) since {W|w}⁻¹={W⁻¹|-W⁻¹w} */
+        /* transformed coordinate pt = {W|w}⁻¹p = W⁻¹(p-w) since {W|w}⁻¹={W⁻¹|-W⁻¹w} */
         pt = matrix3x3_vector3_mult(invW, vector3_minus(p, w));
 
-        /* Bloch field value at transformed coordinate pt: interpolation is needed to ensure
-           generality in the case of fractional translations.                                */
-        get_bloch_field_point_(Ftemp, pt); /* assigns Ftemp to field at p [excludes exp(ikr) factor] */
+        /* Bloch field value at transformed coordinate pt: interpolation is needed to 
+         * ensure generality in the case of fractional translations.                  */
+        get_bloch_field_point_(Ftemp, pt); /* assign `Ftemp` to field at `p` (without eⁱᵏʳ factor) */
 
-        /* Transform the vector components of Ftemp by W to obtain Ft; a bit repetitious but 
-           we just write out the matrix-product manually here, for real and imag components.
-           Since F, Ftemp, and Ft are in a Cartesian basis, we use Wc instead of W.          */
+        /* define `Ft` as the vector components of `Ftemp` transformed by `Wc`; we just
+         * write out the matrix-product manually here, for both real & imag parts       */
         Ft[0].re = Wc.c0.x*Ftemp[0].re + Wc.c1.x*Ftemp[1].re + Wc.c2.x*Ftemp[2].re;
         Ft[0].im = Wc.c0.x*Ftemp[0].im + Wc.c1.x*Ftemp[1].im + Wc.c2.x*Ftemp[2].im;
         Ft[1].re = Wc.c0.y*Ftemp[0].re + Wc.c1.y*Ftemp[1].re + Wc.c2.y*Ftemp[2].re;
@@ -136,11 +141,11 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         Ft[2].re = Wc.c0.z*Ftemp[0].re + Wc.c1.z*Ftemp[1].re + Wc.c2.z*Ftemp[2].re;
         Ft[2].im = Wc.c0.z*Ftemp[0].im + Wc.c1.z*Ftemp[1].im + Wc.c2.z*Ftemp[2].im;
 
-        /* Get the Bloch field value at current point p [exludes exp(ikr) factor].
-           We multiply the input field F (either B or D-field) with μ⁻¹ or ε⁻¹ to get
-           H- or E-fields, as the relevant overlap is ⟨F|Ft⟩ = (H|Bt) or (E|Dt), with
-           t-postscript denoting a field transformed by {W|w}. Here, we essentially
-           adapt some boiler-plate code from compute_field_energy_internal in fields.c       */
+        /* get the Bloch field value at current point `p` (without eⁱᵏʳ factor).
+         * We multiply the input field `F` (either B or D-field) with μ⁻¹ or ε⁻¹ to get
+         * H- or E-fields, as the relevant overlap is ⟨F|Ft⟩ = ⟨H|Bt⟩ or ⟨E|Dt⟩, with
+         * t-postscript denoting a field transformed by {W|w}. Here, we essentially
+         * adapt some boiler-plate code from compute_field_energy_internal in fields.c   */
         if (curfield_type == 'd') {
             assign_symmatrix_vector(F, mdata->eps_inv[xyz_index], curfield+3*xyz_index);
         }
@@ -153,18 +158,17 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
             F[2] = curfield[3*xyz_index+2];
         }
         
-        /* Inner product of F and Ft={W|w}F in Bloch form */
+        /* inner product of F and Ft={W|w}F in Bloch form */
         CASSIGN_CONJ_MULT(integrand, F[0], Ft[0]);  /* add adjoint(F)*Ft to integrand */
         CACCUMULATE_SUM_CONJ_MULT(integrand, F[1], Ft[1]);
         CACCUMULATE_SUM_CONJ_MULT(integrand, F[2], Ft[2]);
 
-        /* So far, we have excluded the Bloch phases; they must be included, however.
-           It saves two trigonometric operations if we do them just jointly for p and pt.
-           Note that rescaling by TWOPI/geometry_lattice.xyz is hoisted outside loop      */
+        /* so far, Bloch phases have been excluded; we include them here. It saves two
+         * trigonometric operations if we do them just jointly for `p` and `pt`.        */
         deltaphi = (kvector.x*(pt.x-p.x) + kvector.y*(pt.y-p.y) + kvector.z*(pt.z-p.z));
         CASSIGN_SCALAR(phase, cos(deltaphi), sin(deltaphi));
 
-        /* Add integrand-contribution to integral, keeping Bloch phases in mind */
+        /* finally, add integrand-contribution to integral, with Bloch phases included */
         integral.re += CSCALAR_MULT_RE(integrand, phase);
         integral.im += CSCALAR_MULT_IM(integrand, phase);
     }}}

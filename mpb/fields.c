@@ -720,10 +720,9 @@ cvector3 get_bloch_field_point(vector3 p)
      scalar_complex field[3];
      cvector3 F;
 
-	 get_bloch_field_point_(field, p);
+     get_bloch_field_point_(field, p);
 
-	 F = cscalar32cvector3(field);
-     return F;
+     return cscalar32cvector3(field);
 }
 
 cvector3 get_field_point(vector3 p)
@@ -745,7 +744,7 @@ cvector3 get_field_point(vector3 p)
      }
 
 	 F = cscalar32cvector3(field);
-     return F;
+	 return F;
 }
 
 cnumber get_bloch_cscalar_point(vector3 p)
