@@ -37,7 +37,7 @@
  * for a symmetry operation {W|w} with rotation W and translation w; each specified 
  * in the lattice basis. The vector fields Eᵢ and Dᵢ include Bloch phases.
  * If `curfield` is the real-space B-field, the overlap
- *       ∫ Hᵢ(r){W|v}Bᵢ(r) dr  =  det(W) ∫ Hᵢ(r)(WBᵢ)({W|w}⁻¹r) dr,
+ *       ∫ Hᵢ†(r){W|w}Bᵢ(r) dr  =  det(W) ∫ Hᵢ†(r)(WBᵢ)({W|w}⁻¹r) dr,
  * is computed instead. Note that a factor det(W) is then included since B & H are
  * pseudovectors. As a result, the computed symmetry expectation values are
  * independent of whether the D- or B-field is used.
@@ -130,7 +130,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
 
         /* Bloch field value at transformed coordinate pt: interpolation is needed to 
          * ensure generality in the case of fractional translations.                  */
-        get_bloch_field_point_(Ftemp, pt); /* assign `Ftemp` to field at `p` (without eⁱᵏʳ factor) */
+        get_bloch_field_point_(Ftemp, pt); /* assign `Ftemp` to field at `pt` (without eⁱᵏʳ factor) */
 
         /* define `Ft` as the vector components of `Ftemp` transformed by `Wc`; we just
          * write out the matrix-product manually here, for both real & imag parts       */
