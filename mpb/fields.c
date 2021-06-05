@@ -706,7 +706,7 @@ number get_energy_point(vector3 p)
      return f_interp_val(p, mdata, (real *) curfield, 1, 0);
 }
 
-void get_bloch_field_point_(scalar_complex field[static 3], vector3 p)
+void get_bloch_field_point_(scalar_complex field[3], vector3 p)
 {
      CHECK(curfield && strchr("dhbecv", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
