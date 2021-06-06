@@ -303,6 +303,47 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(print
+ "**************************************************************************\n"
+ " Test case: symmetry transformed overlaps & inversion/mirror eigenvalues.\n"
+ "**************************************************************************\n"
+)
+
+(set! resolution 16)
+(set! num-bands 6)
+(set! default-material air)
+; define a simple geometry with inversion and z-mirror
+(set! geometry-lattice
+  (make lattice (size 1 1 1) (basis1 1 0 0) (basis2 0 1 0) (basis3 0 0 1)))
+(set! geometry 
+  (list (make sphere (center 0 0 0) (radius 0.25) (material (make dielectric (epsilon 13) )))))
+
+; compare inversion eigenvalues at k = [1,1,1]/2 against precomputed values
+(set! k-points (list (vector3 0.5 0.5 0.5)))                              ; little group includes inversion
+(define W (matrix3x3 (vector3 -1 0 0) (vector3 0 -1 0) (vector3 0 0 -1))) ; inversion as operation {W|w}
+(define w (vector3 0 0 0))
+
+(run)
+(define symeigs-inv (compute-symmetries W w))
+(check-almost-equal (map real-part symeigs-inv) '(+1 +1 +1 -1 -1 -1))
+(check-almost-equal (map imag-part symeigs-inv) '( 0  0  0  0  0  0))
+
+; compare with run-zeven and run-zodd at k = 0 [must be 0 due to https://github.com/NanoComp/mpb/issues/114]
+(set! k-points (list (vector3 0 0 0)))
+(define mz (matrix3x3 (vector3 1 0 0)  (vector3 0 1 0)  (vector3 0 0 -1)))
+
+(run-zeven) ; even z-parity check
+(define symeigs-zeven (compute-symmetries mz w))
+(check-almost-equal (map real-part symeigs-zeven) '(+1 +1 +1 +1 +1 +1))
+(check-almost-equal (map imag-part symeigs-zeven) '( 0  0  0  0  0  0))
+
+(run-zodd) ; odd z-parity check
+(define symeigs-zodd (compute-symmetries mz w))
+(check-almost-equal (map real-part symeigs-zodd) '(-1 -1 -1 -1 -1 -1))
+(check-almost-equal (map imag-part symeigs-zodd) '( 0  0  0  0  0  0))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 (display-eigensolver-stats)
 (print "Relative error ranged from " min-err " to " max-err
 	      ", with a mean of " (/ sum-err num-err) "\n")

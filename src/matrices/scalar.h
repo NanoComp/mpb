@@ -63,6 +63,14 @@ typedef struct {
 		    bbbb_re * cccc_im + bbbb_im * cccc_re); \
 }
 
+/* a = conj(b) * c */
+#define CASSIGN_CONJ_MULT(a, b, c) { \
+     real bbbb_re = (b).re, bbbb_im = (b).im; \
+     real cccc_re = (c).re, cccc_im = (c).im; \
+     CASSIGN_SCALAR(a, bbbb_re * cccc_re + bbbb_im * cccc_im, \
+              bbbb_re * cccc_im - bbbb_im * cccc_re); \
+}
+
 /* a = b / c = b * conj(c) / |c|^2 */
 #define CASSIGN_DIV(a, b, c) { \
      scalar_complex aaaa_tmp; real aaaa_tmp_norm; \

@@ -706,20 +706,23 @@ number get_energy_point(vector3 p)
      return f_interp_val(p, mdata, (real *) curfield, 1, 0);
 }
 
-cvector3 get_bloch_field_point(vector3 p)
+void get_bloch_field_point_(scalar_complex field[3], vector3 p)
 {
-     scalar_complex field[3];
-     cvector3 F;
-
      CHECK(curfield && strchr("dhbecv", curfield_type),
 	   "field must be must be loaded before get-*field*-point");
      field[0] = f_interp_cval(p, mdata, &curfield[0].re, 6);
      field[1] = f_interp_cval(p, mdata, &curfield[1].re, 6);
      field[2] = f_interp_cval(p, mdata, &curfield[2].re, 6);
-     F.x = cscalar2cnumber(field[0]);
-     F.y = cscalar2cnumber(field[1]);
-     F.z = cscalar2cnumber(field[2]);
-     return F;
+}
+
+cvector3 get_bloch_field_point(vector3 p)
+{
+     scalar_complex field[3];
+     cvector3 F;
+
+     get_bloch_field_point_(field, p);
+
+     return cscalar32cvector3(field);
 }
 
 cvector3 get_field_point(vector3 p)
@@ -727,11 +730,7 @@ cvector3 get_field_point(vector3 p)
      scalar_complex field[3], phase;
      cvector3 F;
 
-     CHECK(curfield && strchr("dhbecv", curfield_type),
-	   "field must be must be loaded before get-*field*-point");
-     field[0] = f_interp_cval(p, mdata, &curfield[0].re, 6);
-     field[1] = f_interp_cval(p, mdata, &curfield[1].re, 6);
-     field[2] = f_interp_cval(p, mdata, &curfield[2].re, 6);
+     get_bloch_field_point_(field, p);
 
      if (curfield_type != 'v') {
 	  double phase_phi = TWOPI *
@@ -744,10 +743,8 @@ cvector3 get_field_point(vector3 p)
 	  CASSIGN_MULT(field[2], field[2], phase);
      }
 
-     F.x = cscalar2cnumber(field[0]);
-     F.y = cscalar2cnumber(field[1]);
-     F.z = cscalar2cnumber(field[2]);
-     return F;
+	 F = cscalar32cvector3(field);
+	 return F;
 }
 
 cnumber get_bloch_cscalar_point(vector3 p)
