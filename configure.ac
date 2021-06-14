@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT(mpb, 1.11.1)
+AC_INIT([mpb],[1.11.1])
 AC_CONFIG_SRCDIR([src/matrices/matrices.c])
-AC_CONFIG_HEADER([config.h src/mpbconf.h])
+AC_CONFIG_HEADERS([config.h src/mpbconf.h])
 AC_CONFIG_MACRO_DIR([m4])
 AM_MAINTAINER_MODE
 
@@ -20,8 +20,8 @@ AC_DEFINE_UNQUOTED(MPB_VERSION_PATCH, [$VERSION_PATCH], [patch version])
 AM_INIT_AUTOMAKE([foreign color-tests parallel-tests silent-rules 1.11])
 AM_SILENT_RULES(yes)
 AC_SUBST(SHARED_VERSION_INFO)
-AM_ENABLE_SHARED(no) dnl shared libs cause too many headaches to be default
-AC_PROG_LIBTOOL
+AC_ENABLE_SHARED([no]) dnl shared libs cause too many headaches to be default
+LT_INIT
 
 ###########################################################################
 MPB_VERSION=$PACKAGE_VERSION
@@ -36,41 +36,41 @@ AC_CHECK_PROGS(CC, cc xlc) # prefer vendor cc, to stay in sync with Fortran
 AC_PROG_CC
 AM_PROG_CC_C_O
 
-AC_ARG_ENABLE(single, [AC_HELP_STRING([--enable-single],[compile for single precision])], enable_single=$enableval, enable_single=no)
+AC_ARG_ENABLE(single, [AS_HELP_STRING([--enable-single],[compile for single precision])], enable_single=$enableval, enable_single=no)
 if test "$enable_single" = "yes"; then
         AC_DEFINE(SCALAR_SINGLE_PREC,1,[Define to use single precision])
 	echo "*********************** SINGLE PRECISION ***********************"
 fi
 
-AC_ARG_ENABLE(long-double, [AC_HELP_STRING([--enable-long-double],[compile for long-double precision])], enable_long_double=$enableval, enable_long_double=no)
+AC_ARG_ENABLE(long-double, [AS_HELP_STRING([--enable-long-double],[compile for long-double precision])], enable_long_double=$enableval, enable_long_double=no)
 if test "$enable_long_double" = "yes"; then
         AC_DEFINE(SCALAR_LONG_DOUBLE_PREC,1,[Define to use long-double precision])
 	echo "****************** LONG-DOUBLE PRECISION ***********************"
 fi
 
-AC_ARG_ENABLE(debug, [AC_HELP_STRING([--enable-debug],[compile for debugging])], ok=$enableval, ok=no)
+AC_ARG_ENABLE(debug, [AS_HELP_STRING([--enable-debug],[compile for debugging])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
 	CFLAGS="-g"
 	AC_DEFINE(DEBUG,1,[Define to turn on debugging checks])
 fi
 
-AC_ARG_ENABLE(debug-malloc, [AC_HELP_STRING([--enable-debug-malloc],[use debug malloc/free])], ok=$enableval, ok=no)
+AC_ARG_ENABLE(debug-malloc, [AS_HELP_STRING([--enable-debug-malloc],[use debug malloc/free])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
 	AC_DEFINE(DEBUG_MALLOC,1,[Define to use debugging malloc/free])
 fi
 
-AC_ARG_ENABLE(prof, [AC_HELP_STRING([--enable-prof],[compile for profiling])], ok=$enableval, ok=no)
+AC_ARG_ENABLE(prof, [AS_HELP_STRING([--enable-prof],[compile for profiling])], ok=$enableval, ok=no)
 if test "$ok" = "yes"; then
 	CFLAGS="$CFLAGS -pg"
 	AC_DEFINE(ENABLE_PROF,1,[Define when using the profiler tool])
 fi
 
-AC_ARG_ENABLE(checks, [AC_HELP_STRING([--disable-checks],[disable runtime checks])], ok=$enableval, ok=yes)
+AC_ARG_ENABLE(checks, [AS_HELP_STRING([--disable-checks],[disable runtime checks])], ok=$enableval, ok=yes)
 if test "$ok" = "no"; then
 	AC_DEFINE(CHECK_DISABLE,1,[Define to disable sanity checks in code])
 fi
 
-AC_ARG_WITH(inv-symmetry,[AC_HELP_STRING([--with-inv-symmetry],[take advantage of (and require) inv. sym.])], inv_sym=$withval, inv_sym=no)
+AC_ARG_WITH(inv-symmetry,[AS_HELP_STRING([--with-inv-symmetry],[take advantage of (and require) inv. sym.])], inv_sym=$withval, inv_sym=no)
 if test "$inv_sym" = "no"; then
         AC_DEFINE(SCALAR_COMPLEX,1,[Define to use complex fields and
 	                            not to require inversion symmetry])
@@ -83,7 +83,7 @@ else
 fi
 AC_SUBST(SCALAR_TYPE)
 
-AC_ARG_WITH(hermitian-eps,[AC_HELP_STRING([--with-hermitian-eps],[allow complex-Hermitian dielectric tensors])], hermitian_epsilon=$withval, hermitian_epsilon=no)
+AC_ARG_WITH(hermitian-eps,[AS_HELP_STRING([--with-hermitian-eps],[allow complex-Hermitian dielectric tensors])], hermitian_epsilon=$withval, hermitian_epsilon=no)
 if test "$hermitian_epsilon" = "yes"; then
         AC_DEFINE(WITH_HERMITIAN_EPSILON,1,[Define to support Hermitian/complex
                                             dielectric tensors.])
@@ -100,7 +100,7 @@ fi
 #                       Checks for libraries:
 ##############################################################################
 
-AC_ARG_WITH(efence, [AC_HELP_STRING([--with-efence],[use ElectricFence library])], ok=$withval, ok=no)
+AC_ARG_WITH(efence, [AS_HELP_STRING([--with-efence],[use ElectricFence library])], ok=$withval, ok=no)
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(efence, malloc)
 fi
@@ -121,8 +121,8 @@ fi
 # though, we do nothing (and wait for the compilation errors).
 
 ##############################################################################
-AC_ARG_WITH(mpi, [AC_HELP_STRING([--with-mpi],[enable MPI parallelization])], with_mpi=$withval, with_mpi=no)
-AC_ARG_WITH(fftw2, [AC_HELP_STRING([--with-fftw2],[prefer FFTW2 to FFTW3])], with_fftw2=$withval, with_fftw2=no)
+AC_ARG_WITH(mpi, [AS_HELP_STRING([--with-mpi],[enable MPI parallelization])], with_mpi=$withval, with_mpi=no)
+AC_ARG_WITH(fftw2, [AS_HELP_STRING([--with-fftw2],[prefer FFTW2 to FFTW3])], with_fftw2=$withval, with_fftw2=no)
 
 # Check for FFTW libraries
 fftw3_func=execute
@@ -167,7 +167,7 @@ fi
 ##############################################################################
 # Check for OpenMP libraries
 
-AC_ARG_WITH(openmp, [AC_HELP_STRING([--with-openmp],[enable OpenMP parallelization])], with_omp=$withval, with_omp=no)
+AC_ARG_WITH(openmp, [AS_HELP_STRING([--with-openmp],[enable OpenMP parallelization])], with_omp=$withval, with_omp=no)
 if test "x$with_omp" = xyes; then
    AC_DEFINE([USE_OPENMP], [1], [Define to use OpenMP threading.])
    AX_OPENMP([], [AC_MSG_ERROR([Could not find OpenMP flag; configure with --without-openmp])])
@@ -255,7 +255,7 @@ AC_SUBST(RUNCODE)
 
 ##############################################################################
 # Check for HDF5 library
-AC_ARG_WITH(hdf5, [AC_HELP_STRING([--without-hdf5],[do not use HDF5 output])], ok=$withval, ok=yes)
+AC_ARG_WITH(hdf5, [AS_HELP_STRING([--without-hdf5],[do not use HDF5 output])], ok=$withval, ok=yes)
 if test "$ok" = "yes"; then
 	AC_CHECK_LIB(z,deflate, [],[AC_MSG_WARN([zlib is required for HDF5!])])
 
@@ -274,7 +274,7 @@ fi
 
 ##############################################################################
 
-AC_ARG_WITH(libctl, [AC_HELP_STRING([--with-libctl=<dir>],[specify libctl directory])], with_libctl=$withval, with_libctl=yes)
+AC_ARG_WITH(libctl, [AS_HELP_STRING([--with-libctl=<dir>],[specify libctl directory])], with_libctl=$withval, with_libctl=yes)
 if test "x$with_libctl" != "xyes" -a "x$with_libctl" != "xno"; then
 	LIBCTL_DIR="$with_libctl"
 	with_libctl=yes
@@ -321,40 +321,34 @@ AC_CHECK_HEADERS([libguile.h guile/gh.h])
 
 AC_CHECK_FUNCS(scm_make_smob_type scm_array_get_handle scm_is_array)
 AC_MSG_CHECKING([for SCM_SMOB_PREDICATE])
-AC_TRY_LINK([#if defined(HAVE_LIBGUILE_H)
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#if defined(HAVE_LIBGUILE_H)
 #  include <libguile.h>
 #else
 #  include <guile/gh.h>
 #  include <libguile/smob.h>
-#endif],
-                    [int x; SCM_SMOB_PREDICATE(1,x);],
-                    ok=yes, ok=no)
+#endif]], [[int x; SCM_SMOB_PREDICATE(1,x);]])],[ok=yes],[ok=no])
 AC_MSG_RESULT($ok)
 if test $ok = yes; then
 	AC_DEFINE(HAVE_SCM_SMOB_PREDICATE, 1, [define if we have SCM_SMOB_PREDICATE])
 fi
 AC_MSG_CHECKING([for SCM_SMOB_DATA])
-AC_TRY_LINK([#if defined(HAVE_LIBGUILE_H)
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#if defined(HAVE_LIBGUILE_H)
 #  include <libguile.h>
 #else
 #  include <guile/gh.h>
 #  include <libguile/smob.h>
-#endif],
-                    [int x; SCM_SMOB_DATA(x);],
-                    ok=yes, ok=no)
+#endif]], [[int x; SCM_SMOB_DATA(x);]])],[ok=yes],[ok=no])
 AC_MSG_RESULT($ok)
 if test $ok = yes; then
 	AC_DEFINE(HAVE_SCM_SMOB_DATA, 1, [define if we have SCM_SMOB_DATA])
 fi
 AC_MSG_CHECKING([for SCM_NEWSMOB])
-AC_TRY_LINK([#if defined(HAVE_LIBGUILE_H)
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#if defined(HAVE_LIBGUILE_H)
 #  include <libguile.h>
 #else
 #  include <guile/gh.h>
 #  include <libguile/smob.h>
-#endif],
-                    [int x; SCM_NEWSMOB(x,1,0);],
-                    ok=yes, ok=no)
+#endif]], [[int x; SCM_NEWSMOB(x,1,0);]])],[ok=yes],[ok=no])
 AC_MSG_RESULT($ok)
 if test $ok = yes; then
 	AC_DEFINE(HAVE_SCM_NEWSMOB, 1, [define if we have SCM_NEWSMOB])
@@ -509,7 +503,7 @@ AC_SUBST(NLOPT_LIB)
 
 ##############################################################################
 # Checks for header files.
-AC_HEADER_STDC
+
 AC_CHECK_HEADERS(unistd.h getopt.h nlopt.h)
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -525,7 +519,7 @@ AC_CHECK_FUNCS(getopt strncmp)
 
 AC_MSG_CHECKING([whether calling BLAS zdotc works])
 AC_F77_FUNC(zdotc)
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <stdlib.h>
 typedef struct { double re, im; } cmplx;
@@ -541,7 +535,7 @@ int main(void) {
      if (result.re != 1 || result.im != -1) return EXIT_FAILURE;
      else return EXIT_SUCCESS;
 }
-], ok="yes", ok="no", ok="no")
+]])],[ok="yes"],[ok="no"],[ok="no"])
 AC_MSG_RESULT($ok)
 if test "$ok" = "no"; then
 	AC_DEFINE(NO_FORTRAN_FUNCTIONS,1,[Define if calling Fortran functions directly doesn't work.])
@@ -574,17 +568,15 @@ fi # with_libctl
 # affect whether it is declared, as it is a GNU extension).
 # We need to #include <stdio.h> because that somehow affects whether
 # the function is declared with older gcc versions.  We need
-# to use AC_TRY_COMPILE because the test in AC_HAVE_DECL seems
+# to use AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[],[]) because the test in AC_HAVE_DECL seems
 # to be optimized out.
 
 AC_CHECK_FUNCS(feenableexcept) dnl GNU libc fp exception control function
 AC_MSG_CHECKING([whether feenableexcept declaration is usable])
 feenableexcept_decl_ok=yes
-AC_TRY_COMPILE([#include <stdio.h>
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>
 #define _GNU_SOURCE 1
-#include <fenv.h>], [feenableexcept(0);],
-[AC_DEFINE([HAVE_DECL_FEENABLEEXCEPT],[1],[Define if fenv.h declares this.])],
-[feenableexcept_decl_ok=no])
+#include <fenv.h>]], [[feenableexcept(0);]])],[AC_DEFINE([HAVE_DECL_FEENABLEEXCEPT],[1],[Define if fenv.h declares this.])],[feenableexcept_decl_ok=no])
 AC_MSG_RESULT($feenableexcept_decl_ok)
 
 ##############################################################################
