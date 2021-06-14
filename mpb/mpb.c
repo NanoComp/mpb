@@ -827,11 +827,6 @@ void solve_kpoint(vector3 kvector)
      freqs.num_items = num_bands;
      CHK_MALLOC(freqs.items, number, freqs.num_items);
 
-     /* create eigenvalues array for storing eigenvalues = frequency^2
-        for Men optimization (FIXME: eliminate this?) */
-     eigenvalues.num_items = num_bands;
-     CHK_MALLOC(eigenvalues.items, number, eigenvalues.num_items);
-
      set_kpoint_index(kpoint_index + 1);
 
      mpi_one_printf("%sfreqs:, %d, %g, %g, %g, %g",
@@ -844,18 +839,6 @@ void solve_kpoint(vector3 kvector)
 	  mpi_one_printf(", %g", freqs.items[i]);
      }
      mpi_one_printf("\n");
-
-
-     mpi_one_printf("%seigenvalues:, %d, %g, %g, %g, %g",
-		    parity,
-		    kpoint_index, (double)k[0], (double)k[1], (double)k[2],
-		    vector3_norm(matrix3x3_vector3_mult(Gm, kvector)));
-     for (i = 0; i < num_bands; ++i) {
-	  eigenvalues.items[i] = eigvals[i];
-	  mpi_one_printf(", %g", eigenvalues.items[i]);
-     }
-     mpi_one_printf("\n");
-
 
      eigensolver_flops = evectmatrix_flops;
 

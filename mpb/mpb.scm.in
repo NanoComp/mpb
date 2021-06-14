@@ -132,10 +132,6 @@
 (define-output-var freqs (make-list-type 'number))
 (define-output-var iterations 'integer)
 
-;; abby men
-(define-output-var eigenvalues (make-list-type 'number))
-;;
-
 (define-output-var parity 'string)
 
 (define-input-var negative-epsilon-ok? false 'boolean)
@@ -390,7 +386,7 @@
 			(update-band-range-data band-range-data freqs k))
 
 		  (set! eigband-range-data
-			(update-eigband-range-data eigband-range-data eigenvalues k))
+        (update-eigband-range-data eigband-range-data (map sqr freqs) k))
 
 		  (set! eigensolver-iters
 			(append eigensolver-iters
@@ -762,7 +758,7 @@
 			(update-band-range-data band-range-data freqs k))
 
 		  (set! eigband-range-data
-			(update-eigband-range-data eigband-range-data eigenvalues k))
+        (update-eigband-range-data eigband-range-data (map sqr freqs) k))
 
 		  (set! eigensolver-iters
 			(append eigensolver-iters
