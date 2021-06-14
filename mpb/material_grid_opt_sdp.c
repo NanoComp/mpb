@@ -36,6 +36,9 @@
 
 #ifdef HAVE_MOSEK_H
 #include <mosek.h>    /* Include the MOSEK definition file.  */
+#else
+#define MSKAPI
+#define MSKCONST const
 #endif
 
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
@@ -112,7 +115,7 @@ static void get_Efield_from_Dfield1(const scalar_complex *dfield, scalar_complex
             assign_symmatrix_vector(&efield[ib], eps_inv, &dfield[ib]);
         }
     }
-    
+
 }
 
 static void get_Efield_from_Dfield(scalar_complex *cfield, int cur_num_bands)
@@ -460,7 +463,7 @@ static void material_grids_SPt(scalar_complex *Asp, const double *depsdu, const 
         }
         CASSIGN_SCALAR(Asp[ui*stride],Aitmpt.re*scalegrad,Aitmpt.im*scalegrad);
 
-    /* field1, field2, and despdu (of size fft_output_size = nx*local_y*nz) only have the local block of data, and their products 
+    /* field1, field2, and despdu (of size fft_output_size = nx*local_y*nz) only have the local block of data, and their products
        should be summed up (mpi_reduce) to account for global info. local_ny ~= ny/mpi_comm_size */
 
 	mpi_allreduce_1(&Asp[ui*stride].re, real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
@@ -538,7 +541,7 @@ static void material_grids_SPt(scalar_complex *Asp, const double *depsdu, const 
 
 /**************************************************************************/
 
-/* a quick implementation of the matlab "find" function; 
+/* a quick implementation of the matlab "find" function;
    "find" returns the indices of v that are strictly positive;
    v is not expected to be long; n is the length of v;
    pos = 1, first occurrence; pos > 1, first pos occurrences;
@@ -572,9 +575,9 @@ static int find(const double *v, double scalev, double shiftval, int pos, const 
 
 
 static double  detectFluctuation(double *obj,int irun,int maxflucfreq,double usum,double utol)
-{ 
+{
   int i,j;
-  double errs[maxflucfreq],errsum; 
+  double errs[maxflucfreq],errsum;
   int backshift = MIN2((irun+1)/2,maxflucfreq);
 
  if (backshift>0)
@@ -591,7 +594,7 @@ static double  detectFluctuation(double *obj,int irun,int maxflucfreq,double usu
 	 if(errsum/j <= utol)
 	   {  mpi_one_printf("fluctuation in gap detected, with flucfreq = %d\n",j);
 	     /* to break the while loop */
-	     usum = utol/10; 
+	     usum = utol/10;
 	     break;
 	   }
        }
@@ -666,16 +669,16 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
     double       *xx, *y;
     double *xc, *slc, *suc, *slx, *sux, *snx;
-					 
+
 
 
     MSKint32t       c = 1;
-    MSKint32t       qo = 1; 
-    MSKint32t       a = 1; 
-    MSKint32t       qc = 1; 
-    MSKint32t       bc = 1; 
-    MSKint32t       bx = 1; 
-    MSKint32t       vartype = 1; 
+    MSKint32t       qo = 1;
+    MSKint32t       a = 1;
+    MSKint32t       qc = 1;
+    MSKint32t       bc = 1;
+    MSKint32t       bx = 1;
+    MSKint32t       vartype = 1;
     MSKint32t       cones = 1;
     MSKint32t *barvarList;
 
@@ -699,7 +702,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
     gap = (double *) malloc(sizeof(double) * maxrun);
     obj = (double *) malloc(sizeof(double) * maxrun);
-    
+
 
     eigenvalues = (double *) malloc(sizeof(double) * num_bands);
 
@@ -720,7 +723,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
     a2val = (double *) malloc(sizeof(double)*(ntot+1));
     //memset(a2val, 1.0, sizeof(double)*ntot);
-    
+
     asub2 = (MSKint32t *) malloc(sizeof(MSKint32t)*(ntot+1));
 
     const MSKint32t NUMCON = n;
@@ -729,7 +732,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
     barvarList = (MSKint32t *) malloc(sizeof(MSKint32t)*NUMBARVAR);
 
     r = MSK_makeenv(&env,NULL);
-    
+
 
     usum = ntot; irun = 0;
     while (irun < maxrun & usum >= utol)
@@ -742,7 +745,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 	    r = MSK_maketask(env,NUMCON,0,&task);
 	    MSK_linkfunctotaskstream(task,MSK_STREAM_LOG,NULL,printstr);
 	    r = MSK_putintparam(task,MSK_IPAR_NUM_THREADS,NUM_THREADS);
-	    
+
 	    if ( r == MSK_RES_OK )
 	      r = MSK_appendcons(task,NUMCON);
 	    if ( r == MSK_RES_OK )
@@ -764,7 +767,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
 
 	    for (i=0; i<ntot && r==MSK_RES_OK; ++i)
-	      { 
+	      {
 		asub[0]  = 2*i;
 		asub[1] = 2*i+1;
 		r = MSK_putarow(task, i, 2, asub, a1val);
@@ -946,8 +949,8 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
                     MSK_gety(task, MSK_SOL_ITR, y);
 		    MSK_getdualobj (task, MSK_SOL_ITR, obj+irun);
-		    
-		    
+
+
 		    usum = 0.0;
 		    for(j=0; j<ntot; j++){
 		      usum += fabs(u[j]-y[j]/y[ntot]);
@@ -957,8 +960,8 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 		    usum /= ntot;
 		    mpi_one_printf("After maximization, %d, objective is %0.15g, change_in_u = %g\n",irun+1, obj[irun], usum);
 		    usum = detectFluctuation(obj,irun,maxflucfreq,usum,utol);
-		  		    
-		    /* detect flunctuation */	
+
+		    /* detect flunctuation */
 		    MSK_freetask(task,y);
 
                     break;
@@ -983,7 +986,7 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 	    printf("about to delete task\n");
 	    MSK_deletetask(&task);
         }
-	
+
 	/* mpi_one_printf("broadcasting u\n"); */
 	/* MPI_Bcast(u, ntot, MPI_DOUBLE, optRank, MPI_COMM_WORLD); */
 	/* mpi_one_printf("broadcasting usum\n"); */
@@ -993,15 +996,15 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 	material_grids_set(u, grids, ngrids);
 	reset_epsilon();
 
-	/* output epsilon file at each iteration */ 
-       char prefix[256];       
+	/* output epsilon file at each iteration */
+       char prefix[256];
        snprintf(prefix, 256, "%s%04d-", title, irun+1);
        get_epsilon();
        output_field_to_file(-1, prefix);
-       /* output grid file at each iteration */ 
+       /* output grid file at each iteration */
        strcat(prefix,"grid");
        save_material_grid(*grids, prefix);
-     
+
         irun++;
       }
 
@@ -1019,11 +1022,11 @@ number run_matgrid_optgap_mosek(vector3_list kpoints,
 
     free(gap);
     free(obj);
-    
+
 
     free(asub2);
     free(a2val);
-    
+
     MSK_deleteenv(&env);
 
 #endif

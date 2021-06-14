@@ -114,11 +114,13 @@ void material_grids_addgradient(double *v,
 				double scalegrad, int band,
 				const material_grid *grids, int ngrids);
 
-void material_grids_addgradient_point(double *v, 
+void material_grids_addgradient_point(double *v,
 				      vector3 p, double scalegrad,
-				      const material_grid *grids, 
+				      const material_grid *grids,
 				      int ngrids);
-
+void material_grids_addgradient_mod(double *v,
+				double scalegrad, int band,
+				const material_grid *grids, int ngrids);
 
 /**************************************************************************/
 

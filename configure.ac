@@ -192,6 +192,17 @@ fi
 AX_BLAS([], [AC_MSG_ERROR([BLAS was not found!])])
 AX_LAPACK([], [AC_MSG_ERROR([LAPACK was not found!])])
 
+have_cblas=no
+AC_CHECK_HEADERS([cblas.h], [
+	AC_CHECK_FUNC(cblas_dgemv, [have_cblas=yes], AC_CHECK_LIB(cblas,cblas_dgemv,[
+		have_cblas=yes
+		LIBS="-lcblas $LIBS"
+	]))
+])
+if test "x$have_cblas" = xyes; then
+	AC_DEFINE(HAVE_CBLAS,1,[Define if you have & link an CBLAS library.])
+fi
+
 LIBS="$LAPACK_LIBS $BLAS_LIBS $LIBS $FLIBS"
 
 ##############################################################################

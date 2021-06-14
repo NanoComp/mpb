@@ -39,13 +39,24 @@
 
 #ifdef HAVE_MOSEK_H
 #include <mosek.h>    /* Include the MOSEK definition file.  */
+#else
+#define MSKAPI
+#define MSKCONST const
 #endif
 
-#ifdef __APPLE__
-#include <vecLib/cblas.h>
-#else
+/* FIXME: we don't require cblas header elsewhere — change to
+          use Fortran API via blasglue.c? */
+#ifdef HAVE_CBLAS
 #include <cblas.h>
-/* #include <clapack.h>    */
+#else
+typedef enum {CblasRowMajor=101, CblasColMajor=102} CBLAS_LAYOUT;
+typedef enum {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113} CBLAS_TRANSPOSE;
+typedef enum {CblasUpper=121, CblasLower=122} CBLAS_UPLO;
+static void cblas_zgemv(const CBLAS_LAYOUT __Order, const CBLAS_TRANSPOSE __TransA, const int __M, const int __N, const void *__alpha, const void *__A, const int __lda, const void *__X, const int __incX, const void *__beta, void *__Y, const int __incY) { CHECK(0, "missing cblas.h"); }
+static void cblas_dgemv(const CBLAS_LAYOUT __Order, const CBLAS_TRANSPOSE __TransA, const int __M, const int __N, const double __alpha, const double *__A, const int __lda, const double *__X, const int __incX, const double __beta, double *__Y, const int __incY) { CHECK(0, "missing cblas.h"); }
+static void cblas_zdotc_sub(const int __N, const void *__X, const int __incX, const void *__Y, const int __incY, void *__dotc) { CHECK(0, "missing cblas.h"); }
+static double cblas_ddot(const int __N, const double *__X, const int __incX, const double *__Y, const int __incY) { CHECK(0, "missing cblas.h"); }
+static void cblas_dsymv(const CBLAS_LAYOUT __Order, const CBLAS_UPLO __Uplo, const int __N, const double __alpha, const double *__A, const int __lda, const double *__X, const int __incX, const double __beta, double *__Y, const int __incY) { CHECK(0, "missing cblas.h"); }
 #endif
 
 #define MAX2(a,b) ((a) > (b) ? (a) : (b))
@@ -55,13 +66,13 @@ typedef int bool;
 #define false 0
 #define NUM_THREADS 4
 
-extern void debug_check_memory_leaks(void);  
+extern void debug_check_memory_leaks(void);
 
 /**************************************************************************/
 
 /* Note: the usage of this func is very limited!
-   modify the epsilon with random perturbations; we assume meshsize = 1, 
-   hence, eps and eps_inv tensor are diagonal. should only be called after 
+   modify the epsilon with random perturbations; we assume meshsize = 1,
+   hence, eps and eps_inv tensor are diagonal. should only be called after
    init-params.  (Guile-callable.) */
 void randomize_epsilon(number delta)
 {
@@ -86,7 +97,7 @@ void randomize_epsilon(number delta)
      allowance = delta*N*eps_diff;
      while(allowance>0){
        i = floor(rand()%N);
-       
+
        eps_inv = mdata->eps_inv[i];
 
        m01 = eps_inv.m01; m02 = eps_inv.m02; m12 = eps_inv.m12;
@@ -95,7 +106,7 @@ void randomize_epsilon(number delta)
        m00 = eps_inv.m00; m11 = eps_inv.m11; m22 = eps_inv.m22;
        eps_mean = 3.0/(m00+m11+m22);
        eps_val = (eps_mean > eps_mid) ? eps_min : eps_max;
-       allowance =  allowance - abs(eps_val - eps_mean);
+       allowance =  allowance - fabs(eps_val - eps_mean);
 
        if(allowance>0)
 	 {
@@ -104,10 +115,10 @@ void randomize_epsilon(number delta)
 	   mdata->eps_inv[i].m00 = 1.0/eps_val;
 	   mdata->eps_inv[i].m11 = 1.0/eps_val;
 	   mdata->eps_inv[i].m22 = 1.0/eps_val;
- 
+
 	 }
 
-       
+
 
      }
 
@@ -135,9 +146,9 @@ void randomize_meshgrid(number delta)
      allowance = delta*ntot*mg_diff;
      while(allowance>0){
        i = floor(rand()%ntot);
-      
+
        mg_val = (u[i] > mg_mid) ? mg_min : mg_max;
-       allowance =  allowance - abs(mg_val - u[i]);
+       allowance =  allowance - fabs(mg_val - u[i]);
 
        if(allowance>0)
 	 u[i] = mg_val;
@@ -173,6 +184,7 @@ static void freeArray(double_array *a) {
 
 void print_solsta(int solsta, char *solstastr)
 {
+#ifdef HAVE_MOSEK_H
   switch(solsta)
     {
     /* case MSK_SOL_STA_BEGIN: */
@@ -181,56 +193,59 @@ void print_solsta(int solsta, char *solstastr)
     /*   sprintf (solstastr, "MSK_SOL_STA_END = %d", 16);  */
 
     case MSK_SOL_STA_UNKNOWN:
-      sprintf (solstastr, "MSK_SOL_STA_UNKNOWN = %d", 0); 
+      sprintf (solstastr, "MSK_SOL_STA_UNKNOWN = %d", 0);
       break;
     case MSK_SOL_STA_OPTIMAL:
-      sprintf (solstastr, "MSK_SOL_STA_OPTIMAL = %d", 1); 
+      sprintf (solstastr, "MSK_SOL_STA_OPTIMAL = %d", 1);
       break;
     case MSK_SOL_STA_PRIM_FEAS:
-      sprintf (solstastr, "MSK_SOL_STA_PRIM_FEAS = %d", 2); 
+      sprintf (solstastr, "MSK_SOL_STA_PRIM_FEAS = %d", 2);
       break;
     case MSK_SOL_STA_DUAL_FEAS:
-      sprintf (solstastr, "MSK_SOL_STA_DUAL_FEAS = %d", 3); 
+      sprintf (solstastr, "MSK_SOL_STA_DUAL_FEAS = %d", 3);
       break;
     case MSK_SOL_STA_PRIM_AND_DUAL_FEAS:
-      sprintf (solstastr, "MSK_SOL_STA_PRIM_AND_DUAL_FEAS = %d", 4); 
+      sprintf (solstastr, "MSK_SOL_STA_PRIM_AND_DUAL_FEAS = %d", 4);
       break;
     case MSK_SOL_STA_PRIM_INFEAS_CER:
-      sprintf (solstastr, "MSK_SOL_STA_PRIM_INFEAS_CER = %d", 5); 
+      sprintf (solstastr, "MSK_SOL_STA_PRIM_INFEAS_CER = %d", 5);
       break;
     case MSK_SOL_STA_DUAL_INFEAS_CER:
-      sprintf (solstastr, "MSK_SOL_STA_DUAL_INFEAS_CER = %d", 6); 
+      sprintf (solstastr, "MSK_SOL_STA_DUAL_INFEAS_CER = %d", 6);
       break;
     /* case : */
     /*   sprintf (solstastr, " = %d", 7);  */
     case MSK_SOL_STA_NEAR_OPTIMAL:
-      sprintf (solstastr, "MSK_SOL_STA_NEAR_OPTIMAL = %d", 8); 
+      sprintf (solstastr, "MSK_SOL_STA_NEAR_OPTIMAL = %d", 8);
       break;
     case MSK_SOL_STA_NEAR_PRIM_FEAS:
-      sprintf (solstastr, "MSK_SOL_STA_NEAR_PRIM_FEAS = %d", 9); 
+      sprintf (solstastr, "MSK_SOL_STA_NEAR_PRIM_FEAS = %d", 9);
       break;
     case MSK_SOL_STA_NEAR_DUAL_FEAS:
-      sprintf (solstastr, "MSK_SOL_STA_NEAR_DUAL_FEAS = %d", 10); 
+      sprintf (solstastr, "MSK_SOL_STA_NEAR_DUAL_FEAS = %d", 10);
       break;
     case MSK_SOL_STA_NEAR_PRIM_AND_DUAL_FEAS:
-      sprintf (solstastr, "MSK_SOL_STA_NEAR_PRIM_AND_DUAL_FEAS = %d", 11); 
+      sprintf (solstastr, "MSK_SOL_STA_NEAR_PRIM_AND_DUAL_FEAS = %d", 11);
       break;
     case MSK_SOL_STA_NEAR_PRIM_INFEAS_CER:
-      sprintf (solstastr, "MSK_SOL_STA_NEAR_PRIM_INFEAS_CER = %d", 12); 
+      sprintf (solstastr, "MSK_SOL_STA_NEAR_PRIM_INFEAS_CER = %d", 12);
       break;
     case MSK_SOL_STA_NEAR_DUAL_INFEAS_CER:
-      sprintf (solstastr, "MSK_SOL_STA_NEAR_DUAL_INFEAS_CER = %d", 13); 
+      sprintf (solstastr, "MSK_SOL_STA_NEAR_DUAL_INFEAS_CER = %d", 13);
       break;
     case MSK_SOL_STA_INTEGER_OPTIMAL:
       sprintf (solstastr, "MSK_SOL_STA_INTEGER_OPTIMAL = %d", 14);
       break;
     case MSK_SOL_STA_NEAR_INTEGER_OPTIMAL:
-      sprintf (solstastr, "MSK_SOL_STA_NEAR_INTEGER_OPTIMAL = %d", 15); 
+      sprintf (solstastr, "MSK_SOL_STA_NEAR_INTEGER_OPTIMAL = %d", 15);
       break;
     default:
-      sprintf (solstastr, "Other solution status = %d", solsta); 
+      sprintf (solstastr, "Other solution status = %d", solsta);
       break;
     }
+#else
+	sprintf (solstastr, "Solution status = %d", solsta);
+#endif
 }
 
 /*  returns all combinations of "n" number of coefficients "c", where c */
@@ -243,7 +258,7 @@ static double_array *sumCombination( int k, int n)
 
    int i,row,col,len;
    double_array *c,  *ctmpt;
-   
+
    c = (double_array *)malloc(sizeof(double_array));
 
    if(n==1)
@@ -268,7 +283,7 @@ static double_array *sumCombination( int k, int n)
 
        for(i=0; i<=k; ++i)
    	 {
-	   
+
    	   /* initArray(ctmpt, 2*(k-i+1)); */
    	   ctmpt = sumCombination( k-i, n-1);
 	   len = ctmpt->size/(n-1);
@@ -286,7 +301,7 @@ static double_array *sumCombination( int k, int n)
    	       c->data[c->used + row*n + n-1] = i;
    	     }
    	   c->used = c->used + ctmpt->used + len ;
-	   
+
    	 }
        freeArray(ctmpt);
        return c;
@@ -334,7 +349,7 @@ static void printmatrix_double(double *A, int m, int n)
   int i, j;
 
   for (i = 0; i < m; ++i) {
-    for (j = 0; j < n; ++j) 
+    for (j = 0; j < n; ++j)
       mpi_one_printf("  %6.6f", (double)A[i*n + j]);
     mpi_one_printf("\n");
   }
@@ -417,7 +432,7 @@ static void get_Efield_from_Dfield1(const scalar_complex *dfield, scalar_complex
             assign_symmatrix_vector(&efield[ib], eps_inv, &dfield[ib]);
         }
     }
-    
+
 }
 
 static void get_Efield_from_Dfield(scalar_complex *cfield, int cur_num_bands)
@@ -696,7 +711,7 @@ static void material_grids_SPt(scalar_complex *Asp, const double *depsdu, const 
         }
         CASSIGN_SCALAR(Asp[ui*stride],Aitmpt.re*scalegrad,Aitmpt.im*scalegrad);
 
-    /* field1, field2, and despdu (of size fft_output_size = nx*local_y*nz) only have the local block of data, and their products 
+    /* field1, field2, and despdu (of size fft_output_size = nx*local_y*nz) only have the local block of data, and their products
        should be summed up (mpi_reduce) to account for global info. local_ny ~= ny/mpi_comm_size */
 
 	mpi_allreduce_1(&Asp[ui*stride].re, real, SCALAR_MPI_TYPE, MPI_SUM, MPI_COMM_WORLD);
@@ -748,18 +763,18 @@ static void material_grids_SPt_blas(scalar_complex *Ai, scalar_complex *depsdu_s
         free(field1);
         field1 = field2;
     }
-    
+
     /* updata field1 = Efield_1.*Efield_2*/
     foo = compute_fields_energy(field1,field2,true);
     scalegrad *= -1.0;
 
-    M = mdata->fft_output_size; N = ntot; 
+    M = mdata->fft_output_size; N = ntot;
     CASSIGN_SCALAR(alpha, scalegrad, 0.0);
     CASSIGN_SCALAR(beta, 0.0, 0.0);
 
     cblas_zgemv(CblasRowMajor, CblasTrans, M, N, &alpha, depsdu_sc, N, field1, 1, &beta, Ai, stride);
 
-    /* field1, field2, and despdu (of size fft_output_size = nx*local_y*nz) only have the local block of data, and their products 
+    /* field1, field2, and despdu (of size fft_output_size = nx*local_y*nz) only have the local block of data, and their products
        should be summed up (mpi_reduce) to account for global info. local_ny ~= ny/mpi_comm_size */
     int i;
     for (i=0; i<ntot; i++)
@@ -793,7 +808,7 @@ static void SDP2LP(double_array *Alin, scalar_complex *Avec, double_array *avec,
   vectmpt = (double *) calloc(matsize,sizeof(double));
   vecnorm = (double *) malloc(sizeof(double)*na);
 
-  for(ja = 0; ja < na; ++ja)	  
+  for(ja = 0; ja < na; ++ja)
     vecnorm[ja] = cblas_ddot(matsize, avec->data+ja*matsize, 1, avec->data+ja*matsize, 1);
 
   for (jn = 0; jn < n; ++jn)
@@ -818,7 +833,7 @@ static void SDP2LP(double_array *Alin, scalar_complex *Avec, double_array *avec,
 	  cblas_dsymv(CblasRowMajor,CblasLower,matsize,1/vecnorm[ja],Amat,matsize,avec->data+ja*matsize,1,0,vectmpt,1);
 	  Alin->data[Alin->used+ja*n+jn] = cblas_ddot(matsize, vectmpt, 1, avec->data+ja*matsize, 1);
 	  }
-    } 
+    }
   /* mpi_one_printf("Alin = \n"); */
   /* printmatrix_double(Alin->data+Alin->used,na,n); */
 
@@ -853,7 +868,7 @@ static int SDP2LP_v1(double_array *Alin, scalar_complex *Avec, int spdim, int n,
   vectmpt = (double *) calloc(matsize,sizeof(double));
   vecnorm = (double *) malloc(sizeof(double)*na);
 
-  for(ja = 0; ja < na; ++ja)	  
+  for(ja = 0; ja < na; ++ja)
     vecnorm[ja] = cblas_ddot(matsize, avec->data+ja*matsize, 1, avec->data+ja*matsize, 1);
 
   for (jn = 0; jn < n; ++jn)
@@ -878,7 +893,7 @@ static int SDP2LP_v1(double_array *Alin, scalar_complex *Avec, int spdim, int n,
 	  cblas_dsymv(CblasRowMajor,CblasLower,matsize,1/vecnorm[ja],Amat,matsize,avec->data+ja*matsize,1,0,vectmpt,1);
 	  Alin->data[Alin->used+ja*n+jn] = cblas_ddot(matsize, vectmpt, 1, avec->data+ja*matsize, 1);
 	  }
-    } 
+    }
 
   Alin->used = Alin->used + na*n;
   free(Amat);
@@ -919,13 +934,13 @@ static void Ad2Ad(double *Amat, const double *Avec,int spdim, int n)
 	    }
 	}
 
-    } 
+    }
 
 }
 
 /**************************************************************************/
 
-/* a quick implementation of the matlab "find" function; 
+/* a quick implementation of the matlab "find" function;
    "find" returns the indices of v that are strictly positive;
    v is not expected to be long; n is the length of v;
    pos = 1, first occurrence; pos > 1, first pos occurrences;
@@ -956,9 +971,9 @@ static int find(const double *v, double scalev, double shiftval, int pos, const 
 
 
 static double  detectFluctuation(double *obj,int irun,int maxflucfreq,double usum,double utol)
-{ 
+{
   int i,j;
-  double errs[maxflucfreq],errsum; 
+  double errs[maxflucfreq],errsum;
   int backshift = MIN2((irun+1)/2,maxflucfreq);
 
  if (backshift>0)
@@ -975,7 +990,7 @@ static double  detectFluctuation(double *obj,int irun,int maxflucfreq,double usu
 	 if(errsum/j <= utol)
 	   {  mpi_one_printf("fluctuation in gap detected, with flucfreq = %d\n",j);
 	     /* to break the while loop */
-	     usum = utol/10; 
+	     usum = utol/10;
 	     break;
 	   }
        }
@@ -988,7 +1003,7 @@ static double  detectFluctuation(double *obj,int irun,int maxflucfreq,double usu
 number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 			     integer band1, integer band2,
 			     integer maxrun, number utol,
-			     number low_tol, number upp_tol, 
+			     number low_tol, number upp_tol,
 			     integer kk, integer DCG, char *title)
 {
 
@@ -1007,7 +1022,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
     double *Ak;
     /* double *Altemp1, *Autemp1; */
     double *Akmat, *eigvals, *foo;
-    int MSK_FLAG, DCG_FLAG = 0, maxDCG=3, DCGrun = 0; 
+    int MSK_FLAG, DCG_FLAG = 0, maxDCG=3, DCGrun = 0;
     double tolShift = 1e-4;
     char prefix[256];
  /**************/
@@ -1074,15 +1089,15 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
     /* bvec = (double_array *)malloc(sizeof(double_array)); */
     /* cvec = (double_array *)malloc(sizeof(double_array)); */
     Alin = (double_array *)malloc(sizeof(double_array));
-   
+
     acols = (MSKint32t *) malloc(sizeof(MSKint32t)*n);
     for (j=0; j<n; ++j)
       acols[j] = j;
 
- 
+
     r = MSK_makeenv(&env,NULL);
 
-    usum = ntot; irun = 0; 
+    usum = ntot; irun = 0;
     while (irun < maxrun && usum >= utol)
       {
 	/* set to 1 to allow optimization */
@@ -1144,7 +1159,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
                 for (cidx = 0; cidx <= ridx; ++cidx)
                 {
                     cband = band2+cidx;
-   
+
 		    material_grids_SPt_blas(Autemp+blockH*k+count, depsdu_sc, u_sc, scale, ntot, rband, cband, stride);
                     CASSIGN_SCALAR(Autemp[blockH*k+count+stride*(n-2)], 0.0, 0.0);
                     CASSIGN_SCALAR(Autemp[blockH*k+count+stride*(n-1)],(rband==cband)? -1:0.0, 0.0);
@@ -1170,10 +1185,10 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 	}
 	gap[irun] = 2*(lambda_u-lambda_l)/(lambda_l+lambda_u);
 	mpi_one_printf("Before minimization, %d, gap is %0.15g \n",irun+1, gap[irun]);
-	
+
 	real *Altemp1 = (real *) Altemp;
 	real *Autemp1 = (real *) Autemp;
-	
+
 	/*************************************************/
 	/* OPTIMIZATION */
 	NUMCON = NB+NC+1+ntot;
@@ -1232,7 +1247,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 	    if ( r==MSK_RES_OK )
 	      {
 		/* set to zero to prevent multiple optimization */
-		MSK_FLAG = 0; 
+		MSK_FLAG = 0;
 		DCG_FLAG = 0;
 
 		MSKrescodee trmcode;
@@ -1242,7 +1257,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 		/* Run optimizer */
 		/* r = MSK_optimizetrm(task,&trmcode); */
 
-		  
+
 		if (r == MSK_RES_OK)
 		  r = MSK_optimizetrm(task,&trmcode);
 
@@ -1262,7 +1277,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 
 			MSK_getxx(task, MSK_SOL_ITR, y);
 			MSK_getprimalobj (task, MSK_SOL_ITR, obj+irun);
-		   		    
+
 			usum = 0.0;
 			usum_new = 0.0;
 			for(j=0; j<ntot; ++j){
@@ -1292,7 +1307,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 			char symname[MSK_MAX_STR_LEN];
 			char desc[MSK_MAX_STR_LEN];
 
-			/* The solutions status is unknown. The termination code 
+			/* The solutions status is unknown. The termination code
 			   indicating why the optimizer terminated prematurely. */
 
 			mpi_one_printf("The solution status is unknown.\n");
@@ -1300,15 +1315,15 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 			  {
 			    /* A system failure e.g. out of space. */
 			    MSK_getcodedesc(r,symname,desc);
-			     mpi_one_printf("  Response code: %s\n",symname);  
+			     mpi_one_printf("  Response code: %s\n",symname);
 			  }
 			else
 			  {
 			    /* No system failure e.g. an iteration limit is reached.  */
 			    MSK_getcodedesc(trmcode,symname,desc);
-			     mpi_one_printf("  Termination code: %s\n",symname);  
+			     mpi_one_printf("  Termination code: %s\n",symname);
 			  }
-			break; 
+			break;
 			}
 		      default:
 			mpi_one_printf("Other solution status.");
@@ -1321,7 +1336,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 
 	    if(DCG > 0 && DCGrun < maxDCG)
 	      {
-		++DCGrun; 
+		++DCGrun;
 		double alpha = 1.0, beta = 0.0;
 		NB = 0; NC = 0;
 
@@ -1333,18 +1348,18 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 		    Ad2Ad(Akmat, Ak, nl[k], 1);
 		    /* Az2Ad(Akmat, Ak,nl[k], 1); */
 		    lapackglue_syev('V', 'L', 2*nl[k] , Akmat, 2*nl[k], eigvals, foo, 6*nl[k]);
-		 
+
 
 		    /* forth argument pos = 1 --> first occurance */
 		    idx = find(eigvals, 1.0, tolShift, 1, 2*nl[k]);
-	    
+
 		    if (idx>0)
 		      {
 			DCG_FLAG = 1;
 			bvec = (double_array *)malloc(sizeof(double_array));
 			initArray(bvec, 2*nl[k]*idx);
 			bvec->used = 2*nl[k]*idx;
-			
+
 			for (j=0; j<idx; ++j)
 			  for (i=0; i<2*nl[k]; ++i)
 			    bvec->data[2*nl[k]*j+i] = Akmat[2*nl[k]*i+j];
@@ -1367,14 +1382,14 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 
 		    /* forth argument pos = 1 --> first occurance */
 		    idx = find(eigvals, 1.0, tolShift, 1, 2*nu[k]);
-	    
+
 		    if (idx>0)
 		      {
 			DCG_FLAG = 1;
 			cvec = (double_array *)malloc(sizeof(double_array));
 			initArray(cvec, 2*nu[k]*idx);
 			cvec->used = 2*nu[k]*idx;
-			
+
 			for (j=0; j<idx; ++j)
 			  for (i=0; i<2*nu[k]; ++i)
 			    cvec->data[2*nu[k]*j+i] = Akmat[2*nu[k]*i+j];
@@ -1389,7 +1404,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 		      } /* end of "if idx>0" */
 
 		  }
-	    
+
 	    	/*************************************************/
 		/* OPTIMIZATION */
 		if ( DCG_FLAG && r==MSK_RES_OK )
@@ -1415,8 +1430,8 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 	      } /* only if DCG is enabled */
 
 	  } /* only if MSG_FLAG or DCG_FLAG */
-      
-	  
+
+
 	/* update u and epsilon */
 	material_grids_set(u, grids, ngrids);
 	reset_epsilon();
@@ -1437,7 +1452,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
        output_field_to_file(-1, prefix);
        strcat(prefix,"grid");
        save_material_grid(*grids, prefix);
-      
+
 	++irun;
 
       }
@@ -1528,7 +1543,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 /*     eigenvalues = (double *) malloc(sizeof(double) * num_bands); */
 /*     Altemp = (scalar_complex *) calloc(band1*(band1+1)/2*n, sizeof(scalar_complex)); */
 /*     Autemp = (scalar_complex *) calloc((num_bands-band1)*(num_bands-band1+1)/2*n, sizeof(scalar_complex)); */
-  
+
 
 /*     /\* n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz; *\/ */
 
@@ -1542,7 +1557,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 
 /*     Alin = (double_array *)malloc(sizeof(double_array)); */
 /*     initArray(Alin,2); */
-  
+
 /*     acols = (MSKint32t *) malloc(sizeof(MSKint32t)*n); */
 /*     for (j=0; j<n; j++) */
 /*       acols[j] = j; */
@@ -1582,7 +1597,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 /* 	for (k = 0; k < nk; ++k) { */
 /*             randomize_fields(); */
 /*             solve_kpoint(kpoints.items[k]); */
-	    
+
 /* 	    int rank;  */
 /* 	    MPI_Comm_rank(MPI_COMM_WORLD, &rank); */
 /* 	    /\* printf("k = %d, r = %d, fft_output_size = %d, nx = %d, ny = %d, nz = %d\n", k, rank, mdata->fft_output_size, mdata->nx, mdata->ny, mdata->nz); *\/ */
@@ -1629,7 +1644,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 /*                 for (cidx = 0; cidx <= ridx; ++cidx) */
 /*                 { */
 /*                     cband = band2+cidx; */
-   
+
 /* 		    material_grids_SPt_blas(Autemp+count, depsdu_sc, u_sc, scale, ntot, rband, cband, stride); */
 /*                     CASSIGN_SCALAR(Autemp[count+stride*(n-2)], 0.0, 0.0); */
 /*                     CASSIGN_SCALAR(Autemp[count+stride*(n-1)],(rband==cband)? -1:0.0, 0.0); */
@@ -1664,13 +1679,13 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 /* 	gap[irun] = 2*(lambda_u-lambda_l)/(lambda_l+lambda_u); */
 /* 	mpi_one_printf("Before maximization, %d, gap is %0.15g \n",irun+1, gap[irun]); */
 
-	
+
 
 
 /* 	if ( r==MSK_RES_OK ) */
 /* 	  { */
 
-	    
+
 /* 	    /\* set linear term c_j in the objective *\/ */
 /* 	    if ( r ==MSK_RES_OK ) */
 /* 	      r = MSK_putobjsense(task,MSK_OBJECTIVE_SENSE_MAXIMIZE); */
@@ -1736,7 +1751,7 @@ number run_matgrid_optgap_lp_DCG(vector3_list kpoints,
 
 /* 		    MSK_getxx(task, MSK_SOL_ITR, y); */
 /* 		    MSK_getprimalobj (task, MSK_SOL_ITR, obj+irun); */
-		   		    
+
 /* 		    usum = 0.0; */
 /* 		    for(j=0; j<ntot; j++){ */
 /* 		      usum += fabs(y[j]/y[ntot]-u[j]); */
@@ -1902,7 +1917,7 @@ number run_matgrid_optgap_lp(vector3_list kpoints,
     eigenvalues = (double *) malloc(sizeof(double) * num_bands);
     Altemp = (scalar_complex *) calloc(band1*(band1+1)/2*n, sizeof(scalar_complex));
     Autemp = (scalar_complex *) calloc((num_bands-band1)*(num_bands-band1+1)/2*n, sizeof(scalar_complex));
-  
+
     depsdu = (double *) malloc(sizeof(double) * ntot*mdata->fft_output_size);
     depsdu_sc = (scalar_complex *) calloc(ntot*mdata->fft_output_size, sizeof(scalar_complex));
     u_sc = (scalar_complex *) calloc(ntot, sizeof(scalar_complex));
@@ -1913,7 +1928,7 @@ number run_matgrid_optgap_lp(vector3_list kpoints,
 
     Alin = (double_array *)malloc(sizeof(double_array));
     initArray(Alin,2);
-  
+
     acols = (MSKint32t *) malloc(sizeof(MSKint32t)*n);
     for (j=0; j<n; j++)
       acols[j] = j;
@@ -1976,7 +1991,7 @@ number run_matgrid_optgap_lp(vector3_list kpoints,
 	    /* Alin->used = 0; */
 	    Nl[k] = SDP2LP_v1(Alin, Altemp, nl[k], n, kk);
 	    Nu[k] = SDP2LP_v1(Alin, Autemp, nu[k], n, kk);
-	    
+
 	    NB += Nl[k];NC += Nu[k];
 
 	}
@@ -1985,7 +2000,7 @@ number run_matgrid_optgap_lp(vector3_list kpoints,
 
 
 	/* MPI_Bcast(Alin->data, (NB+NC)*n, MPI_DOUBLE, 0, MPI_COMM_WORLD); */
-	
+
 	/*************************************************/
 #ifdef HAVE_MPI
 	printf("About to check rank, rank = %d, status = %d\n", rank, r);
@@ -2053,7 +2068,7 @@ number run_matgrid_optgap_lp(vector3_list kpoints,
 		  case MSK_SOL_STA_NEAR_OPTIMAL:
 		    MSK_getxx(task, MSK_SOL_BAS, y);
 		    MSK_getprimalobj (task, MSK_SOL_BAS, obj+irun);
-		   		    
+
 		    usum = 0.0;
 		    for(j=0; j<ntot; j++){
 		      usum += fabs(y[j]/y[ntot]-u[j]);
@@ -2141,7 +2156,7 @@ int timeval_subtract(struct timeval *result, struct timeval *t2, struct timeval 
 number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 			     integer band1, integer band2,
 			     integer maxrun, number utol,
-			     number sp_tol, integer kk, 
+			     number sp_tol, integer kk,
 			     number delta, char *title)
 {
   int k, ntot, n, ngrids,nl, nu,nk,ridx,cidx,rband,cband,count,nltmpt,nutmpt,stride,irun;
@@ -2159,7 +2174,7 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
     char solstastr[30];
 
     struct timeval tbegin, tend, tdiff;
-    
+
  /**************/
 #ifndef HAVE_MOSEK
     CHECK(0, "mosek is required for material_grids_optgap\n");
@@ -2222,10 +2237,10 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 
     Clin = (double_array *)malloc(sizeof(double_array));
     initArray(Clin,2);
-  
+
    /* OPTIMIZATION */
     r = MSK_makeenv(&env,NULL);
-    if (r == MSK_RES_OK)  
+    if (r == MSK_RES_OK)
       r = MSK_initenv(env);
 
     NUMVAR = ntot+1;
@@ -2234,7 +2249,7 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
     while (irun < maxrun && usum >= utol)
       {
 	NB = 0; NC = 0;
-	Blin->used = 0; 
+	Blin->used = 0;
 	Clin->used = 0;
 
         lambda_l = 0.0;
@@ -2307,7 +2322,7 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 
 	/*************************************************/
 	/* Inner tasks: (i,j) subproblem */
-	
+
 	/* create a subtask with numvarij variables, and numconij constraints */
 	r = MSK_maketask(env,numconij,numvarij,&taskij);
 	/* MSK_linkfunctotaskstream(taskij,MSK_STREAM_LOG,NULL,printstr); */
@@ -2348,7 +2363,7 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 
 	r = MSK_putconbound(taskij, 3*ntot, MSK_BK_UP, -MSK_INFINITY, 0.0);
 	r = MSK_putconbound(taskij, 3*ntot+1, MSK_BK_FX, 1, 1);
-	  
+
 	if ( r ==MSK_RES_OK )
 	  r = MSK_putobjsense(taskij,MSK_OBJECTIVE_SENSE_MINIMIZE);
 
@@ -2361,9 +2376,9 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 	if ( r == MSK_RES_OK )
 	  r = MSK_appendcons(task,NB*NC);
 
-	ii = 0; jj = 0; 
+	ii = 0; jj = 0;
 	mpi_one_printf("NB = %d, NC = %d \n", NB, NC);
-        
+
 	for(ii=0; ii<NB; ++ii)
 	  {
 	    /* /\* time(&tbegin); *\/ */
@@ -2377,7 +2392,7 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 		for(j=0; j<ntot && r ==MSK_RES_OK; ++j)
 		  r = MSK_putaij(taskij, 3*ntot+1, j, (Clin->data[jj*n+j] + Blin->data[ii*n+j]));
 		r = MSK_putaij(taskij, 3*ntot+1, 2*ntot, (Clin->data[jj*n+ntot] + Blin->data[ii*n+ntot]));
-	      
+
 		for(j = 0; j<ntot && r ==MSK_RES_OK; ++j)
 		  r = MSK_putcj(taskij, j, 2*(Clin->data[jj*n+j] - Blin->data[ii*n+j]));
 		r = MSK_putcj(taskij, 2*ntot, 2*(Clin->data[jj*n+ntot] - Blin->data[ii*n+ntot]));
@@ -2387,11 +2402,11 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 		r = MSK_optimizetrm(taskij,&trmcode);
 		/* MSK_solutionsummary (taskij,MSK_STREAM_MSG); */
 		/* ==== */
-	      
+
 		if ( r==MSK_RES_OK )
 		  {
-	
-		    MSKsolstae solsta;		    	    
+
+		    MSKsolstae solsta;
 		    r = MSK_getsolsta (taskij,MSK_SOL_BAS,&solsta);
 
 		    switch(solsta)
@@ -2408,7 +2423,7 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 
 			if(r == MSK_RES_OK)
 			  r = MSK_putarow(task, ccount, n, ayidx_ij, delf_ij);
-		    
+
 			/* lhs constant (lowerbound) = delf_ij'*uhat - ~f_ij(xhat)  */
 			lhs = cblas_ddot(ntot,delf_ij,1,u,1);
 			lhs -= obj_ij;
@@ -2433,10 +2448,10 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 	    /* gettimeofday(&tend, NULL); */
 	    /* timeval_subtract(&tdiff, &tend, &tbegin); */
 	    /* mpi_one_printf("The loop used %ld.%06ld seconds\n", tdiff.tv_sec, tdiff.tv_usec);	     */
-	    
+
 	    mpi_one_printf("min_obj = %f\n", min_obj);
 	  }
-	
+
 	/*************************************************/
 	mpi_one_printf("number of constraints in outer task = %d\n", NB*NC);
 
@@ -2444,7 +2459,7 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 	mpi_one_printf("Starting outer task\n");
 	if ( r==MSK_RES_OK )
 	  {
-	    r = MSK_putintparam(task,MSK_IPAR_OPTIMIZER,MSK_OPTIMIZER_FREE_SIMPLEX); 
+	    r = MSK_putintparam(task,MSK_IPAR_OPTIMIZER,MSK_OPTIMIZER_FREE_SIMPLEX);
 	    r = MSK_putintparam(task,MSK_IPAR_NUM_THREADS,1);
 
 	    /* MSKrescodee trmcode; */
@@ -2475,7 +2490,7 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
 		    }
 		    usum /= ntot;
 
-		    MSK_getprimalobj (task, MSK_SOL_BAS, obj+irun);	    
+		    MSK_getprimalobj (task, MSK_SOL_BAS, obj+irun);
 		    mpi_one_printf("After maximization, %d, objective is %0.15g, change_in_u = %g\n",irun+1, obj[irun], usum);
 
 		    /* detect flunctuation */
@@ -2513,7 +2528,7 @@ number run_matgrid_optgap_lp_fa(vector3_list kpoints,
     /*************************************************/
 
     free(u);
-    free(u_sc);    
+    free(u_sc);
     free(eigenvalues);
     free(depsdu_sc);
     free(Altemp);
@@ -2542,11 +2557,11 @@ void compute_subspace(int band, char lu, int nsp, double scale, scalar_complex *
       if ( lu == 'l')
 	rband = band-nsp+1+ridx;
       else
-	rband = band+ridx;	 
-     
+	rband = band+ridx;
+
       for (cidx = 0; cidx <= ridx; ++cidx)
 	{
-	  
+
 	    if ( lu == 'l')
 	      {
 		cband = band-nsp+1+cidx;
@@ -2570,11 +2585,11 @@ void compute_subspace(int band, char lu, int nsp, double scale, scalar_complex *
 	      }
 	    else
 	      {
-	
+
 		CASSIGN_SCALAR(Atemp[count+(n-2)*stride], 0.0, 0.0);
 		CASSIGN_SCALAR(Atemp[count+(n-1)*stride],(rband==cband)? -1:0.0, 0.0);
 	      }
-	    
+
 	    ++count;
 	}
     }
@@ -2592,8 +2607,8 @@ void compute_subspace_fa(int band, char lu, int nsp, double scale, scalar_comple
       if ( lu == 'l')
 	rband = band-nsp+1+ridx;
       else
-	rband = band+ridx;	 
-     
+	rband = band+ridx;
+
       for (cidx = 0; cidx <= ridx; ++cidx)
 	{
 	  if ( lu == 'l')
@@ -2629,7 +2644,7 @@ void findFail(bool *optStat, int totalStat, int totalStatRound, int *failList, i
 	}
     }
   printf("failCnt + failCntRound = %d + %d = %d, totalFail = %d\n", failCnt, failCntRound, failCnt+failCntRound, *totalFail);
-  
+
   CHECK( (failCnt+failCntRound)==*totalFail, "total number of fail is wrong\n");
   totalFail = failCnt;
 
@@ -2657,7 +2672,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
     char prefix[256];
     char solstastr[30];
     struct timeval tbegin, tend, tdiff;
-    
+
 
  /**************/
 #ifndef HAVE_MOSEK
@@ -2680,12 +2695,12 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
     int *failList;
     /* double min_obj_ij, min_obj, knorm; */
     double knorm;
-    struct { 
-        double val; 
-        int   rank; 
-    } min_obj_ij, min_obj; 
+    struct {
+        double val;
+        int   rank;
+    } min_obj_ij, min_obj;
  /**************/
-    
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     grids = get_material_grids(geometry, &ngrids);
@@ -2703,7 +2718,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
     eigenvalues = (double *) malloc(sizeof(double) * num_bands);
     Altemp = (scalar_complex *) calloc(band1*(band1+1)/2*n, sizeof(scalar_complex));
     Autemp = (scalar_complex *) calloc((num_bands-band1)*(num_bands-band1+1)/2*n, sizeof(scalar_complex));
-  
+
     depsdu = (double *) malloc(sizeof(double) * ntot*mdata->fft_output_size);
     depsdu_sc = (scalar_complex *) calloc(ntot*mdata->fft_output_size, sizeof(scalar_complex));
     u_sc = (scalar_complex *) calloc(ntot, sizeof(scalar_complex));
@@ -2751,14 +2766,14 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 	for(j=0; j<ntot; ++j)
 	  u_sc[j].re = u[j];
 
-	
+
 	for (k = 0; k < nk; ++k) {
             randomize_fields();
             solve_kpoint(kpoints.items[k]);
 
 	    for (j = 0; j < num_bands; ++j)
 	      eigenvalues[j]  = freqs.items[j]*freqs.items[j];
-	    
+
 	    /* lambda_l and lambda_u updated at each k, only used outside the "for" loop for k */
 	    lambda_l = MAX2(eigenvalues[band1-1], lambda_l);
 	    lambda_u = MIN2(eigenvalues[band2-1], lambda_u);
@@ -2771,7 +2786,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 	    nu = nutmpt>=1 ? nutmpt : nutmpt+1;
 
 	    /* mpi_one_printf("nl[%d] = %d, nu[%d] = %d\n",k,nl,k,nu); */
-	      
+
 	    /* compute subspaces and their linear approximations */
 	    scale = 1.0;
 	    knorm = kpoints.items[k].x*kpoints.items[k].x + kpoints.items[k].y*kpoints.items[k].y + kpoints.items[k].z*kpoints.items[k].z;
@@ -2818,7 +2833,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 	  }
 	/*************************************************/
 	/* Inner tasks: (i,j) subproblem */
-	
+
 	/* create a subtask with numvarij variables, and numconij constraints */
 	r = MSK_maketask(env,numconij,numvarij,&taskij);
 	/* MSK_linkfunctotaskstream(taskij,MSK_STREAM_LOG,NULL,printstr); */
@@ -2860,7 +2875,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 
 	r = MSK_putconbound(taskij, 3*ntot, MSK_BK_UP, -MSK_INFINITY, 0.0);
 	r = MSK_putconbound(taskij, 3*ntot+1, MSK_BK_FX, 1, 1);
-	  
+
 	if ( r ==MSK_RES_OK )
 	  r = MSK_putobjsense(taskij,MSK_OBJECTIVE_SENSE_MINIMIZE);
 
@@ -2875,7 +2890,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 	    if ( r == MSK_RES_OK )
 	      r = MSK_appendcons(task,NB*NC);
 	  }
-	
+
 	MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
 	NCsub = ceil(NC*1.0/numtasks);
 	NCround = NCsub*numtasks;
@@ -2923,7 +2938,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 		if ( r==MSK_RES_OK )
 		  {
 		    MSKsolstae solsta;
-		    
+
 		    /* r = MSK_getsolsta (taskij,MSK_SOL_ITR,&solsta); */
 		    r = MSK_getsolsta(taskij,MSK_SOL_BAS,&solsta);
 
@@ -2937,21 +2952,21 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 			MSK_getxx(taskij, MSK_SOL_BAS, xx);
 			MSK_getyslice(taskij, MSK_SOL_BAS, 0, 2*ntot, y);
 			MSK_getprimalobj (taskij, MSK_SOL_BAS, &obj_ij);
-			
+
 			for(j = 0; j<ntot && r ==MSK_RES_OK; ++j)
 			  delf_ij[jj*n+j] = (y[j] - y[ntot+j])*xx[2*ntot];
 			delf_ij[jj*n+ntot] = -1.0; /* coefficient for t */
-		    
+
 			/* lhs constant (lowerbound) = delf_ij'*uhat - ~f_ij(xhat)  */
 			lhs_ij[jj] = cblas_ddot(ntot,delf_ij+jj*n,1,u,1);
 			lhs_ij[jj] = lhs_ij[jj] - obj_ij;
-			
+
 			/* printf("rank = %d, (%d,%d), obj_ij = %f\n", rank, ii,jj, obj_ij); */
 			if (rank*NCsub+jj < NC)
 			  {
 			    if (obj_ij < min_obj_ij.val)
 			      {
-				for(j=0; j<ntot; ++j)				 
+				for(j=0; j<ntot; ++j)
 				  yopt[j] = xx[j]/xx[2*ntot];
 				min_obj_ij.val = obj_ij;
 			     }
@@ -2989,7 +3004,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 
 
 
-	    
+
 	    if(rank==optRank)
 	      {
 		for(jj=0; jj<NC & r==MSK_RES_OK; ++jj)
@@ -3009,7 +3024,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 		    MSK_removecons(task, failCount, failList);
 		    free(failList);
 		  }
-	    
+
 		/* index of the current last constraint*/
 		offset += NC-failCount;
 	      }
@@ -3023,7 +3038,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 	free(delf);
 	free(lhs);
 	free(optStat);
-	
+
 	/*************************************************/
 	if(r==MSK_RES_OK)
 	  {
@@ -3049,7 +3064,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 		  r = MSK_optimizetrm(task,&trmcode);
 		else
 		  printf("rank %d, error while optimizing with code %d .\n", rank, r);
-	    
+
 		MSK_solutionsummary (task,MSK_STREAM_MSG);
 
 		if ( r==MSK_RES_OK )
@@ -3070,7 +3085,7 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 			MSK_getxx(task, MSK_SOL_BAS, xx);
 			printf("rank %d, t = %g\n", rank, xx[ntot]);
 			usum = 0.0;
-			
+
 			for(j=0; j<ntot; ++j){
 			  usum += fabs(xx[j]-u[j]);
 			  u[j] = xx[j];
@@ -3097,14 +3112,14 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
 		  }
 		 else
 		   printf("rank %d, error while optimizing with code %d .\n", rank, r);
-	
+
 		printf("about to delete task\n");
 		MSK_deletetask(&task);
 	      } /* end of rank == optRank */
  	  } /* end of if r==MSK_RES_OK */
 	else
 	  printf("rank %d, error while optimizing with code %d .\n", rank, r);
-	
+
 	mpi_one_printf("about to delete taskij\n");
 	MSK_deletetask(&taskij);
 
@@ -3157,5 +3172,5 @@ number run_matgrid_optgap_lp_fa_mpi(vector3_list kpoints,
     MSK_deleteenv(&env);
 #endif
     return 1;
-    
+
 }
