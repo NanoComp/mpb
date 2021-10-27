@@ -2,7 +2,7 @@
 # Introduction
 ---
 
-**MPB** is a software package to compute definite-frequency eigenstates of Maxwell's equations in periodic dielectric structures. It can compute optical dispersion relations and eigenstates for structures such as strip waveguides and optical fibers. MPB is well suited for the study of **photonic crystals**: periodic dielectric structures exhibiting a band gap in their optical modes, prohibiting propagation of light in that frequency range.
+**MPB** is a software package to compute definite-frequency eigenstates of Maxwell's equations in periodic dielectric structures of lossless, wavelength-independent, anisotropic $\varepsilon$ and $\mu$. It can compute optical dispersion relations and eigenstates for structures such as strip waveguides and optical fibers. MPB is well suited for the study of **photonic crystals**: periodic dielectric structures exhibiting a band gap in their optical modes, prohibiting propagation of light in that frequency range. MPB can also be used to compute modes of strip and rib waveguides used in photonic integrated circuits as well as slab waveguide structures (known as "light guides") used in near-eye displays.
 
 This manual assumes that the reader is familiar with concepts from solid-state physics such as eigenstates, band structures, and Bloch's theorem. We also do not attempt to instruct the reader on photonic crystals or other optical applications for which this code might be useful. For an excellent introduction to all of these topics in the context of photonic crystals, see the book [Photonic Crystals: Molding the Flow of Light](http://ab-initio.mit.edu/book), by J. D. Joannopoulos, S. G. Johnson, R. D. Meade, and J. N. Winn (Princeton, 2008).
 

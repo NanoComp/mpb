@@ -2,7 +2,7 @@
 # MPB
 ---
 
-**MPB** is a free and open-source software package for computing the band structures, or dispersion relations, and electromagnetic modes of periodic dielectric structures, on both serial and parallel computers. MPB is an acronym for *MIT Photonic Bands*. MPB computes definite-frequency eigenstates, or harmonic modes, of [Maxwell's equations](https://en.wikipedia.org/wiki/Maxwell%27s_equations) in periodic dielectric structures for arbitrary wavevectors, using fully-vectorial and three-dimensional methods. It is applicable to many problems in optics, such as waveguides and resonator systems, and [photonic crystals](http://ab-initio.mit.edu/book).
+**MPB** is a free and open-source software package for computing the band structures, or dispersion relations, and electromagnetic modes of periodic dielectric structures, on both serial and parallel computers. MPB is an acronym for *MIT Photonic Bands*. MPB computes definite-frequency eigenstates, or harmonic modes, of [Maxwell's equations](https://en.wikipedia.org/wiki/Maxwell%27s_equations) for periodic dielectric structures of lossless, wavelength-independent, anisotropic $\varepsilon$ and $\mu$ for arbitrary wavevectors, using fully-vectorial and three-dimensional methods. It is applicable to many problems in optics, such as waveguides and resonator systems, and [photonic crystals](http://ab-initio.mit.edu/book).
 
 See also the complementary [Meep](https://meep.readthedocs.io/) package for time-domain simulations, reflection/transmission spectra, etc.
 
@@ -16,7 +16,7 @@ Features
 -   Fully-vectorial **1d, 2d, 3d** calculations. Iterative eigensolver techniques are employed to make large calculations possible.
 -   **Direct, frequency-domain eigensolver** as opposed to indirect methods, e.g. time-domain. This means that you get both eigenvalues (frequencies) and eigenstates (electromagnetic modes) at the same time. See [comparison of time-domain and frequency-domain techniques](Introduction.md#frequency-domain-vs-time-domain).
 -   **Targeted eigensolver**. Iterative eigensolvers normally compute states (harmonic modes) with the lowest few frequencies. MPB can alternatively compute the modes whose frequencies are closest to a specified target frequency. This greatly reduces the number of bands that must be computed in guided or resonant mode calculations.
--   Support for arbitrary, **anisotropic** dielectrics including **gyrotropic/magneto-optic** materials and **non-orthogonal** unit cells.
+-   Support for arbitrary, **anisotropic** dielectrics including **gyrotropic/magneto-optic** materials and **non-orthogonal** unit cells. Lossy and wavelength-dependent $\varepsilon$ and $\mu$ are not supported.
 -   Field output in the [HDF5](https://support.hdfgroup.org/HDF5/) data format.
 
 To give you some feel for how long these calculations take, let us consider one typical data point. For the 3d band-structure of a [diamond lattice of dielectric spheres in air](Data_Analysis_Tutorial.md#diamond-lattice-of-spheres), computing the lowest 10 bands on a 16×16×16 grid at 31 k-points, MPB took 8 seconds on a 2.8 GHz AMD Opteron under Debian with the [ATLAS](http://www.netlib.org/atlas/) optimized BLAS library. Thus, at each k-point, MPB was minimizing a function with 81920 degrees of freedom in 0.26 seconds on average.
