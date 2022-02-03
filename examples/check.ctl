@@ -303,6 +303,9 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(if (not (using-mpi?)) ; currently do not support transformed-overlap with MPI
+(begin
+
 (print
  "**************************************************************************\n"
  " Test case: symmetry transformed overlaps & inversion/mirror eigenvalues.\n"
@@ -341,6 +344,10 @@
 (define symeigs-zodd (compute-symmetries mz w))
 (check-almost-equal (map real-part symeigs-zodd) '(-1 -1 -1 -1 -1 -1))
 (check-almost-equal (map imag-part symeigs-zodd) '( 0  0  0  0  0  0))
+
+
+) ; begin
+) ; if (not (using-mpi?))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
