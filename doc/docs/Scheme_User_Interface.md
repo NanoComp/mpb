@@ -586,15 +586,15 @@ $W$ and $w$ should be supplied as `matrix3x3` and `vector3` variables in the bas
 
 Given the character tables associated with the little groups of a considered photonic crystal, this functionality can e.g. be used to infer which irreducible representation (irrep) a given band (or band grouping) transforms as across the Brillouin zone.
 
-**`(compute-symmetry which_band W w)`**
+**`(compute-symmetry which-band W w)`**
 Compute the $(\mathbf{H}|g\mathbf{B})$ character for `which-band` under a symmetry operation with rotation `W` and translation `w`, returning a complex number.
 
 **`(compute-symmetries W w)`**
 Equivalent to `compute-symmetry`, but returns characters for *all* computed bands, returning a list of complex numbers.
 
-**`(transformed_overlap W w)`**
+**`(transformed-overlap W w)`**
 Sets **F**′ to `curfield` (must be either a **D**- or **B**-field) and computes the associated character under the symmetry operation specified by `W` and `w`, returning a complex number.
-Usually, it will be more convenient to call `compute-symmetry` (which wraps `transformed_overlap` with an initialization of `curfield` via `get-bfield`).
+Usually, it will be more convenient to call `compute-symmetry` (which wraps `transformed-overlap` with an initialization of `curfield` via `get-bfield`).
 
 Field Manipulation
 ------------------
