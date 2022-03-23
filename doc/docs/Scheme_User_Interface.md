@@ -865,11 +865,12 @@ Inversion Symmetry
 
 If you `configure` MPB with the `--with-inv-symmetry` flag, then the program is configured to assume inversion symmetry in the dielectric function. This allows it to run at least twice as fast and use half as much memory as the more general case. This version of MPB is by default installed as `mpbi`, so that it can coexist with the usual `mpb` program.
 
-Inversion symmetry means that if you transform (x,y,z) to (-x,-y,-z) in the coordinate system, the dielectric structure is not affected. Or, more technically, that (see [our online textbook](http://ab-initio.mit.edu/book), ch. 3):
+Inversion symmetry means that if you transform (x,y,z) to (-x,-y,-z) in the coordinate system, the dielectric structure is not affected. More technically, `mpbi` requires that Fourier transform of the dielectric function is purely real (see [our online textbook](http://ab-initio.mit.edu/book), ch. 3), corresponding to the requirement that:
 
 \[\varepsilon(\mathbf{x}) = \varepsilon(-\mathbf{x})^*\]
 
-where the conjugation is significant for complex-hermitian dielectric tensors. This symmetry is very common; all of the examples in this manual have inversion symmetry, for example.
+This symmetry is very common; all of the examples in this manual have inversion symmetry, for example.
+Note that the conjugation is significant for complex-hermitian dielectric tensors, such as in time-reversal broken settings. For complex dielectric functions, the above criterion more precisely corresponds to parity-time (PT) symmetry.
 
 Note that inversion symmetry is defined with respect to a specific origin, so that you may "break" the symmetry if you define a given structure in the wrong way—this will prevent `mpbi` from working properly. For example, the [diamond structure](Data_Analysis_Tutorial.md#diamond-lattice-of-spheres) that we considered earlier would not have possessed inversion symmetry had we positioned one of the "atoms" to lie at the origin.
 
