@@ -527,6 +527,32 @@ Returns a list of the group-velocity components (units of *c*) in the given *dir
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 As above, but returns the group velocity or component thereof only for band `which_band`.
 
+### Band symmetry
+
+MPB can compute the "characters" or "symmetry eigenvalues" of eigenfields under a symmetry operation $g$, i.e. MPB can compute the overlap integrals:
+
+\[(\mathbf{F}|g\mathbf{F}') = \int \mathbf{F}(\mathbf{r})^\dagger [g\mathbf{F}'(\mathbf{r})] \, \mathrm{d}\mathbf{r} = \int \mathbf{F}(\mathbf{r})^\dagger (g\mathbf{F}')(g^{-1}\mathbf{r}) \, \mathrm{d}\mathbf{r}\]
+
+where **F** denotes either the **E**- or **H**-field and **F**′ denotes the associated **D**- or **B**-field (including Bloch phases) and integration is over the unit cell.
+The space group operation $g$ may include both rotational ($W$) and translational ($w$) parts, and are specified by the associated matrix-column pair $g = \{W|w\}$ acting on points as $\{W|w\}\mathbf{r} = W\mathbf{r} + w$.
+$W$ and $w$ should be supplied as `Matrix` and `vector3` variables in the basis of the lattice (listings of space group operations are available e.g. on the [Bilbao Crystallographic Server](https://www.cryst.ehu.es/)).
+(Note that $g$ transforms both the vectorial components of **F**′ as well as its coordinates: if **F**′ refers to a **B**-field, an additional factor of $\mathop{\mathrm{det}}W$ is incorporated to account for its pseudovectorial nature.)
+
+Given the character tables associated with the little groups of a considered photonic crystal, this functionality can e.g. be used to infer which irreducible representation (irrep) a given band (or band grouping) transforms as across the Brillouin zone.
+
+**`ModeSolver.compute_symmetry(which_band, W, w)`**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Compute the $(\mathbf{H}|g\mathbf{B})$ character for `which_band` under a symmetry operation with rotation `W` and translation `w`, returning a complex number.
+
+**`ModeSolver.compute_symmetries(W, w)`**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Equivalent to `compute_symmetry`, but returns characters for *all* computed bands, returning a list of complex numbers.
+
+**`ModeSolver.transformed_overlap(W, w)`**
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Sets **F**′ to the currently loaded field (must be either a **D**- or **B**-field) and computes the associated character under the symmetry operation specified by `W` and `w`, returning a complex number.
+Usually, it will be more convenient to call `compute_symmetry` (which wraps `transformed_overlap` with an initialization of the current field from `get_bfield`).
+
 Field Manipulation
 ------------------
 

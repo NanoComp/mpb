@@ -573,14 +573,12 @@ As above, but returns the group velocity or component thereof only for band `whi
 
 ### Band symmetry
 
-MPB can compute the "characters" of a symmetry operation $g$ applied to a field at a particular point, i.e. MPB can compute the overlap integrals:
+MPB can compute the "characters" or "symmetry eigenvalues" of eigenfields under a symmetry operation $g$, i.e. MPB can compute the overlap integrals:
 
-```math
-(\mathbf{F}|g\mathbf{F}') = \int \mathbf{F}(\mathbf{r})^\dagger [g\mathbf{F}'(\mathbf{r})] \, \mathrm{d}\mathbf{r} = \int \mathbf{F}(\mathbf{r})^\dagger (g\mathbf{F}')(g^{-1}\mathbf{r}) \, \mathrm{d}\mathbf{r}
-```
+\[(\mathbf{F}|g\mathbf{F}') = \int \mathbf{F}(\mathbf{r})^\dagger [g\mathbf{F}'(\mathbf{r})] \, \mathrm{d}\mathbf{r} = \int \mathbf{F}(\mathbf{r})^\dagger (g\mathbf{F}')(g^{-1}\mathbf{r}) \, \mathrm{d}\mathbf{r}\]
 
 where **F** denotes either the **E**- or **H**-field and **F**′ denotes the associated **D**- or **B**-field (including Bloch phases) and integration is over the unit cell.
-The space group operation $g$ may include both rotational ($W$) and translational ($w$) parts, and are specified by the associated matrix-column pair $g = \{W,w\}$ acting on points as $\{W,w\}\mathbf{r} = W\mathbf{r} + w$.
+The space group operation $g$ may include both rotational ($W$) and translational ($w$) parts, and are specified by the associated matrix-column pair $g = \{W|w\}$ acting on points as $\{W|w\}\mathbf{r} = W\mathbf{r} + w$.
 $W$ and $w$ should be supplied as `matrix3x3` and `vector3` variables in the basis of the lattice (listings of space group operations are available e.g. on the [Bilbao Crystallographic Server](https://www.cryst.ehu.es/)).
 (Note that $g$ transforms both the vectorial components of **F**′ as well as its coordinates: if **F**′ refers to a **B**-field, an additional factor of $\mathop{\mathrm{det}}W$ is incorporated to account for its pseudovectorial nature.)
 
