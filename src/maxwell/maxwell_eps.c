@@ -302,7 +302,7 @@ int check_maxwell_dielectric(maxwell_data *d,
 #define MOMENT_MESH_R_2D 0.7071067811865475 /* sqrt(1/2) */
 #define MOMENT_MESH_R_3D 0.8660254037844386 /* sqrt(3/4) */
 
-/* Function to set up a voxel averaging mesh given the mesh size (any mesh 
+/* Function to set up a voxel averaging mesh given the mesh size (any mesh
    sizes < 1 are taken to be 1). The returned values are:
 
    mesh_center: the center of the mesh, relative to the integer
@@ -331,7 +331,7 @@ static void get_mesh(const int mesh_size[3], real mesh_center[3], int *mesh_prod
                 used for averaging the first moment of epsilon at
                 a grid point (for finding the local surface normal).
    moment_mesh_weights: an array of size_moment_mesh weights to multiply
-                the integrand values by.  
+                the integrand values by.
    size_moment_mesh: number of integration points (2 in 1D, NUMQUAD2=12
                 in 2D, NUMQUAD3=50 in 3D)                                    */
 static void get_moment_mesh(int nx, int ny, int nz,
@@ -408,7 +408,7 @@ static symmetric_matrix average_eps_inv_over_mesh(real r[3],
                void *epsilon_data) {
    symmetric_matrix eps_inv_mean;
    int mi, mj, mk;
-     
+
    eps_inv_mean.m00 = eps_inv_mean.m11 = eps_inv_mean.m22 = 0.0;
    ASSIGN_ESCALAR(eps_inv_mean.m01, 0, 0);
    ASSIGN_ESCALAR(eps_inv_mean.m02, 0, 0);
@@ -433,7 +433,7 @@ static symmetric_matrix average_eps_inv_over_mesh(real r[3],
          }
       }
    }
-   
+
    /* rescale to get average */
    eps_inv_mean.m00 *= mesh_prod_inv;
    eps_inv_mean.m11 *= mesh_prod_inv;
@@ -458,7 +458,7 @@ static symmetric_matrix average_eps_inv_over_mesh(real r[3],
 }
 
 /* Function to detect whether a voxel centered at `r` with sides `s1`, `s2`, & `s3`
-   intersects a material interface (returns 1) or not (returns 0). 
+   intersects a material interface (returns 1) or not (returns 0).
    Intersection is based on whether or not the permittivity tensor evaluated at the
    voxel corners deviates significantly (`> SMALL`) from its value at the voxel center.
    The approach is analogous to that taken in `mean_epsilon_func(...)`.                 */
@@ -470,16 +470,16 @@ short detect_interface_via_corner_check(real r[3],
    short is_interface;
    int i;
    const int num_corners[3] = {2, 4, 8};
-   const real corners[3][8][3] = { 
-            { {-0.5,0,0}, {0.5,0,0}, 
+   const real corners[3][8][3] = {
+            { {-0.5,0,0}, {0.5,0,0},
             {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0} },
             { {-0.5,-0.5,0}, {0.5,0.5,0}, {-0.5,0.5,0}, {0.5,-0.5,0},
             {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0} },
             { {0.5,0.5,0.5}, {0.5,0.5,-0.5}, {0.5,-0.5,0.5}, {0.5,-0.5,-0.5},
-            {-0.5,0.5,0.5}, {-0.5,0.5,-0.5}, {-0.5,-0.5,0.5}, {-0.5,-0.5,-0.5} } };       
+            {-0.5,0.5,0.5}, {-0.5,0.5,-0.5}, {-0.5,-0.5,0.5}, {-0.5,-0.5,-0.5} } };
    symmetric_matrix eps, eps_inv, eps_corner, eps_inv_corner;
    real r_corner[3];
-   
+
    epsilon(&eps, &eps_inv, r, epsilon_data); /* eps at voxel center */
    for (i = 0; i < num_corners[rank - 1]; ++i) {
       r_corner[0] = r[0] + corners[rank - 1][i][0] * s1;
@@ -504,10 +504,10 @@ short detect_interface_via_corner_check(real r[3],
                      fabs(eps.m02 - eps_corner.m02) > SMALL ||
                      fabs(eps.m12 - eps_corner.m12) > SMALL;
 #endif
-      if (is_interface) 
+      if (is_interface)
          return is_interface;
    }
-   
+
    return is_interface;
 }
 
@@ -561,7 +561,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 #endif
 
      /* integration mesh for checking whether voxel intersects an interface */
-     get_mesh(mesh_size, mesh_center, &mesh_prod); 
+     get_mesh(mesh_size, mesh_center, &mesh_prod);
      mesh_prod_inv = 1.0 / mesh_prod;
 
      s1 = 1.0 / n1;
@@ -584,6 +584,12 @@ void set_maxwell_dielectric(maxwell_data *md,
 	     r[0] = i1 * s1;
 	     r[1] = i2 * s2;
 	     r[2] = i3 * s3;
+
+       if (mesh_prod == 1) {
+         epsilon(&eps_mean, &eps_inv_mean, r, epsilon_data);
+         md->eps_inv[xyz_index] = eps_inv_mean;
+         goto got_eps_inv;
+       }
 
 	     if (mepsilon && mepsilon(&eps_mean, &eps_inv_mean, normal,
 					s1, s2, s3, mesh_prod_inv,
@@ -617,7 +623,7 @@ void set_maxwell_dielectric(maxwell_data *md,
      }
 
      /* detect whether voxel intersects an interface */
-     is_interface = detect_interface_via_corner_check(r, epsilon, rank, 
+     is_interface = detect_interface_via_corner_check(r, epsilon, rank,
                                                       s1, s2, s3, epsilon_data);
 
      /* if an interface was detected, then we need to find the normal vector to
@@ -699,7 +705,7 @@ void set_maxwell_dielectric(maxwell_data *md,
                     CACCUMULATE_SCALAR(tau.m12,                                              /* ε₂₃-ε₂₁ε₁₃/ε₁₁ */
                         teps.m12.re - CSCALAR_MULT_CONJ_RE(teps.m02, teps.m01)/teps.m00,
                         teps.m12.im - CSCALAR_MULT_CONJ_IM(teps.m02, teps.m01)/teps.m00 );
-                    
+
 #else
                     tau.m01 += teps.m01/teps.m00;                                            /* ε₁₂/ε₁₁        */
                     tau.m02 += teps.m02/teps.m00;                                            /* ε₁₃/ε₁₁        */
@@ -708,7 +714,7 @@ void set_maxwell_dielectric(maxwell_data *md,
                  }
               }
            }
-           
+
            /* normalize τ-summation to get mean */
            tau.m00 *= mesh_prod_inv;
            tau.m11 *= mesh_prod_inv;
@@ -725,7 +731,7 @@ void set_maxwell_dielectric(maxwell_data *md,
            tau.m02 *= mesh_prod_inv;
            tau.m12 *= mesh_prod_inv;
 #endif
-           
+
            /* --- compute τ⁻¹[mean(τ(ε))] (i.e. the Kottke-averaged permittivity) --- */
            /* τ⁻¹(τ) is defined by [Kottke PRE, Eq. (23)]:
                          ( -1/τ₁₁    -τ₁₂/τ₁₁        -τ₁₃/τ₁₁       )
@@ -745,7 +751,7 @@ void set_maxwell_dielectric(maxwell_data *md,
                     ESCALAR_IM(tau.m12) - ESCALAR_MULT_CONJ_IM(tau.m02, tau.m01)/tau.m00 );
 
            /* --- rotate eps_mean (i.e. τ⁻¹) back to the cartesian coordinate system --- */
-#define SWAP(a,b) { double xxx = a; a = b; b = xxx; }  /* invert via tranposition */  
+#define SWAP(a,b) { double xxx = a; a = b; b = xxx; }  /* invert via tranposition */
            SWAP(Rot[0][1], Rot[1][0]);
            SWAP(Rot[0][2], Rot[2][0]);
            SWAP(Rot[2][1], Rot[1][2]);
