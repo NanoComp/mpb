@@ -118,7 +118,7 @@ This variable is undocumented and reserved for use by Jedi Masters only.
 
 **`mesh_size` [`integer`]**  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-The mesh size determines the window size over which sub-pixel smoothening happens. Setting the mesh_size to 1 disables sub-pixel smoothing.
+The mesh size determines the window size over which sub-pixel smoothening happens. Setting the `mesh_size` to `1` disables sub-pixel smoothing.
 
 Predefined Variables
 --------------------
