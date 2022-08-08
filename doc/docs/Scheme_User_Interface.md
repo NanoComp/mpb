@@ -584,6 +584,8 @@ $W$ and $w$ should be supplied as `matrix3x3` and `vector3` variables in the bas
 
 Given the character tables associated with the little groups of a considered photonic crystal, this functionality can e.g. be used to infer which irreducible representation (irrep) a given band (or band grouping) transforms as across the Brillouin zone.
 
+**Note:** the following utilities currently require that MPB is [compiled serially](#parallel-mpb) and without explicit assumption of [inversion symmetry](#inversion-symmetry) (i.e., works for `mpb` but not for `mpb-mpi`, `mpbi`, or `mpbi-mpi`).
+
 **`(compute-symmetry which-band W w)`**
 Compute the $(\mathbf{H}|g\mathbf{B})$ character for `which-band` under a symmetry operation with rotation `W` and translation `w`, returning a complex number.
 
