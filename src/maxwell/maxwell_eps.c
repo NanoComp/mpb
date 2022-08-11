@@ -585,7 +585,7 @@ void set_maxwell_dielectric(maxwell_data *md,
 	     r[1] = i2 * s2;
 	     r[2] = i3 * s3;
 
-       if (mesh_prod == 1) {
+       if (epsilon && mesh_prod == 1) {
          epsilon(&eps_mean, &eps_inv_mean, r, epsilon_data);
          md->eps_inv[xyz_index] = eps_inv_mean;
          goto got_eps_inv;
