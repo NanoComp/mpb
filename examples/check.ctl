@@ -324,28 +324,33 @@
 ; compare inversion eigenvalues at k = [1,1,1]/2 against precomputed values
 (set! k-points (list (vector3 0.5 0.5 0.5)))                              ; little group includes inversion
 
-; inversion as operation {W|w}
-(let ((W (matrix3x3 (vector3 -1 0 0) (vector3 0 -1 0) (vector3 0 0 -1)))
-      (w (vector3 0 0 0)))
-  (run)
-  (define symeigs-inv (compute-symmetries W w))
-  (check-almost-equal (map real-part symeigs-inv) '(+1 +1 +1 -1 -1 -1))
-  (check-almost-equal (map imag-part symeigs-inv) '( 0  0  0  0  0  0))
 
+(let ((Winv (matrix3x3 (vector3 -1 0 0) (vector3 0 -1 0) (vector3 0 0 -1)))
+      (Wmz (matrix3x3 (vector3 1 0 0)  (vector3 0 1 0)  (vector3 0 0 -1)))
+      (w (vector3 0 0 0)) )
+  
+  (run)
+  ; check inversion eigenvalues (inversion as operation = {Winv|w})
+  (let ((symeigs-inv (compute-symmetries Winv w)))
+    (check-almost-equal (map real-part symeigs-inv) '(+1 +1 +1 -1 -1 -1))
+    (check-almost-equal (map imag-part symeigs-inv) '( 0  0  0  0  0  0))
+  )
+  
   ; compare with run-zeven and run-zodd at k = 0 [must be 0 due to https://github.com/NanoComp/mpb/issues/114]
   (set! k-points (list (vector3 0 0 0)))
-  (define mz (matrix3x3 (vector3 1 0 0)  (vector3 0 1 0)  (vector3 0 0 -1)))
 
   (run-zeven) ; even z-parity check
-  (define symeigs-zeven (compute-symmetries mz w))
-  (check-almost-equal (map real-part symeigs-zeven) '(+1 +1 +1 +1 +1 +1))
-  (check-almost-equal (map imag-part symeigs-zeven) '( 0  0  0  0  0  0))
+  (let ((symeigs-zeven (compute-symmetries Wmz w)))
+    (check-almost-equal (map real-part symeigs-zeven) '(+1 +1 +1 +1 +1 +1))
+    (check-almost-equal (map imag-part symeigs-zeven) '( 0  0  0  0  0  0))
+  )
 
   (run-zodd) ; odd z-parity check
-  (define symeigs-zodd (compute-symmetries mz w))
-  (check-almost-equal (map real-part symeigs-zodd) '(-1 -1 -1 -1 -1 -1))
-  (check-almost-equal (map imag-part symeigs-zodd) '( 0  0  0  0  0  0))
-) ; let
+  (let ((symeigs-zodd (compute-symmetries Wmz w)))
+    (check-almost-equal (map real-part symeigs-zodd) '(-1 -1 -1 -1 -1 -1))
+    (check-almost-equal (map imag-part symeigs-zodd) '( 0  0  0  0  0  0))
+  )
+) ; let ((Winv ...
 
 ) ; begin
 ) ; if (not (using-mpi?))
