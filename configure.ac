@@ -319,7 +319,7 @@ AC_CHECK_HEADERS([libguile.h guile/gh.h])
 
 # Check how smob types work in this Guile version:
 
-AC_CHECK_FUNCS(scm_make_smob_type scm_array_get_handle scm_is_array)
+AC_CHECK_FUNCS(scm_make_smob_type scm_new_smob scm_array_get_handle scm_is_array)
 AC_MSG_CHECKING([for SCM_SMOB_PREDICATE])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[#if defined(HAVE_LIBGUILE_H)
 #  include <libguile.h>

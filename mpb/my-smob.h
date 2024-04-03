@@ -34,7 +34,10 @@
     &print_ ## T,  0 }
 #endif /* ! HAVE_SCM_MAKE_SMOB_TYPE */
 
-#ifdef HAVE_SCM_NEWSMOB
+#if defined(HAVE_SCM_NEW_SMOB)
+#  define NEWCELL_SMOB(ANSWER,T,PSMOB) \
+       ANSWER = scm_new_smob(scm_tc16_smob_ ## T, (scm_t_bits) PSMOB)
+#elif defined(HAVE_SCM_NEWSMOB)
 #  define NEWCELL_SMOB(ANSWER,T,PSMOB) \
        SCM_NEWSMOB(ANSWER, scm_tc16_smob_ ## T, PSMOB)
 #else
