@@ -31,7 +31,7 @@ extern void end_divide_parallel(void);
 extern int divide_parallel_processes(int numgroups);
 extern void begin_global_communications(void);
 extern void end_global_communications(void);
-extern int my_global_rank();
+extern int my_global_rank(void);
 
 extern void mpi_die(const char *template, ...)
 #ifdef __GNUC__

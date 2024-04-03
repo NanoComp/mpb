@@ -104,7 +104,7 @@ void end_global_communications(void)
 #endif
 }
 
-int my_global_rank() {
+int my_global_rank(void) {
 #ifdef HAVE_MPI
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -187,7 +187,7 @@ void mpi_assert_equal(double x)
    of code that should be executed by only one process at a time.
 
    They work by having each process wait for a message from the
-   previous process before starting. 
+   previous process before starting.
 
    Each critical section is passed an integer "tag"...ideally, this
    should be a unique identifier for each critical section so that
@@ -201,7 +201,7 @@ void mpi_begin_critical_section(int tag)
      if (process_rank > 0) { /* wait for a message before continuing */
 	  MPI_Status status;
 	  int recv_tag = tag - 1; /* initialize to wrong value */
-	  MPI_Recv(&recv_tag, 1, MPI_INT, process_rank - 1, tag, 
+	  MPI_Recv(&recv_tag, 1, MPI_INT, process_rank - 1, tag,
 		   mpb_comm, &status);
 	  CHECK(recv_tag == tag, "invalid tag received");
      }
@@ -213,7 +213,7 @@ void mpi_end_critical_section(int tag)
      MPI_Comm_rank(mpb_comm, &process_rank);
      MPI_Comm_size(mpb_comm, &num_procs);
      if (process_rank != num_procs - 1) { /* send a message to next process */
-	  MPI_Send(&tag, 1, MPI_INT, process_rank + 1, tag, 
+	  MPI_Send(&tag, 1, MPI_INT, process_rank + 1, tag,
 		   mpb_comm);
      }
 }
