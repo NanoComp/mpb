@@ -7,7 +7,7 @@ MPB originated as part of graduate research at MIT with initial contributions by
 Referencing
 -----------
 
-We kindly request that you use the following reference in any publication for which you use MPB:
+We kindly request that you cite the following reference in any publication for which you use MPB:
 
 - Steven G. Johnson and J. D. Joannopoulos, [Block-iterative frequency-domain methods for Maxwell's equations in a planewave basis](http://www.opticsinfobase.org/abstract.cfm?URI=oe-8-3-173), *Optics Express* **8**, no. 3, 173-190 (2001). ([pdf](http://math.mit.edu/~stevenj/papers/JohnsonJo01.pdf))
 
