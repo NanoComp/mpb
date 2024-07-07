@@ -15,8 +15,10 @@ markdown_extensions:
     - wikilinks
     - toc:
         title: Table of Contents
+        permalink: "#"
     - attr_list
     - fenced_code
+    - md_in_html
     - mdx_math:
         enable_dollar_delimiter: True
 
@@ -25,7 +27,7 @@ extra_javascript:
  - 'js/mathjaxhelper.js'
  - 'js/extra.js'
 
-pages:
+nav:
 - Manual: 'index.md'
 - Introduction: 'Introduction.md'
 - Download: 'Download.md'
