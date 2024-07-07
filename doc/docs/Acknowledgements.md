@@ -2,7 +2,7 @@
 Acknowledgements
 ---
 
-MPB originated as part of graduate research at MIT with initial contributions by [Steven G. Johnson](http://math.mit.edu/~stevenj/).  We are also grateful to *R. D. Meade et al.* for developing a Fortran band-structure program that helped to inspire MPB and provided early numerical validation results, along with an [algorithm for anisotropic sub-pixel averaging](http://link.aps.org/abstract/PRB/v48/p8434) that MPB still uses in a [modified form](http://doi.org/10.1103/PhysRevE.77.036611) today (via an independent software implementation).  Significant contributions to MPB have been made by [Simpetus](http://www.simpetus.com) (which funded the Python API and several other major developments) and by the developer community on [GitHub](https://github.com/NanoComp/mpb).
+MPB originated as part of graduate research at MIT with initial contributions by [Steven G. Johnson](http://math.mit.edu/~stevenj/).  We are also grateful to R. D. Meade *et al.* for developing a Fortran band-structure program that helped to inspire MPB and provided early numerical validation results, along with an [algorithm for anisotropic sub-pixel averaging](http://link.aps.org/abstract/PRB/v48/p8434) that MPB still uses in a [modified form](http://doi.org/10.1103/PhysRevE.77.036611) today (via an independent software implementation).  Significant contributions to MPB have been made by [Simpetus](http://www.simpetus.com) (which funded the Python API and several other major developments) and by the developer community on [GitHub](https://github.com/NanoComp/mpb).
 
 Referencing
 -----------
