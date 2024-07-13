@@ -1,5 +1,5 @@
-[![Latest Docs](https://readthedocs.org/projects/pip/badge/?version=latest)](http://mpb.readthedocs.io/en/latest/)]
-[![Build Status](https://travis-ci.org/NanoComp/mpb.svg?branch=master)](https://travis-ci.org/NanoComp/mpb)]
+[![Latest Docs](https://readthedocs.org/projects/pip/badge/?version=latest)](http://mpb.readthedocs.io/en/latest/)
+[![Build Status](https://travis-ci.org/NanoComp/mpb.svg?branch=master)](https://travis-ci.org/NanoComp/mpb)
 
 MPB is a free and open-source software package for computing electromagnetic band structures and modes.
 
