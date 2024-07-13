@@ -18,6 +18,7 @@
 #ifndef MPB_H
 #define MPB_H
 
+#include <string.h>
 #include <maxwell.h>
 #include <ctl-io.h>
 #include <ctlgeom.h>
