@@ -82,6 +82,8 @@ typedef struct {
 #define ODD_Z_PARITY (1<<1)
 #define EVEN_Y_PARITY (1<<2)
 #define ODD_Y_PARITY (1<<3)
+#define EVEN_X_PARITY (1<<4)
+#define ODD_X_PARITY (1<<5)
 
 #define MAX_NPLANS 32
 
@@ -221,6 +223,7 @@ extern void maxwell_ucross_op(evectmatrix Xin, evectmatrix Xout,
 extern void maxwell_parity_constraint(evectmatrix X, void *data);
 extern void maxwell_zparity_constraint(evectmatrix X, void *data);
 extern void maxwell_yparity_constraint(evectmatrix X, void *data);
+extern void maxwell_xparity_constraint(evectmatrix X, void *data);
 
 extern int maxwell_zero_k_num_const_bands(evectmatrix X, maxwell_data *d);
 extern void maxwell_zero_k_set_const_bands(evectmatrix X, maxwell_data *d);
