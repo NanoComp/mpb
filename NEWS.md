@@ -2,6 +2,16 @@
 
 ## MPB 1.11.1
 
+4/3/25
+
+* Add support for anisotropic subpixel smoothing (#127).
+
+* Add support for computing mode-overlap integral under symmetry operation (#134).
+
+* Disable subpixel smoothing for mesh size of one (#150).
+
+* Various minor fixes and additional documentation (#138, #140, #141, #145, #149).
+
 10/23/20
 
 * Fix compilation error on MacOS for `mpb/fields.c`.
