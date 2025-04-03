@@ -1,6 +1,6 @@
 # MPB Release Notes
 
-## MPB 1.11.1
+## MPB 1.12
 
 4/3/25
 
@@ -11,6 +11,8 @@
 * Disable subpixel smoothing for mesh size of one (#150).
 
 * Various minor fixes and additional documentation (#138, #140, #141, #145, #149).
+
+## MPB 1.11.1
 
 10/23/20
 
