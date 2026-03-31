@@ -577,6 +577,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 
 	       d_norm = sqrt(SCALAR_RE(evectmatrix_traceXtY(BD,D)) / Y.p);
 	       mpi_assert_equal(d_norm);
+               if (d_norm == 0) break; /* D has zero B-norm; converged */
 
 	       /* dE = 2 * tr Gt D.  (Use prev_G instead of G so that
 		  it works even when we are using Polak-Ribiere.) */
@@ -650,6 +651,7 @@ void eigensolver_lagrange(evectmatrix Y, real *eigenvals,
 
 	       d_scale = sqrt(SCALAR_RE(evectmatrix_traceXtY(BD, D)) / Y.p);
 	       mpi_assert_equal(d_scale);
+               if (d_scale == 0) break; /* D has zero B-norm; converged */
 	       blasglue_rscal(Y.p * Y.n, 1/d_scale, D.data, 1);
 	       if (B) blasglue_rscal(Y.p * Y.n, 1/d_scale, BD.data, 1);
 
