@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 
 #include "config.h"
@@ -32,9 +33,9 @@
 
 
 
-/* If `curfield` is the real-space D-field (of band-index i), computes the overlap 
+/* If `curfield` is the real-space D-field (of band-index i), computes the overlap
  *       ∫ Eᵢ†(r){W|w}Dᵢ(r) dr  =  ∫ Eᵢ†(r)(WDᵢ)({W|w}⁻¹r) dr,
- * for a symmetry operation {W|w} with rotation W and translation w; each specified 
+ * for a symmetry operation {W|w} with rotation W and translation w; each specified
  * in the lattice basis. The vector fields Eᵢ and Dᵢ include Bloch phases.
  * If `curfield` is the real-space B-field, the overlap
  *       ∫ Hᵢ†(r){W|w}Bᵢ(r) dr  =  det(W) ∫ Hᵢ†(r)(WBᵢ)({W|w}⁻¹r) dr,
@@ -43,7 +44,7 @@
  * independent of whether the D- or B-field is used.
  * No other choices for `curfield` are allowed: to set `curfield` to the real-space
  * B- or D-field use the `get-bfield` and `get-dfield` Scheme functions or the
- * `get_bfield` and `get_dfield` in C functions.                   
+ * `get_bfield` and `get_dfield` in C functions.
  * Usually, it will be more convenient to use the wrapper `compute_symmetry(i, W, w)`
  * which defaults to the B-field (since μ = 1 usually) and takes a band-index `i`.
  */
@@ -70,7 +71,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
          * counting the number of grid points correctly somehow: I think the root issue is
          * that we use the LOOP_XYZ macro, which has special handling for mbpi (i.e. only
          * "visits" the "inversion-reduced" part of the unitcell): but here, we actually
-         * really want to (or at least assume to) visit _all_ the points in the unitcell. 
+         * really want to (or at least assume to) visit _all_ the points in the unitcell.
          */
     #endif
     #ifdef HAVE_MPI
@@ -83,7 +84,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
          * Long story short: disable it for now.
          */
     #endif
-    
+
     /* prepare before looping ... */
     n1 = mdata->nx; n2 = mdata->ny; n3 = mdata->nz;
 
@@ -128,7 +129,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
         /* transformed coordinate pt = {W|w}⁻¹p = W⁻¹(p-w) since {W|w}⁻¹={W⁻¹|-W⁻¹w} */
         pt = matrix3x3_vector3_mult(invW, vector3_minus(p, w));
 
-        /* Bloch field value at transformed coordinate pt: interpolation is needed to 
+        /* Bloch field value at transformed coordinate pt: interpolation is needed to
          * ensure generality in the case of fractional translations.                  */
         get_bloch_field_point_(Ftemp, pt); /* assign `Ftemp` to field at `pt` (without eⁱᵏʳ factor) */
 
@@ -157,7 +158,7 @@ cnumber transformed_overlap(matrix3x3 W, vector3 w)
             F[1] = curfield[3*xyz_index+1];
             F[2] = curfield[3*xyz_index+2];
         }
-        
+
         /* inner product of F and Ft={W|w}F in Bloch form */
         CASSIGN_CONJ_MULT(integrand, F[0], Ft[0]);  /* add adjoint(F)*Ft to integrand */
         CACCUMULATE_SUM_CONJ_MULT(integrand, F[1], Ft[1]);

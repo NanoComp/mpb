@@ -63,7 +63,7 @@ static double mindiff_func(int n, const double *u, double *grad, void *data)
     solve_kpoint(d->k);
     gap = (f2 = freqs.items[d->b-1]);
     if (grad) {
-        material_grids_addgradient(work, 1.0, d->b, 
+        material_grids_addgradient(work, 1.0, d->b,
                                    d->grids, d->ngrids);
     }
 
@@ -72,15 +72,15 @@ static double mindiff_func(int n, const double *u, double *grad, void *data)
     solve_kpoint(d->k);
     gap -= (f1 = freqs.items[d->b-1]);
     if (grad) {
-        material_grids_addgradient(work, -1.0, d->b, 
+        material_grids_addgradient(work, -1.0, d->b,
                                    d->grids, d->ngrids);
     }
 
     if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
-        mpi_allreduce(work, grad, n, double, MPI_DOUBLE, 
+        mpi_allreduce(work, grad, n, double, MPI_DOUBLE,
                       MPI_SUM, mpb_comm);
 
-     mpi_one_printf("material-grid-mindiff:, %d, %g, %g, %0.15g\n", 
+     mpi_one_printf("material-grid-mindiff:, %d, %g, %g, %0.15g\n",
                     d->iter, f1, f2, gap);
 
      return gap;
@@ -191,7 +191,7 @@ static double band_constraint(int n, const double *u, double *grad, void *data)
      if (grad) memset(work, 0, sizeof(double) * (n-2));
      if (kind == BAND1_CONSTRAINT) {
 	  if (grad) {
-	       material_grids_addgradient(work, 1.0, d->b1, 
+	       material_grids_addgradient(work, 1.0, d->b1,
 					  d->grids, d->ngrids);
 	       grad[n-1] = -1;
 	       grad[n-2] = 0;
@@ -200,7 +200,7 @@ static double band_constraint(int n, const double *u, double *grad, void *data)
      }
      else {
 	  if (grad) {
-	       material_grids_addgradient(work, -1.0, d->b2, 
+	       material_grids_addgradient(work, -1.0, d->b2,
 					  d->grids, d->ngrids);
 	       grad[n-1] = 0;
 	       grad[n-2] = 1;
@@ -208,7 +208,7 @@ static double band_constraint(int n, const double *u, double *grad, void *data)
 	  val = u[n-2] - (d->f2s[ik] = freqs.items[d->b2-1]);
      }
      if (grad) /* gradient w.r.t. epsilon needs to be summed over processes */
-	  mpi_allreduce(work, grad, n-2, double, MPI_DOUBLE, 
+	  mpi_allreduce(work, grad, n-2, double, MPI_DOUBLE,
 			MPI_SUM, mpb_comm);
 
      return val;
@@ -227,7 +227,7 @@ static double maxgap_func(int n, const double *u, double *grad, void *data)
      d->unsolved = 1;
 
      gap = (f2 - f1) * 2.0 / (f1 + f2);
-     
+
      if (grad) {
 	  memset(grad, 0, sizeof(double) * (n-2));
 	  grad[n-1] = 2.0 * ((f1 + f2) - (f1 - f2)) / ((f1+f2)*(f1+f2));
@@ -238,13 +238,13 @@ static double maxgap_func(int n, const double *u, double *grad, void *data)
 	  }
      }
 
-     mpi_one_printf("material-grid-%sgap:, %d, %g, %g, %0.15g\n", 
+     mpi_one_printf("material-grid-%sgap:, %d, %g, %g, %0.15g\n",
 		    d->do_min ? "min" : "max", d->iter, f1, f2, gap);
-     
+
      if (verbose) {
 	  char prefix[256];
 	  get_epsilon();
-	  snprintf(prefix, 256, "%sgap-%04d-", 
+	  snprintf(prefix, 256, "%sgap-%04d-",
 		   d->do_min ? "min" : "max", d->iter);
 	  output_field_to_file(-1, prefix);
      }
@@ -253,7 +253,7 @@ static double maxgap_func(int n, const double *u, double *grad, void *data)
 }
 
 static number material_grids_maxmin_gap(boolean do_min,
-					vector3_list kpoints, 
+					vector3_list kpoints,
 					integer band1, integer band2,
 					number func_tol, number eps_tol,
 					integer maxeval, number maxtime)
@@ -323,7 +323,7 @@ static number material_grids_maxmin_gap(boolean do_min,
      mma_verbose = kpoints.num_items*2;
      res = nlopt_minimize_constrained(
 	  NLOPT_LD_MMA, n, maxgap_func, &d,
-	  kpoints.num_items*2, band_constraint, 
+	  kpoints.num_items*2, band_constraint,
 	  cdata, sizeof(band_constraint_data),
 	  lb, ub, u, &func_min,
 	  -HUGE_VAL, func_tol,0, 0,u_tol, maxeval,maxtime);
@@ -352,7 +352,7 @@ static number material_grids_maxmin_gap(boolean do_min,
 
      func_min = (u[n-2] - u[n-1]) * 2.0 / (u[n-1] + u[n-2]);
      mpi_one_printf("material-grid-%sgap:, %d, %g, %g, %0.15g\n",
-                    d.do_min ? "min" : "max", d.iter+1, 
+                    d.do_min ? "min" : "max", d.iter+1,
 		    u[n-1], u[n-2], func_min);
      func_min = d.do_min ? func_min : -func_min;
 
@@ -364,7 +364,7 @@ static number material_grids_maxmin_gap(boolean do_min,
      return(do_min ? func_min : -func_min);
 }
 
-number material_grids_maxgap(vector3_list kpoints, 
+number material_grids_maxgap(vector3_list kpoints,
 			     integer band1, integer band2,
 			     number func_tol, number eps_tol,
 			     integer maxeval, number maxtime)
@@ -373,7 +373,7 @@ number material_grids_maxgap(vector3_list kpoints,
 				      func_tol, eps_tol, maxeval, maxtime);
 }
 
-number material_grids_mingap(vector3_list kpoints, 
+number material_grids_mingap(vector3_list kpoints,
 			     integer band1, integer band2,
 			     number func_tol, number eps_tol,
 			     integer maxeval, number maxtime)

@@ -194,7 +194,7 @@ number mpi_max(number num)
 /**************************************************************************/
 /* expose some build info to guile */
 
-boolean has_hermitian_epsp()
+boolean has_hermitian_epsp(void)
 {
 #if WITH_HERMITIAN_EPSILON
     return 1;
@@ -203,7 +203,7 @@ boolean has_hermitian_epsp()
 #endif
 }
 
-boolean has_inversion_symp()
+boolean has_inversion_symp(void)
 {
 #if SCALAR_COMPLEX
     return 0;
@@ -869,7 +869,7 @@ number_list compute_yparities(void)
    group velocities, one for each band, in units of c. */
 number_list compute_group_velocity_component(vector3 d)
 {
-     number_list group_v;
+     number_list group_v = { 0, (number *) NULL };
      real *gv_scratch;
      real u[3];
      int i, ib;
@@ -951,7 +951,7 @@ number compute_1_group_velocity_component(vector3 d, integer b)
 {
      real u[3];
      int ib = b - 1;
-     real group_v, scratch;
+     real group_v = 0, scratch;
 
      curfield_reset();
 

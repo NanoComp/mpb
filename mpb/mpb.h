@@ -111,5 +111,7 @@ void material_grids_addgradient(double *v,
 /**************************************************************************/
 
 extern const char *parity_string(maxwell_data *d);
+boolean has_hermitian_epsp(void);
+boolean has_inversion_symp(void);
 
 #endif /* MPB_H */
